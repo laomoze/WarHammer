@@ -1,0 +1,207 @@
+{
+	"type": "tank",
+	"name": "飞刃",
+	"squareShape": true,
+	"omniMovement": false,
+	"rotateMoveFirst": false,
+	"drownTimeMultiplier": 5,
+	"speed": 1.3,
+	"crushDamage": 9,
+	"treadPullOffset": 0,
+	"treadFrames": 10,
+	"outlineRadius": 3,
+	"outlineColor": "36363CFF",
+	"treadRects": [
+		{
+			"x": -109,
+			"y": -163,
+			"width": 69,
+			"height": 324
+		}
+	],
+	"hitSize": 60,
+	"immunities": [
+		"shocked",
+		"electrified",
+		"melta",
+		"melting"
+	],
+	"research": {
+		"parent": "tank2s"
+	},
+	"ammoType": "refine-ceramite",
+	"ammoCapacity": 80,
+	"targetAir": true,
+	"health": 150000,
+	"armor": 30,
+	"drag": 0.09,
+	"rotateSpeed": 1,
+	"itemCapacity": 55,
+	"faceTarget": false,
+	"weapons": [
+		{
+			"name": "tank3s-weapon1",
+			"mirror": false,
+			"shake": 4,
+			"shootY": 40,
+			"rotate": true,
+			"rotateSpeed": 1.2,
+			"x": 0,
+			"y": 0,
+			"reload": 260,
+			"shoot": {
+				"type": "ShootPattern",
+				"firstShotDelay": 40
+			},
+			"shootStatusDuration": 320,
+			"shootStatus": "bless",
+			"chargeSound": "lasercharge",
+			"shootSound": "laserbig",
+			"continuous": true,
+			"cooldownTime": 200,
+			"heatColor": "FF4040",
+			"bullet": {
+				"type": "ContinuousLaserBulletType",
+				"damage": 550,
+				"width": 7,
+				"length": 330,
+				"colors": [
+					"DB7F4DFF",
+					"DB7F4DFF",
+					"FFAA69FF"
+				],
+				"hitEffect": {
+					"type": "ParticleEffect",
+					"particles": 4,
+					"sizeFrom": 10,
+					"sizeTo": 0,
+					"line": true,
+					"length": 85,
+					"baseLength": 0,
+					"lifetime": 25,
+					"colorFrom": "FFA05CFF",
+					"colorTo": "D86E56FF",
+					"cone": 70
+				},
+				"lifetime": 320,
+				"hitShake": 2,
+				"despawnEffect": "smokeCloud",
+				"smokeEffect": "none",
+				"chargeEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "WaveEffect",
+							"lifetime": 45,
+							"sizeFrom": 60,
+							"sizeTo": 0,
+							"strokeFrom": 0,
+							"strokeTo": 4,
+							"colorFrom": "FFA05CFF",
+							"colorTo": "FFA05CFF"
+						},
+						{
+							"type": "ParticleEffect",
+							"particles": 10,
+							"line": true,
+							"strokeFrom": 0,
+							"strokeTo": 2.5,
+							"lenFrom": 0,
+							"lenTo": 18,
+							"length": -100,
+							"baseLength": 100,
+							"lifetime": 45,
+							"sizeInterp": "pow5Out",
+							"interp": "pow5In",
+							"colorFrom": "FFA05CFF",
+							"colorTo": "FFA05CFF"
+						},
+						{
+							"type": "ParticleEffect",
+							"particles": 10,
+							"line": true,
+							"strokeFrom": 0,
+							"strokeTo": 2,
+							"lenFrom": 0,
+							"lenTo": 12,
+							"length": -100,
+							"baseLength": 100,
+							"lifetime": 45,
+							"sizeInterp": "pow5Out",
+							"interp": "pow5In",
+							"colorFrom": "FFA05CFF",
+							"colorTo": "FFA05CFF"
+						}
+					]
+				},
+				"incendChance": 0.1,
+				"incendSpread": 8,
+				"incendAmount": 1
+			}
+		},
+		{
+			"name": "tank3s-weapon2",
+			"mirror": false,
+			"shake": 4,
+			"shootY": 40,
+			"rotate": true,
+			"rotateSpeed": 1.2,
+			"x": 0,
+			"y": 0,
+			"reload": 685,
+			"shoot": {
+				"type": "ShootPattern",
+				"firstShotDelay": 40,
+				"shots": 23,
+				"shotDelay": 11
+			},
+			"bullet": {
+				"type": "BasicBulletType",
+				"despawnEffect": "none",
+				"hitEffect": "none",
+				"sprite": "wh-none",
+				"collides": false,
+				"hittable": false,
+				"absorbable": false,
+				"damage": 50,
+				"width": 1,
+				"height": 1,
+				"speed": 10,
+				"lifetime": 32,
+				"shrinkY": 0,
+				"frontColor": "FFFFFF00",
+				"backColor": "FFFFFF00",
+				"intervalRandomSpread": 0,
+				"intervalBullets": 1,
+				"bulletInterval": 32,
+				"intervalAngle": 0,
+				"intervalSpread": 0,
+				"intervalBullet": {
+					"type": "PositionLightningBulletType",
+					"damage": 50,
+					"maxRange": 330,
+					"rangeOverride": 330,
+					"lightningColor": "FFA05C",
+					"lightningDamage": 85,
+					"lightning": 2,
+					"lightningLength": 4,
+					"lightningLengthRand": 6,
+					"hitEffect": {
+						"type": "ParticleEffect",
+						"particles": 5,
+						"strokeFrom": 2,
+						"strokeTo": 0,
+						"line": true,
+						"lenFrom": 0,
+						"lenTo": 10,
+						"length": 30,
+						"baseLength": 0,
+						"lifetime": 25,
+						"colorFrom": "FFA05C",
+						"colorTo": "FFC397FF"
+					}
+				}
+			}
+		}
+	]
+}

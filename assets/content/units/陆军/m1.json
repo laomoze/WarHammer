@@ -1,0 +1,125 @@
+{
+	"name": "PDF",
+	"type": "mech",
+	"health": 600,
+	"armor": 2,
+	"hitSize": 10,
+	"speed": 0.7,
+	"rotateSpeed": 4,
+	"lowAltitude": true,
+	"mechLandShake": 0.7,
+	"riseSpeed": 0.05,
+	"mechFrontSway": 0.6,
+	"outlineRadius": 2,
+	"research": "imperium",
+	"researchCostMultiplier": 1.5,
+	"weapons": [
+		{
+			"name": "lasgun",
+			"mirror": false,
+			"layerOffset": -0.001,
+			"x": 5,
+			"y": 2.5,
+			"shootY": 6,
+			"shootX": 0.3,
+			"top": false,
+			"recoil": 0.5,
+			"shake": 0.5,
+			"reload": 30,
+			"shootSound": "shoot",
+			"bullet": {
+				"type": "PointBulletType",
+				"trailEffect": {
+					"type": "ParticleEffect",
+					"particles": 1,
+					"length": 0,
+					"baseLength": 1,
+					"lifetime": 10,
+					"line": true,
+					"randLength": false,
+					"lenFrom": 10,
+					"lenTo": 10,
+					"strokeFrom": 3.5,
+					"strokeTo": 0,
+					"colorFrom": "FF5D45FF",
+					"colorTo": "FF5D45FF",
+					"cone": 0
+				},
+				"trailSpacing": 9,
+				"shootEffect": {
+					"type": "ParticleEffect",
+					"particles": 1,
+					"sizeFrom": 7,
+					"sizeTo": 0,
+					"length": 0,
+					"baseLength": 0,
+					"lifetime": 11,
+					"colorFrom": "FF5D45FF",
+					"colorTo": "FF5D45FF"
+				},
+				"speed": 30,
+				"lifetime": 5,
+				"damage": 30,
+				"hitSound": "plasmaboom",
+				"despawnEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "ParticleEffect",
+							"particles": 1,
+							"sizeFrom": 6,
+							"sizeTo": 0,
+							"length": 0,
+							"baseLength": 0,
+							"lifetime": 60,
+							"colorFrom": "FF5D45FF",
+							"colorTo": "FF5D45FF"
+						}
+					]
+				}
+			}
+		},
+		{
+			"name": "手雷",
+			"reload": 240,
+			"shootX": -1,
+			"shootY": 4,
+			"mirror": false,
+			"recoil": 0.6,
+			"inaccuracy": 4,
+			"shootSound": "missile",
+			"top": true,
+			"shootWarmupSpeed": 0.03,
+			"minWarmup": 0.9,
+			"shake": 0.36,
+			"velocityRnd": 0.1,
+			"bullet": {
+				"type": "ArtilleryBulletType",
+				"sprite": "wh-抛射",
+				"height": 20,
+				"width": 16,
+				"frontColor": "f8ad42",
+				"backColor": "f68021",
+				"spin": 10,
+				"drag": 0.017,
+				"lifetime": 15,
+				"speed": 10,
+				"ammoMultiplier": 10,
+				"splashDamageRadius": 26,
+				"splashDamage": 53,
+				"incendAmount": 1,
+				"incendSpread": 16,
+				"incendChance": 0.2,
+				"hitSound": "explosion",
+				"hitEffect": "flakExplosionBig",
+				"despawnEffect": "none"
+			}
+		}
+	],
+	"abilities": [
+		{
+			"type": "RegenAbility",
+			"percentAmount": 0.0125
+		}
+	]
+}

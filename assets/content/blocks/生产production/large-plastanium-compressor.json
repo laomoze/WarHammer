@@ -1,0 +1,43 @@
+{
+	"type": "GenericCrafter",
+	"name": "重型塑钢压缩机",
+	"outputItem": "plastanium/6",
+	"size": 3,
+	"hasPower": true,
+	"hasLiquids": true,
+	"hasItems": true,
+	"craftTime": 60,
+	"itemCapacity": 20,
+	"liquidCapacity": 40,
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			{
+				"type": "DrawRegion",
+				"suffix": "-bottom"
+			},
+			"DrawDefault",
+			"DrawFade"
+		]
+	},
+	"craftEffect": "formsmoke",
+	"updateEffect": "plasticburn",
+	"consumes": {
+		"power": 6,
+		"liquid": "oil/1",
+		"items": [
+			"titanium/8"
+		]
+	},
+	"requirements": [
+		"lead/270",
+		"titanium/200",
+		"graphite/150",
+		"titanium-steel/110"
+	],
+	"category": "crafting",
+	"research": {
+		"parent": "large-cultivator"
+	},
+	"researchCostMultiplier": 0.17
+}

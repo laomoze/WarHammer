@@ -1,0 +1,404 @@
+{
+	"type": "ItemTurret",
+	"category": "units",
+	"name": "亚能折跃门",
+	"health": 22000,
+	"armor": 18,
+	"size": 6,
+	"reload": 12000,
+	"range": 300,
+	"recoil": 0,
+	"shootY": 0,
+	"playerControllable": false,
+	"requirements": [
+		"silicon/8000",
+		"carbide/5000",
+		"ceramite/6000",
+		"adamantium/6000"
+	],
+	"drawer": {
+		"type": "DrawTurret",
+		"basePrefix": "energe-warp-gate-",
+		"parts": [
+			{
+				"type": "shapePart",
+				"circle": true,
+				"layer": 114,
+				"color": "000000ff",
+				"radiusTo": 8,
+				"radius": 0
+			},
+			{
+				"type": "shapePart",
+				"circle": true,
+				"layer": 110,
+				"color": "F7E97EFF",
+				"radiusTo": 11,
+				"radius": 0
+			},
+			{
+				"type": "HaloPart",
+				"layer": 110,
+				"rotateSpeed": 0,
+				"sides": 3,
+				"shapes": 2,
+				"color": "F7E97EFF",
+				"tri": true,
+				"hollow": true,
+				"radius": 7,
+				"radiusTo": 7,
+				"triLength": 0,
+				"triLengthTo": 40,
+				"haloRadius": 4,
+				"haloRotateSpeed": 0.8
+			},
+			{
+				"type": "HaloPart",
+				"layer": 110,
+				"rotateSpeed": 0,
+				"sides": 3,
+				"shapes": 2,
+				"color": "F7E97EFF",
+				"tri": true,
+				"hollow": true,
+				"radius": 7,
+				"radiusTo": 7,
+				"triLength": 0,
+				"triLengthTo": 24,
+				"haloRadius": 4,
+				"haloRotateSpeed": -1
+			},
+			{
+				"type": "HaloPart",
+				"color": "F7E97EFF",
+				"progress": {
+					"type": "charge",
+					"op": "delay",
+					"amount": 0.1
+				},
+				"tri": true,
+				"shapes": 2,
+				"triLength": 0,
+				"triLengthTo": 20,
+				"radius": 30,
+				"radiusTo": 30,
+				"haloRadius": 30,
+				"haloRadiusTo": 38,
+				"shapeRotation": 0,
+				"haloRotation": 0,
+				"layer": 110
+			},
+			{
+				"type": "HaloPart",
+				"color": "F7E97EFF",
+				"progress": {
+					"type": "charge",
+					"op": "delay",
+					"amount": 0.1
+				},
+				"tri": true,
+				"shapes": 2,
+				"triLength": 0,
+				"triLengthTo": 4,
+				"radius": 30,
+				"radiusTo": 30,
+				"haloRadius": 30,
+				"haloRadiusTo": 38,
+				"shapeRotation": 180,
+				"haloRotation": 0,
+				"layer": 110
+			},
+			{
+				"type": "HaloPart",
+				"layer": 110,
+				"x": -28,
+				"y": 13,
+				"rotateSpeed": 0,
+				"sides": 3,
+				"shapes": 1,
+				"color": "F7E97EFF",
+				"tri": true,
+				"hollow": true,
+				"radius": 7,
+				"radiusTo": 7,
+				"triLength": 0,
+				"triLengthTo": 100,
+				"haloRadius": 0,
+				"haloRotation": 90,
+				"haloRotateSpeed": 0
+			},
+			{
+				"type": "HaloPart",
+				"layer": 110,
+				"x": -28,
+				"y": -13,
+				"rotateSpeed": 0,
+				"sides": 3,
+				"shapes": 1,
+				"color": "F7E97EFF",
+				"tri": true,
+				"hollow": true,
+				"radius": 7,
+				"radiusTo": 7,
+				"triLength": 0,
+				"triLengthTo": 100,
+				"haloRadius": 0,
+				"haloRotation": 90,
+				"haloRotateSpeed": 0
+			},
+			{
+				"type": "HaloPart",
+				"color": "F7E97EFF",
+				"x": -50,
+				"tri": true,
+				"shapes": 1,
+				"triLength": 0,
+				"triLengthTo": 4,
+				"radius": 16,
+				"radiusTo": 16,
+				"haloRadius": 0,
+				"haloRadiusTo": 4,
+				"haloRotation": 90,
+				"layer": 110
+			},
+			{
+				"type": "HaloPart",
+				"color": "F7E97EFF",
+				"x": -70,
+				"tri": true,
+				"shapes": 1,
+				"triLength": 0,
+				"triLengthTo": 4,
+				"radius": 19,
+				"radiusTo": 19,
+				"haloRadius": 0,
+				"haloRadiusTo": 4,
+				"haloRotation": 90,
+				"layer": 110
+			},
+			{
+				"type": "HaloPart",
+				"color": "F7E97EFF",
+				"x": -90,
+				"tri": true,
+				"shapes": 1,
+				"triLength": 0,
+				"triLengthTo": 4,
+				"radius": 22,
+				"radiusTo": 22,
+				"haloRadius": 0,
+				"haloRadiusTo": 4,
+				"haloRotation": 90,
+				"layer": 110
+			},
+			{
+				"type": "HaloPart",
+				"layer": 110,
+				"x": 28,
+				"y": 13,
+				"rotateSpeed": 0,
+				"sides": 3,
+				"shapes": 1,
+				"color": "F7E97EFF",
+				"tri": true,
+				"hollow": true,
+				"radius": 7,
+				"radiusTo": 7,
+				"triLength": 0,
+				"triLengthTo": 100,
+				"haloRadius": 0,
+				"haloRotation": -90,
+				"haloRotateSpeed": 0
+			},
+			{
+				"type": "HaloPart",
+				"layer": 110,
+				"x": 28,
+				"y": -13,
+				"rotateSpeed": 0,
+				"sides": 3,
+				"shapes": 1,
+				"color": "F7E97EFF",
+				"tri": true,
+				"hollow": true,
+				"radius": 7,
+				"radiusTo": 7,
+				"triLength": 0,
+				"triLengthTo": 100,
+				"haloRadius": 0,
+				"haloRotation": -90,
+				"haloRotateSpeed": 0
+			},
+			{
+				"type": "HaloPart",
+				"color": "F7E97EFF",
+				"x": 50,
+				"tri": true,
+				"shapes": 1,
+				"triLength": 0,
+				"triLengthTo": 4,
+				"radius": 16,
+				"radiusTo": 16,
+				"haloRadius": 0,
+				"haloRadiusTo": 4,
+				"haloRotation": -90,
+				"layer": 110
+			},
+			{
+				"type": "HaloPart",
+				"color": "F7E97EFF",
+				"x": 70,
+				"tri": true,
+				"shapes": 1,
+				"triLength": 0,
+				"triLengthTo": 4,
+				"radius": 19,
+				"radiusTo": 19,
+				"haloRadius": 0,
+				"haloRadiusTo": 4,
+				"haloRotation": -90,
+				"layer": 110
+			},
+			{
+				"type": "HaloPart",
+				"color": "F7E97EFF",
+				"x": 90,
+				"tri": true,
+				"shapes": 1,
+				"triLength": 0,
+				"triLengthTo": 4,
+				"radius": 22,
+				"radiusTo": 22,
+				"haloRadius": 0,
+				"haloRadiusTo": 4,
+				"haloRotation": -90,
+				"layer": 110
+			}
+		]
+	},
+	"consumes": {
+		"power": 1500
+	},
+	"targetGround": false,
+	"targetAir": false,
+	"inaccuracy": 360,
+	"shootCone": 360,
+	"shake": 1,
+	"rotateSpeed": 0,
+	"shootSound": "wave",
+	"ammoPerShot": 9000,
+	"maxAmmo": 9000,
+	"alwaysShooting": true,
+	"shoot": {
+		"type": "shootSpread",
+		"firstShotDelay": 360,
+		"spread": 360,
+		"shots": 1
+	},
+	"ammoTypes": {
+		"adamantium": {
+			"reloadMultiplier": 0.75,
+			"speed": 10,
+			"damage": 50,
+			"lifetime": 30,
+			"sprite": "wh-none",
+			"width": 1,
+			"height": 1,
+			"hitEffect": {
+				"type": "multiEffect",
+				"effects": [
+					{
+						"type": "ParticleEffect",
+						"particles": 1,
+						"sizeFrom": 30,
+						"sizeTo": 30,
+						"length": 0,
+						"layer": 110,
+						"region": "wh-jump",
+						"interp": "swing",
+						"lifetime": 300,
+						"colorFrom": "F7E97EFF",
+						"colorTo": "F7E97E00"
+					}
+				]
+			},
+			"shootEffect": {
+				"type": "WaveEffect",
+				"lifetime": 45,
+				"interp": "circleOut",
+				"sizeFrom": 0,
+				"sizeTo": 80,
+				"strokeFrom": 5,
+				"strokeTo": 0,
+				"colorFrom": "F7E97EFF",
+				"colorTo": "F7E97EFF"
+			},
+			"fragBullets": 1,
+			"fragBullet": {
+				"speed": 0,
+				"lifetime": 300,
+				"sprite": "wh-none",
+				"width": 24,
+				"height": 24,
+				"fragBullets": 1,
+				"fragBullet": {
+					"spawnUnit": "wh-c-moon"
+				}
+			}
+		},
+		"sealed-promethium": {
+			"reloadMultiplier": 1.25,
+			"speed": 10,
+			"damage": 50,
+			"lifetime": 30,
+			"sprite": "wh-none",
+			"width": 24,
+			"height": 24,
+			"hitEffect": {
+				"type": "multiEffect",
+				"effects": [
+					{
+						"type": "ParticleEffect",
+						"particles": 1,
+						"sizeFrom": 30,
+						"sizeTo": 30,
+						"length": 0,
+						"layer": 110,
+						"region": "wh-jump",
+						"interp": "swing",
+						"lifetime": 300,
+						"colorFrom": "F7E97EFF",
+						"colorTo": "F7E97E00"
+					}
+				]
+			},
+			"shootEffect": {
+				"type": "WaveEffect",
+				"lifetime": 45,
+				"interp": "circleOut",
+				"sizeFrom": 0,
+				"sizeTo": 80,
+				"strokeFrom": 5,
+				"strokeTo": 0,
+				"colorFrom": "F7E97EFF",
+				"colorTo": "F7E97EFF"
+			},
+			"fragBullets": 1,
+			"fragBullet": {
+				"speed": 0,
+				"lifetime": 300,
+				"sprite": "wh-none",
+				"width": 24,
+				"height": 24,
+				"fragBullets": 1,
+				"fragBullet": {
+					"spawnUnit": "wh-tankAG"
+				}
+			}
+		}
+	},
+	"research": {
+		"parent": "exterminate-reconstructor"
+	},
+	"researchCostMultiplier": 1.2
+}

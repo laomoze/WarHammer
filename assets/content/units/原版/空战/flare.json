@@ -1,0 +1,30 @@
+{
+	"health": 350,
+	"armor": 3,
+	"weapons": [
+		{
+			"name": "flare1",
+			"shoot": {
+				"shots": 8,
+				"shotDelay": 3
+			},
+			"reload": 48,
+			"x": 0,
+			"y": 3,
+			"mirror": false,
+			"rotate": false,
+			"inaccuracy": 1,
+			"ignoreRotation": true,
+			"ejectEffect": "casing1",
+			"shootSound": "shoot",
+			"bullet": {
+				"drag": 0.016,
+				"damage": 10,
+				"speed": 8,
+				"lifetime": 30,
+				"width": 5,
+				"height": 8
+			}
+		}
+	]
+}

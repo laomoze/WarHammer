@@ -1,0 +1,40 @@
+{
+	"targetAir": true,
+	"health": 2800,
+	"armor": 7,
+	"range": 230,
+	"weapons": [
+		{
+			"name": "zenith-weapon1",
+			"reload": 60,
+			"x": 7.5,
+			"y": 0,
+			"shootY": 8,
+			"shoot": {
+				"type": "ShootSpread",
+				"shots": 3,
+				"spread": 1.77
+			},
+			"rotate": true,
+			"inaccuracy": 6,
+			"alternate": true,
+			"ejectEffect": "casing2",
+			"shootSound": "missile",
+			"bullet": {
+				"type": "MissileBulletType",
+				"damage": 40,
+				"splashDamageRadius": 35,
+				"splashDamage": 40,
+				"status": "blasted",
+				"backColor": "FF7F24",
+				"hitEffect": "explosion",
+				"despawnEffect": "explosion",
+				"smokeEffect": "none",
+				"speed": 5,
+				"lifetime": 50,
+				"width": 8,
+				"height": 9
+			}
+		}
+	]
+}

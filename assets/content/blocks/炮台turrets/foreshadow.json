@@ -1,0 +1,94 @@
+{
+    "range": 600,
+    "rotateSpeed": 3,
+    "fogRadiusMultiplier": 0.6888,
+    "coolantMultiplier": 1.5,
+    "consumes": {
+        "power": 20
+    },
+    "ammoTypes": {
+        "surge-alloy": {
+            "type": "PointBulletType",
+            "trailSpacing": 10,
+            "hitEffect": "instHit",
+            "smokeEffect": "smokeCloud",
+            "trailEffect": {
+                "type": "ParticleEffect",
+                "particles": 1,
+                "baseLength": 0.1,
+                "length": 0.1,
+                "lifetime": 30,
+                "line": true,
+                "randLength": false,
+                "lenFrom": 11,
+                "lenTo": 11,
+                "strokeFrom": 8,
+                "strokeTo": 0,
+                "colorFrom": "EAE49A",
+                "colorTo": "EAE49A",
+                "cone": 0
+            },
+            "despawnEffect": "instBomb",
+            "hitColor": "EAE49A",
+            "damage": 900,
+            "hitShake": 6,
+            "ammoMultiplier": 1,
+            "lightningDamage": 25,
+            "lightningColor": "EAE49A",
+            "lightning": 4,
+            "lightningLength": 10,
+            "speed": 32,
+            "lifetime": 30,
+            "shootEffect": "instShoot",
+            "buildingDamageMultiplier": 0.3,
+            "fragBullets": 3,
+            "fragBullet": {
+                "type": "PointBulletType",
+                "trailEffect": {
+                    "type": "ParticleEffect",
+                    "particles": 1,
+                    "baseLength": 0.1,
+                    "length": 0.1,
+                    "lifetime": 22,
+                    "line": true,
+                    "randLength": false,
+                    "lenFrom": 9,
+                    "lenTo": 9,
+                    "strokeFrom": 5,
+                    "strokeTo": 0,
+                    "colorFrom": "EAE49A",
+                    "colorTo": "EAE49A",
+                    "cone": 0
+                },
+                "hitEffect": {
+                    "type": "ParticleEffect",
+                    "particles": 1,
+                    "sizeFrom": 9,
+                    "sizeTo": 0,
+                    "length": 0,
+                    "baseLength": 0,
+                    "lifetime": 30,
+                    "colorFrom": "EAE49A",
+                    "colorTo": "EAE49A",
+                    "cone": 60
+                },
+                "trailSpacing": 6,
+                "hitShake": 3,
+                "speed": 10,
+                "lifetime": 6,
+                "lightningDamage": 45,
+                "lightning": 1,
+                "lightningLength": 8,
+                "splashDamageRadius": 16,
+                "splashDamage": 60
+            }
+        }
+    },
+    "requirements": [
+        "copper/1400",
+        "titanium-steel/300",
+        "phase-fabric/200",
+        "surge-alloy/200",
+        "plastanium/200"
+    ]
+}

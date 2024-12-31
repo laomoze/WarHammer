@@ -1,0 +1,17 @@
+{
+	"health": 150,
+	"size": 1,
+	"speed": 1.5,
+	"update": "true",
+	"hasItems": "true",
+	"type": "UnloaderF",
+	"name": "钛钢卸载器",
+	"requirements": [
+		"titanium-steel/25",
+		"lead/25",
+		"silicon/50"
+	],
+	"category": "effect",
+	"research": "steel-dust",
+	"researchCostMultiplier": 1
+}

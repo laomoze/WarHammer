@@ -1,0 +1,38 @@
+{
+	"type": "GenericCrafter",
+	"name": "陶钢冶炼机",
+	"outputItem": "ceramite/2",
+	"size": 2,
+	"hasPower": true,
+	"hasItems": true,
+	"craftTime": 50,
+	"itemCapacity": 10,
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			"DrawDefault",
+			{
+				"type": "DrawFlame",
+				"flameColor": "CEE0CAFF"
+			}
+		]
+	},
+	"craftEffect": "smeltsmoke",
+	"consumes": {
+		"power": 2,
+		"items": [
+			"tungsten/3",
+			"plastanium/3"
+		]
+	},
+	"requirements": [
+		"lead/45",
+		"silicon/40",
+		"tungsten/25",
+		"plastanium/20"
+	],
+	"category": "crafting",
+	"ambientSound": "smelter",
+	"researchCostMultiplier": 0.6,
+	"research": "large-titanium-steel-furnace"
+}

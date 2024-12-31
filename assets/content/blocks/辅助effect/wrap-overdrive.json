@@ -1,0 +1,88 @@
+{
+	"name": "亚空间超速仪",
+	"description": "通过亚空间能量扭曲部分时空，拉近现在与未来的帷幕来实现超速[red]摧毁会发生能量泄露",
+	"type": "OverdriveProjector",
+	"health": 980,
+	"size": 3,
+	"range": 180,
+	"phaseRangeBoost": 50,
+	"speedBoostPhase": 1,
+	"speedBoost": 2,
+	"baseColor": "BF9CEDFF",
+	"hasBoost": true,
+	"useTime": 120,
+	"consumes": {
+		"power": 6,
+		"items": {
+			"items": [
+				"sealed-promethium/1"
+			],
+			"booster": true,
+			"optional": true
+		}
+	},
+	"destroyBullet": {
+		"type": "BasicBulletType",
+		"instantDisappear": true,
+		"collides": false,
+		"hittable": false,
+		"absorbable": false,
+		"pierceArmor": true,
+		"splashDamageRadius": 65,
+		"splashDamage": 200,
+		"lightningDamage": 53,
+		"lightning": 3,
+		"lightningLength": 14,
+		"lightningLengthRand": 8,
+		"speed": 12,
+		"hitShake": 8,
+		"hitSound": "plasmaboom",
+		"hitSoundVolume": 3,
+		"hitColor": "D641FF97",
+		"hitEffect": {
+			"type": "MultiEffect",
+			"effects": [
+				{
+					"type": "WrapEffect",
+					"effect": "dynamicSpikes",
+					"color": "D641FF97",
+					"rotation": 70
+				},
+				"titanExplosion",
+				"titanSmoke"
+			]
+		},
+		"fragBullets": 10,
+		"fragLifeMin": 0.01,
+		"fragBullet": {
+			"type": "BulletType",
+			"speed": 0,
+			"damage": 0,
+			"lifetime": 180,
+			"collides": false,
+			"absorbable": false,
+			"hittable": false,
+			"lightning": 1,
+			"lightningDamage": 30,
+			"lightningLength": 18,
+			"lightningLengthRand": 17,
+			"lightningColor": "D641FF97",
+			"lightRadius": 0,
+			"hitEffect": "none",
+			"keepVelocity": false,
+			"despawnEffect": "none"
+		}
+	},
+	"requirements": [
+		"silicon/250",
+		"titanium-steel/250",
+		"surge-alloy/150",
+		"phase-fabric/80",
+		"sealed-promethium/50"
+	],
+	"category": "effect",
+	"research": {
+		"parent": "wrap-projector"
+	},
+	"researchCostMultiplier": 0.7
+}

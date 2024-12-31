@@ -1,0 +1,54 @@
+{
+	"type": "GenericCrafter",
+	"name": "大型钛钢熔炉",
+	"health": 700,
+	"outputItem": "titanium-steel/3",
+	"size": 3,
+	"hasPower": true,
+	"hasItems": true,
+	"craftTime": 30,
+	"itemCapacity": 40,
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			"DrawDefault",
+			{
+				"type": "DrawFlame",
+				"flameColor": "C8E5E7FF"
+			}
+		]
+	},
+	"craftEffect": {
+		"type": "ParticleEffect",
+		"particles": 3,
+		"baseLength": 6,
+		"length": 10,
+		"region": "wh-菱形",
+		"sizeInterp": "pow3In",
+		"lifetime": 25,
+		"sizeFrom": 5,
+		"sizeTo": 0,
+		"colorFrom": "63B5E0AA",
+		"colorTo": "75B7D1FF"
+	},
+	"consumes": {
+		"power": 3,
+		"items": [
+			"titanium/3",
+			"metaglass/4"
+		]
+	},
+	"requirements": [
+		"copper/120",
+		"titanium-steel/50",
+		"thorium/50",
+		"silicon/50"
+	],
+	"category": "crafting",
+	"ambientSound": "smelter",
+	"ambientSoundVolume": 0.65,
+	"research": {
+		"parent": "imperium"
+	},
+	"researchCostMultiplier": 0.45
+}

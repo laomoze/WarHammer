@@ -1,0 +1,11 @@
+{
+    "name": "wh",
+    "displayName": "WarHammer",
+    "author": "牢陌泽",
+    "subtitle": "唯战永恒",
+    "description": "以战锤40k为原型的MOD,Mod官方QQ交流群：316481519\n贡献者DOC-A-7244(bundles),Eipusino(java)",
+    "version": "0.11",
+    "minGameVersion": "146",
+    "main": "wh.core.WarHammerMod",
+    "java": true
+}

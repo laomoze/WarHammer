@@ -1,0 +1,42 @@
+{
+	"armor": 13,
+	"health": 10000,
+	"weapons": [
+		{
+			"name": "scepter-weapon1",
+			"reload": 60,
+			"shoot": {
+				"shots": 6,
+				"shotDelay": 5
+			},
+			"x": 16,
+			"y": 0,
+			"shootY": 10,
+			"rotate": false,
+			"inaccuracy": 5,
+			"shootSound": "shootBig",
+			"alternate": true,
+			"top": false,
+			"ejectEffect": "casing4",
+			"shake": 3,
+			"bullet": {
+				"damage": 30,
+				"splashDamage": 25,
+				"splashDamageRadius": 35,
+				"lightningDamage": 16,
+				"lightning": 3,
+				"lightningLength": 6,
+				"lightningLengthRand": 3,
+				"status": "shocked",
+				"statusDuration": 60,
+				"speed": 6,
+				"lifetime": 42,
+				"smokeEffect": "shootBig",
+				"width": 10,
+				"height": 15,
+				"hitEffect": "flakExplosionBig",
+				"despawnEffect": "flakExplosionBig"
+			}
+		}
+	]
+}

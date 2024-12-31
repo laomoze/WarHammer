@@ -1,0 +1,229 @@
+{
+	"type": "mech",
+	"name": "侍从",
+	"hitSize": 42,
+	"canDrown": true,
+	"armor": 17,
+	"speed": 0.65,
+	"rotateSpeed": 1.5,
+	"baseRotateSpeed": 2.1,
+	"health": 18000,
+	"mechStepParticles": true,
+	"mechFrontSway": 0.7,
+	"mechSideSway": 0.5,
+	"outlineRadius": 3,
+	"outlineColor": "36363CFF",
+	"abilities": [
+		{
+			"type": "ForceFieldAbility",
+			"radius": 70,
+			"regen": 9,
+			"sides": 24,
+			"max": 10000,
+			"cooldown": 1500
+		}
+	],
+	"research": "mecha4",
+	"requirements": {
+		"block": "tetrative-reconstructor",
+		"previous": "mecha4"
+	},
+	"weapons": [
+		{
+			"name": "mecha5-weapon1",
+			"reload": 15,
+			"x": 21.5,
+			"y": 1,
+			"shootY": 20,
+			"mirror": true,
+			"top": false,
+			"alternate": true,
+			"layerOffset": -0.001,
+			"rotationLimit": 35,
+			"rotateSpeed": 1,
+			"rotate": true,
+			"shootCone": 45,
+			"shootSound": "pulseBlast",
+			"inaccuracy": 6,
+			"recoil": 6,
+			"bullet": {
+				"sprite": "missile-large",
+				"damage": 260,
+				"splashDamageRadius": 48,
+				"splashDamage": 100,
+				"lightning": 4,
+				"lightningDamage": 40,
+				"lightningLength": 5,
+				"lightningLengthRand": 6,
+				"lightningColor": "FFC397FF",
+				"speed": 16,
+				"lifetime": 20,
+				"shrinkY": 0,
+				"shrinkX": 0,
+				"width": 16,
+				"height": 16,
+				"frontColor": "FFFFFF",
+				"backColor": "FFA05C",
+				"hitSound": "spark",
+				"hitShake": 1,
+				"trailColor": "FFC397FF",
+				"trailParam": 2,
+				"trailWidth": 5,
+				"trailLength": 16,
+				"trailChance": 0.1,
+				"trailInterval": 3,
+				"trailEffect": {
+					"type": "ParticleEffect",
+					"region": "wh-空心菱形",
+					"startDelay": 1.25,
+					"particles": 1,
+					"sizeFrom": 6,
+					"sizeTo": 0,
+					"length": 10,
+					"lifetime": 45,
+					"interp": "pow10Out",
+					"sizeInterp": "pow5In",
+					"colorFrom": "FFA05C",
+					"colorTo": "FFA05C"
+				},
+				"shootEffect": {
+					"type": "multiEffect",
+					"effects": [
+						"shootBig",
+						{
+							"type": "ParticleEffect",
+							"region": "wh-空心菱形",
+							"particles": 3,
+							"length": 80,
+							"lifetime": 48,
+							"interp": "circleOut",
+							"sizeInterp": "pow5Out",
+							"cone": 0,
+							"colorFrom": "FFA05C",
+							"colorTo": "FFC397FF",
+							"sizeFrom": 8,
+							"sizeTo": 0
+						}
+					]
+				},
+				"hitEffect": {
+					"type": "multiEffect",
+					"effects": [
+						{
+							"type": "WaveEffect",
+							"lifetime": 25,
+							"sizeFrom": 0,
+							"sizeTo": 60,
+							"strokeFrom": 3.5,
+							"strokeTo": 0,
+							"colorFrom": "FFA05C",
+							"colorTo": "FFC397FF"
+						},
+						{
+							"type": "ParticleEffect",
+							"particles": 15,
+							"line": true,
+							"interp": "pow10Out",
+							"sizeInterp": "pow5In",
+							"strokeFrom": 2,
+							"strokeTo": 0,
+							"lenFrom": 12,
+							"lenTo": 0,
+							"length": 60,
+							"baseLength": 0,
+							"lifetime": 30,
+							"colorFrom": "FFA05C",
+							"colorTo": "FFC397FF"
+						},
+						{
+							"type": "ParticleEffect",
+							"region": "wh-空心菱形",
+							"particles": 4,
+							"length": 40,
+							"lifetime": 60,
+							"colorFrom": "FFA05C",
+							"colorTo": "FFC397FF",
+							"sizeFrom": 10,
+							"sizeTo": 0
+						}
+					]
+				}
+			}
+		},
+		{
+			"name": "mecha5-weapon2",
+			"x": -12,
+			"y": -5,
+			"shootY": 20,
+			"reload": 70,
+			"rotate": true,
+			"alternate": true,
+			"mirror": true,
+			"rotateSpeed": 1.6,
+			"shootSound": "missile",
+			"recoil": 1,
+			"shoot": {
+				"firstShotDelay": 25,
+				"shots": 2,
+				"shotDelay": 10
+			},
+			"bullet": {
+				"type": "PositionLightningBulletType",
+				"damage": 50,
+				"maxRange": 250,
+				"rangeOverride": 250,
+				"lightningColor": "FFC397FF",
+				"lightningDamage": 35,
+				"lightning": 2,
+				"lightningLength": 5,
+				"lightningLengthRand": 3,
+				"hitEffect": {
+					"type": "ParticleEffect",
+					"particles": 5,
+					"strokeFrom": 2,
+					"strokeTo": 0,
+					"line": true,
+					"lenFrom": 0,
+					"lenTo": 10,
+					"length": 30,
+					"baseLength": 5,
+					"lifetime": 25,
+					"colorFrom": "FFC397FF",
+					"colorTo": "FFC397FF"
+				},
+				"spawnBullets": [
+					{
+						"type": "LaserBulletType",
+						"lifetime": 35,
+						"damage": 250,
+						"length": 250,
+						"width": 14,
+						"sideAngle": 0,
+						"sideWidth": 0,
+						"sideLength": 0,
+						"laserAbsorb": true,
+						"pierce": true,
+						"pierceBuilding": false,
+						"colors": [
+							"FFA05C",
+							"FFA05C",
+							"FFC397FF"
+						],
+						"shootEffect": {
+							"type": "ParticleEffect",
+							"particles": 1,
+							"sizeFrom": 9,
+							"sizeTo": 0,
+							"length": 0,
+							"baseLength": 0,
+							"lifetime": 30,
+							"colorFrom": "FFC397FF",
+							"colorTo": "FFC397FF"
+						},
+						"smokeEffect": "none"
+					}
+				]
+			}
+		}
+	]
+}

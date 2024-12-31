@@ -1,0 +1,23 @@
+{
+	"size": 2,
+	"type": "ShieldWall",
+	"name": "最终之墙",
+	"health": 50000,
+	"armor": 30,
+	"regenSpeed": 25,
+	"chanceDeflect": 90,
+	"glowColor": "DBDFFBFF",
+	"requirements": [
+		"carbide/300",
+		"ceramite/300",
+		"adamantium/300",
+		"sealed-promethium/150"
+	],
+	"shieldHealth": 10000,
+	"breakCooldown": 1200,
+	"category": "defense",
+	"research": {
+		"parent": "promethium-charge-wall"
+	},
+	"researchCostMultiplier": 0.5
+}

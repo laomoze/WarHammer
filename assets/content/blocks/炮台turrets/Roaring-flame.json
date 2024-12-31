@@ -1,0 +1,137 @@
+{
+	"type": "ContinuousLiquidTurret",
+	"name": "烈焰",
+	"description": "大型钷素喷火器，向敌人发射俩道圣火，击中同时伴随聚变反应穿透敌方护甲",
+	"size": 5,
+	"health": 10000,
+	"category": "turret",
+	"range": 250,
+	"targetAir": true,
+	"squareSprite": false,
+	"targetGround": true,
+	"rotateSpeed": 2,
+	"loopSound": "torch",
+	"loopSoundVolume": 1,
+	"shootWarmupSpeed": 0.06,
+	"minWarmup": 0.88,
+	"heatColor": "ff6214",
+	"cooldownTime": 120,
+	"liquidCapacity": 60,
+	"ammoPerShot": 4,
+	"shoot": {
+		"type": "ShootAlternate",
+		"barrels": 2,
+		"spread": 13.5,
+		"shots": 2
+	},
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			{
+				"type": "DrawTurret",
+				"parts": [
+					{
+						"type": "RegionPart",
+						"mirror": true,
+						"x": 0,
+						"y": 0,
+						"suffix": "-管",
+						"layer": 50,
+						"under": true,
+						"moveX": 0,
+						"moveY": -2,
+						"moveRot": 0,
+						"heatColor": "ff6214",
+						"heatProgress": "recoil"
+					},
+					{
+						"type": "RegionPart",
+						"mirror": true,
+						"x": 0,
+						"y": 0,
+						"suffix": "-side",
+						"layer": 50,
+						"under": true,
+						"moveX": 1.6,
+						"moveY": -2,
+						"moveRot": -15,
+						"heatColor": "ff6214",
+						"heatProgress": "warmup"
+					}
+				]
+			}
+		]
+	},
+	"ammoTypes": {
+		"ore-promethium": {
+			"type": "ContinuousFlameBulletType",
+			"buildingDamageMultiplier": 0.3,
+			"rangeChange": -40,
+			"flareColor": "F0C6A1FF",
+			"flareLength": 12,
+			"flareWidth": 3,
+			"pierceArmor": true,
+			"damage": 75,
+			"knockback": 0.1,
+			"pierce": true,
+			"pierceCap": 4,
+			"width": 3,
+			"length": 210,
+			"colors": [
+				"FF6947FF",
+				"FF8B37FF",
+				"FEB938FF",
+				"F6FF66FF"
+			],
+			"hitEffect": {
+				"type": "ParticleEffect",
+				"lifetime": 30,
+				"sizeFrom": 5,
+				"sizeTo": 0,
+				"baseLength": 0,
+				"length": 12,
+				"colorFrom": "FF6947FF",
+				"colorTo": "FEB938FF"
+			}
+		},
+		"refine-promethium": {
+			"type": "ContinuousFlameBulletType",
+			"ammoMultiplier": 2,
+			"buildingDamageMultiplier": 0.3,
+			"flareColor": "F0C6A1FF",
+			"flareLength": 12,
+			"flareWidth": 3,
+			"pierceArmor": true,
+			"damage": 160,
+			"knockback": 0.8,
+			"pierce": true,
+			"pierceCap": 6,
+			"width": 3,
+			"length": 250,
+			"colors": [
+				"FF6947FF",
+				"FF8B37FF",
+				"FEB938FF",
+				"F6FF66FF"
+			],
+			"hitEffect": {
+				"type": "ParticleEffect",
+				"lifetime": 30,
+				"sizeFrom": 5,
+				"sizeTo": 0,
+				"baseLength": 0,
+				"length": 12,
+				"colorFrom": "FF6947FF",
+				"colorTo": "FEB938FF"
+			}
+		}
+	},
+	"requirements": [
+		"titanium-steel/500",
+		"carbide/300",
+		"surge-alloy/300",
+		"ceramite/300"
+	],
+	"research": "Heavy-hammer",
+	"researchCostMultiplier": 0.5
+}

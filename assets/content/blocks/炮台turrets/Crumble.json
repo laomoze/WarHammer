@@ -1,0 +1,294 @@
+{
+	"type": "ItemTurret",
+	"name": "瓦解",
+	"health": 8500,
+	"size": 5,
+	"range": 500,
+	"canOverdrive": true,
+	"squareSprite": false,
+	"shootSound": "plasmadrop",
+	"unitSort": "farthest",
+	"shoot": {
+		"type": "ShootMulti",
+		"source": {
+			"shots": 5,
+			"shotDelay": 10
+		},
+		"dest": [
+			{
+				"type": "ShootHelix",
+				"scl": 4.6,
+				"mag": 2
+			}
+		]
+	},
+	"shootWarmupSpeed": 0.03,
+	"warmupMaintainTime": 350,
+	"minWarmup": 0.88,
+	"shootY": 13,
+	"heatColor": "FF4040",
+	"cooldownTime": 260,
+	"shake": 8,
+	"inaccuracy": 6,
+	"xRand": 11,
+	"shootCone": 60,
+	"recoil": 6,
+	"recoilTime": 160,
+	"velocityRnd": 0.12,
+	"ammoPerShot": 4,
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			{
+				"type": "DrawTurret",
+				"parts": [
+					{
+						"type": "ShapePart",
+						"progress": "warmup",
+						"y": -17,
+						"color": "FFFEACFF",
+						"stroke": 0,
+						"strokeTo": 2,
+						"circle": true,
+						"hollow": true,
+						"radius": 0,
+						"radiusTo": 14,
+						"layer": 110
+					},
+					{
+						"type": "HaloPart",
+						"progress": "warmup",
+						"sides": 3,
+						"shapes": 3,
+						"y": -17,
+						"color": "FFFEACFF",
+						"layer": 110,
+						"tri": true,
+						"radius": 0,
+						"radiusTo": 6,
+						"triLength": 0,
+						"triLengthTo": 12,
+						"haloRadius": 0,
+						"haloRadiusTo": 19,
+						"haloRotation": 0,
+						"haloRotateSpeed": -0.9
+					},
+					{
+						"type": "HaloPart",
+						"shapeRotation": 180,
+						"progress": "warmup",
+						"sides": 3,
+						"shapes": 3,
+						"y": -17,
+						"color": "FFFEACFF",
+						"layer": 110,
+						"tri": true,
+						"radius": 0,
+						"radiusTo": 6,
+						"triLength": 0,
+						"triLengthTo": 5,
+						"haloRadius": 0,
+						"haloRadiusTo": 19,
+						"haloRotation": 0,
+						"haloRotateSpeed": -0.9
+					},
+					{
+						"type": "HaloPart",
+						"progress": "warmup",
+						"hollow": true,
+						"shapes": 1,
+						"sides": 3,
+						"x": 0,
+						"y": -19,
+						"color": "FFFEACFF",
+						"layer": 110,
+						"tri": true,
+						"radius": 0,
+						"radiusTo": 12,
+						"triLength": 0,
+						"triLengthTo": 12,
+						"haloRadius": 0,
+						"haloRadiusTo": 0,
+						"haloRotateSpeed": 0
+					}
+				]
+			}
+		]
+	},
+	"ammoTypes": {
+		"refine-ceramite": {
+			"type": "BasicBulletType",
+			"ammoMultiplier": 1,
+			"sprite": "wh-海胆",
+			"spin": -4,
+			"speed": 2,
+			"lifetime": 100,
+			"drag": -0.019,
+			"homingDelay": 33,
+			"homingPower": 0.05,
+			"homingRange": 60,
+			"damage": 120,
+			"splashDamageRadius": 64,
+			"splashDamage": 100,
+			"status": "palsy",
+			"statusDuration": 15,
+			"shrinkY": 0,
+			"trailLength": 16,
+			"trailWidth": 3,
+			"trailColor": "FFFEACFF",
+			"frontColor": "FFFFFF",
+			"backColor": "FFFEACFF",
+			"width": 32,
+			"height": 32,
+			"lightningDamage": 60,
+			"lightning": 1,
+			"lightningLength": 15,
+			"lightningColor": "FFFEACFF",
+			"hitSound": "plasmaboom",
+			"despawnEffect": {
+				"type": "WrapEffect",
+				"effect": "dynamicSpikes",
+				"color": "FFFEACFF",
+				"rotation": 70
+			},
+			"hitEffect": {
+				"type": "MultiEffect",
+				"effects": [
+					{
+						"type": "WaveEffect",
+						"lifetime": 30,
+						"colorFrom": "FFFEACC8",
+						"colorTo": "FFFEAC00",
+						"sizeFrom": 0,
+						"sizeTo": 68,
+						"strokeFrom": 0,
+						"strokeTo": 4
+					},
+					{
+						"type": "ParticleEffect",
+						"region": "wh-冲击波",
+						"sizeInterp": "fastSlow",
+						"interp": "pow2OutInverse",
+						"length": 0,
+						"baseLength": 0,
+						"particles": 1,
+						"sizeFrom": 30,
+						"sizeTo": 70,
+						"lifetime": 30,
+						"colorFrom": "FFFEACC8",
+						"colorTo": "FFFEAC00"
+					}
+				]
+			},
+			"fragBullets": 1,
+			"fragRandomSpread": 0,
+			"fragBullet": {
+				"type": "MissileBulletType",
+				"despawnHit": true,
+				"collides": false,
+				"instantDisappear": true,
+				"trailEffect": "none",
+				"hitEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "ParticleEffect",
+							"region": "wh-菱形",
+							"particles": 5,
+							"sizeFrom": 8,
+							"sizeTo": 0,
+							"length": 70,
+							"baseLength": 0,
+							"lifetime": 70,
+							"colorFrom": "FFF896FF",
+							"colorTo": "FFF896FF"
+						},
+						{
+							"type": "ParticleEffect",
+							"particles": 15,
+							"line": true,
+							"strokeFrom": 2.5,
+							"strokeTo": 0,
+							"lenFrom": 8,
+							"lenTo": 12,
+							"length": 100,
+							"baseLength": 10,
+							"lifetime": 40,
+							"colorFrom": "FFF896FF",
+							"colorTo": "FFF896FF"
+						}
+					]
+				},
+				"sprite": "circle-bullet",
+				"despawnEffect": "none",
+				"absorbable": false,
+				"status": "disarmed",
+				"statusDuration": 8,
+				"shrinkY": 0,
+				"pierce": true,
+				"frontColor": "FFFEACFF",
+				"backColor": "FFFEACFF",
+				"damage": 80,
+				"splashDamageRadius": 64,
+				"splashDamage": 100,
+				"speed": 0,
+				"lifetime": 20
+			},
+			"shootEffect": {
+				"type": "MultiEffect",
+				"effects": [
+					{
+						"type": "ParticleEffect",
+						"particles": 3,
+						"sizeFrom": 3,
+						"sizeTo": 0,
+						"interp": "pow5Out",
+						"sizeInterp": "pow5In",
+						"length": 53,
+						"baseLength": 0,
+						"lifetime": 55,
+						"colorFrom": "FFF896FF",
+						"colorTo": "FFF896FF",
+						"cone": 20
+					},
+					{
+						"type": "ParticleEffect",
+						"particles": 10,
+						"line": true,
+						"strokeFrom": 2,
+						"strokeTo": 0,
+						"lenFrom": 0,
+						"lenTo": 12,
+						"length": 40,
+						"baseLength": 0,
+						"lifetime": 60,
+						"cone": 30,
+						"colorFrom": "FFF896FF",
+						"colorTo": "FFF896FF"
+					}
+				]
+			}
+		}
+	},
+	"smokeEffect": "none",
+	"consumes": {
+		"power": 40,
+		"coolant": {
+			"amount": 1.75,
+			"optional": true
+		}
+	},
+	"research": "Cyclone-missile-launcher",
+	"researchCostMultiplier": 0.4,
+	"coolantMultiplier": 0.55,
+	"liquidCapacity": 120,
+	"reload": 480,
+	"rotateSpeed": 1.5,
+	"category": "turret",
+	"requirements": [
+		"titanium-steel/500",
+		"carbide/200",
+		"ceramite/200",
+		"refine-ceramite/100"
+	]
+}

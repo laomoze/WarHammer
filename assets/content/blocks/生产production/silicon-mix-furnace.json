@@ -1,0 +1,41 @@
+{
+	"type": "GenericCrafter",
+	"name": "大型混合硅炉",
+	"size": 3,
+	"category": "crafting",
+	"requirements": [
+		"silicon/40",
+		"graphite/40",
+		"titanium-steel/40"
+	],
+	"craftEffect": "none",
+	"outputItem": "silicon/10",
+	"craftTime": 60,
+	"itemCapacity": 60,
+	"hasPower": true,
+	"hasItems": true,
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			{
+				"type": "DrawRegion",
+				"suffix": "-bottom"
+			},
+			"DrawDefault",
+			"DrawArcSmelt"
+		]
+	},
+	"ambientSound": "smelter",
+	"ambientSoundVolume": 0.11,
+	"consumes": {
+		"power": 7.5,
+		"items": {
+			"items": [
+				"graphite/4",
+				"sand/10"
+			]
+		}
+	},
+	"researchCostMultiplier": 0.5,
+	"research": "imperium"
+}

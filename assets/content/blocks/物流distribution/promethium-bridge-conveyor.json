@@ -1,0 +1,24 @@
+{
+	"type": "ItemBridge",
+	"name": "重钢带桥",
+	"health": 630,
+	"range": 36,
+	"transportTime": 1.2,
+	"consumes": {
+		"power": 0.5
+	},
+	"arrowSpacing": 8,
+	"arrowOffset": 4,
+	"arrowTimeScl": 12,
+	"bridgeWidth": 8,
+	"requirements": [
+		"titanium-steel/25",
+		"silicon/15",
+		"phase-fabric/25"
+	],
+	"category": "distribution",
+	"research": {
+		"parent": "steel-bridge-conveyor"
+	},
+	"researchCostMultiplier": 1
+}

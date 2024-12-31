@@ -1,0 +1,226 @@
+{
+	"type": "mech",
+	"name": "卡斯特兰",
+	"hitSize": 26,
+	"canDrown": false,
+	"armor": 12,
+	"speed": 0.65,
+	"rotateSpeed": 2.35,
+	"baseRotateSpeed": 2.3,
+	"health": 8000,
+	"mechStepParticles": true,
+	"mechFrontSway": 0.98,
+	"mechSideSway": 0.4,
+	"outlineRadius": 3,
+	"outlineColor": "36363CFF",
+	"ammoCapacity": 300,
+	"abilities": [
+		{
+			"type": "ShieldArcAbility",
+			"y": -10,
+			"radius": 40,
+			"width": 20,
+			"max": 6000,
+			"regen": 18,
+			"cooldown": 120,
+			"angle": 120
+		}
+	],
+	"research": "mecha2",
+	"requirements": {
+		"block": "multiplicative-reconstructor",
+		"previous": "mecha2"
+	},
+	"weapons": [
+		{
+			"name": "mecha3-weapon1",
+			"x": 16.5,
+			"reload": 30,
+			"shoot": {
+				"shots": 4,
+				"shotDelay": 3,
+				"type": "ShootAlternate",
+				"barrels": 2,
+				"spread": 3
+			},
+			"shootX": -0.75,
+			"shootY": 18,
+			"mirror": true,
+			"recoil": 2.5,
+			"inaccuracy": 5,
+			"shootSound": "missile",
+			"rotate": true,
+			"rotateSpeed": 0.8,
+			"rotationLimit": 30,
+			"layerOffset": -0.0001,
+			"alternate": true,
+			"xRand": 0.3,
+			"velocityRnd": 0.12,
+			"bullet": {
+				"type": "BasicBulletType",
+				"damage": 100,
+				"splashDamageRadius": 32,
+				"splashDamage": 80,
+				"pierceArmor": true,
+				"makeFire": true,
+				"trailLength": 6,
+				"trailWidth": 1.8,
+				"trailColor": "6BFEEC",
+				"frontColor": "FBFBFF",
+				"backColor": "6BFEEC",
+				"width": 15,
+				"height": 26,
+				"status": "burning",
+				"statusDuration": 180,
+				"speed": 17,
+				"lifetime": 16,
+				"fragRandomSpread": 30,
+				"fragBullets": 2,
+				"fragBullet": {
+					"type": "FireBulletType",
+					"speed": 2,
+					"lifetime": 8,
+					"damage": 28,
+					"status": "burning",
+					"statusDuration": 360,
+					"makeFire": true
+				},
+				"hitEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "ParticleEffect",
+							"particles": 8,
+							"sizeFrom": 6,
+							"sizeTo": 0,
+							"length": 35,
+							"baseLength": 10,
+							"lifetime": 25,
+							"colorFrom": "6BFEEC",
+							"colorTo": "6BFFEE7E"
+						},
+						{
+							"type": "WaveEffect",
+							"lifetime": 15,
+							"sizeFrom": 1,
+							"sizeTo": 30,
+							"strokeFrom": 3,
+							"strokeTo": 0,
+							"colorFrom": "6BFEEC",
+							"colorTo": "6BFFEE7E"
+						},
+						{
+							"type": "ParticleEffect",
+							"particles": 6,
+							"line": true,
+							"strokeFrom": 3.5,
+							"strokeTo": 0,
+							"lenFrom": 18,
+							"lenTo": 0,
+							"length": 60,
+							"baseLength": 20,
+							"lifetime": 10,
+							"colorFrom": "6BFEEC",
+							"colorTo": "FFFFFF",
+							"cone": 30
+						}
+					]
+				},
+				"despawnEffect": "none",
+				"shootEffect": {
+					"type": "WaveEffect",
+					"lifetime": 16,
+					"sizeFrom": 0,
+					"sizeTo": 32,
+					"strokeFrom": 2,
+					"strokeTo": 0,
+					"colorFrom": "6BFEEC",
+					"colorTo": "6BFFEE7E"
+				}
+			}
+		},
+		{
+			"name": "mecha3-weapon2",
+			"x": 6.75,
+			"y": -11,
+			"reload": 3,
+			"shootY": 8.5,
+			"mirror": false,
+			"rotate": true,
+			"rotateSpeed": 0.6,
+			"recoil": 0,
+			"bullet": {
+				"type": "BulletType",
+				"damage": 60,
+				"hitSize": 10,
+				"pierceBuilding": true,
+				"hittable": false,
+				"absorbable": false,
+				"pierce": true,
+				"status": "burning",
+				"statusDuration": 360,
+				"speed": 8,
+				"lifetime": 30,
+				"shootEffect": {
+					"type": "ParticleEffect",
+					"particles": 13,
+					"lifetime": 33,
+					"sizeFrom": 2.85,
+					"sizeTo": 0,
+					"interp": "pow5Out",
+					"sizeInterp": "pow10In",
+					"length": 180,
+					"baseLength": 0,
+					"colorFrom": "6BFEEC",
+					"colorTo": "6BFFEE7E",
+					"cone": 12
+				},
+				"smokeEffect": {
+					"type": "ParticleEffect",
+					"particles": 3,
+					"line": true,
+					"strokeFrom": 2.2,
+					"strokeTo": 0,
+					"lenFrom": 25,
+					"lenTo": 10,
+					"length": 180,
+					"baseLength": 0,
+					"lifetime": 15,
+					"colorFrom": "FFFFFF",
+					"colorTo": "FFE176",
+					"cone": 10
+				},
+				"hitEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "ParticleEffect",
+							"particles": 2,
+							"line": true,
+							"strokeFrom": 1.3,
+							"strokeTo": 0,
+							"lenFrom": 8,
+							"lenTo": 8,
+							"length": 24,
+							"baseLength": 0,
+							"lifetime": 15,
+							"colorFrom": "f8ad42",
+							"colorTo": "FFE176",
+							"cone": 23
+						},
+						{
+							"type": "ParticleEffect",
+							"particles": 4,
+							"lifetime": 10,
+							"sizeFrom": 3,
+							"sizeTo": 0,
+							"colorFrom": "FF8C00",
+							"colorTo": "FF8C00"
+						}
+					]
+				},
+				"despawnEffect": "none"
+			}
+		}
+	]
+}

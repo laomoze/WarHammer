@@ -1,0 +1,43 @@
+{
+	"type": "GenericCrafter",
+	"name": "陶钢精制厂",
+	"outputItem": "refine-ceramite/4",
+	"size": 3,
+	"health": 1000,
+	"hasPower": true,
+	"hasItems": true,
+	"craftTime": 100,
+	"itemCapacity": 25,
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			"DrawDefault",
+			{
+				"type": "DrawFlame",
+				"flameColor": "FFF9B6FF"
+			}
+		]
+	},
+	"craftEffect": "smeltsmoke",
+	"consumes": {
+		"power": 5,
+		"items": [
+			"ceramite/3",
+			"tungsten/3",
+			"surge-alloy/3"
+		],
+		"liquid": "refine-promethium/0.266667"
+	},
+	"requirements": [
+		"surge-alloy/50",
+		"carbide/30",
+		"ceramite/30",
+		"phase-fabric/30"
+	],
+	"category": "crafting",
+	"ambientSound": "smelter",
+		"research": {
+		"parent": "ceramite-steel-plant"
+	},
+	"researchCostMultiplier": 0.45
+}

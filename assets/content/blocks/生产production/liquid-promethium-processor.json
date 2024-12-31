@@ -1,0 +1,73 @@
+{
+	"type": "GenericCrafter",
+	"name": "钷素精炼厂",
+	"health": 600,
+	"outputLiquid": "refine-promethium/1",
+	"itemCapacity": 10,
+	"size": 3,
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			{
+				"type": "DrawRegion",
+				"suffix": "-bottom"
+			},
+			{
+				"type": "DrawLiquidRegion",
+				"drawLiquid": "ore-promethium",
+				"alpha": 0.7
+			},
+			{
+				"type": "DrawLiquidTile",
+				"drawLiquid": "refine-promethium"
+			},
+			{
+				"type": "DrawGlowRegion",
+				"color": "9B9CCAFF",
+				"rotateSpeed": 1.6,
+				"glowIntensity": 0.5,
+				"alpha": 0.5,
+				"layer": -1
+			},
+			"DrawDefault"
+		]
+	},
+	"hasItems": true,
+	"hasLiquids": true,
+	"outputsLiquid": true,
+	"hasPower": true,
+	"liquidCapacity": 60,
+	"craftTime": 120,
+	"updateEffect": {
+		"type": "ParticleEffect",
+		"particles": 5,
+		"sizeFrom": 2,
+		"sizeTo": 0,
+		"length": 0,
+		"baseLength": 0,
+		"lifetime": 30,
+		"colorFrom": "9B9CCAFF",
+		"colorTo": "9B9CCAFF"
+	},
+	"consumes": {
+		"power": 5,
+		"items": [
+			"phase-fabric/2"
+		],
+		"liquids": [
+			"oil/0.5",
+			"ore-promethium/0.5"
+		]
+	},
+	"requirements": [
+		"metaglass/50",
+		"titanium-steel/100",
+		"tungsten/50",
+		"phase-fabric/50"
+	],
+	"category": "crafting",
+	"research": {
+		"parent": "promethium-extractor"
+	},
+	"researchCostMultiplier": 0.45
+}

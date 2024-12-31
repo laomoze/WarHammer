@@ -1,0 +1,132 @@
+{
+	"type": "payload",
+	"name": "瓦尔基里",
+	"speed": 2.8,
+	"drag": 0.06,
+	"accel": 0.08,
+	"rotateSpeed": 4,
+	"immunities": [
+		"unmoving"
+	],
+	"ammoType": {
+		"type": "PowerAmmoType",
+		"totalPower": 3000
+	},
+	"ammoCapacity": 150,
+	"hitSize": 20,
+	"flying": true,
+	"healColor": "FF5B5B",
+	"outlineColor": "383848",
+	"engineLayer": 110,
+	"health": 1800,
+	"armor": 6,
+	"engineOffset": 7,
+	"engineSize": 4,
+	"trailLength": 6,
+	"pickupUnits": true,
+	"payloadCapacity": 640,
+	"itemCapacity": 50,
+	"faceTarget": true,
+	"research": "air2",
+	"requirements": {
+		"block": "multiplicative-reconstructor",
+		"previous": "air2"
+	},
+	"weapons": [
+		{
+			"name": "air3-weapon1",
+			"x": -14,
+			"y": 5,
+			"reload": 3.5,
+			"rotate": true,
+			"rotationLimit": 22,
+			"shootCone": 30,
+			"inaccuracy": 1.5,
+			"rotateSpeed": 16,
+			"shootSound": "JG1",
+			"layerOffset": -0.01,
+			"top": false,
+			"bullet": {
+				"type": "BasicBulletType",
+				"reflectable": false,
+				"shrinkY": 0,
+				"frontColor": "FFFFFF",
+				"backColor": "FFA05C",
+				"shootEffect": {
+					"type": "WaveEffect",
+					"lifetime": 6,
+					"sizeFrom": 1,
+					"sizeTo": 8,
+					"strokeFrom": 4,
+					"strokeTo": 0,
+					"colorFrom": "FFC397FF",
+					"colorTo": "FFC397FF"
+				},
+				"smokeEffect": "none",
+				"hitEffect": {
+					"type": "WaveEffect",
+					"lifetime": 10,
+					"sizeFrom": 1,
+					"sizeTo": 6,
+					"strokeFrom": 2,
+					"strokeTo": 0,
+					"colorFrom": "FFC397FF",
+					"colorTo": "FFA05C"
+				},
+				"despawnEffect": {
+					"type": "ParticleEffect",
+					"particles": 1,
+					"sizeFrom": 5,
+					"sizeTo": 0,
+					"length": 0,
+					"baseLength": 0,
+					"lifetime": 12,
+					"colorFrom": "FFC397FF",
+					"colorTo": "FFA05C"
+				},
+				"trailLength": 5,
+				"trailWidth": 1,
+				"trailColor": "FFC397FF",
+				"damage": 45,
+				"width": 6,
+				"height": 12,
+				"speed": 10,
+				"lifetime": 22
+			}
+		},
+		{
+			"name": "air3-weapon3",
+			"reload": 70,
+			"x": -7.5,
+			"y": 7,
+			"shoot": {
+				"type": "ShootSpread",
+				"shots": 3,
+				"spread": 3
+			},
+			"rotate": true,
+			"inaccuracy": 8,
+			"alternate": true,
+			"ejectEffect": "casing2",
+			"shootSound": "missile",
+			"bullet": {
+				"type": "MissileBulletType",
+				"damage": 65,
+				"splashDamageRadius": 20,
+				"splashDamage": 55,
+				"backColor": "FFA05C",
+				"trailLength": 6,
+				"trailWidth": 1.5,
+				"hitEffect": "explosion",
+				"despawnEffect": "explosion",
+				"smokeEffect": "none",
+				"speed": 5,
+				"lifetime": 42,
+				"width": 10,
+				"height": 12,
+				"weaveScale": 6,
+				"weaveMag": 2.5
+			}
+		}
+	]
+}

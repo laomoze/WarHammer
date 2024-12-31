@@ -1,0 +1,273 @@
+{
+	"type": "tank",
+	"name": "掠夺",
+	"squareShape": true,
+	"omniMovement": false,
+	"rotateMoveFirst": false,
+	"speed": 1.1,
+	"hitSize": 32,
+	"crushDamage": 2.2,
+	"drownTimeMultiplier": 2,
+	"treadPullOffset": 0,
+	"treadFrames": 8,
+	"outlineRadius": 3,
+	"outlineColor": "36363CFF",
+	"treadRects": [
+		{
+			"x": -85,
+			"y": -104,
+			"width": 45,
+			"height": 208
+		}
+	],
+	"ammoType": "surge-alloy",
+	"targetAir": true,
+	"health": 18000,
+	"armor": 20,
+	"rotateSpeed": 1.5,
+	"itemCapacity": 0,
+	"faceTarget": false,
+	"research": "tank-warp-gate",
+	"researchCostMultiplier": 0.65,
+	"weapons": [
+		{
+			"name": "tank1-weapon",
+			"x": 0,
+			"y": 0,
+			"rotate": true,
+			"rotateSpeed": 1.2,
+			"cooldownTime": 100,
+			"heatColor": "FF4040",
+			"mirror": false,
+			"inaccuracy": 0,
+			"reload": 120,
+			"top": true,
+			"shootCone": 11,
+			"shootSound": "blaster",
+			"shoot": {
+				"type": "ShootBarrel",
+				"shots": 2,
+				"barrels": [
+					6.5,
+					23.5,
+					0,
+					-6.5,
+					23.5,
+					0
+				]
+			},
+			"bullet": {
+				"type": "PointBulletType",
+				"damage": 800,
+				"hitSound": "DBZ1",
+				"speed": 36,
+				"lifetime": 10,
+				"buildingDamageMultiplier": 0.75,
+				"status": "electrified",
+				"statusDuration": 80,
+				"trailSpacing": 8,
+				"trailEffect": {
+					"type": "ParticleEffect",
+					"particles": 1,
+					"length": 1,
+					"baseLength": 0,
+					"lifetime": 40,
+					"line": true,
+					"randLength": false,
+					"lenFrom": 7,
+					"lenTo": 9,
+					"strokeFrom": 9,
+					"strokeTo": 0,
+					"colorFrom": "90E5F4FF",
+					"colorTo": "90E5F4FF",
+					"cone": 0
+				},
+				"despawnEffect": "none",
+				"shootEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "ParticleEffect",
+							"particles": 1,
+							"sizeFrom": 12,
+							"sizeTo": 0,
+							"length": 0,
+							"baseLength": 0,
+							"lifetime": 30,
+							"colorFrom": "90E5F4FF",
+							"colorTo": "90E5F4FF",
+							"cone": 0
+						}
+					]
+				},
+				"smokeEffect": "smokeCloud",
+				"hitEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "WaveEffect",
+							"lifetime": 15,
+							"sizeFrom": 0,
+							"sizeTo": 30,
+							"strokeFrom": 3,
+							"strokeTo": 0,
+							"colorFrom": "90E5F4FF",
+							"colorTo": "90E5F4FF"
+						},
+						{
+							"type": "ParticleEffect",
+							"particles": 1,
+							"sizeFrom": 16,
+							"sizeTo": 0,
+							"length": 0,
+							"baseLength": 0,
+							"lifetime": 55,
+							"colorFrom": "90E5F4FF",
+							"colorTo": "90E5F4FF",
+							"cone": 0
+						}
+					]
+				},
+				"fragRandomSpread": 30,
+				"fragBullets": 1,
+				"fragBullet": {
+					"type": "PointBulletType",
+					"trailSpacing": 8,
+					"status": "electrified",
+					"statusDuration": 120,
+					"trailEffect": {
+						"type": "ParticleEffect",
+						"particles": 1,
+						"baseLength": 0.1,
+						"length": 0.1,
+						"lifetime": 22,
+						"line": true,
+						"randLength": false,
+						"lenFrom": 8,
+						"lenTo": 8,
+						"strokeFrom": 8,
+						"strokeTo": 0,
+						"colorFrom": "90E5F4FF",
+						"colorTo": "90E5F4FF",
+						"cone": 0
+					},
+					"hitEffect": {
+						"type": "ParticleEffect",
+						"particles": 1,
+						"sizeFrom": 12,
+						"sizeTo": 0,
+						"length": 0,
+						"baseLength": 0,
+						"lifetime": 50,
+						"colorFrom": "90E5F4FF",
+						"colorTo": "90E5F4FF",
+						"cone": 60
+					},
+					"despawnEffect": {
+						"type": "WaveEffect",
+						"lifetime": 30,
+						"sizeFrom": 0,
+						"sizeTo": 40,
+						"strokeFrom": 2,
+						"strokeTo": 0,
+						"colorFrom": "90E5F4FF",
+						"colorTo": "90E5F4FF"
+					},
+					"hitShake": 2,
+					"hitSound": "plasmaboom",
+					"speed": 10,
+					"buildingDamageMultiplier": 0.5,
+					"lifetime": 6,
+					"lightningDamage": 67,
+					"lightning": 2,
+					"lightningLength": 9,
+					"lightningColor": "BFFFDB",
+					"splashDamageRadius": 35,
+					"splashDamage": 120,
+					"fragRandomSpread": 55
+				}
+			}
+		},
+		{
+			"name": "tank1-weapon2",
+			"reload": 6,
+			"velocityRnd": 0.15,
+			"x": 16,
+			"y": 5.75,
+			"recoil": 5,
+			"shootY": 8.5,
+			"alternate": true,
+			"mirror": true,
+			"rotate": true,
+			"rotationLimit": 25,
+			"rotateSpeed": 1.2,
+			"inaccuracy": 3,
+			"shootSound": "shootBig",
+			"shootCone": 25,
+			"bullet": {
+				"type": "BasicBulletType",
+				"damage": 65,
+				"width": 10,
+				"height": 22,
+				"speed": 25,
+				"lifetime": 14.4,
+				"shrinkY": 0,
+				"lightColor": "FEEBB3",
+				"frontColor": "FFFFFF",
+				"backColor": "FFD58AFF",
+				"trailColor": "FFD58AFF",
+				"trailLength": 7,
+				"trailWidth": 2,
+				"smokeEffect": {
+					"type": "ParticleEffect",
+					"particles": 4,
+					"interp": "pow3Out",
+					"sizeInterp": "pow3In",
+					"sizeFrom": 1,
+					"sizeTo": 0,
+					"length": -10,
+					"baseLength": 0,
+					"lifetime": 10,
+					"cone": 30,
+					"colorFrom": "FFD58AFF",
+					"colorTo": "FFFFFF"
+				},
+				"hitEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						"hitBulletColor",
+						{
+							"type": "ParticleEffect",
+							"particles": 3,
+							"strokeFrom": 1.5,
+							"strokeTo": 0,
+							"lenFrom": 16,
+							"lenTo": 0,
+							"line": true,
+							"sizeInterp": "fastSlow",
+							"interp": "circleOut",
+							"length": 32,
+							"baseLength": 0,
+							"lifetime": 15,
+							"colorFrom": "F5BC90FF",
+							"colorTo": "FFD58AFF",
+							"cone": 20
+						}
+					]
+				},
+				"hitColor": "FEEBB3",
+				"despawnEffect": {
+					"type": "ParticleEffect",
+					"particles": 1,
+					"sizeFrom": 2,
+					"sizeTo": 4,
+					"length": 0,
+					"baseLength": 0,
+					"lifetime": 8,
+					"colorFrom": "FFD58AFF",
+					"colorTo": "FEEBB300"
+				}
+			}
+		}
+	]
+}

@@ -1,0 +1,55 @@
+{
+	"health": 28000,
+	"armor": 14,
+	"weapons": [
+		{
+			"name": "corvous-weapon1",
+			"shootSound": "laserblast",
+			"chargeSound": "lasercharge",
+			"top": false,
+			"mirror": false,
+			"shake": 14,
+			"x": 0,
+			"y": 0,
+			"shootY": 5,
+			"reload": 420,
+			"recoil": 0,
+			"cooldownTime": 350,
+			"shootStatusDuration": 130,
+			"shootStatus": "unmoving",
+			"parentizeEffects": true,
+			"shoot": {
+				"type": "ShootPattern",
+				"firstShotDelay": 60
+			},
+			"bullet": {
+				"type": "LaserBulletType",
+				"length": 550,
+				"damage": 450,
+				"splashDamage": 150,
+				"splashDamageRadius": 40,
+				"width": 75,
+				"lifetime": 70,
+				"lightningColor": "97FFA8",
+				"lightningSpacing": 32,
+				"lightningLength": 5,
+				"lightningDelay": 1.1,
+				"lightningLengthRand": 15,
+				"lightningDamage": 70,
+				"lightningAngleRand": 40,
+				"largeHit": true,
+				"sideAngle": 20,
+				"sideWidth": 2,
+				"sideLength": 60,
+				"colors": [
+					"97FFA890",
+					"97FFA880",
+					"FFFFFF"
+				],
+				"chargeEffect": "greenLaserCharge",
+				"healPercent": 33,
+				"collidesTeam": true
+			}
+		}
+	]
+}

@@ -1,0 +1,48 @@
+{
+	"health": 2000,
+	"armor": 7,
+	"boostMultiplier": 2.3,
+	"abilities": [
+		{
+			"type": "ForceFieldAbility",
+			"sides": 4,
+			"radius": 66,
+			"max": 600,
+			"regen": 2,
+			"cooldown": 240
+		}
+	],
+	"weapons": [
+		{
+			"name": "quaser-weapon1",
+			"reload": 60,
+			"x": 7,
+			"y": -1,
+			"rotate": false,
+			"top": false,
+			"recoil": 4,
+			"inaccuracy": 0,
+			"alternate": true,
+			"shootSound": "laser",
+			"shake": 2,
+			"bullet": {
+				"type": "LaserBulletType",
+				"healPercent": 8,
+				"recoil": 1,
+				"damage": 100,
+				"collidesTeam": true,
+				"shootEffect": "bigShockwave",
+				"sideAngle": 35,
+				"sideWidth": 1,
+				"sideLength": 70,
+				"colors": [
+					"7CF38990",
+					"97FFA880",
+					"FFFFFF"
+				],
+				"width": 16,
+				"length": 200
+			}
+		}
+	]
+}

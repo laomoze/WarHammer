@@ -1,0 +1,13 @@
+{
+    "name": "液氮",
+    "description": "帝国常见的冷却剂，用于高级武器以及重型设备的冷却",
+    "alwaysUnlocked": false,
+    "color": "C2D9F2D0",
+	"lightColor":"C2D9F2D0",
+    "flammability": 0,
+    "temperature": 0.1,
+    "heatCapacity": 1.3,
+    "viscosity": 0.2,
+    "explosiveness": 0,
+    "research": "cryofluid"
+}

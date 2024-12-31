@@ -1,0 +1,9 @@
+{
+	"color": "FFFFFF",
+	"hidden": true,
+	"alwaysUnlocked": true,
+	"research": {
+		"root": true,
+		"name": "[yellow]IMPERIUM"
+	}
+}

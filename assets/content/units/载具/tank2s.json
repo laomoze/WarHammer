@@ -1,0 +1,357 @@
+{
+	"type": "tank",
+	"name": "维护",
+	"squareShape": true,
+	"omniMovement": false,
+	"rotateMoveFirst": true,
+	"speed": 1.4,
+	"hitSize": 45,
+	"drownTimeMultiplier": 2.6,
+	"crushDamage": 12,
+	"treadPullOffset": 8,
+	"treadFrames": 8,
+	"outlineRadius": 3,
+	"outlineColor": "36363CFF",
+	"treadRects": [
+		{
+			"x": -102,
+			"y": -131,
+			"width": 53,
+			"height": 248
+		}
+	],
+	"abilities": [
+		{
+			"type": "ShieldArcAbility",
+			"region": "wh-tank2s-sprite-shield",
+			"whenShooting": false,
+			"y": 21,
+			"radius": 20,
+			"max": 18000,
+			"regen": 35,
+			"cooldown": 1500,
+			"angle": 120
+		}
+	],
+	"ammoType": "refine-ceramite",
+	"targetAir": false,
+	"faceTarget": false,
+	"health": 45000,
+	"armor": 30,
+	"rotateSpeed": 1.5,
+	"immunities": [
+		"burning",
+		"shocked",
+		"disarmed"
+	],
+	"targetFlags": [
+		"turret"
+	],
+	"research": "tank1s",
+	"requirements": {
+		"block": "tetrative-reconstructor",
+		"previous": "tank1s"
+	},
+	"weapons": [
+		{
+			"name": "tank2s-weapkn1",
+			"x": 0,
+			"y": 0,
+			"reload": 400,
+			"mirror": false,
+			"shootCone": 180,
+			"rotate": true,
+			"rotateSpeed": 2,
+			"rotationLimit": 20,
+			"shoot": {
+				"type": "ShootBarrel",
+				"barrels": [
+					8,
+					35,
+					0
+				]
+			},
+			"bullet": {
+				"width": 16,
+				"height": 42,
+				"speed": 10,
+				"lifetime": 30,
+				"recoil": 2,
+				"type": "ArtilleryBulletType",
+				"damage": 900,
+				"collidesTiles": true,
+				"collidesAir": false,
+				"hittable": false,
+				"absorbable": false,
+				"sprite": "missile-large",
+				"backColor": "FFFFFFF",
+				"frontColor": "FFA05C",
+				"scaledSplashDamage": true,
+				"splashDamageRadius": 64,
+				"splashDamage": 450,
+				"buildingDamageMultiplier": 4,
+				"hitSound": "boom",
+				"hitShake": 9,
+				"shootEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "ParticleEffect",
+							"particles": 15,
+							"sizeFrom": 14,
+							"sizeTo": 0,
+							"interp": "pow10Out",
+							"sizeInterp": "pow5In",
+							"length": 90,
+							"baseLength": 5,
+							"lifetime": 80,
+							"colorFrom": "BEBEBEFF",
+							"colorTo": "737373FF",
+							"cone": -30
+						},
+						{
+							"type": "WaveEffect",
+							"lifetime": 9,
+							"sizeFrom": 1,
+							"sizeTo": 90,
+							"strokeFrom": 6,
+							"strokeTo": 0,
+							"colorFrom": "FFA05C",
+							"colorTo": "FFC397FF"
+						}
+					]
+				},
+				"smokeEffect": "none",
+				"trailChance": 0.5,
+				"trailInterval": 1,
+				"trailRotation": true,
+				"trailEffect": {
+					"type": "ParticleEffect",
+					"particles": 4,
+					"lifetime": 45,
+					"interp": "circleOut",
+					"sizeInterp": "pow3In",
+					"sizeFrom": 6,
+					"sizeTo": 0,
+					"length": 12,
+					"baseLength": 0,
+					"colorFrom": "FFA05C",
+					"colorTo": "FFA05C00"
+				},
+				"hitEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "ParticleEffect",
+							"particles": 3,
+							"sizeFrom": 16,
+							"sizeTo": 0,
+							"length": 40,
+							"lifetime": 90,
+							"colorFrom": "737373",
+							"colorTo": "737373"
+						},
+						{
+							"type": "ParticleEffect",
+							"particles": 8,
+							"sizeFrom": 12,
+							"sizeTo": 0,
+							"length": 56,
+							"interp": "pow10Out",
+							"sizeInterp": "pow10Out",
+							"lifetime": 85,
+							"colorFrom": "FFA05C",
+							"colorTo": "FFC397FF"
+						},
+						{
+							"type": "WaveEffect",
+							"lifetime": 19,
+							"sizeFrom": 0,
+							"sizeTo": 70,
+							"strokeFrom": 10,
+							"strokeTo": 0,
+							"colorFrom": "FFA05C",
+							"colorTo": "FFC397FF"
+						},
+						{
+							"type": "ParticleEffect",
+							"particles": 15,
+							"strokeFrom": 3,
+							"strokeTo": 0,
+							"line": true,
+							"lenFrom": 12,
+							"lenTo": 0,
+							"length": 80,
+							"baseLength": 0,
+							"lifetime": 60,
+							"colorFrom": "FFA05C",
+							"colorTo": "FFC397FF"
+						},
+						{
+							"type": "ParticleEffect",
+							"particles": 15,
+							"strokeFrom": 3,
+							"strokeTo": 0,
+							"line": true,
+							"lenFrom": 0,
+							"lenTo": 12,
+							"length": 80,
+							"baseLength": 0,
+							"lifetime": 60,
+							"colorFrom": "FFA05C",
+							"colorTo": "FFC397FF"
+						},
+						"massiveExplosion",
+						{
+							"type": "WrapEffect",
+							"effect": "scatheExplosion",
+							"color": "FFC397FF"
+						}
+					]
+				},
+				"despawnEffect": {
+					"type": "WaveEffect",
+					"lifetime": 19,
+					"sizeFrom": 0,
+					"sizeTo": 90,
+					"strokeFrom": 5,
+					"strokeTo": 0,
+					"colorFrom": "FFA05C",
+					"colorTo": "FFC397FF"
+				},
+				"fragBullets": 7,
+				"fragBullet": {
+					"type": "BasicBulletType",
+					"status": "blasted",
+					"speed": 3,
+					"lifetime": 29,
+					"backColor": "FFC397FF",
+					"frontColor": "FFC397FF",
+					"width": 16,
+					"height": 16,
+					"damage": 148,
+					"scaledSplashDamage": true,
+					"splashDamageRadius": 49,
+					"splashDamage": 200,
+					"buildingDamageMultiplier": 1.8,
+					"hitSound": "explosion",
+					"absorbable": false,
+					"sprite": "circle-bullet",
+					"shrinkY": 0,
+					"hitEffect": {
+						"type": "MultiEffect",
+						"effects": [
+							{
+								"type": "ParticleEffect",
+								"particles": 6,
+								"strokeFrom": 2,
+								"strokeTo": 0,
+								"line": true,
+								"lenFrom": 0,
+								"lenTo": 9,
+								"length": 60,
+								"baseLength": 0,
+								"lifetime": 80,
+								"colorFrom": "FFA05C",
+								"colorTo": "FFC397FF"
+							},
+							{
+								"type": "ParticleEffect",
+								"particles": 6,
+								"strokeFrom": 2,
+								"strokeTo": 0,
+								"line": true,
+								"lenFrom": 12,
+								"lenTo": 0,
+								"length": 60,
+								"baseLength": 0,
+								"lifetime": 80,
+								"colorFrom": "FFA05C",
+								"colorTo": "FFC397FF"
+							},
+							{
+								"type": "ParticleEffect",
+								"region": "wh-菱形",
+								"particles": 3,
+								"sizeFrom": 8,
+								"sizeTo": 0,
+								"length": 40,
+								"baseLength": 0,
+								"lifetime": 80,
+								"colorFrom": "FFA05C",
+								"colorTo": "FFC397FF"
+							}
+						]
+					},
+					"despawnEffect": "none"
+				}
+			}
+		},
+		{
+			"name": "tank2s-weapon2",
+			"x": 6,
+			"y": 0,
+			"reload": 160,
+			"shoot": {
+				"type": "ShootBarrel",
+				"barrels": [
+					-3.2,
+					6,
+					0,
+					0,
+					6,
+					0,
+					3.2,
+					6,
+					0
+				],
+				"shots": 6,
+				"shotDelay": 4
+			},
+			"rotate": true,
+			"rotateSpeed": 2,
+			"xRand": 0.1,
+			"mirror": false,
+			"shootSound": "missile",
+			"inaccuracy": 8,
+			"shootStatusDuration": 70,
+			"shootStatus": "assault",
+			"bullet": {
+				"type": "MissileBulletType",
+				"backColor": "FFC397FF",
+				"trailColor": "FFA05C",
+				"speed": 10,
+				"lifetime": 30,
+				"damage": 50,
+				"width": 10,
+				"height": 10,
+				"trailLength": 6,
+				"trailWidth": 1.5,
+				"despawnEffect": "blastExplosion",
+				"hitEffect": "blastExplosion",
+				"shootEffect": "none",
+				"splashDamageRadius": 32,
+				"splashDamage": 35,
+				"fragLifeMin": 0.1,
+				"fragBullets": 2,
+				"pierceArmor": true,
+				"fragBullet": {
+					"type": "BasicBulletType",
+					"pierceArmor": true,
+					"damage": 20,
+					"despawnEffect": "flakExplosion",
+					"status": "blasted",
+					"statusDuration": 60,
+					"knockback": 0.7,
+					"backColor": "FFD096FF",
+					"width": 3,
+					"height": 3,
+					"splashDamageRadius": 30,
+					"splashDamage": 50,
+					"lifetime": 20,
+					"speed": 2.5
+				}
+			}
+		}
+	]
+}

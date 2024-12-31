@@ -1,0 +1,17 @@
+{
+	"name": "大型陶钢墙",
+	"type": "Wall",
+	"armor": 5,
+	"health": 7000,
+	"size": 2,
+	"insulated": true,
+	"absorbLasers": true,
+	"requirements": [
+		"ceramite/36"
+	],
+	"category": "defense",
+	"research": {
+		"parent": "ceramite-wall"
+	},
+	"researchCostMultiplier": 1
+}

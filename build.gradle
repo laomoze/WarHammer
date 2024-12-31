@@ -32,6 +32,8 @@ allprojects{
 }
 
 dependencies{
+    implementation "org.jetbrains:annotations:24.0.1"
+    implementation "org.tomlj:tomlj:1.1.1"
     compileOnly "com.github.Anuken.Arc:arc-core:$mindustryVersion"
     compileOnly "com.github.Anuken.Mindustry:core:$mindustryVersion"
 
@@ -70,13 +72,13 @@ task jarAndroid{
 
 jar{
     archiveFileName = "${base.archivesBaseName}Desktop.jar"
-
+    duplicatesStrategy = 'exclude'
     from{
         configurations.runtimeClasspath.collect{ it.isDirectory() ? it : zipTree(it) }
     }
 
     from(projectDir){
-        include "mod.hjson"
+        include "mod.json"
     }
 
     from("assets/"){

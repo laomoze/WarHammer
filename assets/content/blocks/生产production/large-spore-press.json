@@ -1,0 +1,61 @@
+{
+	"type": "GenericCrafter",
+	"name": "孢子榨油机",
+	"outputLiquid": "oil/1",
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			{
+				"type": "DrawRegion",
+				"suffix": "-bottom"
+			},
+			{
+				"type": "DrawPistons",
+				"sinMag": 1
+			},
+			"DrawDefault",
+			{
+				"type": "DrawLiquidRegion",
+				"drawLiquid": "oil"
+			},
+			{
+				"type": "DrawRegion",
+				"suffix": "-top"
+			}
+		]
+	},
+	"size": 3,
+	"hasPower": true,
+	"hasLiquids": true,
+	"hasItems": true,
+	"craftTime": 30,
+	"itemCapacity": 24,
+	"liquidCapacity": 120,
+	"updateEffect": {
+		"type": "ParticleEffect",
+		"particles": 3,
+		"sizeFrom": 3,
+		"sizeTo": 0,
+		"length": 15,
+		"baseLength": 10,
+		"lifetime": 10,
+		"colorFrom": "E3E3E390",
+		"colorTo": "FFFFFF"
+	},
+	"consumes": {
+		"power": 4,
+		"items": [
+			"spore-pod/6"
+		]
+	},
+	"requirements": [
+		"silicon/40",
+		"titanium-steel/60",
+		"plastanium/30"
+	],
+	"category": "crafting",
+	"research": {
+		"parent": "large-cultivator"
+	},
+	"researchCostMultiplier": 0.45
+}

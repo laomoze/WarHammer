@@ -1,0 +1,20 @@
+{
+	"type": "FrontlineCoreBlock",
+	"buildVisibility": "shown",
+	"name": "据点核心",
+	"requirements": [
+		"copper/1000",
+		"lead/2000",
+		"silicon/1000",
+		"titanium-steel/500"
+	],
+	"unitType": "evoke",
+	"armor": 22,
+	"health": 5000,
+	"itemCapacity": 2000,
+	"size": 4,
+	"unitCapModifier": 10,
+	"researchCostMultiplier": 0.7,
+	"research": "imperium",
+	"category": "effect"
+}

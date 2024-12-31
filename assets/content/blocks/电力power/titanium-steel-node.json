@@ -1,0 +1,19 @@
+{
+	"type": "PowerNode",
+	"name": "钛钢装甲节点",
+	"health": 300,
+	"armor": 8,
+	"size": 2,
+	"maxNodes": 25,
+	"laserRange": 22,
+	"laserScale": 0.4,
+	"laserColor2": "7AA5D6FF",
+	"requirements": [
+		"lead/40",
+		"silicon/50",
+		"titanium-steel/30"
+	],
+	"category": "power",
+	"researchCostMultiplier": 0.8,
+	"research": "imperium"
+}

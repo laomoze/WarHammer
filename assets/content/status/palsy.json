@@ -1,0 +1,22 @@
+{
+    "name": "瘫痪",
+    "color": "F3E979FF",
+    "speedMultiplier": 0.5,
+    "healthMultiplier": 0.8,
+    "reloadMultiplier": 0.6,
+    "effectChance": 0.5,
+    "effect": {
+        "type": "ParticleEffect",
+        "particles": 1,
+        "baseLength": 0,
+        "length": 16,
+        "lifetime": 10,
+        "line": true,
+        "lenFrom": 10,
+        "lenTo": 0,
+        "strokeFrom": 1,
+        "strokeTo": 0,
+        "colorFrom": "F3E979FF",
+        "colorTo": "F3E979FF"
+    }
+}

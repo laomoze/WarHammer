@@ -1,0 +1,416 @@
+{
+	"type": "payload",
+	"name": "风暴隼",
+	"pickupUnits": true,
+	"payloadCapacity": 2400,
+	"rotateSpeed": 0.7,
+	"speed": 1.5,
+	"drag": 0.07,
+	"accel": 0.09,
+	"ammoCapacity": 1200,
+	"ammoType": {
+		"type": "PowerAmmoType",
+		"totalPower": 22000
+	},
+	"flying": true,
+	"hitSize": 62,
+	"health": 140000,
+	"armor": 38,
+	"range": 450,
+	"engineOffset": 55,
+	"engineSize": 10,
+	"trailLength": 40,
+	"engineLayer": 110,
+	"outlineRadius": 3,
+	"outlineColor": "36363CFF",
+	"research": {
+		"parent": "air5"
+	},
+	"engines": [
+		{
+			"x": -17,
+			"y": -46.5,
+			"radius": 6,
+			"rotation": -135
+		},
+		{
+			"x": 17,
+			"y": -46.5,
+			"radius": 6,
+			"rotation": -45
+		}
+	],
+	"faceTarget": false,
+	"circleTarget": false,
+	"weapons": [
+		{
+			"name": "air6-weapon1",
+			"x": -21.5,
+			"y": 26.5,
+			"rotate": true,
+			"rotateSpeed": 1.5,
+			"mirror": true,
+			"recoil": 2,
+			"inaccuracy": 3,
+			"reload": 60,
+			"top": true,
+			"layerOffset": -0.01,
+			"cooldownTime": 45,
+			"heatColor": "FF4040",
+			"shootCone": 15,
+			"shootSound": "blaster",
+			"shoot": {
+				"shots": 12,
+				"shotDelay": 5,
+				"type": "ShootBarrel",
+				"barrels": [
+					-1,
+					4,
+					0,
+					1,
+					4,
+					0
+				]
+			},
+			"bullet": {
+				"type": "BasicBulletType",
+				"sprite": "wh-能量弹",
+				"pierceCap": 6,
+				"pierce": true,
+				"speed": 15,
+				"lifetime": 27,
+				"hitSize": 5,
+				"width": 8,
+				"height": 24,
+				"lightColor": "FFC397FF",
+				"frontColor": "FFC397FF",
+				"backColor": "FFA05C",
+				"trailColor": "FFC397FF",
+				"trailLength": 16,
+				"trailWidth": 2.5,
+				"shootEffect": "shootBig",
+				"smokeEffect": {
+					"type": "ParticleEffect",
+					"particles": 4,
+					"interp": "pow3Out",
+					"sizeInterp": "pow3In",
+					"sizeFrom": 1,
+					"sizeTo": 0,
+					"length": -10,
+					"baseLength": 0,
+					"lifetime": 10,
+					"cone": 30,
+					"colorFrom": "FFC397FF",
+					"colorTo": "FFFFFF"
+				},
+				"damage": 95,
+				"lightningColor": "FFC397FF",
+				"hitEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "ParticleEffect",
+							"region": "wh-空心菱形",
+							"particles": 1,
+							"sizeFrom": 12,
+							"sizeTo": 0,
+							"length": 0,
+							"baseLength": 0,
+							"lifetime": 20,
+							"colorFrom": "FFC397FF",
+							"colorTo": "FFC397FF",
+							"cone": 0
+						}
+					]
+				},
+				"trailInterval": 2,
+				"trailEffect": {
+					"type": "ParticleEffect",
+					"region": "wh-空心菱形",
+					"particles": 1,
+					"length": 16,
+					"baseLength": 10,
+					"lifetime": 45,
+					"colorFrom": "FFC397FF",
+					"colorTo": "FFC397FF",
+					"sizeFrom": 4,
+					"sizeTo": 0
+				}
+			}
+		},
+		{
+			"name": "air6-weapon2",
+			"reload": 120,
+			"x": -32,
+			"y": -13,
+			"shoot": {
+				"shots": 8,
+				"shotDelay": 6
+			},
+			"shake": 3,
+			"recoil": 1,
+			"rotate": true,
+			"rotateSpeed": 1.6,
+			"shootCone": 18,
+			"inaccuracy": 10,
+			"shootSound": "plasmadrop",
+			"velocityRnd": 0.15,
+			"layerOffset": -0.01,
+			"bullet": {
+				"damage": 500,
+				"splashDamage": 500,
+				"splashDamageRadius": 50,
+				"hitShake": 8,
+				"hitSize": 10,
+				"hitSound": "plasmaboom",
+				"shootEffect": "none",
+				"smokeEffect": "none",
+				"width": 16,
+				"height": 20,
+				"hitEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "ParticleEffect",
+							"particles": 6,
+							"sizeFrom": 16,
+							"sizeTo": 0,
+							"length": 50,
+							"lifetime": 60,
+							"colorFrom": "737373",
+							"colorTo": "737373"
+						},
+						{
+							"type": "ParticleEffect",
+							"particles": 10,
+							"line": true,
+							"interp": "pow10Out",
+							"sizeInterp": "pow5In",
+							"strokeFrom": 2,
+							"strokeTo": 0,
+							"lenFrom": 10,
+							"lenTo": 15,
+							"length": 60,
+							"baseLength": 0,
+							"lifetime": 25,
+							"colorFrom": "FFA05C",
+							"colorTo": "FFC397FF"
+						},
+						{
+							"type": "WaveEffect",
+							"lifetime": 20,
+							"sizeFrom": 2,
+							"sizeTo": 60,
+							"strokeFrom": 5,
+							"strokeTo": 0,
+							"colorFrom": "FFA05C",
+							"colorTo": "FFC397FF"
+						},
+						{
+							"type": "ParticleEffect",
+							"region": "wh-菱形",
+							"particles": 2,
+							"sizeFrom": 8,
+							"sizeTo": 0,
+							"lifetime": 45,
+							"interp": "pow10Out",
+							"sizeInterp": "pow3In",
+							"baseLength": 10,
+							"length": 60,
+							"colorFrom": "FFA05C",
+							"colorTo": "FFC397FF"
+						}
+					]
+				},
+				"despawnEffect": "none",
+				"sprite": "missile-large",
+				"shrinkX": 0.1,
+				"shrinkY": 0.2,
+				"speed": 10,
+				"lifetime": 43,
+				"lightningColor": "FFC397FF",
+				"lightningDamage": 70,
+				"lightning": 3,
+				"lightningLength": 14,
+				"backColor": "FFA05C",
+				"frontColor": "FFFFFF",
+				"trailLength": 9,
+				"trailWidth": 4,
+				"trailColor": "FFC397FF"
+			}
+		},
+		{
+			"name": "air6-weapon3",
+			"reload": 160,
+			"recoil": 0,
+			"recoilTime": 70,
+			"cooldownTime": 160,
+			"y": -21,
+			"x": 0,
+			"shootY": 33,
+			"rotate": true,
+			"rotateSpeed": 0.8,
+			"shootCone": 8,
+			"mirror": false,
+			"inaccuracy": 3,
+			"shootSound": "mediumCannon",
+			"alternate": false,
+			"shootWarmupSpeed": 0.013,
+			"minWarmup": 0.9,
+			"shake": 7,
+			"parts": [
+				{
+					"type": "RegionPart",
+					"progress": "warmup",
+					"mirror": true,
+					"under": true,
+					"suffix": "-管1",
+					"heatColor": "FF4040",
+					"moves": [
+						{
+							"y": -9,
+							"progress": "recoil"
+						}
+					]
+				}
+			],
+			"ejectEffect": {
+				"type": "MultiEffect",
+				"effects": [
+					{
+						"type": "WaveEffect",
+						"lifetime": 16,
+						"sizeFrom": 0,
+						"sizeTo": 60,
+						"strokeFrom": 20,
+						"strokeTo": 8,
+						"layer": 60,
+						"interp": "circleOut",
+						"colorFrom": "FFFFFF",
+						"colorTo": "FFFFFF10"
+					},
+					{
+						"type": "ParticleEffect",
+						"particles": 9,
+						"sizeFrom": 9,
+						"sizeTo": 0,
+						"lifetime": 120,
+						"interp": "pow10Out",
+						"sizeInterp": "pow3In",
+						"baseLength": 0,
+						"length": 60,
+						"layer": 60,
+						"colorFrom": "FEEBB3A8",
+						"colorTo": "E3E3E380"
+					},
+					{
+						"type": "ParticleEffect",
+						"particles": 16,
+						"sizeFrom": 5,
+						"sizeTo": 0,
+						"lifetime": 120,
+						"interp": "pow10Out",
+						"sizeInterp": "pow3In",
+						"baseLength": 0,
+						"length": 60,
+						"layer": 60,
+						"colorFrom": "FEEBB3A8",
+						"colorTo": "E3E3E380"
+					},
+					{
+						"type": "ParticleEffect",
+						"particles": 1,
+						"line": true,
+						"casingFlip": true,
+						"interp": "pow10Out",
+						"sizeInterp": "pow5In",
+						"strokeFrom": 6,
+						"strokeTo": 0,
+						"lenFrom": 15,
+						"lenTo": 0,
+						"length": -48,
+						"layer": 49,
+						"randLength": false,
+						"baseLength": -10,
+						"lifetime": 80,
+						"colorFrom": "FFE176",
+						"colorTo": "737373",
+						"cone": 20
+					}
+				]
+			},
+			"velocityRnd": 0.06,
+			"bullet": {
+				"type": "ArtilleryBulletType",
+				"damage": 1800,
+				"splashDamageRadius": 24,
+				"splashDamage": 1200,
+				"splashDamagePierce": true,
+				"speed": 12,
+				"lifetime": 35,
+				"hitShake": 8,
+				"width": 20,
+				"height": 20,
+				"frontColor": "FFFFFF",
+				"backColor": "FFC397FF",
+				"trailLength": 32,
+				"trailWidth": 5,
+				"trailColor": "FFC397FF",
+				"trailInterval": 2,
+				"trailEffect": {
+					"type": "ParticleEffect",
+					"region": "wh-空心菱形",
+					"particles": 1,
+					"sizeFrom": 10,
+					"sizeTo": 0,
+					"lifetime": 25,
+					"sizeInterp": "pow3In",
+					"baseLength": 0,
+					"length": 5,
+					"colorFrom": "FFA05C",
+					"colorTo": "FFC397FF"
+				},
+				"shootEffect": "shootBig2",
+				"smokeEffect": {
+					"type": "ParticleEffect",
+					"particles": 12,
+					"sizeFrom": 4,
+					"sizeTo": 0,
+					"lifetime": 68,
+					"interp": "pow5Out",
+					"sizeInterp": "pow5In",
+					"baseLength": 0,
+					"length": 36,
+					"cone": 16,
+					"colorFrom": "FFC397FF",
+					"colorTo": "FFA05C"
+				},
+				"hitSound": "explosionbig",
+				"hitSoundVolume": 3,
+				"hitColor": "FFC397FF",
+				"hitEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "WaveEffect",
+							"lifetime": 20,
+							"sizeFrom": 0,
+							"sizeTo": 100,
+							"strokeFrom": 10,
+							"strokeTo": 0,
+							"interp": "circleOut",
+							"colorFrom": "FFA05C",
+							"colorTo": "FFC397FF"
+						},
+						{
+							"type": "WrapEffect",
+							"effect": "dynamicSpikes",
+							"color": "FFC397FF",
+							"rotation": 64
+						}
+					]
+				}
+			}
+		}
+	]
+}

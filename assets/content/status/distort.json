@@ -1,0 +1,23 @@
+{
+    "name": "扭曲",
+    "color": "BA70FFFF",
+    "speedMultiplier": 0.6,
+    "healthMultiplier": 2.2,
+    "reloadMultiplier": 1.5,
+    "damageMultiplier": 1.5,
+    "effectChance": 0.5,
+    "effect": {
+        "type": "ParticleEffect",
+        "particles": 1,
+        "baseLength": 0,
+        "length": 25,
+        "lifetime": 10,
+        "line": true,
+        "lenFrom": 10,
+        "lenTo": 0,
+        "strokeFrom": 1,
+        "strokeTo": 0,
+        "colorFrom": "BA70FFFF",
+        "colorTo": "BA70FFFF"
+    }
+}

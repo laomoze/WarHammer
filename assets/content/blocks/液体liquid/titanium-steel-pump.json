@@ -1,0 +1,21 @@
+{
+	"type": "Pump",
+	"category": "liquid",
+	"name": "钛钢泵",
+	"requirements": [
+		"copper/50",
+		"titanium-steel/30",
+		"silicon/50"
+	],
+	"consumes": {
+		"power": 1
+	},
+	"size": 2,
+	"health": 320,
+	"pumpAmount": 0.36,
+	"liquidCapacity": 300,
+	"research": {
+		"parent": "steel-bridge-conduit"
+	},
+	"researchCostMultiplier": 0.45
+}

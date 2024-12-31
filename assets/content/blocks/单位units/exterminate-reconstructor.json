@@ -1,0 +1,53 @@
+{
+	"type": "Reconstructor",
+	"name": "扫荡级单位重构工厂",
+	"size": 11,
+	"liquidCapacity": 180,
+	"consumes": {
+		"power": 45,
+		"items": [
+			"silicon/1500",
+			"plastanium/850",
+			"carbide/500",
+			"ceramite/800",
+			"refine-ceramite/500",
+			"sealed-promethium/350",
+			"adamantium/200"
+		],
+		"liquid": "liquid-nitrogen/4"
+	},
+	"upgrades": [
+		[
+			"mecha5",
+			"mecha6"
+		],
+		[
+			"tank2",
+			"tank3"
+		],
+		[
+			"tank2s",
+			"tank3s"
+		],
+		[
+			"air5",
+			"air6"
+		]
+	],
+	"constructTime": 16000,
+	"requirements": [
+		"lead/4000",
+		"silicon/3800",
+		"titanium-steel/1600",
+		"plastanium/2000",
+		"ceramite/800",
+		"refine-ceramite/500",
+		"sealed-promethium/750"
+	],
+	"category": "units",
+	"buildVisibility": "shown",
+	"research": {
+		"parent": "imperium"
+	},
+	"researchCostMultiplier": 0.4
+}

@@ -1,0 +1,17 @@
+{
+	"name": "陶钢墙",
+	"type": "Wall",
+	"armor": 5,
+	"health": 1750,
+	"size": 1,
+	"insulated": true,
+	"absorbLasers": true,
+	"requirements": [
+		"ceramite/9"
+	],
+	"category": "defense",
+	"research": {
+		"parent": "titanium-steel-wall"
+	},
+	"researchCostMultiplier": 1
+}

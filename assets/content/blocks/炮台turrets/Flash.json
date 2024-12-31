@@ -1,0 +1,66 @@
+{
+	"name": "闪光",
+	"targetAir": true,
+	"targetGround": true,
+	"armor": 5,
+	"health": 2000,
+	"size": 4,
+	"shake": 5,
+	"inaccuracy": 3,
+	"recoil": 2,
+	"liquidCapacity": 60,
+	"canOverdrive": true,
+	"recoilTime": 60,
+	"reload": 55,
+	"rotateSpeed": 4,
+	"range": 300,
+	"xRand": 0.2,
+	"shootY": 10,
+	"coolantMultiplier": 0.7,
+	"shootSound": "spark",
+	"heatColor": "CFF9FFFF",
+	"cooldownTime": 150,
+	"velocityRnd": 0.1,
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			{
+				"type": "DrawTurret",
+				"parts": [
+					{
+						"type": "RegionPart",
+						"mirror": true,
+						"x": 2,
+						"y": -0.5,
+						"suffix": "-side",
+						"layer": 50,
+						"under": true,
+						"moveX": 0,
+						"moveY": -2,
+						"moveRot": -25,
+						"heatColor": "CFF9FFFF",
+						"heatProgress": "warmup"
+					}
+				]
+			}
+		]
+	},
+	"consumes": {
+		"power": 18,
+		"coolant": {
+			"amount": 1,
+			"optional": true
+		}
+	},
+	"category": "turret",
+	"research": {
+		"parent": "Pyros"
+	},
+	"researchCostMultiplier": 0.5,
+	"requirements": [
+		"silicon/200",
+		"titanium-steel/200",
+		"carbide/100",
+		"ceramite/150"
+	]
+}

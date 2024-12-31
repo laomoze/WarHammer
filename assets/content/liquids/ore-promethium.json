@@ -1,0 +1,13 @@
+{
+	"name": "原钷",
+	"description": "帝国的基石",
+	"alwaysUnlocked": false,
+	"color": "676870FF",
+	"lightColor": "676870FF",
+	"flammability": 0.6,
+	"temperature": 0.6,
+	"heatCapacity": 0.2,
+	"viscosity": 0.5,
+	"explosiveness": 0.4,
+	"research": "oil"
+}

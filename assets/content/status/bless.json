@@ -1,0 +1,23 @@
+{
+    "name": "祝福",
+    "color": "F4EEADFF",
+    "damage": -10,
+    "healthMultiplier": 1.5,
+    "reloadMultiplier": 1.2,
+    "damageMultiplier": 1.1,
+    "effectChance": 1,
+    "effect": {
+        "type": "ParticleEffect",
+        "particles": 1,
+        "region": "战锤-菱形",
+        "baseLength": 50,
+        "length": -50,
+        "lifetime": 10,
+        "strokeFrom": 2,
+        "strokeTo": 0,
+        "interp": "fastSlow",
+        "sizeInterp": "pow3In",
+        "colorFrom": "F4EEADFF",
+        "colorTo": "F4EEADFF"
+    }
+}

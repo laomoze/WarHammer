@@ -1,0 +1,62 @@
+{
+	"type": "ConsumeGenerator",
+	"name": "通用发电机",
+	"size": 3,
+	"health": 400,
+	"hasLiquids": true,
+	"hasItems": true,
+	"itemDuration": 15,
+	"powerProduction": 35,
+	"itemCapacity": 20,
+	"liquidCapacity": 100,
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			"DrawDefault",
+			{
+				"type": "DrawRegion",
+				"suffix": "-bottom"
+			},
+			{
+				"type": "DrawLiquidTile",
+				"drawLiquid": "water"
+			},
+			{
+				"type": "DrawBlurSpin",
+				"suffix": "-rotator",
+				"rotateSpeed": 6,
+				"blurThresh": 0.01
+			},
+			{
+				"type": "DrawRegion",
+				"suffix": "-盖"
+			},
+			"DrawWarmupRegion",
+			{
+				"type": "DrawRegion",
+				"suffix": "-光"
+			}
+		]
+	},
+	"generateEffect": "generatespark",
+	"consumes": {
+		"itemFlammable": {},
+		"itemExplode": {},
+		"liquid": "water/0.25"
+	},
+	"buildCostMultiplier": 0.95,
+	"requirements": [
+		"copper/100",
+		"lead/100",
+		"metaglass/60",
+		"silicon/150",
+		"titanium-steel/50"
+	],
+	"ambientSound": "smelter",
+	"ambientSoundVolume": 0.06,
+	"category": "power",
+	"research": {
+		"parent": "titanium-steel-node"
+	},
+	"researchCostMultiplier": 0.8
+}

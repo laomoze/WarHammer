@@ -1,0 +1,73 @@
+{
+	"name": "重型切削钻头",
+	"type": "BurstDrill",
+	"health": 2900,
+	"size": 4,
+	"tier": 3,
+	"arrowOffset": 0,
+	"arrowSpacing": 0,
+	"arrows": 1,
+	"itemCapacity": 100,
+	"liquidCapacity": 50,
+	"glowColor": "FEE984FF",
+	"fogRadius": 0.5,
+	"drawRim": true,
+	"hasItems": true,
+	"drillTime": 45,
+	"drillEffect": {
+		"type": "MultiEffect",
+		"effects": [
+			"mineImpact",
+			"drillSteam",
+			{
+				"type": "ParticleEffect",
+				"particles": 3,
+				"sizeFrom": 19,
+				"sizeTo": 0,
+				"interp": "fastSlow",
+				"length": 35,
+				"baseLength": 8,
+				"lifetime": 55,
+				"colorFrom": "737373",
+				"colorTo": "737373"
+			},
+			{
+				"type": "ParticleEffect",
+				"particles": 10,
+				"line": true,
+				"length": 43,
+				"baseLength": 3,
+				"lifetime": 20,
+				"colorFrom": "FFFFFF",
+				"colorTo": "FFE176"
+			},
+			{
+				"type": "WaveEffect",
+				"lifetime": 14,
+				"sizeFrom": 0,
+				"sizeTo": 38,
+				"strokeFrom": 2,
+				"strokeTo": 0,
+				"colorFrom": "FFFFFF",
+				"colorTo": "FFFFFF00"
+			}
+		]
+	},
+	"consumes": {
+		"power": 7,
+		"liquid": {
+			"liquid": "water",
+			"amount": 0.25
+		}
+	},
+	"requirements": [
+		"copper/100",
+		"lead/100",
+		"graphite/100",
+		"silicon/200",
+		"titanium-steel/100"
+	],
+	"category": "production",
+	"researchCostMultiplier": 0.6,
+	"research": "imperium"
+}

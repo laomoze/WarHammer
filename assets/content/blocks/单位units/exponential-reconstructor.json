@@ -1,0 +1,14 @@
+{
+    "liquidCapacity": 90,
+    "consumes": {
+        "power": 20
+    },
+    "requirements": [
+        "lead/2000",
+        "silicon/1000",
+        "plastanium/850",
+        "titanium-steel/1000",
+        "ceramite/350",
+        "phase-fabric/600"
+    ]
+}

@@ -1,0 +1,345 @@
+{
+	"type": "mech",
+	"name": "终结",
+	"hitSize": 25,
+	"canDrown": false,
+	"armor": 16,
+	"speed": 1,
+	"rotateSpeed": 1.5,
+	"baseRotateSpeed": 1.6,
+	"health": 10000,
+	"mechStepParticles": true,
+	"mechFrontSway": 1.3,
+	"mechSideSway": 1.1,
+	"mechLandShake": 0.1,
+	"outlineRadius": 3,
+	"outlineColor": "36363CFF",
+	"ammoType": "thorium",
+	"research": "m3",
+	"requirements": {
+		"block": "exponential-reconstructor",
+		"previous": "m3"
+	},
+	"abilities": [
+		{
+			"type": "ForceFieldAbility",
+			"radius": 45,
+			"regen": 12,
+			"sides": 6,
+			"max": 9000,
+			"cooldown": 1200
+		},
+		{
+			"type": "RegenAbility",
+			"percentAmount": 0.02
+		}
+	],
+	"weapons": [
+		{
+			"name": "m4-storm-bolter",
+			"x": -2.2,
+			"y": 3,
+			"reload": 15,
+			"shootY": 6,
+			"shootX": -12,
+			"shoot": {
+				"firstShotDelay": 30,
+				"type": "ShootAlternate",
+				"barrels": 2,
+				"spread": 4,
+				"shots": 2
+			},
+			"rotate": true,
+			"rotationLimit": 15,
+			"mirror": false,
+			"alternate": false,
+			"ejectEffect": "casing4",
+			"inaccuracy": 6,
+			"shootSound": "artillery",
+			"shootCone": 20,
+			"recoil": 2,
+			"shootStatusDuration": 4,
+			"shootStatus": "assault",
+			"bullet": {
+				"type": "BasicBulletType",
+				"pierceCap": 3,
+				"absorbable": false,
+				"damage": 120,
+				"splashDamage": 70,
+				"splashDamageRadius": 24,
+				"speed": 20,
+				"hitShake": 1,
+				"lifetime": 10.5,
+				"shootEffect": "shootBig2",
+				"smokeEffect": "shootBigSmoke",
+				"hitSound": "explosion",
+				"width": 9,
+				"height": 15,
+				"backColor": "FFB676FF",
+				"frontColor": "FFE3BDFF",
+				"trailLength": 18,
+				"trailWidth": 2,
+				"trailColor": "FFE3BDFF",
+				"hitEffect": "flakExplosionBig",
+				"despawnEffect": "blastExplosion"
+			},
+			"parts": [
+				{
+					"type": "RegionPart",
+					"suffix": "-weapon",
+					"layerOffset": -0.0001,
+					"mirror": false,
+					"y": -3,
+					"x": 0,
+					"moveY": 3.5,
+					"progress": "warmup"
+				}
+			]
+		},
+		{
+			"name": "storm-bolter",
+			"x": 0,
+			"y": 0,
+			"shootX": 14,
+			"shootY": 6,
+			"reload": 30,
+			"rotate": false,
+			"mirror": false,
+			"alternate": false,
+			"ejectEffect": "casing4",
+			"inaccuracy": 1.6,
+			"shootSound": "artillery",
+			"shootCone": 20,
+			"recoil": 2,
+			"bullet": {
+				"type": "BasicBulletType",
+				"pierceCap": 4,
+				"absorbable": false,
+				"damage": 200,
+				"speed": 20,
+				"hitShake": 1,
+				"lifetime": 9,
+				"shootEffect": "shootBig2",
+				"smokeEffect": "shootBigSmoke",
+				"hitSound": "explosion",
+				"width": 9,
+				"height": 15,
+				"backColor": "8598BFFF",
+				"frontColor": "DEEDFFFF",
+				"trailLength": 18,
+				"trailWidth": 2,
+				"status": "plasma",
+				"trailColor": "DEEDFFFF",
+				"despawnEffect": {
+					"type": "WrapEffect",
+					"effect": "dynamicSpikes",
+					"color": "DEEDFFFF",
+					"rotation": 20
+				},
+				"hitEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "ParticleEffect",
+							"particles": 15,
+							"line": true,
+							"strokeFrom": 3,
+							"strokeTo": 0,
+							"lenFrom": 16,
+							"lenTo": 0,
+							"length": 60,
+							"baseLength": 0,
+							"lifetime": 10,
+							"colorFrom": "DEEDFFFF",
+							"colorTo": "FFFFFF",
+							"cone": 60
+						},
+						"flakExplosionBig"
+					]
+				}
+			}
+		},
+		{
+			"name": "m4-power-fist",
+			"reload": 300,
+			"x": 0,
+			"y": 0,
+			"shootX": 12,
+			"mirror": false,
+			"top": false,
+			"layerOffset": -0.001,
+			"rotationLimit": 35,
+			"rotateSpeed": 1,
+			"rotate": true,
+			"shootSound": "railgun",
+			"shootY": 15,
+			"shootCone": 45,
+			"recoil": -16,
+			"shoot": {
+				"firstShotDelay": 40
+			},
+			"bullet": {
+				"sprite": "wh-冲拳",
+				"pierce": true,
+				"pierceBuilding": true,
+				"damage": 1200,
+				"splashDamageRadius": 24,
+				"splashDamage": 800,
+				"buildingDamageMultiplier": 0.4,
+				"speed": 4,
+				"lifetime": 20,
+				"shrinkY": 0,
+				"shrinkX": 0,
+				"width": 36,
+				"height": 36,
+				"lightningDamage": 50,
+				"lightning": 3,
+				"lightningLength": 7,
+				"lightningCone": 1,
+				"lightningLengthRand": 7,
+				"lightningColor": "DEEDFFFF",
+				"frontColor": "8598BFFF",
+				"backColor": "DEEDFFFF",
+				"scaleLife": true,
+				"hitSound": "spark",
+				"collides": false,
+				"chargeEffect": {
+					"type": "MultiEffect",
+					"effects": [
+						{
+							"type": "WaveEffect",
+							"interp": "circleOut",
+							"lifetime": 35,
+							"sizeFrom": 28,
+							"sizeTo": 0,
+							"strokeFrom": 0,
+							"strokeTo": 2,
+							"colorFrom": "DEEDFF80",
+							"colorTo": "DEEDFFFF"
+						},
+						{
+							"type": "ParticleEffect",
+							"particles": 30,
+							"line": true,
+							"strokeFrom": 2,
+							"strokeTo": 0,
+							"lenFrom": 20,
+							"lenTo": 0,
+							"length": 70,
+							"baseLength": -70,
+							"lifetime": 35,
+							"colorFrom": "DEEDFF80",
+							"colorTo": "DEEDFFFF"
+						}
+					]
+				},
+				"bulletInterval": 3,
+				"intervalBullets": 3,
+				"intervalSpread": 12,
+				"intervalBullet": {
+					"type": "LightningBulletType",
+					"damage": 25,
+					"lightningColor": "DEEDFFFF",
+					"hitColor": "DEEDFFFF",
+					"lightningLength": 5,
+					"hitEffect": "hitLancer",
+					"despawnEffect": "none"
+				},
+				"hitShake": 1,
+				"hitColor": "DEEDFFFF",
+				"trailInterval": 0.125,
+				"trailRotation": true,
+				"trailColor": "FCF387FF",
+				"trailParam": 6,
+				"trailEffect": {
+					"type": "ParticleEffect",
+					"particles": 1,
+					"length": 0,
+					"lifetime": 60,
+					"region": "wh-冲拳-effect",
+					"lightColor": "DEEDFFFF",
+					"colorFrom": "DEEDFFFF",
+					"colorTo": "DEEDFFFF",
+					"sizeFrom": 25,
+					"sizeTo": 10
+				},
+				"despawnEffect": {
+					"type": "ParticleEffect",
+					"line": true,
+					"particles": 7,
+					"lifetime": 30,
+					"offset": 50,
+					"length": 55,
+					"cone": -360,
+					"lenFrom": 6,
+					"lenTo": 0,
+					"colorFrom": "8598BFFF",
+					"colorTo": "DEEDFFFF"
+				},
+				"shootEffect": {
+					"type": "ParticleEffect",
+					"region": "wh-菱形",
+					"particles": 9,
+					"length": 40,
+					"lifetime": 60,
+					"interp": "circleOut",
+					"sizeInterp": "pow5Out",
+					"cone": 360,
+					"colorFrom": "8598BFFF",
+					"colorTo": "DEEDFFFF",
+					"sizeFrom": 4.5,
+					"sizeTo": 0
+				},
+				"hitEffect": {
+					"type": "ParticleEffect",
+					"region": "wh-菱形",
+					"particles": 9,
+					"length": 40,
+					"lifetime": 60,
+					"interp": "circleOut",
+					"sizeInterp": "pow5Out",
+					"cone": 360,
+					"colorFrom": "8598BFFF",
+					"colorTo": "DEEDFFFF",
+					"sizeFrom": 4.5,
+					"sizeTo": 0
+				}
+			},
+			"parts": [
+				{
+					"type": "RegionPart",
+					"suffix": "-weapon",
+					"layerOffset": -0.0001,
+					"mirror": false,
+					"y": 0,
+					"x": 1,
+					"moveX": 1.5,
+					"moveY": 0.8,
+					"progress": "recoil"
+				}
+			]
+		}
+	],
+	"parts": [
+		{
+			"type": "RegionPart",
+			"mirror": false,
+			"x": -1.2,
+			"y": 0,
+			"suffix": "-lshadow",
+			"moveY": -1,
+			"moveX": 1.5,
+			"progress": "warmup"
+		},
+		{
+			"type": "RegionPart",
+			"mirror": false,
+			"x": 1.2,
+			"y": 0,
+			"suffix": "-rshadow",
+			"moveY": 2,
+			"moveX": 0,
+			"progress": "warmup"
+		}
+	]
+}

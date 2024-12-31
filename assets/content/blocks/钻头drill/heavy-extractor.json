@@ -1,0 +1,25 @@
+{
+	"name": "重型抽水机",
+	"type": "SolidPump",
+	"health": 300,
+	"size": 2,
+	"hasPower": true,
+	"hasLiquids": true,
+	"liquidCapacity": 30,
+	"requirements": [
+		"lead/50",
+		"silicon/40",
+		"titanium-steel/40"
+	],
+	"consumes": {
+		"power": 2.5
+	},
+	"pumpAmount": 0.125,
+	"rotateSpeed": 1.3,
+	"result": "water",
+	"baseEfficiency": 2,
+	"attribute": "water",
+	"category": "production",
+	"researchCostMultiplier": 0.5,
+	"research": "imperium"
+}

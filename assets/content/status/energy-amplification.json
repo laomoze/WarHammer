@@ -1,0 +1,20 @@
+{
+    "name": "能量增幅",
+    "color": "9DB1F5FF",
+    "damageMultiplier": 1.5,
+    "healthMultiplier": 1.5,
+    "reloadMultiplier": 1.3,
+    "effectChance": 0.4,
+    "effect": {
+        "type": "ParticleEffect",
+        "particles": 1,
+        "baseLength": 10,
+        "length": 25,
+        "lifetime": 15,
+        "region": "战锤-六边形",
+        "sizeFrom": 3,
+        "sizeTo": 0,
+        "colorFrom": "9DB1F5FF",
+        "colorTo": "9DB1F5FF"
+    }
+}

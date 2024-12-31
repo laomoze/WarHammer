@@ -1,0 +1,47 @@
+{
+	"health": 2800,
+	"armor": 7,
+	"speed": 0.5,
+	"targetAir": true,
+	"weapons": [
+		{
+			"name": "fortress-weapon1",
+			"reload": 60,
+			"x": 9.5,
+			"y": 1,
+			"rotate": false,
+			"inaccuracy": 0,
+			"shake": 2,
+			"recoil": 4,
+			"shootY": 7,
+			"top": false,
+			"alternate": true,
+			"ejectEffect": "casing3",
+			"shootSound": "artillery",
+			"bullet": {
+				"type": "ArtilleryBulletType",
+				"recoil": 0.45,
+				"homingRange": 40,
+				"homingPower": 0.008,
+				"homingDelay": 27,
+				"collides": true,
+				"collidesTiles": false,
+				"collidesAir": true,
+				"status": "blasted",
+				"damage": 100,
+				"speed": 6,
+				"lifetime": 40,
+				"knockback": 19,
+				"hitSound": "explosion",
+				"hitEffect": "flakExplosionBig",
+				"despawnEffect": "blastExplosion",
+				"shootEffect": "shootBig2",
+				"smokeEffect": "shootBigSmoke",
+				"splashDamage": 120,
+				"splashDamageRadius": 40,
+				"width": 12,
+				"height": 16
+			}
+		}
+	]
+}

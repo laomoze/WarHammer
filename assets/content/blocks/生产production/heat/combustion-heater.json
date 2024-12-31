@@ -1,0 +1,39 @@
+{
+	"type": "HeatProducer",
+	"category": "crafting",
+	"name": "燃烧加热器",
+	"craftTime": 120,
+	"requirements": [
+		"lead/30",
+		"silicon/30",
+		"titanium-steel/25"
+	],
+	"consumes": {
+		"itemFlammable": {},
+		"itemExplode": {}
+	},
+	"heatOutput": 3,
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			"DrawDefault",
+			"DrawHeatOutput",
+			{
+				"type": "DrawHeatInput",
+				"suffix": "-heat"
+			}
+		]
+	},
+	"size": 2,
+	"health": 300,
+	"hasPower": false,
+	"hasItems": true,
+	"rotateDraw": false,
+	"regionRotated1": 1,
+	"ambientSound": "hum",
+	"ambientSoundVolume": 0.002,
+	"research": {
+		"parent": "small-heat-router"
+	},
+	"researchCostMultiplier": 0.6
+}

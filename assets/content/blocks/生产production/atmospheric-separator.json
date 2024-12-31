@@ -1,0 +1,58 @@
+{
+	"type": "HeatCrafter",
+	"category": "crafting",
+	"description": "从大气中高效提取氮气",
+	"name": "氮气压缩机",
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			{
+				"type": "DrawRegion",
+				"suffix": "-bottom"
+			},
+			{
+				"type": "DrawLiquidTile",
+				"drawLiquid": "nitrogen"
+			},
+			{
+				"type": "DrawParticles",
+				"color": "D4F0FF",
+				"alpha": 0.5,
+				"particleSize": 4,
+				"particles": 10,
+				"particleRad": 10,
+				"particleLife": 120
+			},
+			"DrawDefault",
+			"DrawHeatInput"
+		]
+	},
+	"requirements": [
+		"lead/80",
+		"metaglass/50",
+		"silicon/150",
+		"titanium-steel/50"
+	],
+	"consumes": {
+		"power": 1.5
+	},
+	"heatRequirement": 6,
+	"outputLiquids": [
+		"nitrogen/0.25"
+	],
+	"size": 3,
+	"health": 900,
+	"itemCapacity": 40,
+	"liquidCapacity": 100,
+	"hasPower": true,
+	"hasLiquids": true,
+	"hasItems": true,
+	"craftTime": 50,
+	"updateEffect": "none",
+	"ambientSound": "extractLoop",
+	"ambientSoundVolume": 0.06,
+	"research": {
+		"parent": "large-cryofluid-mixer"
+	},
+	"researchCostMultiplier": 0.45
+}

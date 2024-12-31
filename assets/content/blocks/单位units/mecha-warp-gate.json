@@ -1,0 +1,32 @@
+{
+	"type": "UnitFactory",
+	"name": "机甲折跃门",
+	"health": 1000,
+	"size": 3,
+	"consumes": {
+		"power": 18,
+		"liquid": "cryofluid/1"
+	},
+	"plans": [
+		{
+			"unit": "mecha2",
+			"time": 3000,
+			"requirements": [
+				"titanium-steel/40",
+				"silicon/200",
+				"tungsten/30"
+			]
+		}
+	],
+	"requirements": [
+		"thorium/300",
+		"tungsten/100",
+		"titanium-steel/200",
+		"silicon/500"
+	],
+	"category": "units",
+	"research": {
+		"parent": "imperium"
+	},
+	"researchCostMultiplier": 0.5
+}

@@ -1,0 +1,48 @@
+{
+    "name": "热熔",
+    "color": "FEB380FF",
+    "damage": 15,
+    "speedMultiplier": 0.85,
+    "dragMultiplier": 1.2,
+    "reloadMultiplier": 0.85,
+    "damageMultiplier": 0.85,
+    "opposites": [
+        "wet",
+        "freezing"
+    ],
+    "transitionDamage": 20,
+    "effectChance": 1,
+    "effect": {
+        "type": "MultiEffect",
+        "effects": [
+            {
+                "type": "ParticleEffect",
+                "particles": 4,
+                "baseLength": 0,
+                "length": 13,
+                "lifetime": 19,
+                "spin": -3,
+                "layer": 110,
+                "sizeInterp": "fastSlow",
+                "region": "战锤-三角形",
+                "sizeFrom": 1,
+                "sizeTo": 0,
+                "colorFrom": "FEB380FF",
+                "colorTo": "FEB380FF"
+            },
+            {
+                "type": "ParticleEffect",
+                "particles": 6,
+                "baseLength": 0,
+                "length": 16,
+                "lifetime": 19,
+                "layer": 110,
+                "sizeInterp": "fastSlow",
+                "sizeFrom": 3,
+                "sizeTo": 0,
+                "colorFrom": "FEB380FF",
+                "colorTo": "FEB38080"
+            }
+        ]
+    }
+}

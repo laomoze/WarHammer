@@ -1,0 +1,42 @@
+{
+	"type": "HeatCrafter",
+	"health": 240,
+	"name": "钨转化机",
+	"outputItem": "tungsten/1",
+	"itemCapacity": 10,
+	"size": 2,
+	"hasPower": true,
+	"hasItems": true,
+	"craftTime": 45,
+	"research": "titanium-steel-furnace",
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			"DrawDefault",
+			{
+				"type": "DrawGlowRegion",
+				"color": "F89661FF",
+				"rotateSpeed": 3,
+				"glowIntensity": 0.5,
+				"layer": -1
+			},
+			"DrawHeatInput"
+		]
+	},
+	"craftEffect": "smeltsmoke",
+	"consumes": {
+		"power": 3,
+		"items": [
+			"thorium/2"
+		]
+	},
+	"heatRequirement": 4,
+	"researchCostMultiplier": 0.5,
+	"requirements": [
+		"thorium/30",
+		"silicon/40",
+		"titanium-steel/50"
+	],
+	"ambientSound": "smelter",
+	"category": "crafting"
+}

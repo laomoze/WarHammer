@@ -1,0 +1,37 @@
+{
+	"type": "GenericCrafter",
+	"name": "钛钢加工厂",
+	"outputItem": "titanium-steel/1",
+	"size": 2,
+	"hasPower": true,
+	"hasItems": true,
+	"craftTime": 50,
+	"itemCapacity": 10,
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			"DrawDefault",
+			{
+				"type": "DrawFlame",
+				"flameColor": "C8E5E7FF"
+			}
+		]
+	},
+	"craftEffect": "smeltsmoke",
+	"consumes": {
+		"power": 2,
+		"items": [
+			"metaglass/1",
+			"titanium/1"
+		]
+	},
+	"requirements": [
+		"lead/30",
+		"copper/30",
+		"graphite/15"
+	],
+	"category": "crafting",
+	"ambientSound": "smelter",
+	"researchCostMultiplier": 0.12,
+	"research": "imperium"
+}

@@ -1,0 +1,13 @@
+{
+    "name": "高能钷素",
+    "description": "将钷素提纯并且溶解与相位物的溶液中，具有高能量，高放射性，注意保护",
+    "alwaysUnlocked": false,
+    "color": "9B9CCAFF",
+    "lightColor": "9B9CCAFF",
+    "flammability": 0.5,
+    "temperature": 0.6,
+    "heatCapacity": 0.2,
+    "viscosity": 0.5,
+    "explosiveness": 0.5,
+    "research": "slag"
+}

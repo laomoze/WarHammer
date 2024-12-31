@@ -1,0 +1,51 @@
+{
+	"name": "极速培养机",
+	"craftTime": 30,
+	"size": 3,
+	"outputItem": "spore-pod/6",
+	"hasLiquids": true,
+	"hasPower": true,
+	"hasItems": true,
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			"DrawDefault",
+			"DrawCultivator",
+			{
+				"type": "DrawBubbles",
+				"color": "7457ce",
+				"sides": 9,
+				"recurrence": 6,
+				"spread": 4,
+				"radius": 6,
+				"amount": 14
+			},
+			{
+				"type": "DrawRegion",
+				"suffix": "-top"
+			}
+		]
+	},
+	"requirements": [
+		"copper/80",
+		"silicon/90",
+		"titanium-steel/50"
+	],
+	"consumes": {
+		"power": 5,
+		"liquid": {
+			"liquid": "water",
+			"amount": 0.5
+		}
+	},
+	"itemCapacity": 60,
+	"liquidCapacity": 120,
+	"boostScale": 0.5,
+	"attribute": "spores",
+	"type": "AttributeCrafter",
+	"category": "production",
+	"research": {
+		"parent": "large-kiln"
+	},
+	"researchCostMultiplier": 0.39
+}

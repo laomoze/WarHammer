@@ -1,0 +1,21 @@
+{
+	"name": "钢质导管",
+	"health": 300,
+	"hasShadow": true,
+	"requirements": [
+		"titanium-steel/2",
+		"lead/1",
+		"silicon/2"
+	],
+	"category": "distribution",
+	"bridgeReplacement": "steel-bridge-conveyor",
+	"junctionReplacement": "inverted-sorter",
+	"placeableLiquid": true,
+	"solid": false,
+	"underBullets": true,
+	"itemCapacity": 1,
+	"speed": 0.218,
+	"displayedSpeed": 30,
+	"research": "imperium",
+	"researchCostMultiplier": 0.8
+}

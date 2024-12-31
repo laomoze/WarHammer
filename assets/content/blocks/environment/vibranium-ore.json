@@ -1,0 +1,10 @@
+{
+    "name": "振金矿",
+    "playerUnmineable": true,
+    "itemDrop": "vibranium",
+    "mapColor": "FBCC56FF",
+    "useColor": true,
+    "oreDefault": true,
+    "oreThreshold": 0.9,
+    "oreScale": 20
+}

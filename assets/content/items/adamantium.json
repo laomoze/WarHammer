@@ -1,0 +1,11 @@
+{
+	"name": "精金",
+	"hardness": 9,
+	"cost": 6,
+	"color": "E3AE6FFF",
+	"healthScaling": 3,
+	"radioactivity": 0,
+	"explosiveness": 0,
+	"flammability": 0,
+	"research": "refine-ceramite"
+}

@@ -1,0 +1,55 @@
+{
+	"armor": 18,
+	"health": 26000,
+	"weapons": [
+		{
+			"name": "reign-weapon1",
+			"reload": 70,
+			"shake": 3,
+			"shoot": {
+				"shots": 5,
+				"shotDelay": 6
+			},
+			"recoil": 5,
+			"x": 21.5,
+			"shootX": 0,
+			"shootY": 11,
+			"rotate": false,
+			"inaccuracy": 1,
+			"shootSound": "artillery",
+			"alternate": true,
+			"ejectEffect": "casing4",
+			"bullet": {
+				"status": "blasted",
+				"damage": 100,
+				"pierceArmor": true,
+				"pierce": true,
+				"pierceCap": 5,
+				"speed": 15,
+				"lifetime": 25.3,
+				"shootEffect": "shootBig",
+				"smokeEffect": "shootBigSmoke",
+				"width": 13,
+				"height": 34,
+				"hitSound": "explosion",
+				"hitEffect": "flakExplosion",
+				"fragBullets": 4,
+				"fragRandomSpread": 30,
+				"fragBullet": {
+					"damage": 33,
+					"width": 10,
+					"height": 10,
+					"pierce": true,
+					"pierceBuilding": true,
+					"pierceCap": 3,
+					"speed": 16,
+					"lifetime": 10,
+					"hitSound": "explosion",
+					"hitEffect": "flakExplosion",
+					"splashDamage": 19,
+					"splashDamageRadius": 16
+				}
+			}
+		}
+	]
+}

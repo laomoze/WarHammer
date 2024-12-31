@@ -1,0 +1,21 @@
+{
+	"size": 2,
+	"type": "ShieldWall",
+	"name": "钷充能墙",
+	"health": 11000,
+	"armor": 10,
+	"regenSpeed": 15,
+	"chanceDeflect": 70,
+	"glowColor": "DBDFFBFF",
+	"requirements": [
+		"adamantium/40",
+		"sealed-promethium/50"
+	],
+	"shieldHealth": 8000,
+	"breakCooldown": 900,
+	"category": "defense",
+	"research": {
+		"parent": "adamantium-wall"
+	},
+	"researchCostMultiplier": 0.8
+}

@@ -1,0 +1,19 @@
+{
+	"name": "大型精金墙",
+	"type": "Wall",
+	"armor": 10,
+	"lightningChance": 0.1,
+	"lightningDamage": 70,
+	"lightningLength": 25,
+	"health": 25000,
+	"size": 2,
+	"requirements": [
+		"adamantium/32",
+		"refine-ceramite/45"
+	],
+	"category": "defense",
+	"research": {
+		"parent": "adamantium-wall"
+	},
+	"researchCostMultiplier": 1
+}

@@ -1,0 +1,143 @@
+{
+	"type": "VariableReactor",
+	"name": "等离子反应堆",
+	"description": "直接利用地核中的等离子体用来发热，不冷却会发生剧烈爆炸",
+	"details": "[red]地 核 抽 取 机",
+	"health": 20000,
+	"size": 5,
+	"ambientSound": "flux",
+	"ambientSoundVolume": 0.13,
+	"effectChance": 0.01,
+	"requirements": [
+		"silicon/4000",
+		"carbide/2000",
+		"titanium-steel/4000",
+		"refine-ceramite/1600",
+		"adamantium/800",
+		"sealed-promethium/800"
+	],
+	"explosionMinWarmup": 0.5,
+	"explosionRadius": 100,
+	"destroyBullet": {
+		"type": "BasicBulletType",
+		"lifetime": 0,
+		"speed": 0,
+		"splashDamage": 1000,
+		"splashDamageRadius": 120,
+		"fragBullets": 10,
+		"despawnEffect": {
+			"type": "MultiEffect",
+			"effects": [
+				{
+					"type": "WaveEffect",
+					"lifetime": 25,
+					"sizeFrom": 0,
+					"sizeTo": 200,
+					"strokeFrom": 18,
+					"strokeTo": 0,
+					"colorFrom": "7EDEDDFF",
+					"colorTo": "7EDEDC00"
+				},
+				{
+					"type": "ParticleEffect",
+					"region": "circle",
+					"lifetime": 200,
+					"particles": 1,
+					"sizeFrom": 121,
+					"sizeTo": 0,
+					"baseLength": 0,
+					"length": 0,
+					"colorFrom": "7EDEDDFF",
+					"colorTo": "7EDEDC00"
+				},
+				{
+					"type": "ParticleEffect",
+					"particles": 20,
+					"interp": "pow10Out",
+					"sizeInterp": "pow5In",
+					"sizeFrom": 20,
+					"sizeTo": 0,
+					"length": 200,
+					"baseLength": 0,
+					"lifetime": 250,
+					"colorFrom": "7EDEDDFF",
+					"colorTo": "7EDEDDFF"
+				}
+			]
+		},
+		"fragBullet": {
+			"fragBullets": 1,
+			"type": "LightningBulletType",
+			"damage": 1000,
+			"pierceArmor": true,
+			"lifetime": 1,
+			"lightningColor": "7EDEDDFF",
+			"lightningLength": 30,
+			"fragBullet": {
+				"type": "BasicBulletType",
+				"damage": 2,
+				"lifetime": 1,
+				"splashDamage": 1800,
+				"splashDamageRadius": 80,
+				"pierceArmor": true,
+				"fragBullet": {
+					"fragBullets": 1,
+					"type": "LightningBulletType",
+					"damage": 200,
+					"pierceArmor": true,
+					"lifetime": 3,
+					"lightningColor": "7EDEDDFF",
+					"lightningLength": 30
+				}
+			}
+		}
+	},
+	"hasItems": true,
+	"hasLiquids": true,
+	"itemCapacity": 120,
+	"liquidCapacity": 1200,
+	"consumes": {
+		"liquids": [
+			"cryofluid/0.5",
+			"liquid-nitrogen/0.5"
+		]
+	},
+	"powerProduction": 2000,
+	"drawer": {
+		"type": "DrawMulti",
+		"drawers": [
+			{
+				"type": "DrawRegion",
+				"suffix": "-bottom"
+			},
+			{
+				"type": "DrawLiquidTile",
+				"drawLiquid": "liquid-nitrogen"
+			},
+			{
+				"type": "DrawRegion",
+				"suffix": "-mid"
+			},
+			{
+				"type": "DrawSoftParticles",
+				"alpha": 0.6,
+				"particleRad": 11,
+				"particleSize": 7,
+				"particleLife": 120,
+				"particles": 27
+			},
+			"DrawDefault",
+			"DrawHeatInput",
+			{
+				"type": "DrawGlowRegion",
+				"suffix": "-ventglow",
+				"color": "32603a"
+			}
+		]
+	},
+	"category": "power",
+	"research": {
+		"parent": "detonation-reactor"
+	},
+	"researchCostMultiplier": 0.6
+}

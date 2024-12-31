@@ -1,0 +1,25 @@
+{
+	"type": "LiquidBridge",
+	"name": "电力导管桥",
+	"health": 230,
+	"range": 36,
+	"liquidCapacity": 40,
+	"consumes": {
+		"power": 0.5
+	},
+	"arrowSpacing": 7,
+	"arrowOffset": 3.5,
+	"arrowTimeScl": 12,
+	"bridgeWidth": 8,
+	"requirements": [
+		"titanium-steel/20",
+		"silicon/15",
+		"phase-fabric/10",
+		"metaglass/25"
+	],
+	"category": "liquid",
+	"research": {
+		"parent": "steel-bridge-conduit"
+	},
+	"researchCostMultiplier": 0.45
+}

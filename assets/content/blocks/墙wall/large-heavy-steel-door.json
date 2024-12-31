@@ -1,0 +1,19 @@
+{
+	"name": "重钢闸门",
+	"type": "AutoDoor",
+	"health": 12000,
+	"armor": 7,
+	"size": 2,
+	"chanceDeflect": 35,
+	"requirements": [
+		"carbide/24",
+		"ceramite/24",
+		"silicon/40",
+		"plastanium/40"
+	],
+	"category": "defense",
+	"research": {
+		"parent": "large-heavy-steel-wall"
+	},
+	"researchCostMultiplier": 1
+}

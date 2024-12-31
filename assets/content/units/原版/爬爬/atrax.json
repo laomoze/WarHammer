@@ -1,0 +1,62 @@
+{
+	"health": 1100,
+	"armor": 4,
+	"weapons": [
+		{
+			"name": "atrax-weapon1",
+			"top": false,
+			"shootY": 3,
+			"reload": 6,
+			"ejectEffect": "none",
+			"recoil": 1,
+			"x": 7,
+			"y": 0,
+			"rotate": false,
+			"shootSound": "flame",
+			"bullet": {
+				"type": "LiquidBulletType",
+				"drag": 0.009,
+				"shootEffect": "shootSmall",
+				"collidesAir": false,
+				"liquid": "slag",
+				"lifetime": 60,
+				"speed": 3,
+				"knockback": 0.8,
+				"statusDuration": 600,
+				"status": "melting",
+				"damage": 15
+			}
+		},
+		{
+			"name": "atrax-weapon2",
+			"top": false,
+			"shootY": 3,
+			"reload": 120,
+			"ejectEffect": "none",
+			"recoil": 1,
+			"x": 0,
+			"shootSound": "flame",
+			"bullet": {
+				"type": "ArtilleryBulletType",
+				"speed": 2.5,
+				"lifetime": 75,
+				"collides": false,
+				"width": 9,
+				"height": 9,
+				"recoil": 1,
+				"shootEffect": "shootSmall",
+				"splashDamageRadius": 25,
+				"splashDamage": 5,
+				"fragBullets": 10,
+				"fragBullet": {
+					"type": "LiquidBulletType",
+					"collidesAir": false,
+					"liquid": "slag",
+					"lifetime": 20,
+					"knockback": 0.5,
+					"damage": 5
+				}
+			}
+		}
+	]
+}

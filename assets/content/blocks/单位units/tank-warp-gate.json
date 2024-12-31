@@ -1,0 +1,46 @@
+{
+	"type": "UnitFactory",
+	"name": "坦克折跃门",
+	"health": 5000,
+	"size": 7,
+	"consumes": {
+		"power": 18,
+		"liquid": "refine-promethium/1.5"
+	},
+	"plans": [
+		{
+			"unit": "tank1",
+			"time": 6400,
+			"requirements": [
+				"titanium-steel/300",
+				"silicon/1330",
+				"tungsten/500",
+				"ceramite/200",
+				"carbide/100"
+			]
+		},
+		{
+			"unit": "tank1s",
+			"time": 6400,
+			"requirements": [
+				"titanium-steel/400",
+				"silicon/1330",
+				"tungsten/400",
+				"ceramite/200",
+				"carbide/100"
+			]
+		}
+	],
+	"requirements": [
+		"thorium/800",
+		"silicon/1200",
+		"titanium-steel/800",
+		"plastanium/800",
+		"ceramite/400"
+	],
+	"category": "units",
+	"research": {
+		"parent": "imperium"
+	},
+	"researchCostMultiplier": 0.2
+}

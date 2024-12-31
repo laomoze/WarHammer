@@ -1,0 +1,91 @@
+{
+	"health": 10000,
+	"weapons": [
+		{
+			"name": "antumbra-weapon1",
+			"reload": 8,
+			"shootY": 7,
+			"x": 10,
+			"y": 0,
+			"rotate": true,
+			"rotateSpeed": 1,
+			"shootSound": "shootBig",
+			"shake": 1,
+			"ejectEffect": "casing3",
+			"bullet": {
+				"damage": 50,
+				"speed": 8.5,
+				"lifetime": 28,
+				"shootEffect": "shootBig",
+				"width": 14,
+				"height": 20
+			}
+		},
+		{
+			"name": "antumbra-weapon2",
+			"reload": 42,
+			"x": 18,
+			"y": 8,
+			"shootY": 6,
+			"shoot": {
+				"shots": 3,
+				"shotDelay": 1
+			},
+			"rotate": true,
+			"inaccuracy": 10,
+			"alternate": true,
+			"shootSound": "missile",
+			"ejectEffect": "casing1",
+			"bullet": {
+				"type": "MissileBulletType",
+				"damage": 48,
+				"splashDamageRadius": 35,
+				"splashDamage": 37,
+				"homingDelay": 20,
+				"status": "blasted",
+				"hitEffect": "flakExplosionBig",
+				"despawnEffect": "flakExplosionBig",
+				"smokeEffect": "none",
+				"speed": 5,
+				"lifetime": 40,
+				"trailLength": 8,
+				"trailWidth": 1.3,
+				"width": 7,
+				"height": 8
+			}
+		},
+		{
+			"name": "antumbra-weapon2",
+			"reload": 48,
+			"x": -18,
+			"y": -9,
+			"shootY": 6,
+			"shoot": {
+				"shots": 3,
+				"shotDelay": 1
+			},
+			"rotate": true,
+			"inaccuracy": 10,
+			"alternate": true,
+			"shootSound": "missile",
+			"ejectEffect": "casing1",
+			"bullet": {
+				"type": "MissileBulletType",
+				"damage": 40,
+				"splashDamageRadius": 35,
+				"splashDamage": 42,
+				"homingDelay": 20,
+				"status": "blasted",
+				"hitEffect": "flakExplosionBig",
+				"despawnEffect": "flakExplosionBig",
+				"smokeEffect": "none",
+				"trailLength": 8,
+				"trailWidth": 1.3,
+				"speed": 5,
+				"lifetime": 40,
+				"width": 7,
+				"height": 8
+			}
+		}
+	]
+}

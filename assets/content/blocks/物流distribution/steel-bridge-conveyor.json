@@ -1,0 +1,23 @@
+{
+	"type": "ItemBridge",
+	"name": "钢质带桥",
+	"health": 230,
+	"range": 8,
+	"transportTime": 2.5,
+	"arrowSpacing": 5,
+	"arrowOffset": 2.5,
+	"arrowTimeScl": 12,
+	"bridgeWidth": 8,
+	"hasPower": false,
+	"requirements": [
+		"lead/10",
+		"silicon/15",
+		"titanium-steel/6",
+		"metaglass/10"
+	],
+	"category": "distribution",
+	"research": {
+		"parent": "steel-dust"
+	},
+	"researchCostMultiplier": 1
+}
