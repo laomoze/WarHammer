@@ -13,7 +13,7 @@
 	"mechSideSway": 1.1,
 	"mechLandShake": 0,
 	"outlineRadius": 3,
-	"outlineColor": "36363CFF",
+	"outlineColor": "FFFFFF00",
 	"ammoType": "thorium",
 	"targetAir": true,
 	"research": "m2",
@@ -24,11 +24,11 @@
 	"abilities": [
 		{
 			"type": "ForceFieldAbility",
-			"radius": 30,
-			"regen": 7,
+			"radius": 25,
+			"regen": 5,
 			"sides": 6,
-			"max": 3000,
-			"cooldown": 1200
+			"max": 2000,
+			"cooldown": 1000
 		},
 		{
 			"type": "RegenAbility",
@@ -37,10 +37,9 @@
 	],
 	"weapons": [
 		{
-			"name": "征服",
 			"reload": 16,
-			"shootY": 18.5,
-			"shootX": 4.3,
+			"shootY": 18,
+			"shootX": 2.7,
 			"rotate": false,
 			"mirror": false,
 			"alternate": false,
@@ -59,8 +58,8 @@
 				"type": "BasicBulletType",
 				"pierceCap": 2,
 				"absorbable": false,
-				"damage": 190,
-				"splashDamage": 60,
+				"damage": 300,
+				"splashDamage": 160,
 				"splashDamageRadius": 24,
 				"speed": 20,
 				"hitShake": 1,
@@ -75,58 +74,29 @@
 				"trailColor": "FFD97990",
 				"hitEffect": "flakExplosionBig",
 				"despawnEffect": "blastExplosion"
-			},
-			"parts": [
-				{
-					"type": "RegionPart",
-					"suffix": "-weapon",
-					"rotation": -10,
-					"layerOffset": -0.0001,
-					"mirror": false,
-					"y": 3.5,
-					"x": 4,
-					"moveRot": -80,
-					"moveX": 1,
-					"moveY": -4.5,
-					"progress": "warmup"
-				},
-				{
-					"type": "RegionPart",
-					"suffix": "-左臂",
-					"mirror": false,
-					"rotation": 45,
-					"x": -8,
-					"y": -7,
-					"layerOffset": -0.01,
-					"moveRot": -50,
-					"moveY": 4,
-					"moveX": 2,
-					"progress": "warmup"
-				},
-				{
-					"type": "RegionPart",
-					"suffix": "-右臂",
-					"mirror": false,
-					"x": 7,
-					"y": -8,
-					"moveRot": -24,
-					"moveY": 2,
-					"moveX": 1,
-					"layerOffset": -0.01,
-					"progress": "warmup"
-				}
-			]
+			}
 		}
 	],
 	"parts": [
 		{
 			"type": "RegionPart",
 			"mirror": false,
-			"x": 0,
-			"y": 0,
-			"suffix": "-lshadow",
-			"moveY": -1,
-			"moveX": 1.5,
+			"x": 4,
+			"y": 7,
+			"rotation": 65,
+			"moveRot": -65,
+			"suffix": "-weapon",
+			"layerOffset": -0.001,
+			"moveY": 0,
+			"moveX": 2,
+			"heatProgress": "recoil",
+			"heatColor": "ff6214",
+			"moves": [
+				{
+					"progress": "recoil",
+					"y": -4
+				}
+			],
 			"progress": "warmup"
 		},
 		{
@@ -134,9 +104,56 @@
 			"mirror": false,
 			"x": 0,
 			"y": 0,
-			"suffix": "-rshadow",
-			"moveY": -1,
-			"moveX": 1,
+			"suffix": "-body",
+			"moveRot": -55,
+			"moveY": 0,
+			"moveX": 0,
+			"layerOffset": -0.00001,
+			"moves": [
+				{
+					"progress": "recoil",
+					"y": -1
+				}
+			],
+			"heatProgress": "recoil",
+			"progress": "warmup"
+		},
+		{
+			"type": "RegionPart",
+			"mirror": false,
+			"x": -12,
+			"y": 2,
+			"rotation": -30,
+			"moveRot": -40,
+			"suffix": "-lh",
+			"moveY": 8,
+			"moveX": 3,
+			"layerOffset": -0.002,
+			"moves": [
+				{
+					"progress": "recoil",
+					"y": -2
+				}
+			],
+			"progress": "warmup"
+		},
+		{
+			"type": "RegionPart",
+			"mirror": false,
+			"x": 8,
+			"y": 2,
+			"rotation": 60,
+			"moveRot": -60,
+			"suffix": "-rh",
+			"moveY": -4,
+			"moveX": 0.5,
+			"layerOffset": -0.002,
+			"moves": [
+				{
+					"progress": "recoil",
+					"y": -2
+				}
+			],
 			"progress": "warmup"
 		}
 	]
