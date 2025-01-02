@@ -1173,8 +1173,7 @@ public final class WHUnitTypes {
                 });
             }
         };
-        M4 = new UnitType("m4")
-        {
+        M4 = new UnitType("m4") {
             {
                 constructor = MechUnit::create;
                 canDrown = false;
@@ -1285,8 +1284,8 @@ public final class WHUnitTypes {
                                             trailWidth = 2;
                                             trailColor = Color.valueOf("FFC397FF");
                                             ;
-                                            hitEffect = WHFx.shootCircleSmall(backColor);
-                                            despawnEffect = blastExplosion;
+                                            hitEffect = WHFx.blast(backColor, splashDamageRadius * 0.75f);
+                                            despawnEffect = WHFx.hitSparkLarge;
                                         }
 
                                         ;
