@@ -1,0 +1,27 @@
+{
+  "name": "星空",
+  "crashDamageMultiplier": 0,
+  "outlineRadius": 3,
+  "outlineColor": "36363CFF",
+  "speed": 0.7,
+  "accel": 0.036,
+  "drag": 0.032,
+  "fogRadius": 90,
+  "lightRadius": 600,
+  "lowAltitude": true,
+  "healColor": "FFFBBD80",
+  "range": 800,
+  "flying": true,
+  "engineSize": 0,
+  "hitSize": 130,
+  "health": 400000,
+  "armor": 50,
+  "research": {
+    "parent": "energy-warp-gate"
+  },
+  "targetFlags": [
+    "turret"
+  ],
+  "rotateSpeed": 0.25,
+  "ammoCapacity": 100000
+}

@@ -9,7 +9,7 @@ public class NucleoidUnitType extends AncientUnitType {
     public float maxOnceDamage = 3000;
     public float reinforcementsSpacing = Time.toMinutes * 2;
 
-    public float mass = 8000000f;
+    public float mass = 5000000f;
 
     public NucleoidUnitType(String name) {
         super(name);

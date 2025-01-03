@@ -1,10 +1,8 @@
 {
 	"name": "新月",
-	"damageMultiplier": 0.7,
-	"crashDamageMultiplier": 0,
 	"outlineRadius": 3,
 	"outlineColor": "36363CFF",
-	"speed": 0.8,
+	"speed": 0.5,
 	"accel": 0.036,
 	"drag": 0.032,
 	"fogRadius": 90,
@@ -22,16 +20,6 @@
 	},
 	"targetFlags": [
 		"turret"
-	],
-	"immunities": [
-		"burning",
-		"electrified",
-		"melting",
-		"disarmed",
-		"sapped",
-		"shocked",
-		"slow",
-		"corroded"
 	],
 	"rotateSpeed": 0.25,
 	"ammoCapacity": 100000,

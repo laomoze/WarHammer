@@ -3,7 +3,10 @@ package wh.type.unit;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
+import arc.struct.Seq;
 import arc.util.*;
+import mindustry.Vars;
+import mindustry.content.StatusEffects;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
@@ -13,6 +16,7 @@ import wh.graphics.*;
 import wh.world.meta.*;
 
 import static arc.Core.*;
+import static mindustry.core.Version.type;
 
 @SuppressWarnings("unused")
 public class AncientUnitType extends UnitType {
@@ -112,5 +116,32 @@ public class AncientUnitType extends UnitType {
                 Draw.z(z);
             }
         }
+    }
+
+
+    public boolean immuniseAll = true;
+    public void init(){
+        super.init();
+
+        if(immuniseAll){
+            immunise(this);
+        }}
+    public static Seq<StatusEffect> statuses;
+
+    public static void immunise(UnitType type){
+        if(statuses == null){
+            statuses = Vars.content.statusEffects().copy();
+            statuses.retainAll(s -> s.disarm || s.damage > 0 || s.healthMultiplier * s.reloadMultiplier * s.buildSpeedMultiplier * s.speedMultiplier < 1);
+
+            statuses.remove(StatusEffects.overclock);
+            statuses.remove(StatusEffects.overdrive);
+            statuses.remove(WHStatusEffects.assault);
+            statuses.remove(WHStatusEffects.bless);
+            statuses.remove(WHStatusEffects.plasma);
+            statuses.add(StatusEffects.wet);
+            statuses.add(StatusEffects.unmoving);
+        }
+
+        type.immunities.addAll(statuses);
     }
 }

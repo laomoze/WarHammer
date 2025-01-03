@@ -7,10 +7,13 @@ package wh.util;
 
 import arc.Core;
 import arc.func.Cons;
+import arc.func.Floatc2;
 import arc.func.Intc2;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
 import arc.graphics.g2d.TextureRegion;
+import arc.math.Angles;
 import arc.math.Mathf;
 import arc.math.Rand;
 import arc.math.geom.Geometry;
@@ -53,7 +56,6 @@ import static mindustry.Vars.*;
         private static Building tmpBuilding;
         private static Unit tmpUnit;
         private static boolean hit, hitB;
-
         private WHUtils() {}
 
         @Contract(pure = true)
@@ -300,6 +302,18 @@ import static mindustry.Vars.*;
                 effect.create(x, y, rot > 0 ? rotModifier ? rot + rotation : rot : rotation, this.color, data);
             }
 
+        }
+        public static void tri(float x, float y, float width, float length, float angle){
+            float wx = Angles.trnsx(angle + 90, width), wy = Angles.trnsy(angle + 90, width);
+            Fill.tri(x + wx, y + wy, x - wx, y - wy, Angles.trnsx(angle, length) + x, Angles.trnsy(angle, length) + y);
+        }
+
+        public static void randLenVectors(long seed, int amount, float length, float minLength, float angle, float range, Floatc2 cons){
+            rand.setSeed(seed);
+            for(int i = 0; i < amount; i++){
+                tV.trns(angle + rand.range(range), minLength  + rand.random(length));
+                cons.get(tV.x, tV.y);
+            }
         }
 
 }
