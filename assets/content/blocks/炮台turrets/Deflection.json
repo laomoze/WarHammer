@@ -3,7 +3,7 @@
 	"name": "偏转",
 	"size": 4,
 	"health": 5300,
-	"range": 300,
+	"range": 400,
 	"outlineIcon": false,
 	"hasPower": true,
 	"rotateSpeed": 20,
@@ -14,9 +14,9 @@
 		"power": 30
 	},
 	"requirements": [
-		"titanium-steel/200",
-		"carbide/150",
-		"refine-ceramite/500",
+		"titanium-steel/500",
+		"carbide/200",
+		"refine-ceramite/200",
 		"sealed-promethium/50"
 	],
 	"category": "turret",

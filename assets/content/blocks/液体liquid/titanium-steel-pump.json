@@ -12,7 +12,7 @@
 	},
 	"size": 2,
 	"health": 320,
-	"pumpAmount": 0.36,
+	"pumpAmount": 0.32,
 	"liquidCapacity": 300,
 	"research": {
 		"parent": "steel-bridge-conduit"

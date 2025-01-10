@@ -4,13 +4,13 @@
 	"size": 3,
 	"category": "crafting",
 	"requirements": [
-		"silicon/40",
-		"graphite/40",
-		"titanium-steel/40"
+		"silicon/100",
+		"graphite/150",
+		"titanium-steel/150"
 	],
 	"craftEffect": "none",
 	"outputItem": "silicon/10",
-	"craftTime": 60,
+	"craftTime": 120,
 	"itemCapacity": 60,
 	"hasPower": true,
 	"hasItems": true,
@@ -28,12 +28,13 @@
 	"ambientSound": "smelter",
 	"ambientSoundVolume": 0.11,
 	"consumes": {
-		"power": 7.5,
+		"power": 10,
 		"items": {
 			"items": [
-				"graphite/4",
+				"graphite/8",
 				"sand/10"
-			]
+			],
+			"liquid": "water/0.25"
 		}
 	},
 	"researchCostMultiplier": 0.5,

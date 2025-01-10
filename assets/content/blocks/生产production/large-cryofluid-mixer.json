@@ -4,7 +4,7 @@
 	"health": 360,
 	"outputLiquid": {
 		"liquid": "cryofluid",
-		"amount": 0.55
+		"amount": 0.61
 	},
 	"itemCapacity": 16,
 	"size": 3,

@@ -85,8 +85,8 @@
 	"hasLiquids": true,
 	"outputsLiquid": true,
 	"hasPower": true,
-	"liquidCapacity": 120,
-	"craftTime": 105,
+	"liquidCapacity": 200,
+	"craftTime": 120,
 	"destroyBullet": {
 		"type": "BasicBulletType",
 		"instantDisappear": true,
@@ -145,11 +145,13 @@
 	"consumes": {
 		"power": 12,
 		"items": [
-			"titanium-steel/4",
 			"tungsten/3",
 			"phase-fabric/2"
 		],
-		"liquid": "refine-promethium/0.5"
+			"liquids": [
+			"refine-promethium/0.5",
+			"cryofluid/0.6"
+		]
 	},
 	"requirements": [
 		"tungsten/150",

@@ -30,7 +30,7 @@
             },
             "despawnEffect": "instBomb",
             "hitColor": "EAE49A",
-            "damage": 900,
+            "damage": 850,
             "hitShake": 6,
             "ammoMultiplier": 1,
             "lightningDamage": 25,

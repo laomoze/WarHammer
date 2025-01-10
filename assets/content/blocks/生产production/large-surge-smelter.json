@@ -1,13 +1,13 @@
 {
 	"type": "GenericCrafter",
 	"name": "大型合金铸造厂",
-	"outputItem": "surge-alloy/2",
+	"outputItem": "surge-alloy/3",
 	"size": 4,
 	"hasPower": true,
 	"hasLiquids": false,
 	"hasItems": true,
 	"craftTime": 60,
-	"itemCapacity": 30,
+	"itemCapacity": 40,
 	"drawer": {
 		"type": "DrawMulti",
 		"drawers": [
@@ -38,15 +38,15 @@
 		"power": 8,
 		"items": {
 			"items": [
-				"copper/7",
-				"lead/6",
-				"silicon/7",
-				"titanium/6"
-			]
+				"copper/10",
+				"silicon/10",
+				"titanium-steel/8"
+			],
+			"liquid": "refine-promethium/0.1666666667"
 		}
 	},
 	"requirements": [
-		"thorium/80",
+		"thorium/100",
 		"titanium-steel/100",
 		"carbide/80",
 		"ceramite/50"

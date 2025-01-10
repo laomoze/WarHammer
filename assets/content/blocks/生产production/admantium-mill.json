@@ -34,7 +34,8 @@
 		"items": [
 			"vibranium/4",
 			"refine-ceramite/3"
-		]
+		],
+		"liquids": ["liquid-nitrogen/0.6"]
 	},
 	"requirements": [
 		"lead/200",

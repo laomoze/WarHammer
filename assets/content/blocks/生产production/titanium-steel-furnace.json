@@ -5,7 +5,7 @@
 	"size": 2,
 	"hasPower": true,
 	"hasItems": true,
-	"craftTime": 50,
+	"craftTime":60,
 	"itemCapacity": 10,
 	"drawer": {
 		"type": "DrawMulti",

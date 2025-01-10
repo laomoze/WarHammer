@@ -5,6 +5,7 @@
 
 package wh.content;
 
+import arc.Core;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
@@ -14,6 +15,7 @@ import arc.math.Angles;
 import arc.math.Interp;
 import arc.math.Mathf;
 import arc.math.geom.Vec2;
+import arc.struct.Seq;
 import arc.util.Time;
 import arc.util.Tmp;
 import mindustry.content.Fx;
@@ -27,6 +29,7 @@ import mindustry.entities.bullet.*;
 import mindustry.entities.effect.MultiEffect;
 import mindustry.entities.effect.ParticleEffect;
 import mindustry.entities.effect.WaveEffect;
+import mindustry.entities.part.DrawPart;
 import mindustry.entities.part.RegionPart;
 import mindustry.entities.part.ShapePart;
 import mindustry.entities.pattern.*;
@@ -36,7 +39,10 @@ import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.type.UnitType;
 import mindustry.type.Weapon;
+import mindustry.type.unit.TankUnitType;
 import mindustry.type.weapons.PointDefenseWeapon;
+import mindustry.world.Block;
+import mindustry.world.blocks.defense.turrets.Turret;
 import wh.entities.abilities.AdaptedHealAbility;
 import wh.entities.abilities.ShockWaveAbility;
 import wh.entities.bullet.*;
@@ -49,15 +55,20 @@ import wh.type.unit.NucleoidUnitType;
 import wh.type.unit.PesterUnitType;
 import wh.util.WHUtils;
 import wh.util.WHUtils.EffectWrapper;
+import wh.world.blocks.turrets.MinigunTurret;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static mindustry.content.Fx.*;
 import static mindustry.content.Fx.none;
 import static mindustry.gen.Sounds.*;
 import static mindustry.gen.Sounds.shootBig;
+import static mindustry.ui.Fonts.outline;
 import static wh.core.WarHammerMod.name;
 
 public final class WHUnitTypes {
-    public static UnitType cMoon, tankAG, M4, StarrySky;
+    public static UnitType cMoon, tankAG, tankl, M4, StarrySky;
 
     private WHUnitTypes() {
     }
@@ -145,6 +156,7 @@ public final class WHUnitTypes {
                                 WHBullets.nuBlackHole.create(b, x, y, 0.0F);
                             }
                         };
+
                         parts.add(new RegionPart("-管l") {
                             {
                                 outline = true;
@@ -733,12 +745,12 @@ public final class WHUnitTypes {
         };
         tankAG = new UnitType("tankAG") {
             {
-                constructor = UnitEntity::create;
+                constructor = ElevationMoveUnit::create;
                 weapons.add(new Weapon("tankAG-weapon7") {
                     final float rangeWeapon = 650.0F;
 
                     {
-                        reload = 1100.0F;
+                        reload = 1300.0F;
                         x = 0.0F;
                         shake = 0.0F;
                         rotate = true;
@@ -747,7 +759,7 @@ public final class WHUnitTypes {
                         inaccuracy = 0.0F;
                         shootSound = Sounds.plasmadrop;
                         recoil = 0.0F;
-                        bullet = new ArtilleryBulletType(10.0F, 150.0F) {
+                        bullet = new BasicBulletType(10.0F, 150.0F) {
                             {
                                 sprite = "wh-jump-arrow";
                                 height = 65.0F;
@@ -949,7 +961,10 @@ public final class WHUnitTypes {
                         Draw.color(heatColor);
                         Draw.z(z);
                     }
+
+
                 });
+
                 weapons.add(new Weapon("wh-tankAG-weapon1") {
                     {
                         x = -40.0F;
@@ -1217,7 +1232,7 @@ public final class WHUnitTypes {
                                 frontColor = Color.valueOf("FFC397FF");
                                 homingPower = 0.08f;
                                 homingDelay = 5f;
-                                lifetime = 55f;
+                                lifetime = 65f;
                                 hitEffect = WHFx.instHit(backColor, 2, 10f);
                                 despawnEffect = WHFx.shootCircleSmall(backColor);
                                 lightning = 1;
@@ -1617,7 +1632,7 @@ public final class WHUnitTypes {
                             velocityBegin = 2f;
                             velocityIncrease = 10f;
                             absorbable = false;
-                            scaledSplashDamage=true;
+                            scaledSplashDamage = true;
                             splashDamage = 600;
                             splashDamageRadius = 64f;
                             incendAmount = 2;
@@ -1682,7 +1697,7 @@ public final class WHUnitTypes {
                             velocityBegin = 2f;
                             velocityIncrease = 10f;
                             absorbable = false;
-                            scaledSplashDamage=true;
+                            scaledSplashDamage = true;
                             splashDamage = 500;
                             splashDamageRadius = 64f;
                             incendAmount = 2;
@@ -1748,7 +1763,7 @@ public final class WHUnitTypes {
                             velocityBegin = 2f;
                             velocityIncrease = 10f;
                             absorbable = false;
-                            scaledSplashDamage=true;
+                            scaledSplashDamage = true;
                             splashDamage = 600;
                             splashDamageRadius = 64f;
                             incendAmount = 2;
@@ -1843,12 +1858,11 @@ public final class WHUnitTypes {
 
                                 status = WHStatusEffects.palsy;
                                 statusDuration = 400.0F;
-                                buildingDamageMultiplier = 0.3F;
-                                lightningDamage = 100.0F;
+                                lightningDamage = 300.0F;
                                 lightning = 2;
                                 lightningLength = 9;
                                 lightningLengthRand = 3;
-                                splashDamage = 400;
+                                splashDamage = 600;
                                 splashDamageRadius = 40f;
                                 lightColor = lightningColor = WHPal.pop;
                                 lifetime = 47.0F;
@@ -1998,7 +2012,7 @@ public final class WHUnitTypes {
                             {
                                 maxRange = 350F;
                                 rangeOverride = 350F;
-                                shootSound=laser;
+                                shootSound = laser;
                                 hitColor = lightColor = lightningColor = WHPal.pop;
                                 shootEffect = WHFx.hitSparkLarge;
                                 hitEffect = WHFx.lightningHitSmall;
@@ -2018,10 +2032,324 @@ public final class WHUnitTypes {
                     }
                 });
 
+
+            }
+
+
+        };
+        tankl = new TankUnitType("tankl") {
+            {
+                constructor = TankUnit::create;
+                weapons.add(new Weapon("wh-tankl-weapon1") {
+                    {
+                        //中右下
+                        parts.add(new RegionPart("-barrel") {
+
+                                      {
+                                          recoilIndex = 0;
+                                          layerOffset = -0.01f;
+                                          recoilTime = 0f;
+                                          recoil = 0f;
+                                          y = 17f;
+                                          x = 0.75f;
+                                          moveX = 1.35f;
+                                          moveY = -2F;
+                                          color = Color.valueOf("82848CFF");
+                                          colorTo = Color.valueOf("4A4B53FF");
+                                          heatColor = Color.valueOf("FF774280");
+                                          heatProgress = PartProgress.reload;
+                                          progress = PartProgress.heat;
+                                          turretHeatLayer = 50;
+                                          xScl = 1.1f;
+                                          yScl = 1.3f;
+                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
+
+                                      }
+                                  }
+                        );
+                        parts.add(new RegionPart("-barrel") {
+
+                                      {
+                                          recoilIndex = 0;
+                                          layerOffset = -0.01f;
+                                          recoil = 0f;
+                                          recoilTime = 5f;
+                                          y = 17f;
+                                          x = 1.875f;
+                                          moveX = 1.1f;
+                                          moveY = -2F;
+                                          color = Color.valueOf("4A4B53FF");
+                                          colorTo = Color.valueOf("82848CFF");
+                                          heatColor = Color.valueOf("FF774280");
+                                          heatProgress = PartProgress.reload;
+                                          progress = PartProgress.heat;
+                                          turretHeatLayer = 50;
+                                          xScl = 1f;
+                                          yScl = 1.3f;
+                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
+
+                                      }
+                                  }
+                        );
+
+                        //中左下
+                        parts.add(new RegionPart("-barrel") {
+
+                                      {
+                                          recoilIndex = 1;
+                                          layerOffset = -0.01f;
+                                          recoilTime = 0f;
+                                          recoil = 0f;
+                                          y = 17f;
+                                          x = -1.875f;
+                                          moveX = 1.125f;
+                                          moveY = -2F;
+                                          color = Color.valueOf("4A4B53FF");
+                                          colorTo = Color.valueOf("82848CFF");
+                                          heatColor = Color.valueOf("FF774280");
+                                          heatProgress = PartProgress.reload;
+                                          progress = PartProgress.heat;
+                                          turretHeatLayer = 50;
+                                          xScl = 1f;
+                                          yScl = 1.3f;
+                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
+
+                                      }
+                                  }
+                        );
+                        parts.add(new RegionPart("-barrel") {
+
+                                      {
+                                          recoilIndex = 1;
+                                          layerOffset = -0.01f;
+                                          recoilTime = 0f;
+                                          recoil = 0f;
+                                          y = 17f;
+                                          x = -0.75f;
+                                          moveX = 1.275f;
+                                          moveY = -2F;
+                                          color = Color.valueOf("4A4B53FF");
+                                          colorTo = Color.valueOf("4A4B53FF");
+                                          heatColor = Color.valueOf("FF774280");
+                                          heatProgress = PartProgress.reload;
+                                          progress = PartProgress.heat;
+                                          turretHeatLayer = 50;
+                                          xScl = 1f;
+                                          yScl = 1.3f;
+                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
+
+                                      }
+                                  }
+                        );
+
+                        //左
+                        parts.add(new RegionPart("-barrel") {
+
+                                      {
+                                          recoilIndex = 2;
+                                          layerOffset = -0.01f;
+                                          recoilTime = 0f;
+                                          recoil = 0f;
+                                          y = 17f;
+                                          x = -3.125f;
+                                          moveX = 1.125f;
+                                          moveY = -2F;
+                                          color = Color.valueOf("4A4B53FF");
+                                          colorTo = Color.valueOf("4A4B53FF");
+                                          heatColor = Color.valueOf("FF774280");
+                                          heatProgress = PartProgress.reload;
+                                          progress = PartProgress.heat;
+                                          turretHeatLayer = 50;
+                                          xScl = 1f;
+                                          yScl = 1.3f;
+                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
+
+                                      }
+                                  }
+                        );
+                        parts.add(new RegionPart("-barrel") {
+
+                                      {
+                                          recoilIndex = 2;
+                                          layerOffset = -0.01f;
+                                          recoilTime = 0f;
+                                          recoil = 0f;
+                                          y = 17f;
+                                          x = -1.875f;
+                                          moveX = 1.125f;
+                                          moveY = -2F;
+                                          color = Color.valueOf("82848CFF");
+                                          colorTo = Color.valueOf("4A4B53FF");
+                                          heatColor = Color.valueOf("FF774280");
+                                          heatProgress = PartProgress.reload;
+                                          progress = PartProgress.heat;
+                                          turretHeatLayer = 50;
+                                          xScl = 1f;
+                                          yScl = 1.3f;
+                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
+
+                                      }
+                                  }
+
+                        );
+
+
+                        //中
+                        parts.add(new RegionPart("-barrel") {
+
+                                      {
+                                          recoilIndex = 3;
+                                          layerOffset = -0.01f;
+                                          recoilTime = 0f;
+                                          recoil = 0f;
+                                          y = 17f;
+                                          x = -0.75f;
+                                          moveX = -2.5f;
+                                          moveY = -2F;
+                                          color = Color.valueOf("565761FF");
+                                          colorTo = Color.valueOf("4A4B53FF");
+                                          heatColor = Color.valueOf("FF774280");
+                                          heatProgress = PartProgress.reload;
+                                          progress = PartProgress.heat;
+                                          turretHeatLayer = 50;
+                                          xScl = 1.1f;
+                                          yScl = 1.3f;
+                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.05f, 0f));
+
+                                      }
+                                  }
+                        );
+                        parts.add(new RegionPart("-barrel") {
+
+                                      {
+                                          recoilIndex = 3;
+                                          layerOffset = -0.01f;
+                                          recoilTime = 0f;
+                                          recoil = 0f;
+                                          y = 17f;
+                                          x = 0.75f;
+                                          moveX = -2.5f;
+                                          moveY = -2F;
+                                          color = Color.valueOf("989AA4FF");
+                                          colorTo = Color.valueOf("82848CFF");
+                                          heatColor = Color.valueOf("FF774280");
+                                          heatProgress = PartProgress.reload;
+                                          progress = PartProgress.heat;
+                                          turretHeatLayer = 50;
+                                          xScl = 1.1f;
+                                          yScl = 1.3f;
+                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
+
+                                      }
+                                  }
+                        );
+                        //右
+                        parts.add(new RegionPart("-barrel") {
+
+                                      {
+                                          recoilIndex = 4;
+                                          layerOffset = -0.01f;
+                                          recoilTime = 0f;
+                                          recoil = 0f;
+                                          y = 17f;
+                                          x = 1.875f;
+                                          moveX = -1.5f;
+                                          moveY = -2F;
+                                          color = Color.valueOf("565761FF");
+                                          colorTo = Color.valueOf("4A4B53FF");
+                                          heatColor = Color.valueOf("FF774280");
+                                          heatProgress = PartProgress.reload;
+                                          progress = PartProgress.heat;
+                                          turretHeatLayer = 50;
+                                          xScl = 1f;
+                                          yScl = 1.3f;
+                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
+
+                                      }
+                                  }
+                        );
+                        parts.add(new RegionPart("-barrel") {
+
+                                      {
+                                          recoilIndex = 4;
+                                          layerOffset = -0.01f;
+                                          recoilTime = 0f;
+                                          recoil = 0f;
+                                          y = 17f;
+                                          x = 3.125f;
+                                          moveX = -2.5f;
+                                          moveY = -2F;
+                                          color = Color.valueOf("989AA4FF");
+                                          colorTo = Color.valueOf("82848CFF");
+                                          heatColor = Color.valueOf("FF774280");
+                                          heatProgress = PartProgress.reload;
+                                          progress = PartProgress.heat;
+                                          turretHeatLayer = 50;
+                                          xScl = 1f;
+                                          yScl = 1.3f;
+                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
+
+                                      }
+                                  }
+                        );
+
+                        heatColor = Color.valueOf("FF774280");
+                        x = 0;
+                        y = -6.5f;
+                        reload = 10;
+                        shootY = 34f;
+                        shootX = 0;
+                        layerOffset = 0.01f;
+                        rotate = true;
+                        rotateSpeed = 0.8f;
+                        mirror = false;
+                        ejectEffect = none;
+                        recoil = 0;
+                        inaccuracy = 8;
+                        xRand = 0.3f;
+                        shootSound = shootBig;
+                        shootCone = 10;
+                        minWarmup = 0.95f;
+                        shootWarmupSpeed = 0.15f;
+                        bullet = new BasicBulletType() {
+                            {
+                                pierceCap = 3;
+                                absorbable = false;
+                                damage = 180;
+                                splashDamage = 100;
+                                splashDamageRadius = 32;
+                                speed = 20;
+                                hitShake = 1;
+                                lifetime = 10.5f;
+                                shootEffect = shootBig2;
+                                smokeEffect = shootBigSmoke;
+                                hitSound = Sounds.explosion;
+                                width = 9;
+                                height = 15;
+                                backColor = Color.valueOf("FFC397FF");
+
+                                frontColor = Color.valueOf("FFFFFF");
+
+                                trailLength = 18;
+                                trailWidth = 2;
+                                trailColor = Color.valueOf("FFC397FF");
+
+                                hitEffect = WHFx.shootCircleSmall(backColor);
+                                despawnEffect = blastExplosion;
+                            }
+
+
+                        };
+
+
+                    }
+
+                });
+
+
             }
         };
     }
-
 }
 
 

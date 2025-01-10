@@ -4,7 +4,7 @@
 	"size": 3,
 	"health": 700,
 	"hasLiquids": true,
-	"heatOutput": 30,
+	"heatOutput": 40,
 	"liquidCapacity": 160,
 	"craftTime": 240,
 	"drawer": {
@@ -25,7 +25,7 @@
 	"rotateDraw": false,
 	"consumes": {
 		"power": 4,
-		"liquid": "refine-promethium/0.333333"
+		"liquid": "refine-promethium/0.25"
 	},
 	"requirements": [
 		"thorium/220",

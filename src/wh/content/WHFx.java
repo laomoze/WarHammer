@@ -63,12 +63,20 @@ public final class WHFx {
     private static int integer;
     public static Effect boolSelector = new Effect(0.0F, 0.0F, (e) -> {
     });
+    //8个线粒子
     public static Effect hitSpark = new Effect(45.0F, (e) -> {
         Draw.color(e.color, Color.white, e.fout() * 0.3F);
         Lines.stroke(e.fout() * 1.6F);
+        //rand.setSeed(e.id);：这行代码设置了随机数生成器的种子，这样可以确保每次执行 Effect 时，随机数生成的结果都是一致的。
         rand.setSeed(e.id);
+        //(x, y) -> {...}：这是一个 lambda 表达式，它定义了生成的每个向量的 x 和 y 分量将如何被使用。
+        // 在这个 lambda 表达式中，x 和 y 是生成的随机向量的分量，而 {...} 中的代码则定义了对这些分量的操作。
         Angles.randLenVectors(e.id, 8, e.finpow() * 20.0F, (x, y) -> {
+            //float ang = Mathf.angle(x, y);：这行代码计算了点 (x, y) 与 x 轴正方向之间的角度，并将结果存储在变量 ang 中。
+            // Mathf.angle 方法返回的角度是弧度制的，范围从 -π 到 π。
             float ang = Mathf.angle(x, y);
+            //e.fout() * rand.random(1.95F, 4.25F) + 1.0F 计算出线条的最终长度
+            //.x 和 e.y 是 Effect 对象的当前位置。
             Lines.lineAngle(e.x + x, e.y + y, ang, e.fout() * rand.random(1.95F, 4.25F) + 1.0F);
         });
     });
@@ -147,7 +155,8 @@ public final class WHFx {
 
     private WHFx() {
     }
-
+    //这行代码计算了 fout 的值。它使用了一个三元运算符 ?:，根据 fin 的值来决定返回的结果。
+    // 如果 fin 大于等于 1.0F - margin，则返回 1.0F - (fin - (1.0F - margin)) / margin；否则，直接返回 1.0F。
     public static float fout(float fin, float margin) {
         return fin >= 1.0F - margin ? 1.0F - (fin - (1.0F - margin)) / margin : 1.0F;
     }
@@ -155,7 +164,11 @@ public final class WHFx {
     public static Effect polyTrail(Color fromColor, Color toColor, float size, float lifetime) {
         return new Effect(lifetime, size * 2.0F, (e) -> {
             Draw.color(fromColor, toColor, e.fin());
+            //ill.poly(e.x, e.y, 6, size * e.fout(), e.rotation);：这行代码使用 Fill 类的 poly 方法绘制一个多边形。
+            // e.x 和 e.y 是 Effect 对象的当前位置，6 是多边形的边数，size * e.fout() 是多边形的大小，e.rotation 是多边形的旋转角度。
             Fill.poly(e.x, e.y, 6, size * e.fout(), e.rotation);
+            //Drawf.light(e.x, e.y, e.fout() * size, fromColor, 0.7F);：这行代码在 Effect 对象的当前位置绘制一个光源。
+            // e.fout() * size 是光源的大小，fromColor 是光源的颜色，0.7F 是光源的强度。
             Drawf.light(e.x, e.y, e.fout() * size, fromColor, 0.7F);
         });
     }
@@ -184,11 +197,11 @@ public final class WHFx {
 
             int i;
             for (i = 0; i < num; ++i) {
+                //这两个循环分别绘制了 num 个三角形，每个三角形的大小和旋转角度都不同。
                 Drawn.tri(e.x, e.y, size / 12.0F, size * e.fout(), (float) (i * 90 + 45));
             }
 
             Draw.color();
-
             for (i = 0; i < num; ++i) {
                 Drawn.tri(e.x, e.y, size / 26.0F, size / 2.5F * e.fout(), (float) (i * 90 + 45));
             }

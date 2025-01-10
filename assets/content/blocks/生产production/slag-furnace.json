@@ -2,9 +2,9 @@
 	"type": "Separator",
 	"name": "矿渣熔炉",
 	"results": [
-		"ceramite/6",
-		"titanium-steel/8",
-		"refine-ceramite/5"
+		"ceramite/2",
+		"titanium-steel/6",
+		"refine-ceramite/2"
 	],
 	"drawer": {
 		"type": "DrawMulti",
@@ -30,10 +30,10 @@
 	"hasItems": true,
 	"hasLiquids": true,
 	"liquidCapacity": 300,
-	"craftTime": 70,
+	"craftTime": 90,
 	"consumes": {
 		"power": 7,
-		"liquid": "slag/0.55"
+		"liquid": "slag/1.5"
 	},
 	"requirements": [
 		"graphite/150",

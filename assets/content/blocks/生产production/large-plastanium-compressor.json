@@ -1,7 +1,7 @@
 {
 	"type": "GenericCrafter",
 	"name": "重型塑钢压缩机",
-	"outputItem": "plastanium/6",
+	"outputItem": "plastanium/5",
 	"size": 3,
 	"hasPower": true,
 	"hasLiquids": true,
@@ -23,17 +23,17 @@
 	"craftEffect": "formsmoke",
 	"updateEffect": "plasticburn",
 	"consumes": {
-		"power": 6,
+		"power": 8,
 		"liquid": "oil/1",
 		"items": [
 			"titanium/8"
 		]
 	},
 	"requirements": [
-		"lead/270",
+		"lead/300",
 		"titanium/200",
 		"graphite/150",
-		"titanium-steel/110"
+		"titanium-steel/200"
 	],
 	"category": "crafting",
 	"research": {

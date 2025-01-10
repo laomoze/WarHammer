@@ -6,9 +6,9 @@
 	"hasLiquids": true,
 	"hasItems": true,
 	"itemDuration": 15,
-	"powerProduction": 35,
-	"itemCapacity": 20,
-	"liquidCapacity": 100,
+	"powerProduction": 16.66666667,
+	"itemCapacity": 30,
+	"liquidCapacity": 150,
 	"drawer": {
 		"type": "DrawMulti",
 		"drawers": [
@@ -47,10 +47,10 @@
 	"buildCostMultiplier": 0.95,
 	"requirements": [
 		"copper/100",
-		"lead/100",
+		"lead/200",
 		"metaglass/60",
-		"silicon/150",
-		"titanium-steel/50"
+		"silicon/200",
+		"titanium-steel/150"
 	],
 	"ambientSound": "smelter",
 	"ambientSoundVolume": 0.06,

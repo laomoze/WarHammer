@@ -129,9 +129,12 @@
 	"category": "turret",
 	"researchCostMultiplier": 0.5,
 	"requirements": [
-		"metaglass/100",
-		"silicon/100",
-		"titanium-steel/120"
+		"silicon/200",
+		"titanium-steel/200",
+		"carbide/100",
+		"ceramite/50"
+
+
 	],
 	"research": "S-sword"
 }

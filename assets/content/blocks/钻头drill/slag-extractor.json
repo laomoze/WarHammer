@@ -35,7 +35,7 @@
 		"titanium-steel/150"
 	],
 	"consumes": {
-		"power": 7
+		"power": 8
 	},
 	"outputLiquid": "slag/0.8",
 	"baseEfficiency": 0,

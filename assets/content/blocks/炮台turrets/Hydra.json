@@ -102,6 +102,7 @@
 			}
 		},
 		"tungsten": {
+			"reloadMultiplier": 1.3,
 			"collidesGround": false,
 			"collidesTiles": true,
 			"trailChance": 2,
@@ -113,14 +114,14 @@
 			"backColor": "E0DAFFFF",
 			"shootEffect": "shootBig2",
 			"smokeEffect": "shootSmokeDisperse",
-			"pierce": false,
+			"pierce": true,
+			"pierceCap": 2,
 			"sprite": "mine-bullet",
 			"backSprite": "large-bomb-back",
 			"type": "BasicBulletType",
 			"speed": 16,
 			"lifetime": 34.375,
 			"damage": 140,
-			"pierceDamageFactor": 0.17,
 			"despawnEffect": {
 				"type": "ParticleEffect",
 				"line": true,
@@ -216,7 +217,7 @@
 				"drawSize": 400,
 				"length": 260,
 				"pierce": true,
-				"pierceCap": 3,
+				"pierceCap": 4,
 				"damage": 140,
 				"lightning": 1,
 				"lightningAngle": 0,

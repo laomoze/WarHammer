@@ -2,11 +2,11 @@
 	"type": "GenericCrafter",
 	"name": "大型钛钢熔炉",
 	"health": 700,
-	"outputItem": "titanium-steel/3",
+	"outputItem": "titanium-steel/4",
 	"size": 3,
 	"hasPower": true,
 	"hasItems": true,
-	"craftTime": 30,
+	"craftTime": 60,
 	"itemCapacity": 40,
 	"drawer": {
 		"type": "DrawMulti",
@@ -34,9 +34,10 @@
 	"consumes": {
 		"power": 3,
 		"items": [
-			"titanium/3",
-			"metaglass/4"
-		]
+			"titanium/4",
+			"metaglass/5"
+		],
+		"liquid": "refine-promethium/0.1"
 	},
 	"requirements": [
 		"copper/120",

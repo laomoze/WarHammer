@@ -13,7 +13,7 @@
 	"health": 1400,
 	"liquidCapacity": 1000,
 	"hasLiquids": true,
-	"pumpAmount": 0.5625,
+	"pumpAmount": 0.4,
 	"consumes": {
 		"power": 12
 	},

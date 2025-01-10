@@ -1,6 +1,6 @@
 {
 	"name": "极速培养机",
-	"craftTime": 30,
+	"craftTime": 60,
 	"size": 3,
 	"outputItem": "spore-pod/6",
 	"hasLiquids": true,

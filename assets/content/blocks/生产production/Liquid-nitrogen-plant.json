@@ -2,7 +2,7 @@
 	"type": "GenericCrafter",
 	"name": "液氮制作仪",
 	"health": 550,
-	"outputLiquid": "liquid-nitrogen/0.4",
+	"outputLiquid": "liquid-nitrogen/0.6",
 	"size": 2,
 	"drawer": {
 		"type": "DrawMulti",
@@ -40,10 +40,10 @@
 		"colorTo": "D0E7FFE1"
 	},
 	"consumes": {
-		"power": 7,
+		"power": 8,
 		"liquids": [
-			"nitrogen/0.3",
-			"cryofluid/0.3"
+			"nitrogen/0.6",
+			"cryofluid/0.6"
 		]
 	},
 	"requirements": [

@@ -11,21 +11,21 @@
 		]
 	},
 	"requirements": [
-		"graphite/80",
-		"metaglass/80",
-		"titanium-steel/20"
+		"graphite/50",
+		"metaglass/100",
+		"titanium-steel/50"
 	],
 	"consumes": {
 		"power": 3.33333,
 		"items": {
 			"items": [
-				"lead/4",
+				"lead/5",
 				"sand/5"
 			]
 		}
 	},
 	"outputItems": [
-		"metaglass/9"
+		"metaglass/8"
 	],
 	"size": 3,
 	"health": 360,

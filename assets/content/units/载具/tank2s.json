@@ -10,8 +10,8 @@
 	"crushDamage": 12,
 	"treadPullOffset": 8,
 	"treadFrames": 8,
-	"outlineRadius": 3,
-	"outlineColor": "36363CFF",
+	"outlineRadius": 1,
+	"outlineColor": "FFFFFF00",
 	"treadRects": [
 		{
 			"x": -102,
@@ -31,12 +31,44 @@
 			"regen": 35,
 			"cooldown": 1500,
 			"angle": 120
+		},
+		{
+			"type": "MoveEffectAbility",
+			"minVelocity": 0,
+			"interval": 8,
+			"effect": {
+				"type": "MultiEffect",
+				"effects": [
+					{
+						"type": "ParticleEffect",
+						"particles": 1,
+						"sizeFrom": 4,
+						"sizeTo": 0,
+						"lifetime": 90,
+						"length": 30,
+						"cone": 150,
+						"colorFrom": "767676FF",
+						"colorTo": "767676FF"
+					},
+					{
+						"type": "ParticleEffect",
+						"particles": 1,
+						"sizeFrom": 8,
+						"sizeTo": 0,
+						"lifetime": 90,
+						"length": 30,
+						"cone": 150,
+						"colorFrom": "767676FF",
+						"colorTo": "767676FF"
+					}
+				]
+			}
 		}
 	],
 	"ammoType": "refine-ceramite",
 	"targetAir": false,
-	"faceTarget": false,
-	"health": 45000,
+	"faceTarget": true,
+	"health": 40000,
 	"armor": 30,
 	"rotateSpeed": 1.5,
 	"immunities": [
@@ -54,23 +86,36 @@
 	},
 	"weapons": [
 		{
-			"name": "tank2s-weapkn1",
+			"name": "tank2s-weapon1",
+			"layerOffset": 0.01,
+			"heatColor": "FFAE66FF",
+			"cooldownTime": 60,
+			"recoilTime": 80,
 			"x": 0,
 			"y": 0,
 			"reload": 400,
 			"mirror": false,
-			"shootCone": 180,
-			"rotate": true,
-			"rotateSpeed": 2,
-			"rotationLimit": 20,
+			"shootCone": 90,
+			"rotate": false,
 			"shoot": {
 				"type": "ShootBarrel",
 				"barrels": [
-					8,
-					35,
+					0,
+					34,
 					0
 				]
 			},
+			"parts": [
+				{
+					"type": "RegionPart",
+					"under": true,
+					"mirror": false,
+					"heatProgress": "recoil",
+					"suffix": "-管",
+					"progress": "recoil",
+					"moveY": -7
+				}
+			],
 			"bullet": {
 				"width": 16,
 				"height": 42,
@@ -88,8 +133,8 @@
 				"frontColor": "FFA05C",
 				"scaledSplashDamage": true,
 				"splashDamageRadius": 64,
-				"splashDamage": 450,
-				"buildingDamageMultiplier": 4,
+				"splashDamage": 700,
+				"buildingDamageMultiplier": 2,
 				"hitSound": "boom",
 				"hitShake": 9,
 				"shootEffect": {
@@ -224,7 +269,7 @@
 					"type": "BasicBulletType",
 					"status": "blasted",
 					"speed": 3,
-					"lifetime": 29,
+					"lifetime": 20,
 					"backColor": "FFC397FF",
 					"frontColor": "FFC397FF",
 					"width": 16,
@@ -289,8 +334,8 @@
 		},
 		{
 			"name": "tank2s-weapon2",
-			"x": 6,
-			"y": 0,
+			"x": 8.25,
+			"y": 4.25,
 			"reload": 160,
 			"shoot": {
 				"type": "ShootBarrel",

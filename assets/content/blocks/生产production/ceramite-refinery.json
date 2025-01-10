@@ -1,12 +1,12 @@
 {
 	"type": "GenericCrafter",
 	"name": "陶钢精制厂",
-	"outputItem": "refine-ceramite/4",
+	"outputItem": "refine-ceramite/3",
 	"size": 3,
 	"health": 1000,
 	"hasPower": true,
 	"hasItems": true,
-	"craftTime": 100,
+	"craftTime": 120,
 	"itemCapacity": 25,
 	"drawer": {
 		"type": "DrawMulti",
@@ -26,12 +26,12 @@
 			"tungsten/3",
 			"surge-alloy/3"
 		],
-		"liquid": "refine-promethium/0.266667"
+		"liquid": "refine-promethium/0.3"
 	},
 	"requirements": [
 		"surge-alloy/50",
-		"carbide/30",
-		"ceramite/30",
+		"carbide/60",
+		"ceramite/60",
 		"phase-fabric/30"
 	],
 	"category": "crafting",

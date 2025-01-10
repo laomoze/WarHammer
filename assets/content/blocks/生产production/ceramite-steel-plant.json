@@ -5,7 +5,7 @@
 	"size": 2,
 	"hasPower": true,
 	"hasItems": true,
-	"craftTime": 50,
+	"craftTime": 60,
 	"itemCapacity": 10,
 	"drawer": {
 		"type": "DrawMulti",
@@ -21,8 +21,8 @@
 	"consumes": {
 		"power": 2,
 		"items": [
-			"tungsten/3",
-			"plastanium/3"
+			"tungsten/4",
+			"plastanium/4"
 		]
 	},
 	"requirements": [

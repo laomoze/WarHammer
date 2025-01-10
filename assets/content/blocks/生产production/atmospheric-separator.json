@@ -36,13 +36,12 @@
 	"consumes": {
 		"power": 1.5
 	},
-	"heatRequirement": 6,
+	"heatRequirement": 9,
 	"outputLiquids": [
-		"nitrogen/0.25"
+		"nitrogen/0.3"
 	],
 	"size": 3,
 	"health": 900,
-	"itemCapacity": 40,
 	"liquidCapacity": 100,
 	"hasPower": true,
 	"hasLiquids": true,

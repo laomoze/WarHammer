@@ -7,7 +7,7 @@
 	"size": 2,
 	"hasPower": true,
 	"hasItems": true,
-	"craftTime": 45,
+	"craftTime": 90,
 	"research": "titanium-steel-furnace",
 	"drawer": {
 		"type": "DrawMulti",
@@ -33,8 +33,9 @@
 	"heatRequirement": 4,
 	"researchCostMultiplier": 0.5,
 	"requirements": [
-		"thorium/30",
-		"silicon/40",
+		"thorium/50",
+		"silicon/80",
+		"phase-fabric/20",
 		"titanium-steel/50"
 	],
 	"ambientSound": "smelter",

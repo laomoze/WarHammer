@@ -2,7 +2,7 @@
 	"type": "HeatProducer",
 	"category": "crafting",
 	"name": "衰变制热机",
-	"craftTime": 270,
+	"craftTime": 240,
 	"requirements": [
 		"silicon/50",
 		"plastanium/50",

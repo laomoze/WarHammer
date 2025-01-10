@@ -2,7 +2,7 @@
 	"type": "HeatProducer",
 	"category": "crafting",
 	"name": "燃烧加热器",
-	"craftTime": 120,
+	"craftTime": 90,
 	"requirements": [
 		"lead/30",
 		"silicon/30",
@@ -12,7 +12,7 @@
 		"itemFlammable": {},
 		"itemExplode": {}
 	},
-	"heatOutput": 3,
+	"heatOutput": 2.5,
 	"drawer": {
 		"type": "DrawMulti",
 		"drawers": [

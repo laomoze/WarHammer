@@ -8,7 +8,7 @@
 	"hasItems": true,
 	"hasLiquids": true,
 	"outputsPower": true,
-	"powerProduction": 80,
+	"powerProduction": 60,
 	"itemDuration": 600,
 	"lightColor": "FFFFFF",
 	"explosionShake": 9,
