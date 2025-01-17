@@ -21,6 +21,9 @@ public final class WHPal {
     public static Color rim3;
     public static Color pop;
     public static Color pop2;
+    public static Color OR;
+    public static Color ORL;
+    public static Color Heat;
 
     private WHPal() {
     }
@@ -37,5 +40,8 @@ public final class WHPal {
         rim3 = Color.valueOf("dbeffe");
         pop = Color.valueOf("FFFBBDE1");
         pop2 = Color.valueOf("FFFFFF");
+        OR = Color.valueOf("FFC397FF");
+        ORL =Color.valueOf("FFA05C");
+        Heat=Color.valueOf("FF4040");
     }
 }

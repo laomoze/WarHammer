@@ -24,7 +24,7 @@
 	"ammoType": "ceramite",
 	"ammoCapacity": 120,
 	"targetAir": true,
-	"health": 16000,
+	"health": 13000,
 	"armor": 24,
 	"itemCapacity": 0,
 	"faceTarget": false,

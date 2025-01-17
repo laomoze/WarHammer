@@ -1,23 +1,23 @@
 {
-	"type": "tank",
+	//"type": "tank",
 	"name": "毒刃",
 	"squareShape": true,
 	"omniMovement": false,
 	"rotateMoveFirst": false,
 	"drownTimeMultiplier": 5,
-	"speed": 1,
+	"speed": 0.8,
 	"crushDamage": 15,
-	"treadPullOffset": 0,
-	"treadFrames": 10,
+	"treadPullOffset": 20,
+	"treadFrames": 20,
 	"outlineRadius": 3,
 	"outlineColor": "36363CFF",
 	"range": 400,
 	"treadRects": [
 		{
-			"x": -132,
-			"y": -182,
+			"x": -131,
+			"y": -195,
 			"width": 69,
-			"height": 361
+			"height": 380
 		}
 	],
 	"hitSize": 66,
@@ -41,7 +41,7 @@
 	"rotateSpeed": 1,
 	"itemCapacity": 55,
 	"faceTarget": false,
-	"weapons": [
+/*	"weapons": [
 		{
 			"name": "tank3-weapon1",
 			"reload": 300,
@@ -633,5 +633,5 @@
 				}
 			}
 		}
-	]
+	]*/
 }

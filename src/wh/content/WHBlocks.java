@@ -64,6 +64,9 @@ public final class WHBlocks {
                 this.ammo(WHItems.sealedPromethium, WHBullets.collapseSp, Items.phaseFabric, WHBullets.collaspsePf);
             }
         };
+
+
+
         sb = new SpecificMineralDrill("傻逼"){{
             requirements(Category.production, with(Items.silicon, 1));
             drillTime = 60f;

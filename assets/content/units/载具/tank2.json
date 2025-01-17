@@ -1,5 +1,5 @@
 {
-	"type": "tank",
+	//"type": "tank",
 	"name": "罗格-多恩",
 	"squareShape": true,
 	"omniMovement": false,
@@ -41,7 +41,7 @@
 		"core",
 		"turret"
 	],
-	"weapons": [
+	/*"weapons": [
 		{
 			"name": "tank2-weapon1",
 			"layerOffset": 0.001,
@@ -392,5 +392,5 @@
 				}
 			]
 		}
-	]
+	]*/
 }

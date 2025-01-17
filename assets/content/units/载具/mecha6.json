@@ -1,12 +1,11 @@
 {
-	"type": "mech",
+	//"type": "mech",
 	"name": "骑士",
 	"hitSize": 48,
 	"canDrown": false,
 	"armor": 40,
 	"speed": 0.6,
-	"rotateSpeed": 1.5,
-	"baseRotateSpeed": 1.4,
+	"rotateSpeed": 1.6,
 	"health": 140000,
 	"mechStepParticles": true,
 	"mechFrontSway": 1.6,
@@ -62,7 +61,7 @@
 			"effect": "overdrive"
 		}
 	],
-	"weapons": [
+	/*"weapons": [
 		{
 			"name": "mecha6-weapon1",
 			"reload": 120,
@@ -510,5 +509,5 @@
 				"lightningColor": "FFA05C"
 			}
 		}
-	]
+	]*/
 }

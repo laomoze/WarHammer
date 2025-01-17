@@ -22,7 +22,7 @@
 	],
 	"ammoType": "surge-alloy",
 	"targetAir": true,
-	"health": 18000,
+	"health": 13000,
 	"armor": 20,
 	"rotateSpeed": 1.5,
 	"itemCapacity": 0,

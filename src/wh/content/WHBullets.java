@@ -1422,7 +1422,7 @@ public final class WHBullets {
                   status = StatusEffects.shocked;
                   shootEffect = WHFx.lightningHitLarge(  hitColor);
                   hitEffect = WHFx.hitSpark(  hitColor, 240.0F, 220, 900.0F, 8.0F, 27.0F);
-                  despawnEffect = WHFx.collapserBulletExplode;
+                  despawnEffect = WHFx.TankAG7BulletExplode;
             }
 
             public void despawned(Bullet b) {
@@ -1451,10 +1451,8 @@ public final class WHBullets {
                             Vec2 v = Tmp.v6.rnd(rad * 2.0F + Mathf.random(rad * 2.0F)).add(vec);
                             (j > 0 ? WHFx.chainLightningFade : WHFx.chainLightningFadeReversed).at(v.x, v.y, 12.0F,   hitColor, vec);
                         }
-
                     });
                 }
-
             }
 
             public void update(Bullet b) {
@@ -1557,6 +1555,7 @@ public final class WHBullets {
                   lifetime = 56.25F;
                   splashDamageRadius = 80.0F;
                   splashDamage = 100.0F;
+                  linkRange =  60.0F;
                   lightningColor = Color.valueOf("788AD7FF");
                   buildingDamageMultiplier = 0.2F;
                   status = WHStatusEffects.palsy;
@@ -1597,7 +1596,7 @@ public final class WHBullets {
                   effectLightningChance = 0.25F;
                   lightningCone = 360.0F;
                   lightningDamage = 200.0F;
-                  linkRange = 200.0F;
+                  linkRange =  60.0F;
                   lightningColor = Color.valueOf("DBD58C");
                   buildingDamageMultiplier = 0.2F;
                   status = WHStatusEffects.palsy;
@@ -1624,7 +1623,6 @@ public final class WHBullets {
                     Draw.color(Color.valueOf("DBD58C"));
                     int[] var8 = Mathf.signs;
                     int var9 = var8.length;
-
                     for(int var10 = 0; var10 < var9; ++var10) {
                         int s = var8[var10];
                         Drawf.tri(x, y, 14.0F * fout, 30.0F * Mathf.curve(finpow, 0.0F, 0.3F) * WHFx.fout(fin, 0.15F), rot + (float)(s * 90));

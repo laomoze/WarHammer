@@ -69,7 +69,7 @@ public final class WHFx {
     public static final IntMap<Effect> same = new IntMap();
     public static final int[] oneArr = new int[]{1};
     public static Effect lightningSpark;
-    public static Effect collapserBulletExplode;
+    public static Effect TankAG7BulletExplode;
     public static Effect posLightning;
     public static Effect attackWarningRange;
     public static Effect attackWarningPos;
@@ -156,16 +156,9 @@ public final class WHFx {
     public static Effect hitSpark = new Effect(45.0F, (e) -> {
         Draw.color(e.color, Color.white, e.fout() * 0.3F);
         Lines.stroke(e.fout() * 1.6F);
-        //rand.setSeed(e.id);：这行代码设置了随机数生成器的种子，这样可以确保每次执行 Effect 时，随机数生成的结果都是一致的。
         rand.setSeed(e.id);
-        //(x, y) -> {...}：这是一个 lambda 表达式，它定义了生成的每个向量的 x 和 y 分量将如何被使用。
-        // 在这个 lambda 表达式中，x 和 y 是生成的随机向量的分量，而 {...} 中的代码则定义了对这些分量的操作。
         Angles.randLenVectors(e.id, 8, e.finpow() * 20.0F, (x, y) -> {
-            //float ang = Mathf.angle(x, y);：这行代码计算了点 (x, y) 与 x 轴正方向之间的角度，并将结果存储在变量 ang 中。
-            // Mathf.angle 方法返回的角度是弧度制的，范围从 -π 到 π。
             float ang = Mathf.angle(x, y);
-            //e.fout() * rand.random(1.95F, 4.25F) + 1.0F 计算出线条的最终长度
-            //.x 和 e.y 是 Effect 对象的当前位置。
             Lines.lineAngle(e.x + x, e.y + y, ang, e.fout() * rand.random(1.95F, 4.25F) + 1.0F);
         });
     });
@@ -188,12 +181,9 @@ public final class WHFx {
             Lines.lineAngle(e.x + x, e.y + y, ang, e.fout() * (float) rand.random(6, 9) + 3.0F);
         });
     });
-    //这行代码计算了 fout 的值。它使用了一个三元运算符 ?:，根据 fin 的值来决定返回的结果。
-    // 如果 fin 大于等于 1.0F - margin，则返回 1.0F - (fin - (1.0F - margin)) / margin；否则，直接返回 1.0F。
     public static float fout(float fin, float margin) {
         return fin >= 1.0F - margin ? 1.0F - (fin - (1.0F - margin)) / margin : 1.0F;
     }
-
     public static Effect polyTrail(Color fromColor, Color toColor, float size, float lifetime) {
         return new Effect(lifetime, size * 2.0F, (e) -> {
             Draw.color(fromColor, toColor, e.fin());
@@ -637,7 +627,6 @@ public final class WHFx {
         return new Effect(lifetime, e -> {
             color(color);
             Lines.stroke(size / 7f * e.fin());
-
             randLenVectors(e.id, 15, 3f + 60f * e.fout(), e.rotation, range, (x, y) -> {
                 lineAngle(e.x + x, e.y + y, Mathf.angle(x, y), e.fslope() * size + size / 4f);
                 Drawf.light(e.x + x, e.y + y, e.fout(0.25f) * size, color, 0.7f);
@@ -666,8 +655,16 @@ public final class WHFx {
             }
         }
     });
-
-
+    public static Effect ExplosionSlash(Color color,float size, float range, float lifetime) {
+        return new Effect(lifetime, range*2, e -> {
+            Draw.color(color);
+            Angles.randLenVectors(e.id, (int) Mathf.clamp(range / 8.0F, 4.0F, 18.0F), range / 8.0F, range * (1.0F + e.fout(Interp.pow2OutInverse)) / 2.0F, (x, y) -> {
+                for (int s : Mathf.signs) {
+                    Drawf.tri(e.x, e.y, e.fout() * size/2, e.foutpow() * size * 2.5f + 6f, e.rotation + s * 90f);
+                }
+            });
+        });
+    }
     static {
         lightningSpark = new Effect(Fx.chainLightning.lifetime, (e) -> {
             Draw.color(Color.white, e.color, e.fin() + 0.25F);
@@ -677,7 +674,7 @@ public final class WHFx {
             });
             Fill.circle(e.x, e.y, 2.5F * e.fout());
         });
-        collapserBulletExplode = (new Effect(300.0F, 1600.0F, (e) -> {
+        TankAG7BulletExplode = (new Effect(300.0F, 1600.0F, (e) -> {
             float rad = 120.0F;
             rand.setSeed(e.id);
             Draw.color(Color.white, e.color, e.fin() + 0.6F);
@@ -720,6 +717,8 @@ public final class WHFx {
             });
             Drawf.light(e.x, e.y, rad * e.fout(Interp.circleOut) * 4.0F, e.color, 0.7F);
         })).layer(110.001F);
+
+
         posLightning = (new Effect(PositionLightning.lifetime, 1200.0F, (e) -> {
             Object patt6351$temp = e.data;
             if (patt6351$temp instanceof Vec2Seq) {
@@ -1556,5 +1555,7 @@ public final class WHFx {
                 });
             }
         });
+
+
     }
 }
