@@ -17,6 +17,7 @@ buildscript {
     }
 }
 
+
 plugins {
     /*id 'org.jetbrains.kotlin.jvm' version "$kotlinVersion"
     id 'org.jetbrains.kotlin.plugin.serialization' version "$kotlinVersion"*/
@@ -37,7 +38,17 @@ java {
     targetCompatibility = JavaVersion.VERSION_16
     sourceCompatibility = JavaVersion.VERSION_16
 }
+repositories {
+    mavenCentral()
+    maven { url 'https://www.jitpack.io' } // 添加 Mindustry 依赖源
+}
 
+dependencies {
+    // 添加 Mindustry 核心依赖
+    implementation "com.github.Anuken.Arc:arc-core:v146"
+    implementation "com.github.Anuken.Mindustry:core:v146"
+
+}
 dependencies {
     implementation "org.jetbrains:annotations:24.0.1"
     implementation "org.tomlj:tomlj:1.1.1"
