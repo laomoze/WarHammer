@@ -109,6 +109,6 @@ public class PcShieldArcAbility extends ShieldArcAbility {
 
     @Override
     public String localized() {
-        return Core.bundle.format("ability." + name("EUArcFieldAbility"));
+        return Core.bundle.format("ability." + name("better-arc-field-ability"));
     }
 }

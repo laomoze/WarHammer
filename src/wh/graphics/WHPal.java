@@ -20,8 +20,8 @@ public final class WHPal {
     public static Color thurmixRedDark;
     public static Color rim;
     public static Color rim3;
-    public static Color pop;
-    public static Color pop2;
+    public static Color WHYellow;
+    public static Color WHYellow2;
     public static Color OR;
     public static Color ORL;
     public static Color Outline;
@@ -33,6 +33,8 @@ public final class WHPal {
     public static Color RefineCeramiteColor;
     public static Color RefinePromethiumColor;
     public static Color OrePromethiumColor;
+    public static Color molybdenumAlloyColor;
+    public static Color resonantCrystalColor;
 
     private WHPal() {
     }
@@ -48,8 +50,8 @@ public final class WHPal {
         rim = Color.valueOf("fffbbde1");
         rim3 = Color.valueOf("dbeffe");
 
-        pop = Color.valueOf("FFFBBDE1");
-        pop2 = Color.valueOf("FFFFFF");
+        WHYellow = Color.valueOf("FFFBBDE1");
+        WHYellow2 = Color.valueOf("FFFFFF");
         OR = Color.valueOf("FFC397FF");
         ORL =Color.valueOf("FFA05C");
         Heat=Color.valueOf("FF4040");
@@ -62,5 +64,7 @@ public final class WHPal {
         RefineCeramiteColor=Color.valueOf("EAE28AFF");
         RefinePromethiumColor= Color.valueOf("999CA8FF");
         OrePromethiumColor=Color.valueOf("676870FF");
+        molybdenumAlloyColor=Color.valueOf("9FA5B4FF");
+        resonantCrystalColor=Color.valueOf("AA7FFAFF");
     }
 }

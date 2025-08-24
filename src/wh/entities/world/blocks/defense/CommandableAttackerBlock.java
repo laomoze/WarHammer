@@ -15,7 +15,6 @@ import mindustry.graphics.*;
 import mindustry.io.*;
 import mindustry.logic.*;
 import mindustry.ui.*;
-import mindustry.world.*;
 import mindustry.world.meta.*;
 import wh.content.*;
 import wh.gen.*;

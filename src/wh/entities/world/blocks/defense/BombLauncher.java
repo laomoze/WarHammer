@@ -25,7 +25,7 @@ import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 import mindustry.graphics.Trail;
 import wh.content.WHFx;
-import wh.gen.WHSounds;
+import wh.content.WHSounds;
 import wh.util.WHUtils;
 
 

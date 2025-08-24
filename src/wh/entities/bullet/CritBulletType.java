@@ -19,8 +19,6 @@ public class CritBulletType extends BasicBulletType{
 
     public CritBulletType(float speed, float damage, String sprite){
         super(speed, damage, sprite);
-        pierce = true;
-        pierceBuilding = true;
         impact = true;
         ammoMultiplier = 1;
         shootEffect = Fx.shootBig;
@@ -29,10 +27,15 @@ public class CritBulletType extends BasicBulletType{
         hitColor = Pal.lightOrange;
         trailLength = 10;
         trailWidth = -1f;
+        status = StatusEffects.none;
     }
 
     public CritBulletType(float speed, float damage){
         this(speed, damage, "bullet");
+    }
+
+    public CritBulletType(){
+
     }
 
     public static boolean critChance(Bullet b, float chance){
@@ -41,6 +44,7 @@ public class CritBulletType extends BasicBulletType{
         critRand.setSeed(b.id);
         return critRand.nextFloat() < chance;
     }
+
 
     @Override
     public void init(){
@@ -156,7 +160,7 @@ public class CritBulletType extends BasicBulletType{
         if(fragBullet != null){
             for(int i = 0; i < fragBullets; i++){
                 float len = Mathf.random(1f, 7f);
-                float a = b.rotation() + Mathf.range(fragRandomSpread / 2) + fragAngle + ((i - fragBullets / 2) * fragSpread);
+                float a = b.rotation() + Mathf.range(fragRandomSpread / 2) + fragAngle + fragSpread * i - (fragBullets - 1) * fragSpread / 2f;;
                 Bullet f = fragBullet.create(b, x + Angles.trnsx(a, len), y + Angles.trnsy(a, len), a, Mathf.random(fragVelocityMin, fragVelocityMax), Mathf.random(fragLifeMin, fragLifeMax));
                 if(f.type instanceof CritBulletType) f.data = b.data;
             }

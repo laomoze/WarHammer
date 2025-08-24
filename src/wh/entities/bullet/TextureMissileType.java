@@ -8,20 +8,22 @@ import mindustry.content.StatusEffects;
 import mindustry.entities.Damage;
 import mindustry.entities.Effect;
 import mindustry.entities.Lightning;
+import mindustry.entities.bullet.*;
 import mindustry.gen.Building;
 import mindustry.gen.Bullet;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Trail;
 import wh.gen.PlasmaFire;
-import wh.gen.UltFire;
+
 
 import static mindustry.Vars.headless;
 
-public class TextureMissileType extends AccelBulletType{
+public class TextureMissileType extends BasicBulletType{
+    public String sprite;
 	public TextureMissileType(float damage, String bulletSprite){
-		super(damage, bulletSprite);
-		
+        this.sprite = bulletSprite;
+		this.damage = damage;
 		absorbable = false;
 	}
 	@Override

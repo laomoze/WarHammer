@@ -1,58 +1,52 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package wh.entities.abilities;
 
 import arc.graphics.Color;
 import arc.math.Mathf;
 import arc.util.Time;
 import arc.util.Tmp;
-import mindustry.Vars;
 import mindustry.content.Fx;
 import mindustry.entities.abilities.Ability;
 import mindustry.gen.Building;
 import mindustry.gen.Unit;
 import mindustry.graphics.Drawf;
 
+import static mindustry.Vars.indexer;
+
 public class MendFieldAbility extends Ability {
     public Color baseColor = Color.valueOf("84f491");
     public Color phaseColor = Color.valueOf("ffd59e");
-    public float range = 180.0F;
-    public float reload = 60.0F;
-    public float healP = 10.0F;
-    public float timer;
 
-    public MendFieldAbility() {
+    public float range = 180f;
+    public float reload = 60f;
+    public float healPercent = 10f;
+
+    protected float timer = 0f;
+
+    public MendFieldAbility() {}
+
+    public MendFieldAbility(float ran, float rel, float hel) {
+        range = ran;
+        reload = rel;
+        healPercent = hel;
     }
 
-    public MendFieldAbility(float range, float reload, float healP) {
-        this.range = range;
-        this.reload = reload;
-        this.healP = healP;
-    }
-
+    @Override
     public void update(Unit unit) {
-        Vars.indexer.eachBlock(unit, this.range, Building::damaged, (other) -> {
-            this.timer += Time.delta;
-            if (this.timer >= this.reload) {
-                this.timer = 0.0F;
-                other.heal(this.healP / 100.0F * (float)other.block.health);
-                Fx.healBlockFull.at(other.x, other.y, (float)other.block.size, Tmp.c1.set(this.baseColor).lerp(this.phaseColor, 0.3F));
+        indexer.eachBlock(unit, range, Building::damaged, other -> {
+            timer += Time.delta;
+            if (timer >= reload) {
+                timer = 0f;
+                other.heal((healPercent / 100) * other.block.health);
+                Fx.healBlockFull.at(other.x, other.y, other.block.size, Tmp.c1.set(baseColor).lerp(phaseColor, 0.3f));
             }
-
         });
     }
 
-    public Ability copy() {
-        return new MendFieldAbility(this.range, this.reload, this.healP);
-    }
-
+    @Override
     public void draw(Unit unit) {
-        Vars.indexer.eachBlock(unit, this.range, Building::damaged, (other) -> {
-            Color tmp = Tmp.c1.set(this.baseColor);
-            tmp.a = Mathf.absin(4.0F, 1.0F);
+        indexer.eachBlock(unit, range, Building::damaged, other -> {
+            Color tmp = Tmp.c1.set(baseColor);
+            tmp.a = Mathf.absin(4f, 1f);
             Drawf.selected(other, tmp);
         });
     }

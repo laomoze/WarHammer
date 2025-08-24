@@ -13,13 +13,14 @@ import arc.math.Rand;
 import arc.math.geom.Vec2;
 import arc.util.Tmp;
 import mindustry.Vars;
+import mindustry.entities.bullet.*;
 import mindustry.gen.Bullet;
 import mindustry.gen.Hitboxc;
 import wh.content.WHFx;
 import wh.graphics.PositionLightning;
 import wh.struct.Vec2Seq;
 
-public class TrailFadeBulletType extends AccelBulletType {
+public class TrailFadeBulletType extends BasicBulletType{
     protected static final Vec2 v1 = new Vec2();
     protected static final Vec2 v2 = new Vec2();
     protected static final Vec2 v3 = new Vec2();

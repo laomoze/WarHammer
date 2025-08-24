@@ -2,20 +2,27 @@ package wh.entities.bullet;
 
 import arc.Core;
 import arc.graphics.Color;
+import arc.graphics.g2d.*;
 import arc.math.Interp;
 import arc.math.Mathf;
 import arc.math.geom.Vec2;
 import arc.util.Time;
 import arc.util.Tmp;
+import arc.util.pooling.*;
 import mindustry.Vars;
 import mindustry.content.Fx;
-import mindustry.entities.Units;
+import mindustry.entities.*;
 import mindustry.entities.bullet.BulletType;
 import mindustry.gen.Bullet;
 import mindustry.gen.Groups;
+import mindustry.graphics.*;
 import mindustry.type.unit.MissileUnitType;
 import wh.content.WHFx;
+import wh.content.WHFx.*;
 import wh.graphics.MainRenderer;
+import wh.util.*;
+
+import static mindustry.Vars.*;
 
 /** @author guiy**/
 public class BlackHoleBulletType extends BulletType {
@@ -88,7 +95,7 @@ public class BlackHoleBulletType extends BulletType {
         });
 
         if(!Vars.headless && (Core.settings != null) && b.time <= b.lifetime - 72) for(int i = 0; i < amount; i++){
-            WHFx.ateData data = WHFx.ateData.create();
+            ateData data = ateData.create();
             float outRDI = i % 2 == 0 ? outRad * 1.2f : outRad;
             data.width = Mathf.random(minWidth, maxWidth) * in;
             data.inRad = inRad * 0.9f * in;
@@ -97,12 +104,63 @@ public class BlackHoleBulletType extends BulletType {
             data.length = data.speed < midSpeed ? Mathf.random(midLength, maxLength) : Mathf.random(minLength, midLength);
             data.owner = b;
             if(i % 2 == 0) data.out = true;
-            WHFx.AccretionDiskEffect.at(
-                    b.x,
-                    b.y,
-                    0, accColor, data);
+            AccretionDiskEffect.at(b.x, b.y, 0, accColor, data);
         }
     }
+
+    public static class ateData implements Pool.Poolable{
+        public float width;
+        public int length;
+        public float inRad, outRad, speed;
+
+        public transient Trail trail;
+
+        public Bullet owner;
+
+        public boolean out = false;
+
+        public static ateData create(){
+            return Pools.obtain(ateData.class, ateData::new);
+        }
+
+        @Override
+        public void reset(){
+            width = 0;
+            length = 0;
+            inRad = outRad = speed = 0;
+            trail = null;owner = null;out = false;
+        }
+    }
+
+    Effect AccretionDiskEffect = new Effect(60, e -> {
+        if(headless || !(e.data instanceof ateData data) || data.owner == null) return;
+
+        float fin = data.out ? e.finpow() : e.foutpow();
+        float fout = data.out ? e.foutpow() : e.finpow();
+        //float fout = 1 - fin;
+
+        float start = Mathf.randomSeed(e.id, 360f);
+        var b = data.owner;
+
+        float ioRad = data.outRad - (data.outRad - data.inRad) * fin;
+        float rad = data.speed * e.time * 6;
+        float dx = WHUtils.dx(b.x, ioRad, start - rad),
+        dy = WHUtils.dy(b.y, ioRad, start - rad);
+
+        if(data.trail == null) data.trail = new Trail(data.length);
+        float dzin = data.out && e.time > e.lifetime - 10 ? Interp.pow2Out.apply((e.lifetime - e.time) / 10) : fin;
+        data.trail.length = data.length;
+        //data.trail.length = (int) (data.length * dzin);
+
+        if(!state.isPaused()) data.trail.update(dx, dy, 1);
+
+        float z = Draw.z();
+        Draw.z(Layer.effect - 19 * fout);
+        //Draw.z(Layer.max - 1);
+        data.trail.draw(Tmp.c3.set(e.color).shiftValue(-e.color.value() * fout), data.width * dzin);
+        //data.trail.draw(e.color, data.width);
+        Draw.z(z);
+    });
 
     public float F(float x, float y, float tx, float ty, float G, float r) {
         float dst = Mathf.dst(x, y, tx, ty);

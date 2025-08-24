@@ -22,6 +22,7 @@ import mindustry.world.draw.DrawBlock;
 import wh.content.WHFx;
 import wh.entities.WHBaseEntity;
 import wh.graphics.WHPal;
+import wh.util.*;
 
 import static mindustry.Vars.state;
 import static mindustry.Vars.tilesize;
@@ -106,7 +107,7 @@ public static final float lightingChance = 0.009f;
                             Fx.chainLightning.at(
                                     x, y, 0,
                                     WHPal.SkyBlueF.cpy().lerp(Pal.water, Mathf.absin(Time.time, 0.3f)),
-                                    WHBaseEntity.pos(bx, by)
+                                    WHUtils.pos(bx, by)
                             );
                         }
                     }

@@ -24,6 +24,7 @@ import mindustry.world.*;
 import mindustry.world.consumers.*;
 import mindustry.world.draw.*;
 import mindustry.world.meta.*;
+import wh.entities.world.blocks.production.MultiCrafter.*;
 import wh.ui.*;
 import wh.util.*;
 
@@ -31,7 +32,11 @@ import static arc.Core.*;
 import static mindustry.Vars.*;
 
 /**
- * @author guiY
+ * MultiCrafter. You can freely choose to change the production formula.
+ *
+ * @author Eipusino
+ * @see CraftPlan craftPlan type
+ * @since 1.0.6
  */
 
 public class MultiCrafterE extends Block {

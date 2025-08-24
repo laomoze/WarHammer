@@ -39,6 +39,8 @@ import mindustry.type.weapons.PointDefenseWeapon;
 import mindustry.world.meta.BlockFlag;
 import wh.entities.abilities.*;
 import wh.entities.bullet.*;
+import wh.entities.bullet.laser.*;
+import wh.entities.world.drawer.part.*;
 import wh.entities.world.unit.*;
 import wh.entities.world.unit.AirRaiderAI.*;
 import wh.entities.world.unit.AirRaiderUnitType.*;
@@ -46,9 +48,7 @@ import wh.gen.*;
 import wh.graphics.Drawn;
 import wh.graphics.WHPal;
 import wh.util.WHUtils;
-import wh.util.WHUtils.EffectWrapper;
 import wh.entities.world.unit.MarkWeapon;
-import wh.entities.world.drawer.WHUnitEngine;
 
 import static arc.graphics.g2d.Draw.color;
 import static arc.graphics.g2d.Lines.lineAngle;
@@ -67,7 +67,6 @@ import static wh.content.WHStatusEffects.assault;
 import static wh.content.WHStatusEffects.bless;
 
 public final class WHUnitTypes{
-    public static int CMoonId;
 
     public static final byte
     ANCIENT_GROUND = 10, ANCIENT_AIR = 11,
@@ -141,9 +140,9 @@ public final class WHUnitTypes{
                     }
                 });
                 abilities.add((new AdaptedHealAbility(3000.0F, 180.0F, 220.0F, healColor)).modify((a) -> a.selfHealReloadTime = 300.0F));
-                abilities.add((new ShockWaveAbility(180.0F, 320.0F, 2000.0F, WHPal.pop)).status(StatusEffects.unmoving, 300.0F, StatusEffects.disarmed, 300.0F).modify((a) -> {
+                abilities.add((new ShockWaveAbility(180.0F, 320.0F, 2000.0F, WHPal.WHYellow)).status(StatusEffects.unmoving, 300.0F, StatusEffects.disarmed, 300.0F).modify((a) -> {
                     a.knockback = 400.0F;
-                    a.shootEffect = new MultiEffect(WHFx.circleOut, WHFx.hitSpark(a.hitColor, 55.0F, 40, a.range + 30.0F, 3.0F, 8.0F), WHFx.crossBlastArrow45, WHFx.smoothColorCircle(WHPal.pop.cpy().a(0.3F), a.range, 60.0F));
+                    a.shootEffect = new MultiEffect(WHFx.circleOut, WHFx.hitSpark(a.hitColor, 55.0F, 40, a.range + 30.0F, 3.0F, 8.0F), WHFx.crossBlastArrow45, WHFx.smoothColorCircle(WHPal.WHYellow.cpy().a(0.3F), a.range, 60.0F));
                 }));
                 weapons.add(new Weapon("wh-c-moon-weapon3"){
                     {
@@ -176,9 +175,9 @@ public final class WHUnitTypes{
                                 tracerSpacing = 10.0F;
                                 tracerUpdateSpacing *= 1.25F;
                                 removeAfterPierce = false;
-                                hitColor = backColor = lightColor = lightningColor = WHPal.pop;
-                                trailColor = WHPal.pop;
-                                frontColor = WHPal.pop2;
+                                hitColor = backColor = lightColor = lightningColor = WHPal.WHYellow;
+                                trailColor = WHPal.WHYellow;
+                                frontColor = WHPal.WHYellow2;
                                 width = 18.0F;
                                 height = 60.0F;
                                 hitSound = Sounds.plasmaboom;
@@ -190,7 +189,7 @@ public final class WHUnitTypes{
                                 lightningLength = 8;
                                 lightningLengthRand = 8;
                                 lightningDamage = 300.0F;
-                                smokeEffect = EffectWrapper.wrap(WHFx.hitSparkHuge, hitColor);
+                                smokeEffect = new WrapEffect(WHFx.hitSparkHuge, hitColor);
                                 shootEffect = WHFx.instShoot(backColor, frontColor);
                                 despawnEffect = WHFx.lightningHitLarge;
                             }
@@ -254,7 +253,7 @@ public final class WHUnitTypes{
                         bullet = new ChainLightingBulletType(300){
                             {
                                 length = 600.0F;
-                                hitColor = lightColor = lightningColor = WHPal.pop;
+                                hitColor = lightColor = lightningColor = WHPal.WHYellow;
                                 shootEffect = WHFx.hitSparkLarge;
                                 hitEffect = WHFx.lightningHitSmall;
                                 smokeEffect = WHFx.hugeSmokeGray;
@@ -264,7 +263,7 @@ public final class WHUnitTypes{
                 });
                 weapons.add(new PointDefenseWeapon("wh-c-moon-weapon1"){
                     {
-                        color = WHPal.pop;
+                        color = WHPal.WHYellow;
                         display = false;
                         layerOffset = 0.01F;
                         rotate = true;
@@ -307,7 +306,7 @@ public final class WHUnitTypes{
                             {
                                 maxRange = 600.0F;
                                 rangeOverride = 600.0F;
-                                hitColor = lightColor = lightningColor = WHPal.pop;
+                                hitColor = lightColor = lightningColor = WHPal.WHYellow;
                                 shootEffect = WHFx.hitSparkLarge;
                                 hitEffect = WHFx.lightningHitSmall;
                                 smokeEffect = WHFx.hugeSmokeGray;
@@ -382,12 +381,12 @@ public final class WHUnitTypes{
                                 lightning = 2;
                                 lightningLength = 9;
                                 lightningLengthRand = 9;
-                                lightColor = lightningColor = WHPal.pop;
+                                lightColor = lightningColor = WHPal.WHYellow;
                                 lifetime = 47.0F;
                                 width = 15.0F;
                                 height = 30.0F;
-                                frontColor = WHPal.pop;
-                                backColor = WHPal.pop;
+                                frontColor = WHPal.WHYellow;
+                                backColor = WHPal.WHYellow;
                                 trailLength = 13;
                                 trailWidth = 3.0F;
                                 trailColor = Color.valueOf("FEEBB3");
@@ -405,7 +404,7 @@ public final class WHUnitTypes{
                                         length = 35.0F;
                                         baseLength = 0.0F;
                                         lifetime = 23.0F;
-                                        colorFrom = colorTo = WHPal.pop;
+                                        colorFrom = colorTo = WHPal.WHYellow;
                                         cone = 15.0F;
                                     }
                                 };
@@ -420,7 +419,7 @@ public final class WHUnitTypes{
                                                 length = 50.0F;
                                                 baseLength = 0.0F;
                                                 lifetime = 60.0F;
-                                                colorFrom = colorTo = WHPal.pop;
+                                                colorFrom = colorTo = WHPal.WHYellow;
                                             }
                                         };
                                         new ParticleEffect(){
@@ -434,7 +433,7 @@ public final class WHUnitTypes{
                                                 length = 80.0F;
                                                 baseLength = 10.0F;
                                                 lifetime = 60.0F;
-                                                colorFrom = colorTo = WHPal.pop;
+                                                colorFrom = colorTo = WHPal.WHYellow;
                                             }
                                         };
                                         new WaveEffect(){
@@ -444,7 +443,7 @@ public final class WHUnitTypes{
                                                 sizeTo = 70.0F;
                                                 strokeFrom = 3.0F;
                                                 strokeTo = 0.0F;
-                                                colorFrom = colorTo = WHPal.pop;
+                                                colorFrom = colorTo = WHPal.WHYellow;
                                             }
                                         };
                                         new WaveEffect(){
@@ -454,7 +453,7 @@ public final class WHUnitTypes{
                                                 sizeTo = 70.0F;
                                                 strokeFrom = 2.5F;
                                                 strokeTo = 0.0F;
-                                                colorFrom = colorTo = WHPal.pop;
+                                                colorFrom = colorTo = WHPal.WHYellow;
                                             }
                                         };
                                     }
@@ -520,12 +519,12 @@ public final class WHUnitTypes{
                                 lightning = 2;
                                 lightningLength = 9;
                                 lightningLengthRand = 9;
-                                lightningColor = WHPal.pop;
+                                lightningColor = WHPal.WHYellow;
                                 lifetime = 47.0F;
                                 width = 15.0F;
                                 height = 30.0F;
-                                frontColor = WHPal.pop;
-                                backColor = WHPal.pop;
+                                frontColor = WHPal.WHYellow;
+                                backColor = WHPal.WHYellow;
                                 trailLength = 13;
                                 trailWidth = 3.0F;
                                 trailColor = Color.valueOf("FEEBB3");
@@ -543,7 +542,7 @@ public final class WHUnitTypes{
                                         length = 35.0F;
                                         baseLength = 0.0F;
                                         lifetime = 23.0F;
-                                        colorFrom = colorTo = WHPal.pop;
+                                        colorFrom = colorTo = WHPal.WHYellow;
                                         cone = 15.0F;
                                     }
                                 };
@@ -559,7 +558,7 @@ public final class WHUnitTypes{
                                                 length = 50.0F;
                                                 baseLength = 0.0F;
                                                 lifetime = 60.0F;
-                                                colorFrom = colorTo = WHPal.pop;
+                                                colorFrom = colorTo = WHPal.WHYellow;
                                             }
                                         };
                                         new ParticleEffect(){
@@ -573,7 +572,7 @@ public final class WHUnitTypes{
                                                 length = 80.0F;
                                                 baseLength = 10.0F;
                                                 lifetime = 60.0F;
-                                                colorFrom = colorTo = WHPal.pop;
+                                                colorFrom = colorTo = WHPal.WHYellow;
                                             }
                                         };
                                         new WaveEffect(){
@@ -583,7 +582,7 @@ public final class WHUnitTypes{
                                                 sizeTo = 70.0F;
                                                 strokeFrom = 3.0F;
                                                 strokeTo = 0.0F;
-                                                colorFrom = colorTo = WHPal.pop;
+                                                colorFrom = colorTo = WHPal.WHYellow;
                                             }
                                         };
                                         new WaveEffect(){
@@ -593,7 +592,7 @@ public final class WHUnitTypes{
                                                 sizeTo = 70.0F;
                                                 strokeFrom = 2.5F;
                                                 strokeTo = 0.0F;
-                                                colorFrom = colorTo = WHPal.pop;
+                                                colorFrom = colorTo = WHPal.WHYellow;
                                             }
                                         };
                                     }
@@ -651,7 +650,7 @@ public final class WHUnitTypes{
                                 trailWidth = 9.0F;
                                 hittable = false;
                                 absorbable = false;
-                                trailColor = WHPal.pop;
+                                trailColor = WHPal.WHYellow;
                                 trailInterval = 1.0F;
                                 trailRotation = true;
                                 trailEffect = new ParticleEffect(){
@@ -679,7 +678,7 @@ public final class WHUnitTypes{
                                         sizeTo = 0.0F;
                                         strokeFrom = 0.0F;
                                         strokeTo = 10.0F;
-                                        colorFrom = colorTo = WHPal.pop;
+                                        colorFrom = colorTo = WHPal.WHYellow;
                                     }
                                 }, new WaveEffect(){
                                     {
@@ -690,10 +689,10 @@ public final class WHUnitTypes{
                                         sizeTo = 0.0F;
                                         strokeFrom = 0.0F;
                                         strokeTo = 10.0F;
-                                        colorFrom = colorTo = WHPal.pop;
+                                        colorFrom = colorTo = WHPal.WHYellow;
                                     }
                                 }, new Effect(180.0F, (e) -> {
-                                    Draw.color(WHPal.pop);
+                                    Draw.color(WHPal.WHYellow);
                                     Fill.circle(e.x, e.y, 23.0F * e.finpow());
                                     float z = Draw.z();
                                     Draw.z(212.0F);
@@ -701,7 +700,7 @@ public final class WHUnitTypes{
                                     Fill.circle(e.x, e.y, 20.0F * e.finpow());
                                     Draw.z(z);
                                     Angles.randLenVectors(e.id, 16, 60.0F * e.foutpow(), Mathf.randomSeed(e.id, 360.0F), 360.0F, (x, y) -> {
-                                        Draw.color(WHPal.pop);
+                                        Draw.color(WHPal.WHYellow);
                                         Fill.circle(e.x + x, e.y + y, 12.0F * e.foutpow());
                                         float zs = Draw.z();
                                         Draw.z(210.0F);
@@ -718,12 +717,12 @@ public final class WHUnitTypes{
                                         keepVelocity = false;
                                         inRad = 32.0F;
                                         outRad = drawSize = 88.0F;
-                                        accColor = WHPal.pop;
+                                        accColor = WHPal.WHYellow;
                                         speed = 0.0F;
                                         lifetime = 150.0F;
                                         splashDamageRadius = 180.0F;
                                         splashDamage = 1500.0F;
-                                        despawnEffect = hitEffect = new MultiEffect(WHFx.smoothColorCircle(WHPal.pop, splashDamageRadius * 1.25F, 95.0F), WHFx.circleOut(WHPal.pop, splashDamageRadius * 1.25F), WHFx.hitSparkLarge);
+                                        despawnEffect = hitEffect = new MultiEffect(WHFx.smoothColorCircle(WHPal.WHYellow, splashDamageRadius * 1.25F, 95.0F), WHFx.circleOut(WHPal.WHYellow, splashDamageRadius * 1.25F), WHFx.hitSparkLarge);
                                         fragBullets = 15;
                                         fragVelocityMax = 1.3F;
                                         fragVelocityMin = 0.5F;
@@ -741,17 +740,17 @@ public final class WHUnitTypes{
                                                 lightningCone = 360.0F;
                                                 lightningDamage = 200.0F;
                                                 linkRange = 150.0F;
-                                                lightningColor = WHPal.pop;
+                                                lightningColor = WHPal.WHYellow;
                                                 drag = 0.04F;
                                                 knockback = 0.8F;
                                                 lifetime = 90.0F;
                                                 splashDamageRadius = 64.0F;
                                                 splashDamage = 800.0F;
-                                                backColor = trailColor = hitColor = WHPal.pop;
-                                                frontColor = WHPal.pop;
+                                                backColor = trailColor = hitColor = WHPal.WHYellow;
+                                                frontColor = WHPal.WHYellow;
                                                 despawnShake = 7.0F;
                                                 lightRadius = 30.0F;
-                                                lightColor = WHPal.pop;
+                                                lightColor = WHPal.WHYellow;
                                                 lightOpacity = 0.5F;
                                                 trailLength = 20;
                                                 trailWidth = 3.5F;
@@ -1029,19 +1028,19 @@ public final class WHUnitTypes{
                             velocityBegin = 3f;
                             velocityIncrease = 11f;
 
-                            backColor = hitColor = lightColor = lightningColor = WHPal.pop;
+                            backColor = hitColor = lightColor = lightningColor = WHPal.WHYellow;
                             trailColor = Color.gray;
-                            frontColor = WHPal.pop;
+                            frontColor = WHPal.WHYellow;
                             homingPower = 0.08f;
                             homingDelay = 5f;
                             lifetime = 120f;
-                            hitEffect = WHFx.instHit(backColor, 2, 30f);
+                            hitEffect = WHFx.instHit(backColor,true, 2, 30f);
                             despawnEffect = WHFx.shootCircleSmall(backColor);
                             lightning = 1;
                             lightningLengthRand = 4;
                             lightningLength = 5;
                             lightningDamage = 90;
-                            lightningColor = WHPal.pop;
+                            lightningColor = WHPal.WHYellow;
                             smokeEffect = Fx.shootPyraFlame;
                             shootEffect = WHFx.hugeSmokeGray;
                             trailWidth = 2f;
@@ -1096,8 +1095,6 @@ public final class WHUnitTypes{
                             }
                         };
                         bullet = new TextureMissileType(1200f, "wh-Starry-sky-missile"){{
-                            velocityBegin = 2f;
-                            velocityIncrease = 10f;
                             absorbable = false;
                             scaledSplashDamage = true;
                             splashDamage = 600;
@@ -1107,7 +1104,7 @@ public final class WHUnitTypes{
                             incendSpread = 24f;
                             makeFire = false;
                             lifetime += 50;
-                            trailColor = WHPal.pop;
+                            trailColor = WHPal.WHYellow;
                             trailEffect = WHFx.trailToGray;
                             trailParam = 2f;
                             trailChance = 0.2f;
@@ -1120,8 +1117,8 @@ public final class WHUnitTypes{
                             lightningLengthRand = 4;
                             lightningLength = 6;
                             lightningDamage = 130;
-                            backColor = hitColor = lightColor = lightningColor = WHPal.pop;
-                            frontColor = WHPal.pop2;
+                            backColor = hitColor = lightColor = lightningColor = WHPal.WHYellow;
+                            frontColor = WHPal.WHYellow2;
 
                             smokeEffect = none;
                             shootEffect = none;
@@ -1161,8 +1158,6 @@ public final class WHUnitTypes{
                             }
                         };
                         bullet = new TextureMissileType(1200f, "wh-Starry-sky-missile"){{
-                            velocityBegin = 2f;
-                            velocityIncrease = 10f;
                             absorbable = false;
                             scaledSplashDamage = true;
                             splashDamage = 500;
@@ -1172,7 +1167,7 @@ public final class WHUnitTypes{
                             incendSpread = 24f;
                             makeFire = false;
                             lifetime += 40f;
-                            trailColor = WHPal.pop;
+                            trailColor = WHPal.WHYellow;
                             trailEffect = WHFx.trailToGray;
                             trailParam = 2f;
                             trailChance = 0.2f;
@@ -1182,8 +1177,8 @@ public final class WHUnitTypes{
                             width = 15;
                             height = 20f;
 
-                            backColor = hitColor = lightColor = lightningColor = WHPal.pop;
-                            frontColor = WHPal.pop2;
+                            backColor = hitColor = lightColor = lightningColor = WHPal.WHYellow;
+                            frontColor = WHPal.WHYellow2;
 
                             smokeEffect = none;
                             shootEffect = none;
@@ -1227,8 +1222,6 @@ public final class WHUnitTypes{
                             }
                         };
                         bullet = new TextureMissileType(1200f, "wh-Starry-sky-missile"){{
-                            velocityBegin = 2f;
-                            velocityIncrease = 10f;
                             absorbable = false;
                             scaledSplashDamage = true;
                             splashDamage = 600;
@@ -1238,7 +1231,7 @@ public final class WHUnitTypes{
                             incendSpread = 24f;
                             makeFire = false;
                             lifetime += 50f;
-                            trailColor = WHPal.pop;
+                            trailColor = WHPal.WHYellow;
                             trailEffect = WHFx.trailToGray;
                             trailParam = 2f;
                             trailChance = 0.2f;
@@ -1248,8 +1241,8 @@ public final class WHUnitTypes{
                             width = 15;
                             height = 20f;
 
-                            backColor = hitColor = lightColor = lightningColor = WHPal.pop;
-                            frontColor = WHPal.pop2;
+                            backColor = hitColor = lightColor = lightningColor = WHPal.WHYellow;
+                            frontColor = WHPal.WHYellow2;
 
                             smokeEffect = none;
                             shootEffect = none;
@@ -1258,7 +1251,7 @@ public final class WHUnitTypes{
                             lightningLengthRand = 4;
                             lightningLength = 10;
                             lightningDamage = 130;
-                            lightningColor = WHPal.pop;
+                            lightningColor = WHPal.WHYellow;
 
                             hitShake = despawnShake = 2f;
                             despawnSound = hitSound = explosion;
@@ -1331,16 +1324,16 @@ public final class WHUnitTypes{
                                 lightningLengthRand = 3;
                                 splashDamage = 600;
                                 splashDamageRadius = 40f;
-                                lightColor = lightningColor = WHPal.pop;
+                                lightColor = lightningColor = WHPal.WHYellow;
                                 lifetime = 47.0F;
                                 width = 15.0F;
                                 height = 30.0F;
-                                frontColor = WHPal.pop;
-                                backColor = WHPal.pop;
+                                frontColor = WHPal.WHYellow;
+                                backColor = WHPal.WHYellow;
                                 trailLength = 13;
                                 trailWidth = 3.0F;
                                 trailColor = Color.valueOf("FEEBB3");
-                                shootEffect = EffectWrapper.wrap(WHFx.shootLine(33, 28), hitColor);
+                                shootEffect = new WrapEffect(WHFx.shootLine(33, 28), hitColor);
                                 smokeEffect = new ParticleEffect(){
                                     {
                                         particles = 8;
@@ -1354,7 +1347,7 @@ public final class WHUnitTypes{
                                         length = 35.0F;
                                         baseLength = 0.0F;
                                         lifetime = 23.0F;
-                                        colorFrom = colorTo = WHPal.pop;
+                                        colorFrom = colorTo = WHPal.WHYellow;
                                         cone = 15.0F;
                                     }
                                 };
@@ -1367,10 +1360,10 @@ public final class WHUnitTypes{
                                         length = 30.0F;
                                         baseLength = 0.0F;
                                         lifetime = 45.0F;
-                                        colorFrom = colorTo = WHPal.pop;
+                                        colorFrom = colorTo = WHPal.WHYellow;
                                     }
                                 });
-                                despawnEffect = WHFx.crossBlast(WHPal.pop, splashDamageRadius * 1.2f, 45);
+                                despawnEffect = WHFx.crossBlast(WHPal.WHYellow, splashDamageRadius * 1.2f, 45);
                             }
 
                         };
@@ -1401,7 +1394,7 @@ public final class WHUnitTypes{
                             height = 12f;
                             shrinkY = 0f;
                             drag = -0.01f;
-                            backColor = trailColor = lightColor = lightningColor = hitColor = WHPal.pop;
+                            backColor = trailColor = lightColor = lightningColor = hitColor = WHPal.WHYellow;
                             frontColor = backColor.cpy().lerp(Color.white, 0.7f);
                             splashDamageRadius = 24;
                             splashDamage = 80;
@@ -1412,7 +1405,7 @@ public final class WHUnitTypes{
                             lightning = 2;
                             lightningLength = 10;
                             inaccuracy = 5;
-                            trailColor = WHPal.pop;
+                            trailColor = WHPal.WHYellow;
                             trailWidth = 1f;
                             trailLength = 7;
                         }};
@@ -1443,7 +1436,7 @@ public final class WHUnitTypes{
                             height = 12f;
                             shrinkY = 0f;
                             drag = -0.01f;
-                            backColor = trailColor = lightColor = lightningColor = hitColor = WHPal.pop;
+                            backColor = trailColor = lightColor = lightningColor = hitColor = WHPal.WHYellow;
                             frontColor = backColor.cpy().lerp(Color.white, 0.7f);
                             splashDamageRadius = 24;
                             splashDamage = 80;
@@ -1454,7 +1447,7 @@ public final class WHUnitTypes{
                             lightning = 2;
                             lightningLength = 10;
                             inaccuracy = 5;
-                            trailColor = WHPal.pop;
+                            trailColor = WHPal.WHYellow;
                             trailWidth = 1f;
                             trailLength = 7;
                         }};
@@ -1480,7 +1473,7 @@ public final class WHUnitTypes{
                                 maxRange = 350F;
                                 rangeOverride = 350F;
                                 shootSound = laser;
-                                hitColor = lightColor = lightningColor = WHPal.pop;
+                                hitColor = lightColor = lightningColor = WHPal.WHYellow;
                                 shootEffect = WHFx.hitSparkLarge;
                                 hitEffect = WHFx.lightningHitSmall;
                                 smokeEffect = WHFx.hugeSmokeGray;
@@ -1872,7 +1865,7 @@ public final class WHUnitTypes{
                                 trailWidth = 3.3F;
                                 trailColor = WHPal.OR;
                                 backColor = WHPal.OR;
-                                frontColor = WHPal.pop2;
+                                frontColor = WHPal.WHYellow2;
                                 width = 14.0F;
                                 height = 33.0F;
                                 hitEffect = new ParticleEffect(){
@@ -1887,7 +1880,7 @@ public final class WHUnitTypes{
                                         baseLength = 0.0F;
                                         lifetime = 10.0F;
                                         colorFrom = WHPal.OR;
-                                        colorTo = WHPal.pop2;
+                                        colorTo = WHPal.WHYellow2;
                                         cone = 60.0F;
                                     }
                                 };
@@ -1970,7 +1963,7 @@ public final class WHUnitTypes{
                                 trailWidth = 5.0F;
                                 trailColor = WHPal.OR;
                                 backColor = WHPal.OR;
-                                frontColor = WHPal.pop2;
+                                frontColor = WHPal.WHYellow2;
                                 drag = -0.07F;
                                 width = 23.0F;
                                 height = 75.0F;
@@ -2005,263 +1998,9 @@ public final class WHUnitTypes{
                 weapons.add(new ProgressWeapon("wh-tankl-weapon1"){
                     {
                         originalReload = 40f;
-                        //中右下
-                        parts.add(new RegionPart("-barrel"){
 
-
-                                      {
-                                          recoilIndex = 0;
-                                          layerOffset = -0.01f;
-                                          recoilTime = 0f;
-                                          recoil = 0f;
-                                          y = 17f;
-                                          x = 0.75f;
-                                          moveX = 1.35f;
-                                          moveY = -2F;
-                                          color = Color.valueOf("82848CFF");
-                                          colorTo = Color.valueOf("4A4B53FF");
-                                          heatColor = Color.valueOf("FF774280");
-                                          heatProgress = PartProgress.warmup
-
-                                          ;
-                                          progress = PartProgress.heat;
-                                          turretHeatLayer = 50;
-                                          xScl = 1.1f;
-                                          yScl = 1.3f;
-                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
-
-                                      }
-                                  }
-                        );
-                        parts.add(new RegionPart("-barrel"){
-
-                                      {
-                                          recoilIndex = 0;
-                                          layerOffset = -0.01f;
-                                          recoil = 0f;
-                                          recoilTime = 5f;
-                                          y = 17f;
-                                          x = 1.875f;
-                                          moveX = 1.1f;
-                                          moveY = -2F;
-                                          color = Color.valueOf("4A4B53FF");
-                                          colorTo = Color.valueOf("82848CFF");
-                                          heatColor = Color.valueOf("FF774280");
-                                          heatProgress = PartProgress.warmup
-
-                                          ;
-                                          progress = PartProgress.heat;
-                                          turretHeatLayer = 50;
-                                          xScl = 1f;
-                                          yScl = 1.3f;
-                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
-
-                                      }
-                                  }
-                        );
-
-                        //中左下
-                        parts.add(new RegionPart("-barrel"){
-
-                                      {
-                                          recoilIndex = 1;
-                                          layerOffset = -0.01f;
-                                          recoilTime = 0f;
-                                          recoil = 0f;
-                                          y = 17f;
-                                          x = -1.875f;
-                                          moveX = 1.125f;
-                                          moveY = -2F;
-                                          color = Color.valueOf("4A4B53FF");
-                                          colorTo = Color.valueOf("82848CFF");
-                                          heatColor = Color.valueOf("FF774280");
-                                          heatProgress = PartProgress.warmup
-
-                                          ;
-                                          progress = PartProgress.heat;
-                                          turretHeatLayer = 50;
-                                          xScl = 1f;
-                                          yScl = 1.3f;
-                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
-
-                                      }
-                                  }
-                        );
-                        parts.add(new RegionPart("-barrel"){
-
-                                      {
-                                          recoilIndex = 1;
-                                          layerOffset = -0.01f;
-                                          recoilTime = 0f;
-                                          recoil = 0f;
-                                          y = 17f;
-                                          x = -0.75f;
-                                          moveX = 1.275f;
-                                          moveY = -2F;
-                                          color = Color.valueOf("4A4B53FF");
-                                          colorTo = Color.valueOf("4A4B53FF");
-                                          heatColor = Color.valueOf("FF774280");
-                                          heatProgress = PartProgress.warmup;
-                                          progress = PartProgress.heat;
-                                          turretHeatLayer = 50;
-                                          xScl = 1f;
-                                          yScl = 1.3f;
-                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
-
-                                      }
-                                  }
-                        );
-
-                        //左
-                        parts.add(new RegionPart("-barrel"){
-
-                                      {
-                                          recoilIndex = 2;
-                                          layerOffset = -0.01f;
-                                          recoilTime = 0f;
-                                          recoil = 0f;
-                                          y = 17f;
-                                          x = -3.125f;
-                                          moveX = 1.125f;
-                                          moveY = -2F;
-                                          color = Color.valueOf("4A4B53FF");
-                                          colorTo = Color.valueOf("4A4B53FF");
-                                          heatColor = Color.valueOf("FF774280");
-                                          heatProgress = PartProgress.warmup;
-                                          progress = PartProgress.heat;
-                                          turretHeatLayer = 50;
-                                          xScl = 1f;
-                                          yScl = 1.3f;
-                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
-
-                                      }
-                                  }
-                        );
-                        parts.add(new RegionPart("-barrel"){
-
-                                      {
-                                          recoilIndex = 2;
-                                          layerOffset = -0.01f;
-                                          recoilTime = 0f;
-                                          recoil = 0f;
-                                          y = 17f;
-                                          x = -1.875f;
-                                          moveX = 1.125f;
-                                          moveY = -2F;
-                                          color = Color.valueOf("82848CFF");
-                                          colorTo = Color.valueOf("4A4B53FF");
-                                          heatColor = Color.valueOf("FF774280");
-                                          heatProgress = PartProgress.warmup;
-                                          progress = PartProgress.heat;
-                                          turretHeatLayer = 50;
-                                          xScl = 1f;
-                                          yScl = 1.3f;
-                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
-
-                                      }
-                                  }
-
-                        );
-
-
-                        //中
-                        parts.add(new RegionPart("-barrel"){
-
-                                      {
-                                          recoilIndex = 3;
-                                          layerOffset = -0.01f;
-                                          recoilTime = 0f;
-                                          recoil = 0f;
-                                          y = 17f;
-                                          x = -0.75f;
-                                          moveX = -2.5f;
-                                          moveY = -2F;
-                                          color = Color.valueOf("565761FF");
-                                          colorTo = Color.valueOf("4A4B53FF");
-                                          heatColor = Color.valueOf("FF774280");
-                                          heatProgress = PartProgress.warmup;
-                                          progress = PartProgress.heat;
-                                          turretHeatLayer = 50;
-                                          xScl = 1.1f;
-                                          yScl = 1.3f;
-                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.05f, 0f));
-
-                                      }
-                                  }
-                        );
-                        parts.add(new RegionPart("-barrel"){
-
-                                      {
-                                          recoilIndex = 3;
-                                          layerOffset = -0.01f;
-                                          recoilTime = 0f;
-                                          recoil = 0f;
-                                          y = 17f;
-                                          x = 0.75f;
-                                          moveX = -2.5f;
-                                          moveY = -2F;
-                                          color = Color.valueOf("989AA4FF");
-                                          colorTo = Color.valueOf("82848CFF");
-                                          heatColor = Color.valueOf("FF774280");
-                                          heatProgress = PartProgress.warmup;
-                                          progress = PartProgress.heat;
-                                          turretHeatLayer = 50;
-                                          xScl = 1.1f;
-                                          yScl = 1.3f;
-                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
-
-                                      }
-                                  }
-                        );
-                        //右
-                        parts.add(new RegionPart("-barrel"){
-
-                                      {
-                                          recoilIndex = 4;
-                                          layerOffset = -0.01f;
-                                          recoilTime = 0f;
-                                          recoil = 0f;
-                                          y = 17f;
-                                          x = 1.875f;
-                                          moveX = -1.5f;
-                                          moveY = -2F;
-                                          color = Color.valueOf("565761FF");
-                                          colorTo = Color.valueOf("4A4B53FF");
-                                          heatColor = Color.valueOf("FF774280");
-                                          heatProgress = PartProgress.warmup;
-                                          progress = PartProgress.heat;
-                                          turretHeatLayer = 50;
-                                          xScl = 1f;
-                                          yScl = 1.3f;
-                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
-
-                                      }
-                                  }
-                        );
-                        parts.add(new RegionPart("-barrel"){
-
-                                      {
-                                          recoilIndex = 4;
-                                          layerOffset = -0.01f;
-                                          recoilTime = 0f;
-                                          recoil = 0f;
-                                          y = 17f;
-                                          x = 3.125f;
-                                          moveX = -2.5f;
-                                          moveY = -2F;
-                                          color = Color.valueOf("989AA4FF");
-                                          colorTo = Color.valueOf("82848CFF");
-                                          heatColor = Color.valueOf("FF774280");
-                                          heatProgress = PartProgress.warmup;
-                                          progress = PartProgress.heat;
-                                          turretHeatLayer = 50;
-                                          xScl = 1f;
-                                          yScl = 1.3f;
-                                          moves.add(new PartMove(PartProgress.heat, 0, 0f, 0, -0.03f, 0f));
-
-                                      }
-                                  }
-                        );
+                        parts.add(new BarrelPart("-barrel"){{y=18f;moveY=-1f;
+                        progress = PartProgress.heat;}});
                         heatColor = Color.valueOf("FF774280");
                         //shoot.firstShotDelay=10f;
                         x = 0;
@@ -2293,7 +2032,7 @@ public final class WHUnitTypes{
                                 width = 9;
                                 height = 14;
                                 backColor = WHPal.OR;
-                                frontColor = WHPal.pop2;
+                                frontColor = WHPal.WHYellow2;
                                 trailLength = 4;
                                 trailWidth = 1.8f;
                                 trailColor = WHPal.OR;
@@ -2304,7 +2043,7 @@ public final class WHUnitTypes{
                             @Override
                             public void hitEntity(Bullet b, Hitboxc entity, float health){
                                 if(entity instanceof Unit unit){
-                                    unit.damage(damage * 2);
+                                    unit.damage(damage);
                                 }
                                 super.despawned(b);
                             }
@@ -2428,7 +2167,7 @@ public final class WHUnitTypes{
                         sprite = "circle-bullet";
                         height = 2;
                         width = 2;
-                        frontColor = WHPal.pop2;
+                        frontColor = WHPal.WHYellow2;
                         backColor = WHPal.OR;
                         shrinkX = 1;
                         shrinkY = 1;
@@ -2477,7 +2216,7 @@ public final class WHUnitTypes{
                                 width = 18;
                                 height = 24;
                                 hitSize = 30;
-                                frontColor = WHPal.pop2;
+                                frontColor = WHPal.WHYellow2;
                                 backColor = WHPal.OR;
                                 trailLength = 8;
                                 trailWidth = 3.6f;
@@ -2598,7 +2337,7 @@ public final class WHUnitTypes{
                             speed = 25;
                             lifetime = 14f;
                             shrinkY = 0;
-                            frontColor = WHPal.pop2;
+                            frontColor = WHPal.WHYellow2;
                             backColor = WHPal.OR;
                             trailColor = WHPal.ORL;
                             trailLength = 3;
@@ -2716,7 +2455,7 @@ public final class WHUnitTypes{
                                 absorbable = false;
                                 sprite = "missile-large";
                                 backColor = WHPal.ORL;
-                                frontColor = WHPal.pop2;
+                                frontColor = WHPal.WHYellow2;
                                 scaledSplashDamage = true;
                                 splashDamageRadius = 64;
                                 splashDamage = 700;
@@ -2935,7 +2674,7 @@ public final class WHUnitTypes{
                             -6.5f, 23.5f, 0,
                             };
                         }};
-                        bullet = new CircleEndLaserType(){
+                        bullet = new LightingLaserBulletType(){
                             {
                                 damage = 650;
                                 shootSound = Sounds.laser;
@@ -2982,7 +2721,7 @@ public final class WHUnitTypes{
                             speed = 25;
                             lifetime = 14.4f;
                             shrinkY = 0;
-                            frontColor = WHPal.pop2;
+                            frontColor = WHPal.WHYellow2;
                             backColor = WHPal.OR;
                             trailColor = WHPal.ORL;
                             trailLength = 7;
@@ -3032,7 +2771,7 @@ public final class WHUnitTypes{
                             lightningLength = 15;
                             lightningColor = WHPal.OR;
                             shrinkY = 0;
-                            frontColor = WHPal.pop2;
+                            frontColor = WHPal.WHYellow2;
                             backColor = WHPal.OR;
                             trailLength = 15;
                             trailWidth = 2.2f;
@@ -3040,7 +2779,7 @@ public final class WHUnitTypes{
                             pierce = true;
                             pierceCap = 4;
                             knockback = 8;
-                            hitEffect = WHFx.instHit(WHPal.OR, 5, 70);
+                            hitEffect = WHFx.instHit(WHPal.OR, true,5, 70);
                             shootEffect = new MultiEffect(WHFx.shootLineSmall(WHPal.OR).followParent(true),
                             new WrapEffect(WHFx.lightningHitLarge, WHPal.OR),
                             WHFx.hugeSmoke,
@@ -3066,7 +2805,7 @@ public final class WHUnitTypes{
                                 trailEffect = none;
                                 despawnEffect = none;
                                 status = blasted;
-                                hitEffect = new MultiEffect(WHFx.instHit(WHPal.OR, 3, 20),
+                                hitEffect = new MultiEffect(WHFx.instHit(WHPal.OR,true, 3, 20),
                                 WHFx.hitSpark(WHPal.OR, 30f, 30, 60f, 2f, 10f));
                                 lightning = 1;
                                 lightningDamage = 25;
@@ -3088,7 +2827,7 @@ public final class WHUnitTypes{
                                         despawnEffect = bigShockwave;
                                         status = blasted;
                                         hitEffect = new MultiEffect(WHFx.hitSpark(WHPal.OR, 30f, 15, 20f, 2f, 10f),
-                                        WHFx.instHit(WHPal.OR, 3, 15));
+                                        WHFx.instHit(WHPal.OR, true,3, 15));
                                         lightning = 1;
                                         lightningDamage = 25;
                                         lightningLength = 5;
@@ -3161,7 +2900,7 @@ public final class WHUnitTypes{
                                 lifetime = 10;
                                 cone = 30;
                                 colorFrom = WHPal.OR;
-                                colorTo = WHPal.pop2;
+                                colorTo = WHPal.WHYellow2;
                             }};
                             width = 10;
                             height = 16;
@@ -3178,7 +2917,6 @@ public final class WHUnitTypes{
         tank3 = new TankUnitType("tank3"){
             {
                 constructor = TankUnit::create;
-                abilities.add(new ReflectiveShieldAbility(5, 2000, 60 * 8, 1.1f));
                 weapons.add(new Weapon("wh-tank3-weapon1"){
                     {
                         reload = 300;
@@ -3219,7 +2957,7 @@ public final class WHUnitTypes{
                                 pierceBuilding = true;
                                 pierceCap = 3;
                                 hitShake = 5;
-                                frontColor = WHPal.pop2;
+                                frontColor = WHPal.WHYellow2;
                                 backColor = WHPal.OR;
                                 trailLength = 8;
                                 trailWidth = 4;
@@ -3235,11 +2973,11 @@ public final class WHUnitTypes{
                                 })
                                 );
                                 shrinkY = 0;
-                                hitEffect = WHFx.instHit(WHPal.ORL, 3, 20);
+                                hitEffect = WHFx.instHit(WHPal.ORL, true,3, 20);
                                 despawnEffect = new MultiEffect(WHFx.hitSpark(WHPal.ORL, 30f, 60, 60f, 2f, 10f),
                                 WHFx.circleOut(WHPal.OR, 70),
                                 WHFx.lineCircleOut(WHPal.OR, 20f, 70, 2),
-                                WHFx.sharpBlast(WHPal.ORL, WHPal.pop2, 100f, 50f),
+                                WHFx.sharpBlast(WHPal.ORL, WHPal.WHYellow2, 100f, 50f),
                                 WHFx.subEffect(70, 70, 11, 30f, Interp.pow2Out, ((i, x, y, rot, fin) -> {
                                     float fout = Interp.pow2Out.apply(1 - fin);
                                     Draw.color(WHPal.ORL);
@@ -3292,7 +3030,7 @@ public final class WHUnitTypes{
                             lifetime = 16;
                             shrinkY = 0;
                             lightColor = WHPal.OR;
-                            frontColor = WHPal.pop2;
+                            frontColor = WHPal.WHYellow2;
                             backColor = WHPal.OR;
                             trailColor = WHPal.OR;
                             trailLength = 5;
@@ -3506,7 +3244,7 @@ public final class WHUnitTypes{
                                             pierceArmor = true;
                                             pierceBuilding = false;
                                             knockback = 5;
-                                            frontColor = WHPal.pop2;
+                                            frontColor = WHPal.WHYellow2;
                                             backColor = WHPal.ORL;
                                             trailColor = WHPal.OR;
                                             trailRotation = true;
@@ -3553,7 +3291,7 @@ public final class WHUnitTypes{
                                                     lightningLength = 11;
                                                     lightningColor = WHPal.ORL;
                                                     backColor = WHPal.ORL;
-                                                    frontColor = WHPal.pop2;
+                                                    frontColor = WHPal.WHYellow2;
                                                     splashDamageRadius = 65;
                                                     buildingDamageMultiplier = 2;
                                                     height = 15;
@@ -3612,7 +3350,7 @@ public final class WHUnitTypes{
                                 sprite = "wh-透彻";
                                 width = 10;
                                 height = 16;
-                                frontColor = WHPal.pop2;
+                                frontColor = WHPal.WHYellow2;
                                 backColor = WHPal.ORL;
                                 trailLength = 10;
                                 trailWidth = 4;
@@ -3677,7 +3415,7 @@ public final class WHUnitTypes{
                                                     width = 8;
                                                     height = 16;
                                                     despawnEffect = blastExplosion;
-                                                    hitEffect = WHFx.instHit(backColor, 2, 20f);
+                                                    hitEffect = WHFx.instHit(backColor, true,2, 20f);
                                                     shootEffect = none;
                                                     lightningDamage = 50;
                                                     lightning = 3;
@@ -3729,7 +3467,7 @@ public final class WHUnitTypes{
                                             shrinkX = 0;
                                             width = 16;
                                             height = 16;
-                                            frontColor = WHPal.pop2;
+                                            frontColor = WHPal.WHYellow2;
                                             backColor = WHPal.OR;
                                             hitSound = spark;
                                             hitShake = 1;
@@ -3965,7 +3703,7 @@ public final class WHUnitTypes{
                             sprite = "wh-透彻";
                             width = 22;
                             height = 30;
-                            frontColor = WHPal.pop2;
+                            frontColor = WHPal.WHYellow2;
                             backColor = Color.valueOf("F3E979FF");
                             trailWidth = 5;
                             trailLength = 8;
@@ -4151,7 +3889,7 @@ public final class WHUnitTypes{
                             homingRange = 50;
                             sprite = "wh-重型导弹";
                             backColor = WHPal.OR;
-                            frontColor = WHPal.pop2;
+                            frontColor = WHPal.WHYellow2;
                             trailLength = 15;
                             trailWidth = 2.5f;
                             trailColor = WHPal.OR;
@@ -4208,7 +3946,7 @@ public final class WHUnitTypes{
                                 width = 9;
                                 height = 15;
                                 backColor = WHPal.OR;
-                                frontColor = WHPal.pop2;
+                                frontColor = WHPal.WHYellow2;
                                 trailLength = 11;
                                 trailWidth = 2;
                                 trailColor = WHPal.OR;
@@ -4326,7 +4064,7 @@ public final class WHUnitTypes{
                                 lightning = 3;
                                 lightningLength = 14;
                                 backColor = WHPal.ORL;
-                                frontColor = WHPal.pop2;
+                                frontColor = WHPal.WHYellow2;
                                 trailLength = 9;
                                 trailWidth = 4;
                                 trailColor = WHPal.OR;
@@ -4523,7 +4261,7 @@ public final class WHUnitTypes{
                                 weaveMag = 0.4f;
                                 reflectable = false;
                                 shrinkY = 0;
-                                frontColor = WHPal.pop2;
+                                frontColor = WHPal.WHYellow2;
                                 trailLength = 16;
                                 trailWidth = 1.6f;
 
@@ -4540,7 +4278,7 @@ public final class WHUnitTypes{
                                     });
                                 }));
                                 despawnEffect = new MultiEffect(WHFx.blast(WHPal.SkyBlue, 50),
-                                WHFx.airAsh(51, splashDamageRadius * .4f, splashDamageRadius * .8f, splashDamageRadius / 10f, WHPal.SkyBlue, 2.7f, 30),
+                                WHFx.airAsh(51, splashDamageRadius *4f, splashDamageRadius *8f, splashDamageRadius / 10f, WHPal.SkyBlue, 2.7f, 30),
                                 new Effect(60, e -> {
                                     Draw.color(WHPal.SkyBlue);
                                     for(int i = 0; i < 4; i++){
@@ -4641,7 +4379,7 @@ public final class WHUnitTypes{
                             lifetime = 30;
                             reflectable = false;
                             shrinkY = 0;
-                            frontColor = WHPal.pop2;
+                            frontColor = WHPal.WHYellow2;
                             backColor = WHPal.ORL;
                             trailLength = 3;
                             trailWidth = 1.5f;
@@ -4682,7 +4420,7 @@ public final class WHUnitTypes{
                                 frontColor = WHPal.SkyBlueF;
                                 backColor = WHPal.SkyBlue;
                                 shootEffect = none;
-                                smokeEffect = shootEffect = EffectWrapper.wrap(WHFx.shootLine(5, 10), backColor);
+                                smokeEffect = shootEffect = new WrapEffect(WHFx.shootLine(5, 10), backColor);
                                 damage = 55;
                                 splashDamageRadius = 35;
                                 splashDamage = 75;
@@ -4750,7 +4488,7 @@ public final class WHUnitTypes{
                             shrinkY = 0;
                             shrinkX = 0;
                             backColor = WHPal.OR;
-                            frontColor = WHPal.pop2;
+                            frontColor = WHPal.WHYellow2;
                             hitEffect = despawnEffect = new Effect(60f, e -> {
                                 Fx.rand.setSeed(e.id);
                                 Draw.color(WHPal.OR, WHPal.OR, e.finpow());
@@ -4894,14 +4632,14 @@ public final class WHUnitTypes{
                                 homingPower = 0.08f;
                                 homingDelay = 5f;
                                 lifetime = 65f;
-                                hitEffect = WHFx.instHit(backColor, 2, 10f);
+                                hitEffect = WHFx.instHit(backColor, true,2, 10f);
                                 despawnEffect = WHFx.shootCircleSmall(backColor);
                                 lightning = 1;
                                 lightningLength = 6;
                                 lightningDamage = 40;
                                 smokeEffect = Fx.shootPyraFlame;
                                 shootEffect = WHFx.hugeSmokeGray;
-                                trailColor = WHPal.pop2;
+                                trailColor = WHPal.WHYellow2;
                                 trailWidth = 2f;
                                 trailLength = 5;
 
@@ -4954,7 +4692,7 @@ public final class WHUnitTypes{
                                         width = 9;
                                         height = 15;
                                         backColor = WHPal.OR;
-                                        frontColor = WHPal.pop2;
+                                        frontColor = WHPal.WHYellow2;
                                         trailLength = 18;
                                         trailWidth = 2;
                                         trailColor = WHPal.OR;
@@ -4979,7 +4717,9 @@ public final class WHUnitTypes{
             armor = 10f;
             mechFrontSway = 1f;
             ammoType = new ItemAmmoType(Items.thorium);
-            abilities.add(new EllipseForceFieldAbility(70, 40, 4, 2000f, 60f * 3, 0.2f));
+            abilities.add(
+            new EllipseForceFieldAbility(100, 80, 2000/60f, 10000f, 60f * 3, 0.2f)
+            {{shader=true;fullAbsorb=true;Regen=true;}});
             mechStepParticles = true;
             stepShake = 0.15f;
             singleTarget = true;

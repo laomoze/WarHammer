@@ -122,7 +122,9 @@ public class SpeedupTurret extends EnhancedPowerTurret{
                 reloadCounter = 0f;
             } else {
                 reloadCounter += (1 + speedupScl) * delta() * peekAmmo().reloadMultiplier * baseReloadSpeed();
-                overheat = Mathf.approachDelta(overheat, overheatTime + 0.05f, efficiency * timeScale * ((speedupScl / maxSpeedupScl) * 1) / (1 + (liquids.current() == null ? 0 : liquids.current().heatCapacity)));
+                overheat = Mathf.approachDelta(overheat, overheatTime + 0.05f, efficiency * timeScale *
+                ((speedupScl / maxSpeedupScl) * 1) / (1 + (liquids.current() == null ? 0 : liquids.current().heatCapacity)));
+
                 if (overheat > overheatTime) requireCompleteCooling = true;
             }
         }

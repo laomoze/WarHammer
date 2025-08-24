@@ -17,7 +17,7 @@ import mindustry.gen.Unit;
 import mindustry.type.StatusEffect;
 import mindustry.type.UnitType;
 import wh.content.WHFx;
-import wh.gen.WHSounds;
+import wh.content.WHSounds;
 import wh.graphics.PositionLightning;
 import wh.graphics.WHPal;
 
