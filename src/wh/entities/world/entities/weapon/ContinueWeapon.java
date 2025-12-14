@@ -9,6 +9,8 @@ import mindustry.entities.bullet.*;
 import mindustry.entities.units.*;
 import mindustry.gen.*;
 import mindustry.type.*;
+import wh.entities.bullet.laser.*;
+import wh.entities.bullet.laser.ChargePointLaser.*;
 import wh.entities.world.entities.weapon.MarkWeapon.*;
 
 import static mindustry.Vars.*;
@@ -107,9 +109,10 @@ public class ContinueWeapon extends Weapon{
 
         if(alwaysShooting) mount.shoot = true;
 
-        if(continuous && mount.bullet != null && mount.bullets.size > 0 && mount.bullet.type instanceof ContinuousBulletType){
+        if(continuous && mount.bullet != null && mount.bullets.size > 0){
             mount.bullets.removeAll(b -> b == null || !b.isAdded() || b.type == null || b.time >= b.lifetime || mount.bullet.type != mount.bulletWhich);
             for(Bullet bullet : mount.bullets){
+
                 Vec2 pos = mount.shootPoints.get(bullet);
                 float
                 bx = mountX + Angles.trnsx(weaponRotation, this.shootX + pos.x, this.shootY + pos.y),
@@ -139,6 +142,7 @@ public class ContinueWeapon extends Weapon{
                 bullet.aimY = Tmp.v1.y;
 
                 if(alwaysContinuous && mount.shoot){
+
                     bullet.time = bullet.lifetime * bullet.type.optimalLifeFract * mount.warmup;
                     bullet.keepAlive = true;
 

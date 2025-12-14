@@ -72,7 +72,7 @@ public final class UIUtils{
             if(map.size == 0) continue;
 
             if(stats.useCategories){
-                table.add("@category." + cat.name).color(Pal.accent).fillX();
+                table.add("@category." + cat.name).color(Pal.accent.cpy()).fillX();
                 table.row();
             }
 

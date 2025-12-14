@@ -15,15 +15,14 @@ import wh.entities.world.type.*;
 
 import static mindustry.content.Planets.*;
 
-@SuppressWarnings("unused")
 public final class WHPlanets {
     public static Planet kellex;
 
     public static void load() {
-        kellex = new BetterPlanet("kellex", sun, 1, 2) {{
+        kellex = new Planet("kellex", sun, 1, 2){{
             generator = new KellexPlanetGenerator() {{
-                baseHeight = 0f;
-                baseColor = Blocks.stone.mapColor;
+              /*  baseHeight = 0f;
+                baseColor = Blocks.stone.mapColor.cpy();
                 heights.add(new NoiseHeight() {{
                     offset.set(1000, 0, 0);
                     octaves = 8;
@@ -54,7 +53,7 @@ public final class WHPlanets {
                             magnitude = 1.2f;
                             min = 0f;
                             max = 0.5f;
-                            out = Blocks.grass.mapColor;
+                            out = Blocks.grass.mapColor.cpy();
                             offset.set(1500f, 300f, -500f);
                         }},
                         new NoiseColorPass() {{
@@ -65,7 +64,7 @@ public final class WHPlanets {
                             magnitude = 1.2f;
                             min = 0.1f;
                             max = 0.4f;
-                            out = Blocks.stone.mapColor;
+                            out = Blocks.stone.mapColor.cpy();
                             offset.set(1500f, 300f, -500f);
                         }},
                         new NoiseColorPass() {{
@@ -76,7 +75,7 @@ public final class WHPlanets {
                             magnitude = 0.95f;
                             min = 0.1f;
                             max = 0.4f;
-                            out = Blocks.stone.mapColor;
+                            out = Blocks.stone.mapColor.cpy();
                             offset.set(1500f, 300f, -500f);
                         }},
                         new NoiseColorPass() {{
@@ -87,7 +86,7 @@ public final class WHPlanets {
                             magnitude = 1.2f;
                             min = 0.1f;
                             max = 0.4f;
-                            out = Blocks.stone.mapColor;
+                            out = Blocks.stone.mapColor.cpy();
                             offset.set(1500f, 300f, -500f);
                         }},
                         new NoiseColorPass() {{
@@ -98,7 +97,7 @@ public final class WHPlanets {
                             magnitude = 1.2f;
                             min = 0.1f;
                             max = 0.4f;
-                            out = Blocks.stone.mapColor;
+                            out = Blocks.stone.mapColor.cpy();
                             offset.set(1500f, 300f, -500f);
                         }},
                         new NoiseColorPass() {{
@@ -109,32 +108,32 @@ public final class WHPlanets {
                             magnitude = 1.2f;
                             min = 0.1f;
                             max = 0.4f;
-                            out = Blocks.water.mapColor;
+                            out = Blocks.water.mapColor.cpy();
                             offset.set(1500f, 300f, -500f);
                         }}
                 );
                 for(int i = 0; i < 5; i++) {
-                    colors.add(new SphereColorPass(new Vec3().setToRandomDirection(), 0.06f, Blocks.stone.mapColor));
+                    colors.add(new SphereColorPass(new Vec3().setToRandomDirection(), 0.06f, Blocks.stone.mapColor.cpy()));
                 }
                 colors.add(
                         new FlatColorPass() {{
                             min = 0;
                             max = 0.07f;
-                            out = Blocks.water.mapColor;
+                            out = Blocks.water.mapColor.cpy();
                         }},
                         new FlatColorPass() {{
                             min = 0.3f;
                             max = 0.5f;
-                            out = Blocks.stone.mapColor;
+                            out = Blocks.stone.mapColor.cpy();
                         }},
                         new FlatColorPass() {{
                             max = 1f;
                             min = 0.52f;
-                            out = Blocks.ice.mapColor;
+                            out = Blocks.ice.mapColor.cpy();
                         }}
-                );
+                );*/
             }};
-            meshLoader = () -> new MultiMesh(
+           /* meshLoader = () -> new MultiMesh(
                     new NoiseMesh(this, 0, 5, 0.94f, 1, 0.0001f, 0.0001f, 1f, Color.valueOf("404066FF"), Color.valueOf("404066FF"), 1, 1, 1, 1),
                     new NoiseMesh(this, 0, 6, 0.94f, 4, 0.9f, 0.7f, 1f, Color.valueOf("B17C4EFF"), Color.valueOf("3E3E4AFF"), 1, 1, 1.8f, 1),
                     new NoiseMesh(this, 0, 6, 0.895f, 4, 0.9f, 0.7f, 1.5f, Color.valueOf("505D4DFF"), Color.valueOf("3B5029FF"), 4, 1, 1.8f, 1),
@@ -144,7 +143,7 @@ public final class WHPlanets {
                     new HexSkyMesh(this, 0, 3, 0.1f, 6, Color.valueOf("FFF2DD88"), 3, 0.3f, 1f, 0.43f),
                     new HexSkyMesh(this, 0, 2, 0.11f, 6, Color.valueOf("FADDB1BB"), 3, 0.5f, 0.9f, 0.43f),
                     new HexSkyMesh(this, 0, -2, 0.034f, 5, Color.valueOf("403673FF"), 1, 0.2f, 0.2f, 0.4f)
-            );
+            );*/
             visible = true;
             tidalLock = false;
             accessible = true;

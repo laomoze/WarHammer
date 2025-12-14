@@ -28,7 +28,6 @@ public class WHShaders{
     public static DepthShader depth;
     public static DepthAtmosphereShader depthAtmosphere;
     public static @Nullable HexagonalTextureShieldShader HexagonalShield;
-    public static @Nullable VoidShield VoidShield;
     public static OutlineShader powerArea, powerDynamicArea;
 
     private WHShaders(){
@@ -50,11 +49,9 @@ public class WHShaders{
         };
         try{
             HexagonalShield = new HexagonalTextureShieldShader();
-            VoidShield = new VoidShield();
         }catch(Throwable t){
             //don't load shield shader
             HexagonalShield = null;
-            VoidShield = null;
             t.printStackTrace();
         }
     }

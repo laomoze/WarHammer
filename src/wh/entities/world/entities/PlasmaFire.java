@@ -28,8 +28,8 @@ import wh.graphics.WHPal;
 import static mindustry.Vars.*;
 
 public class PlasmaFire extends Fire{
-    public float tileDamage = 20f,damageDelay=10f;
-    public static final float baseLifetime = 15*60f;
+    public float tileDamage = 25f, damageDelay = 15f;
+    public static final float baseLifetime = 9 * 60f;
     public static final int frames = 80;
 
     protected transient float animation = (float)Mathf.random(44);
@@ -157,8 +157,8 @@ public class PlasmaFire extends Fire{
                     entity.damage(tileDamage);
                 }
                 Damage.damageUnits(null, tile.worldx(), tile.worldy(), 8f,
-                15f, (unit) -> !unit.isFlying() && !unit.isImmune(WHStatusEffects.PlasmaFireBurn), (unit) -> {
-                    unit.apply(WHStatusEffects.PlasmaFireBurn, 300f);
+                15f, (unit) -> !unit.isFlying() && !unit.isImmune(WHStatusEffects.plasmaFireBurn), (unit) -> {
+                    unit.apply(WHStatusEffects.plasmaFireBurn, 300f);
 
                 });
             }

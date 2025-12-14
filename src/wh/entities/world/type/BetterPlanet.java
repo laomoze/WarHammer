@@ -27,21 +27,24 @@ import static mindustry.Vars.renderer;
  * @author Eipusino
  * @since 1.0.6
  */
-public class BetterPlanet extends Planet {
+public class BetterPlanet extends Planet{
     public @Nullable FrameBuffer buffer;
 
-    public BetterPlanet(String name, Planet parent, float radius) {
+    public BetterPlanet(String name, Planet parent, float radius){
         super(name, parent, radius);
     }
 
-    public BetterPlanet(String name, Planet parent, float radius, int sectorSize) {
+    public BetterPlanet(String name, Planet parent, float radius, int sectorSize){
         super(name, parent, radius, sectorSize);
     }
 
     @Override
-    public void load() {
-        super.load();
-        if (!headless) {
+    public void load(){
+        if(!headless){
+            mesh = meshLoader.get();
+            cloudMesh = cloudMeshLoader.get();
+            if(grid != null) gridMesh = gridMeshLoader.get();
+
             buffer = new FrameBuffer(Core.graphics.getWidth(), Core.graphics.getHeight(), true);
             buffer.getTexture().setFilter(TextureFilter.nearest);
         }
@@ -49,7 +52,7 @@ public class BetterPlanet extends Planet {
 
 
     @Override
-    public void drawAtmosphere(Mesh atmosphere, Camera3D cam) {
+    public void drawAtmosphere(Mesh atmosphere, Camera3D cam){
         Gl.depthMask(false);
         Blending.additive.apply();
 
@@ -64,20 +67,20 @@ public class BetterPlanet extends Planet {
         Gl.depthMask(true);
     }
 
-    public class AtmosphereHexMesh implements GenericMesh {
+    public class AtmosphereHexMesh implements GenericMesh{
         protected Mesh mesh;
 
-        public AtmosphereHexMesh(HexMesher mesher, int divisions) {
+        public AtmosphereHexMesh(HexMesher mesher, int divisions){
             mesh = MeshBuilder.buildHex(mesher, divisions, radius, 0.2f);
         }
 
-        public AtmosphereHexMesh(int divisions) {
+        public AtmosphereHexMesh(int divisions){
             this(generator, divisions);
         }
 
         @Override
-        public void render(PlanetParams params, Mat3D projection, Mat3D transform) {
-            if (params.alwaysDrawAtmosphere || Core.settings.getBool("atmosphere")) {
+        public void render(PlanetParams params, Mat3D projection, Mat3D transform){
+            if(params.alwaysDrawAtmosphere || Core.settings.getBool("atmosphere")){
                 var depth = WHShaders.depth;
                 buffer.resize(Core.graphics.getWidth(), Core.graphics.getHeight());
                 buffer.begin(Tmp.c1.set(0xffffff00));

@@ -15,7 +15,7 @@ import mindustry.world.blocks.environment.*;
 
 import static wh.core.WarHammerMod.name;
 
-public class propeller extends Ability{
+public class Propeller extends Ability{
     public float px, py, length, speed;
     public String sprite;
 
@@ -29,7 +29,7 @@ public class propeller extends Ability{
         Fill.circle(e.x, e.y, e.fout() * 6 + 0.3f);
     });
 
-    public propeller(float px, float py, String sprite, float length, float speed){
+    public Propeller(float px, float py, String sprite, float length, float speed){
         this.px = px;
         this.py = py;
         this.length = length;
@@ -37,7 +37,7 @@ public class propeller extends Ability{
         this.sprite = sprite;
     }
 
-    public propeller(float px, float py, float length, float speed){
+    public Propeller(float px, float py, float length, float speed){
         this.px = px;
         this.py = py;
         this.length = length;
@@ -45,21 +45,22 @@ public class propeller extends Ability{
     }
 
     @Override
-    public String localized() {
+    public String localized(){
         return Core.bundle.format("ability.wh-utilities-propeller", px, py);
     }
 
     @Override
-    public void update(Unit unit) {
+    public void update(Unit unit){
         if(unit.type != null && unit.type.naval && !unit.floorOn().isLiquid){
             unit.elevation = 1;
         }
 
         float realSpeed = unit.elevation * speed * Time.delta;
+        float unitRot = unit.rotation - 90;
         rot += realSpeed;
         float out = unit.elevation * length;
-        float x = unit.x + Angles.trnsx(unit.rotation, px, py) + Angles.trnsx(unit.rotation, 0, out);
-        float y = unit.y + Angles.trnsy(unit.rotation, px, py) + Angles.trnsy(unit.rotation, 0, out);
+        float x = unit.x + Angles.trnsx(unitRot, px, py) + Angles.trnsx(unitRot, 0, out);
+        float y = unit.y + Angles.trnsy(unitRot, px, py) + Angles.trnsy(unitRot, 0, out);
         if(!unit.moving() && unit.isFlying()){
             Floor floor = Vars.world.floorWorld(x, y);
             if(floor != null) wind.at(x + Mathf.range(8), y + Mathf.range(8), floor.mapColor);
@@ -67,24 +68,31 @@ public class propeller extends Ability{
     }
 
     @Override
-    public void draw(Unit unit) {
-        Draw.mixcol(Color.white, unit.hitTime);
-        Draw.z(Math.max(Layer.groundUnit - 1, unit.elevation * Layer.flyingUnitLow));
-        float e = Math.max(unit.elevation, unit.type.shadowElevation);
+    public void draw(Unit unit){
 
+        float e = Math.max(unit.elevation, unit.type.shadowElevation);
+        float unitRot = unit.rotation - 90;
         float out = unit.elevation * length;
-        float x = unit.x + Angles.trnsx(unit.rotation, px, py) + Angles.trnsx(unit.rotation, 0, out);
-        float y = unit.y + Angles.trnsy(unit.rotation, px, py) + Angles.trnsy(unit.rotation, 0, out);
-        Draw.rect(Core.atlas.find(name("wing")),x, y, unit.rotation + rot * 2);//why not Time.time ? I Don't Know. ha~~
-        if(drawWing)Draw.rect(Core.atlas.find(sprite),x, y, unit.rotation - 90);
+        float x = unit.x + Angles.trnsx(unitRot, px, py) + Angles.trnsx(unitRot, 0, out);
+        float y = unit.y + Angles.trnsy(unitRot, px, py) + Angles.trnsy(unitRot, 0, out);
+        float z1 = Math.min(Layer.darkness, Layer.groundUnit - 1);
+        float z2 = Math.max(z1, unit.elevation * Layer.flyingUnitLow);
+
+        Draw.mixcol(Color.white, unit.hitTime);
+        Draw.z(z2);
+        if(drawWing) Draw.rect(Core.atlas.find(sprite), x, y, unit.rotation - 90);
+        Draw.z(z2 - 1);
+        Draw.rect(Core.atlas.find(name("wing")), x, y, unit.rotation + rot);
+
+        Draw.z(z1);
         Draw.color(Pal.shadow);
         Draw.rect(Core.atlas.find(name("wing")), x + UnitType.shadowTX * e, y + UnitType.shadowTY * e, unit.rotation + rot * 2);
         Draw.mixcol();
-        Draw.z(Math.min(Layer.darkness, Layer.groundUnit - 1));
-        if(unit.isFlying()&&drawWing){
+        if(unit.isFlying() && drawWing){
+            Draw.z(z1);
             Draw.color(Pal.shadow);
             Draw.rect(Core.atlas.find(sprite), x + UnitType.shadowTX * e, y + UnitType.shadowTY * e, unit.rotation - 90);
-            Draw.color();
         }
+        Draw.reset();
     }
 }

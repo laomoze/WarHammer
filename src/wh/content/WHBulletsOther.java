@@ -161,7 +161,7 @@ public class WHBulletsOther{
             {
                 buildingDamageMultiplier = 0.1f;
                 sprite = "circle-bullet";
-                trailColor = WHPal.OR;
+                trailColor = WHPal.ShootOrange;
                 trailWidth = 2f;
                 trailLength = 10;
                 status = WHStatusEffects.melta;
@@ -176,10 +176,10 @@ public class WHBulletsOther{
                 sticky = false;
                 puddleAmount = 3;
                 puddleLiquid = Liquids.slag;
-                backColor = WHPal.OR;
-                frontColor = WHPal.ORL;
+                backColor = WHPal.ShootOrange;
+                frontColor = WHPal.ShootOrangeLight;
                 hitEffect = despawnEffect = new ExplosionEffect(){{
-                    waveColor = sparkColor = WHPal.ORL;
+                    waveColor = sparkColor = WHPal.ShootOrangeLight;
                     waveLife = 20f;
                     lifetime = 30f;
                     sparks = 12;
@@ -200,7 +200,7 @@ public class WHBulletsOther{
                 speed = 3f;
                 drag = 0.05f;
                 frontColor = Color.white;
-                backColor = hitColor = trailColor = WHPal.ORL.cpy();
+                backColor = hitColor = trailColor = WHPal.ShootOrangeLight.cpy();
                 width = height = 5;
                 trailLength = 30;
                 trailWidth = 2;
@@ -212,7 +212,7 @@ public class WHBulletsOther{
                 homingDelay = 20;
                 homingRange = 48;
 
-                hitEffect = despawnEffect = WHFx.square(WHPal.ORL.cpy(), 60, 8, 20, 4);
+                hitEffect = despawnEffect = WHFx.square(WHPal.ShootOrangeLight.cpy(), 60, 8, 20, 4);
             }
 
             @Override
@@ -252,7 +252,7 @@ public class WHBulletsOther{
                 height = 30;
                 width = 12;
                 shrinkX = shrinkY = 0;
-                frontColor = backColor = lightningColor = hitColor = trailColor = WHPal.ORL.cpy();
+                frontColor = backColor = lightningColor = hitColor = trailColor = WHPal.ShootOrangeLight.cpy();
                 trailWidth = 4;
                 trailSpread = 5;
                 trailChance = 0.3f;
@@ -260,10 +260,10 @@ public class WHBulletsOther{
                 trailSinScl = 12f;
                 trailSinMag = 0.16f;
                 hitEffect = despawnEffect = new MultiEffect(
-                WHFx.lineCircleOut(WHPal.ORL.cpy(), 90, 50, 2f),
-                WHFx.hitSpark(WHPal.ORL.cpy(), 120, 15, 40, 1f, 8),
-                WHFx.square(WHPal.ORL.cpy(), 60, 18, 60, 5),
-                WHFx.fillCircle(WHPal.ORL.cpy(), 10, 60, Interp.pow3Out)
+                WHFx.lineCircleOut(WHPal.ShootOrangeLight.cpy(), 90, 50, 2f),
+                WHFx.hitSpark(WHPal.ShootOrangeLight.cpy(), 120, 15, 40, 1f, 8),
+                WHFx.square(WHPal.ShootOrangeLight.cpy(), 60, 18, 60, 5),
+                WHFx.fillCircle(WHPal.ShootOrangeLight.cpy(), 10, 60, Interp.pow3Out)
                 );
                 fragBullets = 1;
                 fragBullet = WHBulletsOther.PyrosBulletFrag;
@@ -307,7 +307,7 @@ public class WHBulletsOther{
                 sticky = true;
                 height = width = 25;
                 shrinkX = shrinkY = 0;
-                frontColor = backColor = lightningColor = hitColor = trailColor = WHPal.ORL.cpy();
+                frontColor = backColor = lightningColor = hitColor = trailColor = WHPal.ShootOrangeLight.cpy();
                 trailWidth = 4;
                 trailSpread = 5;
                 trailInterval = 0.1f;
@@ -316,12 +316,12 @@ public class WHBulletsOther{
                 trailSinScl = 12f;
                 trailSinMag = 0.16f;
                 hitEffect = despawnEffect = new MultiEffect(
-                WHFx.lineCircleOut(WHPal.ORL.cpy(), 90, 50, 2f),
-                WHFx.hitSpark(WHPal.ORL.cpy(), 120, 15, 40, 1f, 8),
-                WHFx.square(WHPal.ORL.cpy(), 60, 18, 60, 5),
-                WHFx.fillCircle(WHPal.ORL.cpy(), 10, 60, Interp.pow3Out),
+                WHFx.lineCircleOut(WHPal.ShootOrangeLight.cpy(), 90, 50, 2f),
+                WHFx.hitSpark(WHPal.ShootOrangeLight.cpy(), 120, 15, 40, 1f, 8),
+                WHFx.square(WHPal.ShootOrangeLight.cpy(), 60, 18, 60, 5),
+                WHFx.fillCircle(WHPal.ShootOrangeLight.cpy(), 10, 60, Interp.pow3Out),
                 WHFx.subEffect(140, 40, 8, 34f, Interp.pow2Out, ((i, x, y, rot, fin) -> {
-                    Draw.color(WHPal.ORL.cpy());
+                    Draw.color(WHPal.ShootOrangeLight.cpy());
                     float fout = Interp.pow2Out.apply(1 - fin);
                     for(int s : Mathf.signs){
                         Drawf.tri(x, y, 8 * fout, 17 * Mathf.curve(fin, 0, 0.1f) * WHFx.fout(fin, 0.25f), rot + s * 90);
@@ -640,7 +640,7 @@ public class WHBulletsOther{
                 trailWidth = 5;
                 fx = WHFx.square(f, 60, 1, 10, 4);
                 despawnEffect = new MultiEffect(
-                WHFx.generalExplosion(30, f, DOTRadius * 1.3f, 30),
+                WHFx.generalExplosion(30, f, DOTRadius * 1.3f, 30, true),
                 WHFx.hitSpark(f, 60, 40, DOTRadius, 1.2f, 8),
                 WHFx.sharpBlast(f, b, 180, DOTRadius * 0.7f),
                 WHFx.trailCircleHitSpark(f, 150, 20, DOTRadius*1.5f,2.5f,40).layer(Layer.effect),

@@ -34,6 +34,7 @@ import mindustry.world.Tile;
 import mindustry.world.blocks.environment.Floor;
 import mindustry.world.blocks.environment.SteamVent;
 import wh.entities.abilities.PcShieldArcAbility;
+import wh.entities.world.drawer.part.*;
 import wh.graphics.*;
 import wh.struct.Vec2Seq;
 import wh.util.WHUtils;
@@ -43,6 +44,7 @@ import static arc.graphics.g2d.Lines.*;
 import static arc.math.Angles.randLenVectors;
 import static mindustry.Vars.*;
 import static mindustry.Vars.tilesize;
+import static wh.entities.Spawner.delaySpawnTime;
 
 public final class WHFx{
     public static final float EFFECT_MASK = Layer.effect + 0.0001f;
@@ -134,6 +136,7 @@ public final class WHFx{
 
     public static Effect spawn;
     public static Effect jumpTrail;
+    public static Effect jumpIn;
     public static Effect jumpTrailOut;
     public static Effect airDropOut;
     public static Effect AirDropLandDust;
@@ -206,10 +209,46 @@ public final class WHFx{
         });
     }
 
+    public static Effect hitCircle(Color color, Color to, float lifetime, int num, float range, float size){
+        return new Effect(lifetime, (e) -> {
+            color(color, to, e.fout() * 0.3F);
+            randLenVectors(e.id, num, e.finpow() * range, e.rotation, 360.0F, (x, y) -> {
+                Fill.circle(e.x + x, e.y + y, e.fout() * size * 0.85F);
+            });
+        });
+    }
+
+    public static Effect hitLine(Color from, Color to, float range, float angleRange, float lineLength){
+        return new Effect(37f, e -> {
+            rand.setSeed(e.id);
+
+            int num = Mathf.clamp((int)range / 6, 6, 20);
+            float thick = Mathf.clamp(0.75f, 1, lineLength / 8 * rand.random(0.5f, 1f));
+            color(from, to, e.fin());
+
+            WHUtils.randLenVectors(e.id, num, 4 + (range * 1.2f) * e.fin(), range * 0.15f * e.fin(), e.rotation, angleRange, (x, y) -> {
+                stroke(thick * e.fout(0.32f));
+                lineAngle(e.x + x, e.y + y, Mathf.angle(x, y), (e.fslope() + e.fin()) * 0.5f * (lineLength * rand.random(0.1f, 0.3f) + rand.random(2f)) + rand.random(2f));
+                Drawf.light(e.x + x, e.y + y, e.fslope() * (range * 0.5f + 14f) + 3, e.color, 0.7f);
+            });
+        });
+    }
+
+    public static Effect hitPoly(Color color, Color to, float lifetime, int num, float range, float size, int sides, float rotation){
+        return new Effect(lifetime, (e) -> {
+            rand.setSeed(e.id);
+            float rot = rand.random(rotation * 1.5f);
+            color(color, to, e.fout() * 0.3F);
+            randLenVectors(e.id, num, e.finpow() * range, e.rotation, 360.0F, (x, y) -> {
+                Fill.poly(e.x + x, e.y + y, sides, e.fout() * size * 0.85F, (rot + rotation) * Mathf.curve(e.fin(), 0, 0.5f));
+            });
+        });
+    }
+
     public static TrailEffect trailHitSpark(Color color, float lifetime, int num, float range, float stroke, float length){
         return new TrailEffect(lifetime, range * 2, color, color, num, (int)length, stroke)
         .trailUpdater((e, trail, x, y, width, len, index) -> {
-            long id = e.id + index*45;
+            long id = e.id + index * 45;
             rand.setSeed(e.id + id);
             randLenVectors(e.id + id, 1, e.fin(Interp.pow3Out) * range, e.rotation, 360, (x1, y1) -> {
                 trail.length = (int)(len * WHFx.fout(e.fin(), 0.06f));
@@ -221,7 +260,7 @@ public final class WHFx{
     public static TrailEffect trailCircleHitSpark(Color color, float lifetime, int num, float range, float stroke, float length){
         return new TrailEffect(lifetime, range * 2, color, color, num, (int)length, stroke)
         .trailUpdater((e, trail, x, y, width, len, index) -> {
-            long id = e.id + index*45;
+            long id = e.id + index * 45L;
             rand.setSeed(e.id + id);
             randLenVectors(e.id + id, 1, e.fin(Interp.pow3Out) * range, e.rotation, 360, (x1, y1) -> {
                 trail.length = (int)(len * WHFx.fout(e.fin(), 0.06f));
@@ -288,6 +327,21 @@ public final class WHFx{
         });
     }
 
+    public static Effect explosionSmokeEffect(Color color, float lifetime, float range, int amount, float size){
+        return new Effect(lifetime, 180.0F, (e) -> {
+            color(color);
+            Drawf.light(e.x, e.y, e.fout() * 90.0F, color, 0.7F);
+            Fill.circle(e.x, e.y, e.fout() * 8.0F);
+            randLenVectors(e.id + 1, amount / 2, 1.0F + range * e.finpow(), (x, y) -> {
+                Fill.circle(e.x + x, e.y + y, e.fout() * size);
+            });
+            color(Color.gray, 0.8f);
+            randLenVectors(e.id, amount, 2 + range * 0.7f * e.finpow(), (x, y) -> {
+                Fill.circle(e.x + x, e.y + y, e.fout() * size + 0.5F);
+            });
+        });
+    }
+
     public static Effect shootLineSmall(Color color){
         return new Effect(37.0F, (e) -> {
             color(color, Color.white, e.fout() * 0.7F);
@@ -340,6 +394,25 @@ public final class WHFx{
                 ang + i * 90);
             }
         }).layer(Layer.effect - 1f);
+    }
+
+    public static Effect instRotation(Color color, float lifetime, float size, float rotateAngle, boolean rotate){
+        return new Effect(lifetime, size * 1.6f, e -> {
+            rand.setSeed(e.id);
+            float ang = rotate ? rand.random(0, 180f) * e.fin(Interp.smooth) + rotateAngle : rotateAngle;
+            Draw.color(color);
+            for(int i = 0; i < 4; i++){
+                Drawf.tri(e.x, e.y, size / 15f, size * e.fout(), i * 90 + ang);
+            }
+
+            Draw.color();
+            float scale = 0.4f;
+            for(int i = 0; i < 4; i++){
+                Drawf.tri(e.x, e.y, scale * size / 15f, scale * size * e.fout(), i * 90 + ang);
+            }
+
+            Drawf.light(e.x, e.y, size * 1.1f, color, e.fout());
+        });
     }
 
     public static Effect instBombSize(Color color, int num, float size){
@@ -450,7 +523,7 @@ public final class WHFx{
         });
     }
 
-    public static Effect crossBlastArrow45(Color color, Color to, float lifetime, float with, float length, float arrowLength, float range){
+    public static Effect crossBlastArrow45(Color color, Color to, float lifetime, float with, float length, float arrowStartLen, float range){
         return new Effect(lifetime, (e) -> {
             color(color, to, e.fout());
             Drawf.light(e.x, e.y, e.fout() * 70.0F, e.color, 0.7F);
@@ -463,7 +536,7 @@ public final class WHFx{
             float f = Mathf.curve(e.fin(), 0, 0.08f);
 
             for(int i = 0; i < 4; ++i){
-                Tmp.v1.trns(45 + i * 90, arrowLength);
+                Tmp.v1.trns(45 + i * 90, arrowStartLen);
                 Drawn.arrow(e.x + Tmp.v1.x, e.y + Tmp.v1.y,
                 with * (e.fout() * 3f + 1) / 4 * e.fout(Interp.pow3In),
                 (length + randL) * f * e.fout(Interp.pow3),
@@ -550,30 +623,33 @@ public final class WHFx{
     }
 
 
-    public static Effect generalExplosion(float lifetime, Color color, float size, int amount){
+    public static Effect generalExplosion(float lifetime, Color color, float size, int amount, boolean smooth){
         return new MultiEffect(
-        new Effect(lifetime, e -> {
+        new Effect(lifetime * 2.5f, e -> {
             color(color);
 
-            e.scaled(lifetime / 3, i -> {
-                stroke(3f * i.fout());
-                circle(e.x, e.y, 3f + i.fin() * size);
+            e.scaled(lifetime, i -> {
+                stroke(3f * i.fout(Interp.pow2Out));
+                if(!smooth) circle(e.x, e.y, 3f + i.fin(Interp.smooth) * size);
+                if(smooth) Drawn.shockWave(i.x, i.y, size, size * 0.65f * i.fout(Interp.pow2Out), i.fin(Interp.pow3Out), color);
             });
 
             color(Color.gray);
 
             randLenVectors(e.id, amount / 2, 2f + size * 0.85f * e.finpow(), (x, y) -> {
-                Fill.circle(e.x + x, e.y + y, e.fout() * size / 8 + 0.5f);
+                Fill.circle(e.x + x, e.y + y, e.fout() * (Math.max(size / 8, 6) + 0.5f));
             });
 
-            Draw.color(Pal.lighterOrange,Color.gray.cpy(),e.fout());
-            stroke(2 * e.fout());
+            Draw.color(Pal.lighterOrange, Color.gray.cpy(), e.fout());
+            e.scaled(lifetime, e1 -> {
+                stroke(2 * e1.fout());
+                randLenVectors(e1.id + 1, (int)(amount * 1.5f), 1f + Mathf.randomSeed(e1.id, 0.5f, 1) * size * 0.85f * e1.finpow(), (x, y) -> {
+                    lineAngle(e1.x + x, e1.y + y, Mathf.angle(x, y), e1.fout() * Math.max(size / 8, 5) * Mathf.randomSeed(e1.id, 0.3f, 1.2f));
 
-            randLenVectors(e.id + 1, amount, 1f + Mathf.randomSeed(e.id, 0.5f, 1) * size * 0.85f * e.finpow(), (x, y) -> {
-                lineAngle(e.x + x, e.y + y, Mathf.angle(x, y), 1f + e.fout() * 8 * Mathf.randomSeed(e.id, 0.3f, 1.2f));
+                });
+                Drawf.light(e1.x, e1.y, size * 1.5f, Pal.lighterOrange, 0.8f * e1.fout());
             });
 
-            Drawf.light(e.x, e.y, size * 1.5f, Pal.lighterOrange, 0.8f * e.fout());
         })
         /*new TrailEffect(lifetime, size * 2, Pal.lighterOrange, Color.gray, amount, 20, 1.5f)
         .trailUpdater((e, trail, x, y, width, len, index) -> {
@@ -589,12 +665,12 @@ public final class WHFx{
 
     public static Effect line45Explosion(Color from, Color to, float size){
         return new Effect(60f, e -> {
-            Fx.rand.setSeed(e.id);
+            rand.setSeed(e.id);
             color(from, to, e.finpow());
-            stroke(size * 0.15f * e.fout());
-            spikes(e.x, e.y, Fx.rand.random(size, size * 1.4f) * e.finpow(), Fx.rand.random(size * 0.5f) * e.foutpowdown() + Fx.rand.random(size * 0.3f, size * 0.7f) * e.fin(), 4, 45);
+            stroke(Mathf.clamp(Math.max(1, size / 20), 1, 3) * e.fout());
+            spikes(e.x, e.y, rand.random(size, size * 1.2f) * e.finpow(), rand.random(size * 0.08f) * e.foutpowdown() + rand.random(size * 0.15f, size * 0.5f) * e.fin(), 4, 45);
             randLenVectors(e.id, 4, 4f + e.fin() * 8f, (x, y) -> {
-                color(WHPal.OR, WHPal.OR, e.finpow());
+                color(from, to, e.finpow());
                 Fill.square(e.x + x, e.y + y, 0.5f + e.fout() * 6f, 45);
             });
         });
@@ -602,7 +678,7 @@ public final class WHFx{
 
     public static Effect airAsh(float lifetime, float range, float start, float pin, Color color, float width,
                                 int amount){
-        return new MultiEffect(
+/*         new MultiEffect(
         new Effect(lifetime, e -> {
             float fee = e.time < e.lifetime / 2 ? e.fin() * 2 : e.fout() * 2;
             for(int a : Mathf.signs){
@@ -636,7 +712,48 @@ public final class WHFx{
                 }
             }
         })
-        );
+        )*/
+        ;
+        return new MultiEffect(
+        new TrailEffect(lifetime, range * 2, color, color, amount, 20, width)
+        .trailUpdater((e, trail, x, y, w, len, index) -> {
+            rand.setSeed(e.id);
+            color(color);
+            float fee = e.time < e.lifetime / 2 ? e.fin() * 2 : e.fout() * 2;
+            Draw.z(Layer.bullet + 0.01f);
+            float random = rand.random(0f, 0.5f), offset = ((float)index / amount) * 360, r = Mathf.sign(rand.random(0, 1f) > 0.5f);
+            float
+            dx = WHUtils.dx(x, range * e.fin(Interp.smooth) + start, r * e.time * 6 + offset + random * 90),
+            dy = WHUtils.dy(y, range * e.fin(Interp.smooth) + start, r * e.time * 6 + offset + random * 90);
+            trail.length = (int)(fee * len);
+            trail.update(dx, dy, w * fee);
+        }),
+        new TrailEffect(lifetime, range * 2, color, color, amount, 15, width)
+        .trailUpdater((e, trail, x, y, w, len, index) -> {
+            rand.setSeed(e.id);
+            color(color);
+            float fee = e.time < e.lifetime / 2 ? e.fin() * 2 : e.fout() * 2;
+            Draw.z(Layer.bullet + 0.01f);
+            float random = rand.random(0f, 0.5f), offset = ((float)index / amount) * 360, r = Mathf.sign(rand.random(0, 1f) > 0.5f);
+            float
+            dx = WHUtils.dx(x, (range - pin) * e.fin(Interp.smooth) + start, r * e.time * 4 + offset + random * 90 + 120),
+            dy = WHUtils.dy(y, (range - pin) * e.fin(Interp.smooth) + start, r * e.time * 4 + offset + random * 90 + 120);
+            trail.length = (int)(fee * len);
+            trail.update(dx, dy, w * fee);
+        }),
+        new TrailEffect(lifetime, range * 2, color, color, amount, 20, width)
+        .trailUpdater((e, trail, x, y, w, len, index) -> {
+            rand.setSeed(e.id);
+            color(color);
+            float fee = e.time < e.lifetime / 2 ? e.fin() * 2 : e.fout() * 2;
+            Draw.z(Layer.bullet + 0.01f);
+            float random = rand.random(0f, 0.5f), offset = ((float)index / amount) * 360, r = Mathf.sign(rand.random(0, 1f) > 0.5f);
+            float
+            dx = WHUtils.dx(x, (range - pin * 2) * e.fin(Interp.smooth) + start, r * e.time * 2 + offset + random * 90 + 240),
+            dy = WHUtils.dy(y, (range - pin * 2) * e.fin(Interp.smooth) + start, r * e.time * 2 + offset + random * 90 + 240);
+            trail.length = (int)(fee * len);
+            trail.update(dx, dy, w * fee);
+        }));
     }
 
 
@@ -792,12 +909,20 @@ public final class WHFx{
         });
     }
 
+    public static Effect linePolyOut(Color color, float lifetime, float size, float stroke, int sides, float angle){
+        return new Effect(lifetime, (e) -> {
+            color(color);
+            stroke(e.fout() * stroke);
+            poly(e.x, e.y, sides, size * e.fin(Interp.pow3Out), angle);
+        });
+    }
+
 
     public static Effect lineCircleOut(Color color, float lifetime, float size, float stroke){
         return new Effect(lifetime, (e) -> {
             color(color);
             stroke(e.fout() * stroke);
-            circle(e.x, e.y, e.fin(Interp.pow3Out) * size);
+            circle(e.x, e.y, e.fin(Interp.pow2Out) * size);
         });
     }
 
@@ -814,6 +939,22 @@ public final class WHFx{
             color(e.color, Color.white, e.fout() * 0.7F);
             stroke(thick * e.fout());
             circle(e.x, e.y, radius * e.fin(Interp.pow3Out));
+        });
+    }
+
+    public static Effect circleOut(float lifetime, Color color, float range){
+        return new Effect(lifetime, range * 1.5F, (e) -> {
+            rand.setSeed(e.id);
+            color(Color.white, color.cpy(), e.fin() + 0.6F);
+            float circleRad = e.fin(Interp.circleOut) * range;
+            stroke(Mathf.clamp(range / 24.0F, 4.0F, 20.0F) * e.fout());
+            circle(e.x, e.y, circleRad);
+
+            for(int i = 0; (float)i < Mathf.clamp(range / 12.0F, 9.0F, 60.0F); ++i){
+                Tmp.v1.set(1, 0).setToRandomDirection(rand).scl(circleRad);
+                Drawn.tri(e.x + Tmp.v1.x, e.y + Tmp.v1.y, rand.random(circleRad / 16.0F, circleRad / 12.0F) * e.fout(),
+                rand.random(circleRad / 4.0F, circleRad / 1.5F) * (1.0F + e.fin()) / 2.0F, Tmp.v1.angle() - 180.0F);
+            }
         });
     }
 
@@ -888,17 +1029,18 @@ public final class WHFx{
         }).followParent(true);
     }
 
-    public static Effect shootLine(float size, float angleRange){
-        int num = Mathf.clamp((int)size / 6, 6, 20);
-        float thick = Mathf.clamp(0.75f, 2f, size / 22f);
-
+    public static Effect shootLine(float range, float angleRange){
         return new Effect(37f, e -> {
-            color(e.color, Color.white, e.fout() * 0.7f);
             rand.setSeed(e.id);
-            WHUtils.randLenVectors(e.id, num, 4 + (size * 1.2f) * e.fin(), size * 0.15f * e.fin(), e.rotation, angleRange, (x, y) -> {
+
+            int num = Mathf.clamp((int)range / 6, 6, 20);
+            float thick = Mathf.clamp(0.75f, 1, range / 22f * rand.random(0.5f, 1f));
+            color(e.color, Color.white, e.fout() * 0.7f);
+
+            WHUtils.randLenVectors(e.id, num, 4 + (range * 1.2f) * e.fin(), range * 0.15f * e.fin(), e.rotation, angleRange, (x, y) -> {
                 stroke(thick * e.fout(0.32f));
-                lineAngle(e.x + x, e.y + y, Mathf.angle(x, y), (e.fslope() + e.fin()) * 0.5f * (size * rand.random(0.15f, 0.5f) + rand.random(2f)) + rand.random(2f));
-                Drawf.light(e.x + x, e.y + y, e.fslope() * (size * 0.5f + 14f) + 3, e.color, 0.7f);
+                lineAngle(e.x + x, e.y + y, Mathf.angle(x, y), (e.fslope() + e.fin()) * 0.5f * (range * rand.random(0.1f, 0.3f) + rand.random(2f)) + rand.random(2f));
+                Drawf.light(e.x + x, e.y + y, e.fslope() * (range * 0.5f + 14f) + 3, e.color, 0.7f);
             });
         });
     }
@@ -970,7 +1112,7 @@ public final class WHFx{
     }
 
 
-    public static Effect TrailCharge(Color color, float length, float size, float range, int amount, float lifetime){
+    public static Effect trailCharge(Color color, float length, float width, float range, int amount, float lifetime){
        /* return new Effect(lifetime, e -> {
             float fee = e.time < e.lifetime / 2 ? e.fin() * 2 : e.fout() * 2;
             z(Layer.bullet + 0.01f);
@@ -986,17 +1128,17 @@ public final class WHFx{
                 }
             }
         });*/
-        return new TrailEffect(lifetime, size * 2, color, color, amount, (int)length, size)
-        .trailUpdater((e, trail, x, y, width, len, index) -> {
-            rand.setSeed(e.id+index);
+        return new TrailEffect(lifetime, 1000, color, color, amount, (int)length, width)
+        .trailUpdater((e, trail, x, y, w, len, index) -> {
+            rand.setSeed(e.id + index);
             float fee = e.time < e.lifetime / 2 ? e.fin() * 2 : e.fout() * 2;
             z(Layer.bullet + 0.01f);
             float random = rand.random(0f, 0.5f), offset = ((float)index / amount) * 360;
             float
-            dx = WHUtils.dx(x, range * e.fout(Interp.pow2In)+random*range, e.time * 4*rand.random(0.8f, 1.5f) + offset+random*90),
-            dy = WHUtils.dy(y, range * e.fout(Interp.pow2In)+random*range, e.time * 4*rand.random(0.8f, 1.5f) + offset+random*90);
+            dx = WHUtils.dx(x, range * e.fout(Interp.pow2In) + random * range, e.time * 4 * rand.random(0.8f, 1.5f) + offset + random * 90),
+            dy = WHUtils.dy(y, range * e.fout(Interp.pow2In) + random * range, e.time * 4 * rand.random(0.8f, 1.5f) + offset + random * 90);
             trail.length = (int)(fee * len);
-            trail.update(dx, dy, width * fee);
+            trail.update(dx, dy, w * fee);
         });
     }
 
@@ -1176,10 +1318,10 @@ public final class WHFx{
                 Fill.circle(ix.x, ix.y, rad * ix.fout() * 0.75F);
             });
             Drawf.light(e.x, e.y, rad * e.fout(Interp.circleOut) * 4.0F, e.color, 0.7F);
-        })).layer(110.001F);
+        })).layer(Layer.effect + 0.001f);
 
 
-        posLightning = (new Effect(PositionLightning.lifetime, 1200.0f, e -> {
+        posLightning = (new Effect(PositionLightning.lifetime, 1500, e -> {
             if(!(e.data instanceof Vec2Seq)) return;
             Vec2Seq lines = e.data();
 
@@ -1566,9 +1708,9 @@ public final class WHFx{
         PlasmaFireBurn = (new Effect(25.0F, (e) -> {
             color(WHPal.SkyBlue, Color.gray, e.fin() * 0.75F);
             randLenVectors(e.id, 2, 2.0F + e.fin() * 7.0F, (x, y) -> {
-                Fill.poly(e.x + x, e.y + y, 6, 0.2F + e.fout() * 2F, 45);
+                Fill.poly(e.x + x, e.y + y, 6, 0.2F + e.fout() * 4f, 45);
             });
-        })).layer(101.0F);
+        }));
 
         skyTrail = new Effect(22.0F, (e) -> {
             color(Pal.techBlue, Pal.gray, e.fin() * 0.6F);
@@ -1998,89 +2140,125 @@ public final class WHFx{
                 }
             }
         });
+
         jumpTrail = new Effect(120f, 5000, e -> {
             if(!(e.data instanceof UnitType)) return;
+
             UnitType type = e.data();
+
             color(type.engineColor == null ? e.color : type.engineColor);
 
             if(type.engineLayer > 0) z(type.engineLayer);
-            else z((type.lowAltitude ? Layer.flyingUnitLow : Layer.flyingUnit) - 0.001f);
+            else Draw.z(type.flyingLayer > 110 ? Layer.effect : type.flyingLayer + 1);
+            /*z((type.lowAltitude ? Layer.flyingUnitLow : Layer.flyingUnit) - 0.001f);*/
 
             for(int index = 0; index < type.engines.size; index++){
+
                 UnitEngine engine = type.engines.get(index);
 
-                if(Angles.angleDist(engine.rotation, -90) > 75) return;
-                float ang = Mathf.slerp(engine.rotation, -90, 0.75f);
+                /*  if(Angles.angleDist(engine.rotation, -90) > 75) return;*/
+                float ang = Mathf.slerp(engine.rotation, -90, 1);
 
                 //noinspection SuspiciousNameCombination
                 Tmp.v1.trns(e.rotation, engine.y, -engine.x);
 
-                e.scaled(80, i -> {
-                    Drawn.tri(i.x + Tmp.v1.x, i.y + Tmp.v1.y, engine.radius * 1.5f * i.fout(Interp.slowFast), 3000 * engine.radius / (type.engineSize + 4), i.rotation + ang - 90);
+                Drawn.tri(e.x + Tmp.v1.x, e.y + Tmp.v1.y, engine.radius * 1.5f * e.fout(Interp.slowFast),
+                1500 * engine.radius / (type.engineSize + 4), e.rotation + ang - 90);
+                Fill.circle(e.x + Tmp.v1.x, e.y + Tmp.v1.y, engine.radius * 1.5f * e.fout(Interp.slowFast));
+
+                e.scaled(30, i -> {
+                    Drawn.tri(i.x + Tmp.v1.x, i.y + Tmp.v1.y, engine.radius * 1.5f * i.fout(Interp.slowFast),
+                    1500 * engine.radius / (type.engineSize + 4) * e.fout(), i.rotation + ang - 90);
                     Fill.circle(i.x + Tmp.v1.x, i.y + Tmp.v1.y, engine.radius * 1.5f * i.fout(Interp.slowFast));
                 });
 
-                randLenVectors(e.id + index, 22, 400 * engine.radius / (type.engineSize + 4), e.rotation + ang - 90, 0f, (x, y) -> lineAngle(e.x + x + Tmp.v1.x, e.y + y + Tmp.v1.y, Mathf.angle(x, y), e.fout() * 60));
+                randLenVectors(e.id + index, 22, 400 * engine.radius / (type.engineSize + 4),
+                e.rotation + ang - 90, 0f, (x, y) -> lineAngle(e.x + x + Tmp.v1.x, e.y + y + Tmp.v1.y, Mathf.angle(x, y), e.fout() * 60));
             }
 
             color();
+            alpha(e.fout(Interp.pow3In));
             mixcol(e.color, 1);
+            Draw.z(type.flyingLayer > 110 ? Layer.effect : type.flyingLayer - 1);
             Draw.rect(type.fullIcon, e.x, e.y, type.fullIcon.width * e.fout(Interp.pow2Out) * scl * 1.2f, type.fullIcon.height * e.fout(Interp.pow2Out) * scl * 1.2f, e.rotation - 90f);
             reset();
+        });
+
+        jumpIn = new Effect(delaySpawnTime, e -> {
+            if(!(e.data instanceof UnitType)) return;
+
+            UnitType type = e.data();
+
+            Tmp.v1.trns(e.rotation, -1500).add(e.x, e.y);
+            Tmp.v2.trns(e.rotation, 1500 * e.fin()).add(Tmp.v1);
+
+            alpha(0.5f + 0.5f * e.fin());
+            Draw.z(type.flyingLayer > 110 ? Layer.effect : type.flyingLayer + 1);
+
+            color(type.engineColor == null ? e.color : type.engineColor);
+
+            for(int index = 0; index < type.engines.size; index++){
+                UnitEngine engine = type.engines.get(index);
+
+                /*   if(Angles.angleDist(engine.rotation, -90) > 75) return;*/
+                float ang = Mathf.slerp(engine.rotation, -90, 1);
+
+                //noinspection SuspiciousNameCombination
+                Tmp.v3.trns(e.rotation, engine.y, -engine.x).add(Tmp.v2);
+
+                Drawn.tri(Tmp.v3.x, Tmp.v3.y, engine.radius * 1.5f,
+                1500 * e.fin() * engine.radius / (type.engineSize + 4), e.rotation + ang - 90);
+                Fill.circle(Tmp.v3.x, Tmp.v3.y, engine.radius * 1.5f * e.fout(Interp.slowFast));
+            }
+
+            color();
+            alpha(0.5f + 0.5f * e.fin());
+            Draw.z(Layer.flyingUnit + 0.01f);
+            Draw.rect(type.fullIcon, Tmp.v2.x, Tmp.v2.y, type.fullIcon.width * scl * 1.2f, type.fullIcon.height * scl * 1.2f, e.rotation - 90f);
         });
 
         airDropOut = new Effect(111f, e -> {
             if(!(e.data instanceof UnitType)) return;
             UnitType type = e.data();
 
-            float fin = e.fin(Interp.pow4In);
-            float rotation = e.rotation - 90f + e.fout() * (Mathf.randomSeedRange(e.id, 50f));
+            float fin = e.fin(Interp.pow4In) * Mathf.curve(e.fin(), 0, 0.13f);
+            float rotation = e.rotation - 90f + e.fout(Interp.smooth) * (Mathf.randomSeedRange(e.id, 25f));
             float fout = e.fout(Interp.pow2In);
             float scale = fout * 1.1f + 1f;
 
             scale *= type.fullIcon.scl();
             float rw = type.fullIcon.width * scale, rh = type.fullIcon.height * scale;
 
+            Drawf.shadow(e.x, e.y, type.hitSize, 1);
+
             z(Layer.effect + 0.001f);
-            color(Pal.engine);
+            Draw.alpha(0.4f + 0.6f * e.fin());
             Fill.light(e.x, e.y, 10, (10f + type.hitSize / 2) * e.fout(), Tmp.c2.set(Pal.engine).a(fout), Tmp.c1.set(Pal.engine).a(0f));
             for(int i = 0; i < 4; i++){
                 z(Layer.flyingUnit - 1);
                 Tmp.v2.trns((i) * 90 + rotation + 45, type.hitSize * scale + 20f);
-                color(Pal.engine);
                 float rad = type.hitSize * e.fout();
                 float scl = Mathf.absin(Time.time, 2f, type.hitSize / 8f) * e.fout();
-                Fill.circle(
-                e.x + Tmp.v2.x,
-                e.y + Tmp.v2.y,
-                rad * 0.4f + scl
-                );
+                color(type.engineColor == null ? e.color : type.engineColor);
+                Fill.circle(e.x + Tmp.v2.x, e.y + Tmp.v2.y, rad * 0.4f + scl);
                 color(type.engineColorInner);
-                Fill.circle(
-                e.x + Tmp.v2.x,
-                e.y + Tmp.v2.y,
-                rad * 0.2f + scl
-                );
+                Fill.circle(e.x + Tmp.v2.x, e.y + Tmp.v2.y, rad * 0.2f + scl);
             }
 
-            alpha(fin);
-            color();
             z(Layer.weather - 1);
-            Drawf.shadow(e.x, e.y, type.hitSize, 1);
+            color();
+
             Draw.rect(type.fullIcon, e.x, e.y, rw, rh, rotation);
+
 
             Tmp.v1.trns(225f, fout * 300f);
             z(Layer.flyingUnit + 1);
             color(0, 0, 0, 0.5f * fin);
-            Draw.rect(type.fullIcon, e.x + Tmp.v1.x, e.y + Tmp.v1.y,
-            rw,
-            rh,
-            rotation);
+            Draw.rect(type.fullIcon, e.x + Tmp.v1.x, e.y + Tmp.v1.y, rw, rh, rotation);
 
             z(Layer.weather - 1);
             color(Color.gray, 0.8f * e.fout());
 
-            color();
             reset();
         });
 
@@ -2128,7 +2306,7 @@ public final class WHFx{
                 float rot = e.rotation + rand.range(30f) + 180f;
                 v.trns(rot, rand.random(e.fin() * 15f));
                 lineAngle(e.x + v.x, e.y + v.y, rot, 8 * e.fout(Interp.pow2Out) * Mathf.randomSeed(e.id + 999, 1.5f));
-                randLenVectors(e.id * 2, e.fin(), (int)(5f * rand.random(1f)), -30f, (x1, y1, fin, fout) -> {
+                randLenVectors(e.id, e.fin(), (int)(5f * rand.random(1f)), -30f, (x1, y1, fin, fout) -> {
                     z(Layer.effect + 0.001f);
                     color(Color.gray);
                     alpha((0.5f - Math.abs(fin - 0.5f)) * 2f);

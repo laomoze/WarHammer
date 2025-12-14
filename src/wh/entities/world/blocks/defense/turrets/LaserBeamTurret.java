@@ -12,6 +12,7 @@ import mindustry.ui.*;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.consumers.*;
 import mindustry.world.meta.*;
+import wh.content.*;
 import wh.entities.bullet.laser.*;
 
 import static mindustry.Vars.tilesize;
@@ -19,27 +20,41 @@ import static mindustry.Vars.tilesize;
 public class LaserBeamTurret extends PowerTurret{
     public float firingMoveFract = 0.5f;
     public float shootDuration = 300;
+    public Liquid cost = WHLiquids.refinePromethium;
+    public float costMount = 60 / 45f;
     public LaserBeamTurret(String name){
         super(name);
         coolantMultiplier=2;
         canOverdrive=false;
+
+        consume(new ConsumeLiquid(cost, costMount){
+            @Override
+            public void update(Building build){
+                if(build instanceof LaserBeamTurretBuild c){
+                    if(c.warmup() >= 0.95f){
+                        super.update(build);
+                    }
+                }
+            }
+        });
     }
+
     @Override
     public void setStats(){
         super.setStats();
 
         stats.remove(Stat.booster);
+
         if(coolant != null){
-            stats.add(Stat.input, StatValues.boosters(reload, coolant.amount, coolantMultiplier, false, this::consumesLiquid));
+            stats.add(Stat.input, StatValues.boosters(reload, coolant.amount, coolantMultiplier, false, liquid -> consumesLiquid(liquid) && liquid != cost));
         }
     }
 
     @Override
     public void init(){
         super.init();
-
         if(coolant == null){
-            coolant = findConsumer(c -> c instanceof ConsumeCoolant );
+            coolant = findConsumer(c -> c instanceof ConsumeCoolant b && b.filter != cost);
         }
     }
 

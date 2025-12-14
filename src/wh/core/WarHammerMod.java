@@ -67,7 +67,9 @@ public class WarHammerMod extends Mod {
         WHBlocksEnvironment.load();
         WHBlocks.load();
         WHOverride.load();
+
         WHPlanets.load();
         WHTechTree.load();
+
     }
 }

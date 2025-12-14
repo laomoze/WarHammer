@@ -36,36 +36,40 @@ public class TrailFadeBulletType extends BasicBulletType{
     public boolean hitBlinkTrail;
     public boolean despawnBlinkTrail;
 
-    public TrailFadeBulletType() {
-         tracers = 2;
-         tracerFadeOffset = 10;
-         tracerStrokeOffset = 15;
-         tracerStroke = 3.0F;
-         tracerSpacing = 8.0F;
-         tracerRandX = 6.0F;
-         tracerUpdateSpacing = 0.3F;
-         addBeginPoint = false;
-         hitBlinkTrail = true;
-         despawnBlinkTrail = false;
+    public TrailFadeBulletType(){
     }
 
-    public TrailFadeBulletType(float speed, float damage, String bulletSprite) {
+
+    {
+        tracers = 2;
+        tracerFadeOffset = 8;
+        tracerStrokeOffset = 12;
+        tracerStroke = 3;
+        tracerSpacing = 8;
+        tracerRandX = 6;
+        tracerUpdateSpacing = 0.6f;
+        addBeginPoint = false;
+        hitBlinkTrail = true;
+        despawnBlinkTrail = false;
+    }
+
+    public TrailFadeBulletType(float speed, float damage, String bulletSprite){
         super(speed, damage, bulletSprite);
-         tracers = 2;
-         tracerFadeOffset = 10;
-         tracerStrokeOffset = 15;
-         tracerStroke = 3.0F;
-         tracerSpacing = 8.0F;
-         tracerRandX = 6.0F;
-         tracerUpdateSpacing = 0.3F;
-         addBeginPoint = false;
-         hitBlinkTrail = true;
-         despawnBlinkTrail = false;
-         impact = true;
+        tracers = 2;
+        tracerFadeOffset = 8;
+        tracerStrokeOffset = 12;
+        tracerStroke = 3;
+        tracerSpacing = 8;
+        tracerRandX = 6;
+        tracerUpdateSpacing = 0.6f;
+        addBeginPoint = false;
+        hitBlinkTrail = true;
+        despawnBlinkTrail = false;
+        impact = true;
     }
 
-    public TrailFadeBulletType(float speed, float damage) {
-        this(speed, damage, "bullet");
+    public TrailFadeBulletType(float speed, float damage){
+        this(speed, damage, "shell");
     }
 
 
@@ -75,16 +79,17 @@ public class TrailFadeBulletType extends BasicBulletType{
         super.despawned(b);
     }
 
-    public void despawnBlink (Bullet b){
+    public void despawnBlink(Bullet b){
         if(!Vars.headless && (b.data instanceof Vec2Seq[])){
             Vec2Seq[] pointsArr = (Vec2Seq[])b.data();
             for(Vec2Seq points : pointsArr){
                 points.add(b.x, b.y);
-                if(despawnBlinkTrail || (b.absorbed && hitBlinkTrail)){
+                if((b.absorbed && hitBlinkTrail)){
                     PositionLightning.createBoltEffect(hitColor, tracerStroke * 2f, points);
                     Vec2 v = points.firstTmp();
                     WHFx.lightningHitSmall.at(v.x, v.y, hitColor);
-                }else{
+                }
+                if(despawnBlinkTrail){
                     points.add(tracerStroke, tracerFadeOffset);
                     WHFx.lightningFade.at(b.x, b.y, tracerStrokeOffset, hitColor, points);
                 }
@@ -104,7 +109,7 @@ public class TrailFadeBulletType extends BasicBulletType{
     public void hit(Bullet b){
         super.hit(b);
 
-        if(Vars.headless || !(b.data instanceof Vec2Seq[]))return;
+        if(Vars.headless || !(b.data instanceof Vec2Seq[])) return;
         Vec2Seq[] pointsArr = (Vec2Seq[])b.data();
         for(Vec2Seq points : pointsArr){
             points.add(b.x, b.y);
@@ -124,23 +129,22 @@ public class TrailFadeBulletType extends BasicBulletType{
     @Override
     public void init(Bullet b){
         super.init(b);
-        if(Vars.headless && trailLength > 0)return;
+        if(Vars.headless && trailLength > 0) return;
         Vec2Seq[] points = new Vec2Seq[tracers];
         for(int i = 0; i < tracers; i++){
             Vec2Seq p = new Vec2Seq();
-            if(addBeginPoint)p.add(b.x, b.y);
+            if(addBeginPoint) p.add(b.x, b.y);
             points[i] = p;
         }
         b.data = points;
     }
 
 
-
     @Override
     public void update(Bullet b){
         super.update(b);
         if(!Vars.headless && b.timer(2, tracerUpdateSpacing)){
-            if(!(b.data instanceof Vec2Seq[]))return;
+            if(!(b.data instanceof Vec2Seq[])) return;
             Vec2Seq[] points = (Vec2Seq[])b.data();
             for(Vec2Seq seq : points){
                 v2.trns(b.rotation(), 0, rand.range(tracerRandX));
@@ -157,7 +161,7 @@ public class TrailFadeBulletType extends BasicBulletType{
         if((b.data instanceof Vec2Seq[])){
             Vec2Seq[] pointsArr = (Vec2Seq[])b.data();
             for(Vec2Seq points : pointsArr){
-                if(points.size() < 2)return;
+                if(points.size() < 2) return;
                 Draw.color(hitColor);
                 for(int i = 1; i < points.size(); i++){
 //					Draw.alpha(((float)(i + fadeOffset) / points.size));

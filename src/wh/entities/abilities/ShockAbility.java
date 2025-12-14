@@ -3,7 +3,6 @@ package wh.entities.abilities;
 import arc.*;
 import arc.audio.*;
 import arc.graphics.*;
-import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
@@ -11,14 +10,12 @@ import arc.util.*;
 import mindustry.content.*;
 import mindustry.entities.*;
 import mindustry.entities.abilities.*;
-import mindustry.game.EventType.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.logic.*;
-import mindustry.world.*;
 import mindustry.world.meta.*;
 
 import static mindustry.Vars.*;
+import static wh.core.WarHammerMod.name;
 
 public class ShockAbility extends Ability{
     public float range = 110f;
@@ -28,28 +25,22 @@ public class ShockAbility extends Ability{
     public float shake = 2f;
 
     public Sound shootSound = Sounds.bang;
-    public Color waveColor = Pal.accent, heatColor = Pal.turretHeat, shapeColor = Color.valueOf("f29c83");
-    public float cooldownMultiplier = 1f;
+    public Color waveColor = Pal.accent;
     public Effect hitEffect = Fx.hitSquaresColor;
     public Effect waveEffect = Fx.pointShockwave;
 
-    //TODO switch to drawers eventually or something
-    public float shapeRotateSpeed = 1f, shapeRadius = 6f;
-    public int shapeSides = 4;
-
-
     public float reloadCounter;
-    public float heat = 0f;
     public Seq<Bullet> targets = new Seq<>();
 
     @Override
     public void addStats(Table t){
         super.addStats(t);
-        t.add("[lightgray]" + Stat.damage + ": [white]+" + bulletDamage + StatUnit.none);
         t.row();
-        t.add("[lightgray]" + Stat.range + ": [white]+" + (range / tilesize) + StatUnit.blocks);
+        t.add(abilityStat("firingrate", Strings.autoFixed(60f / reload, 2)));
         t.row();
-        t.add("[lightgray]" + Stat.reload + ": [white]+" + (60f / reload) + StatUnit.blocks);
+        t.add(Core.bundle.format("bullet.range", Strings.autoFixed(range / tilesize, 2)));
+        t.row();
+        t.add(Core.bundle.format("bullet.damage", bulletDamage));
     }
 
 
@@ -65,9 +56,8 @@ public class ShockAbility extends Ability{
             });
 
             if(targets.size > 0){
-                heat = 1f;
                 reloadCounter = 0f;
-                waveEffect.at(unit.x, unit.y, range, waveColor);
+                waveEffect.at(unit.x, unit.y, range, waveColor, unit);
                 shootSound.at(unit);
                 Effect.shake(shake, shake, unit);
                 float waveDamage = Math.min(bulletDamage, bulletDamage * falloffCount / targets.size);
@@ -82,13 +72,16 @@ public class ShockAbility extends Ability{
                 }
             }
         }
-
-        heat = Mathf.clamp(heat - Time.delta / reload * cooldownMultiplier);
     }
 
     @Override
     public void draw(Unit unit){
         super.draw(unit);
+    }
+
+    @Override
+    public String localized(){
+        return Core.bundle.format("ability." + name("ShockAbility"));
     }
 }
 

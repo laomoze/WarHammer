@@ -44,8 +44,6 @@ public class BaseForceProjector extends ForceProjector {
                 Units.nearbyEnemies(team, x, y, radius + 10f, unitConsumer);
             }
         }
-
-
     }
 
 }

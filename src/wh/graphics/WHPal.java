@@ -18,13 +18,12 @@ public final class WHPal {
     public static Color thurmixRed;
     public static Color thurmixRedLight;
     public static Color thurmixRedDark;
-    public static Color rim;
-    public static Color rim3;
     public static Color WHYellow;
     public static Color WHYellow2;
-    public static Color OR;
-    public static Color ORL;
+    public static Color ShootOrange;
+    public static Color ShootOrangeLight;
     public static Color Outline;
+    public static Color OutlineS;
     public static Color Heat;
     public static Color SkyBlue;
     public static Color SkyBlueF;
@@ -40,22 +39,23 @@ public final class WHPal {
     }
 
     static {
+        Outline = Color.valueOf("383848");
+        OutlineS = Color.valueOf("42424FFF");
+        Heat = Color.valueOf("FF4040");
+
         ancient = Items.surgeAlloy.color.cpy().lerp(Pal.accent, 0.115F);
         ancientHeat = Color.red.cpy().mul(1.075F);
         ancientLight = ancient.cpy().lerp(Color.white, 0.7F);
         ancientLightMid = ancient.cpy().lerp(Color.white, 0.4F);
-        thurmixRed = Color.valueOf("#ff9492");
-        thurmixRedLight = Color.valueOf("#ffced0");
+
+        thurmixRed = Color.valueOf("ff9492");
+        thurmixRedLight = Color.valueOf("ffced0");
         thurmixRedDark = thurmixRed.cpy().lerp(Color.black, 0.9F);
-        rim = Color.valueOf("fffbbde1");
-        rim3 = Color.valueOf("dbeffe");
 
         WHYellow = Color.valueOf("FFFBBDE1");
         WHYellow2 = Pal.accent.cpy().lerp(Color.white, 0.6F);
-        OR = Color.valueOf("FFC397FF");
-        ORL =Color.valueOf("FFA05C");
-        Heat=Color.valueOf("FF4040");
-        Outline=Color.valueOf("383848");
+        ShootOrange = Pal.bulletYellowBack.cpy().lerp(Pal.slagOrange.cpy(), 0.25f).lerp(Color.orange.cpy(), 0.25f).lerp(Pal.coalBlack.cpy(), 0.05f);
+        ShootOrangeLight = ShootOrange.cpy().lerp(Color.white.cpy(), 0.7F);
 
         SkyBlue=Color.valueOf("579ED4FF");
         SkyBlueF=Color.valueOf("DBFFFDFF");

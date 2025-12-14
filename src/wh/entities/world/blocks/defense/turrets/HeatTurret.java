@@ -124,11 +124,11 @@ public class HeatTurret extends PowerTurret{
             super.draw();
             Draw.z(Layer.effect + 0.001f);
             Tmp.v1.set(x, y).trns(rotation, -18);
-            Draw.color(WHPal.ORL);
+            Draw.color(Pal.lighterOrange);
             Fill.circle(x + Tmp.v1.x, y + Tmp.v1.y, 8 * warmup);
             Draw.color(Pal.coalBlack);
             Fill.circle(x + Tmp.v1.x, y + Tmp.v1.y, 5 * warmup);
-            Draw.color(WHPal.ORL);
+            Draw.color(Pal.lighterOrange);
             Drawn.surround(id, x + Tmp.v1.x, y + Tmp.v1.y, 13 * warmup, 5, 3, 5, warmup);
         }
     }

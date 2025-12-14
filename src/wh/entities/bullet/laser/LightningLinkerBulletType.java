@@ -28,7 +28,7 @@ import static arc.graphics.g2d.Draw.color;
 import static arc.math.Angles.randLenVectors;
 
 public class LightningLinkerBulletType extends BasicBulletType{
-    public float hitSpacing = 10f;
+    public float hitSpacing = 12f;
     public float size = 30f;
     public float linkRange = 240f;
     public float boltWidth = PositionLightning.WIDTH;
@@ -44,7 +44,7 @@ public class LightningLinkerBulletType extends BasicBulletType{
 
     public float range = -1;
 
-    public int maxHit = 20;
+    public int maxHit = 8;
     public int boltNum = 1;
 
     public int   effectLingtning = 2;
@@ -60,6 +60,14 @@ public class LightningLinkerBulletType extends BasicBulletType{
 
     public static final Vec2 randVec = new Vec2();
 
+    public LightningLinkerBulletType(float speed, float damage, String name){
+        super(speed, damage, name);
+    }
+
+    {
+        liHitEffect2 = liHitEffect = WHFx.lightningHitSmall;
+    }
+
     public LightningLinkerBulletType(float speed, float damage) {
         super(speed, damage);
         collidesGround = collidesAir = true;
@@ -74,12 +82,11 @@ public class LightningLinkerBulletType extends BasicBulletType{
         lightningCone = 360f;
 
         trailWidth = -1;
-
-        liHitEffect2=liHitEffect = WHFx.lightningHitSmall;
     }
 
+
+
     public LightningLinkerBulletType(){
-        this(1f, 1f);
     }
 
     @Override
@@ -141,7 +148,7 @@ public class LightningLinkerBulletType extends BasicBulletType{
             PositionLightning.createRandomRange(b, b.team, b, randomGenerateRange, backColor, Mathf.chanceDelta(randomLightningChance),
             0, 0, boltWidth, boltNum, randomLightningNum, hitPos -> {
             randomGenerateSound.at(hitPos, Mathf.random(0.9f, 1.1f));
-            Damage.damage(b.team, hitPos.getX(), hitPos.getY(), splashDamageRadius / 8, splashDamage * b.damageMultiplier() / 8, collidesAir, collidesGround);
+                Damage.damage(b.team, hitPos.getX(), hitPos.getY(), Math.max(splashDamageRadius / 8, 16f), splashDamage * b.damageMultiplier() / 8, collidesAir, collidesGround);
             liHitEffect2.at(hitPos.getX(), hitPos.getY(),10, lightningColor);
 
             hitModifier.get(hitPos);

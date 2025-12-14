@@ -425,7 +425,7 @@ public class PesterUnit extends UnitEntity implements Pesterc {
             Draw.z(100.0F);
             if ( isBoss) {
                 for(int i = 0; i <  trails.length; ++i) {
-                    Tmp.c1.set( team.color).mul(1.0F + (float)i * 0.005F).lerp(Color.white, 0.015F * (float)i + Mathf.absin(4.0F, 0.3F) + Mathf.clamp( hitTime) / 5.0F);
+                    Tmp.c1.set(team.color.cpy()).mul(1.0F + (float)i * 0.005F).lerp(Color.white, 0.015F * (float)i + Mathf.absin(4.0F, 0.3F) + Mathf.clamp(hitTime) / 5.0F);
                      trails[i].drawCap(Tmp.c1,  type.trailScl);
                      trails[i].draw(Tmp.c1,  type.trailScl);
                 }

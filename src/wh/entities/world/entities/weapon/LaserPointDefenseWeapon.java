@@ -32,28 +32,41 @@ public class LaserPointDefenseWeapon extends PointDefenseWeapon{
     public float damageMultiplier = 5;
 
     public boolean removeRange = true;
-    public float removeRangeRadius = 24;
+    public float removeRangeRadius = 18;
+    public float damageInterval = 6;
 
+    protected Interval damageTimer = new Interval();
 
-    public LaserPointDefenseWeapon(String name, float damage){
-        super(name);
-        this.damage = damage;
+    {
         shootSound = Sounds.tractorbeam;
         predictTarget = false;
         autoTarget = true;
         controllable = false;
         rotate = true;
-        rotateSpeed = 18;
+        rotateSpeed = 15;
         useAmmo = false;
         useAttackRange = false;
-        targetInterval = targetSwitchInterval = 2;
-        mountType = LaserPointDefenseWeaponMount::new;
+        targetInterval = targetSwitchInterval = 4;
+
         shootCone = 5;
         bullet = new BulletType(){{
             damage = 4;
             maxRange = 160;
             collidesGround = false;
         }};
+    }
+
+    public LaserPointDefenseWeapon(String name, float damage){
+        super(name);
+        this.damage = damage;
+        mountType = LaserPointDefenseWeaponMount::new;
+        shootCone = 10;
+    }
+
+    public LaserPointDefenseWeapon(String name){
+        super(name);
+        mountType = LaserPointDefenseWeaponMount::new;
+        shootCone = 10;
     }
 
     public LaserPointDefenseWeapon(){
@@ -68,7 +81,7 @@ public class LaserPointDefenseWeapon extends PointDefenseWeapon{
     public void addStats(UnitType u, Table t){
         if(damage > 0){
             t.row();
-            t.add("[lightgray]" + Stat.damage.localized() + ": [white]" + (int)damage * 60f + " " + StatUnit.perSecond.localized());
+            t.add("[lightgray]" + Stat.damage.localized() + ": [white]" + (int)damage * (60f / damageInterval) + " " + StatUnit.perSecond.localized());
         }
     }
 
@@ -82,9 +95,9 @@ public class LaserPointDefenseWeapon extends PointDefenseWeapon{
 
         LaserPointDefenseWeaponMount mount = (LaserPointDefenseWeaponMount)m;
         mount.maintain -= Time.delta;
-        if(mount.any && mount.maintain > 0) mount.strength = Mathf.approachDelta(mount.strength, 1, 0.05f);
+        if(mount.any && mount.maintain > 0) mount.strength = Mathf.approachDelta(mount.strength, 1, 0.1f);
         if(!mount.any || mount.target == null || mount.maintain < 0){
-            mount.strength = Mathf.lerpDelta(mount.strength, 0, 0.1f);
+            mount.strength = Mathf.lerpDelta(mount.strength, 0, 0.15f);
             if(mount.strength < 0.001f) mount.strength = 0;
             mount.maintain = 0;
         }
@@ -131,17 +144,21 @@ public class LaserPointDefenseWeapon extends PointDefenseWeapon{
             }
             mount.lastX = target.x;
             mount.lastY = target.y;
-            float bulletDamage = damage * mount.damageMul * unit.damageMultiplier() * state.rules.unitDamage(unit.team)* Time.delta;
+            float bulletDamage = damage * mount.damageMul * unit.damageMultiplier() * state.rules.unitDamage(unit.team);
             if(target.damage() > bulletDamage){
-                target.damage(target.damage() - bulletDamage);
+                if(damageTimer.get(damageInterval)){
+                    target.damage(target.damage() - bulletDamage);
+                }
             }else{
                 target.remove();
             }
             if(removeRange && removeRangeRadius > 0){
                 Groups.bullet.intersect(mount.lastX - removeRangeRadius, mount.lastY - removeRangeRadius, removeRangeRadius * 2, removeRangeRadius * 2, b -> {
                     if(b.team != unit.team && b.type.hittable){
-                        b.damage(b.damage() - bulletDamage*0.1f);
-                        if(target.damage() < bulletDamage*0.1f) b.remove();
+                        if(damageTimer.get(damageInterval)){
+                            b.damage(b.damage() - bulletDamage * 0.1f);
+                        }
+                        if(target.damage() < bulletDamage * 0.1f) b.remove();
                     }
                 });
             }

@@ -54,7 +54,7 @@ public final class WHLiquids{
                 heatCapacity = 0.4f;
                 effect = StatusEffects.wet;
                 boilPoint = 0.5f;
-                gasColor = Color.grays(0.9f);
+                gasColor = Color.grays(0.9f).cpy();
                 barColor = Liquids.cyanogen.color.cpy().lerp(Color.white, 0.5f);
                 alwaysUnlocked = true;
             }

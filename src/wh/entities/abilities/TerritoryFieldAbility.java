@@ -52,7 +52,7 @@ public class TerritoryFieldAbility extends Ability{
     public void update(Unit unit){
         Units.nearby(unit.team, unit.x, unit.y, range, u -> {
             if(u != unit){
-                u.apply(WHStatusEffects.PowerEnhance1, 60);
+                u.apply(WHStatusEffects.powerEnhance1, 60);
                 if(healAm > 0 && !u.dead && u.health < u.maxHealth) u.heal((healAm / 60f) * Time.delta);
             }
         });

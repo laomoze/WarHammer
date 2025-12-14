@@ -68,7 +68,7 @@ public class AdaptedHealAbility extends RepairFieldAbility{
             selfHealReload += Time.delta;
 
             if(selfHealReload > selfHealReloadTime){
-                unit.healFract(selfHealAmount * (ignoreHealthMultiplier ? 1 : 1 / unit.healthMultiplier));
+                unit.healFract(selfHealAmount / 60 * (ignoreHealthMultiplier ? 1 : 1 / unit.healthMultiplier));
             }
         }else{
             selfHealReload = 0;

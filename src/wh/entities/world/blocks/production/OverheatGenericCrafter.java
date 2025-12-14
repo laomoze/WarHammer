@@ -20,14 +20,15 @@ import wh.entities.world.drawer.*;
 import static mindustry.Vars.*;
 
 public class OverheatGenericCrafter extends GenericCrafter{
-    // 热量参数
+
     public float heatCapacity = 1000f;
     public float baseHeatProduction = 0.8f;
     public float overloadHeatProduction = 0.6f;
     public float nearbyHeatProduction = 0.3f;
     public float baseHeatLoss = 2.5f;
+
     public float overloadThreshold = 0.5f;
-    public float overloadEfficiency = 0.3f;
+    public float overloadEfficiency = 0.4f;
 
     public int proximityRange = size;
 
@@ -56,11 +57,11 @@ public class OverheatGenericCrafter extends GenericCrafter{
         super.setStats();
         stats.add(Stat.heatCapacity, heatCapacity, StatUnit.heatUnits);
         stats.add(Stat.output, wasteHeatOutput, StatUnit.heatUnits);
-        stats.add(WHStats.baseHeatProduction,   baseHeatProduction + Core.bundle.get("stat.wh-tick"));
-        stats.add(WHStats.overloadHeatProduction,  + overloadHeatProduction + Core.bundle.get("stat.wh-tick") );
-        stats.add(WHStats.heatLoss,  baseHeatLoss+ Core.bundle.get("stat.wh-tick"));
-        stats.add(WHStats.overloadThreshold, Mathf.round(1+overloadThreshold* 100) , StatUnit.percent);
-        stats.add(WHStats.overloadEfficiency, (1 + overloadEfficiency)*100, StatUnit.percent);
+        stats.add(WHStats.baseHeatProduction, baseHeatProduction + Core.bundle.get("stat.wh-tick"));
+        stats.add(WHStats.overloadHeatProduction, +overloadHeatProduction + Core.bundle.get("stat.wh-tick"));
+        stats.add(WHStats.heatLoss, baseHeatLoss + Core.bundle.get("stat.wh-tick"));
+        stats.add(WHStats.overloadThreshold, Mathf.round(1 + overloadThreshold * 100), StatUnit.percent);
+        stats.add(WHStats.overloadEfficiency, (1 + overloadEfficiency) * 100, StatUnit.percent);
 
     }
 
@@ -80,7 +81,6 @@ public class OverheatGenericCrafter extends GenericCrafter{
         t -> Drawf.selected(t, Tmp.c1.set(baseColor).a(Mathf.absin(4f, 1f))));
     }
 
-
     @Override
     public void init(){
         super.init();
@@ -94,8 +94,8 @@ public class OverheatGenericCrafter extends GenericCrafter{
         public boolean cooling = false;
         private int nearbySameType;
         private int lastChange = -2;
-        protected transient float boostDuration;
-        protected transient float overloadThresholdReduce;
+        public float boostDuration;
+        public float overloadThresholdReduce;
 
         @Override
         public void draw(){
@@ -120,7 +120,8 @@ public class OverheatGenericCrafter extends GenericCrafter{
             });
         }
 
-        public float  charge;
+        public float charge;
+
         @Override
         public void updateTile(){
             if(boostDuration > 0){
@@ -148,7 +149,7 @@ public class OverheatGenericCrafter extends GenericCrafter{
             boolean isOverloaded = overHeat > (overloadThreshold - (boostDuration > 0 ? overloadThresholdReduce : 0)) * heatCapacity;
 
 
-            if( isOverloaded && !cooling){
+            if(isOverloaded && !cooling){
                 overloaded = true;
                 applyBoost(1 + overloadEfficiency, 60f);
                 overHeat += overloadHeatProduction * edelta();
@@ -166,7 +167,7 @@ public class OverheatGenericCrafter extends GenericCrafter{
             if(isOverloaded || cooling){
                 heat = Mathf.approachDelta(heat, wasteHeatOutput * efficiency, warmupRate * edelta());
             }else{
-                heat = Mathf.approachDelta(heat, 0, warmupRate*1.5f * edelta());
+                heat = Mathf.approachDelta(heat, 0, warmupRate * 1.5f * edelta());
             }
 
             if(cooling){
@@ -179,7 +180,6 @@ public class OverheatGenericCrafter extends GenericCrafter{
                     cooling = false;
                 }
             }
-
         }
 
         @Override

@@ -7,6 +7,7 @@ package wh.content;
 
 import arc.graphics.Color;
 import arc.struct.*;
+import mindustry.content.*;
 import mindustry.type.Item;
 import wh.graphics.WHPal;
 
@@ -24,12 +25,14 @@ public final class WHItems {
     public static Item resonantCrystal;
     public static Item protocolChip;
 
-    public static final Seq<Item> KellexItems = new Seq<>();
+    public static final Seq<Item> kellexItems = new Seq<>();
+
 
     private WHItems() {
     }
 
     public static void load() {
+
         imperium = new Item("imperium", Color.valueOf("FFFFFF")){{
             hidden = true;
             alwaysUnlocked = true;
@@ -54,6 +57,9 @@ public final class WHItems {
         }};
         protocolChip = new Item("protocol-chip", Color.valueOf("FF6363FF")){{
             charge = 0.8f;
+            frames = 28;
+            transitionFrames = 2;
+            frameTime = 1;
         }};
         titaniumSteel = new Item("titanium-steel", WHPal.TiSteelColor){{
             cost = 0.75f;
@@ -91,6 +97,7 @@ public final class WHItems {
             transitionFrames=2;
             frameTime=1;
         }};
-    }
 
+        kellexItems.addAll(oreSand, molybdenum, Items.tungsten, Items.copper, Items.lead, Items.titanium, Items.thorium);
+    }
 }

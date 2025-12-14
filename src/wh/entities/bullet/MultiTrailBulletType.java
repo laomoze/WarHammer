@@ -20,6 +20,18 @@ public class MultiTrailBulletType extends BasicBulletType{
     public boolean offsetMove = true;
     public boolean DrawTri = false;
 
+    public MultiTrailBulletType(){
+
+    }
+
+    public MultiTrailBulletType(float speed, float damage){
+        super(speed, damage);
+    }
+
+    public MultiTrailBulletType(float speed, float damage, String bulletSprite){
+        super(speed, damage, bulletSprite);
+    }
+
     @Override
     public void init(Bullet b){
         super.init(b);

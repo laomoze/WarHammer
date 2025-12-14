@@ -42,7 +42,7 @@ public class ShockWaveAbility extends Ability{
     public float knockback = 20f;
     public float rotKnock = 10f;
 
-    public Color hitColor = WHPal.OR;
+    public Color hitColor = WHPal.ShootOrangeLight;
 
     public Sound shootSound = WHSounds.shock;
 

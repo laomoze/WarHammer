@@ -1,5 +1,6 @@
 package wh.entities.world.entities.weapon;
 
+import arc.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
@@ -18,6 +19,8 @@ import mindustry.graphics.*;
 import mindustry.type.*;
 import mindustry.world.meta.*;
 import wh.graphics.*;
+import wh.ui.*;
+import wh.util.*;
 
 import static mindustry.Vars.*;
 
@@ -28,12 +31,10 @@ public class MarkWeapon extends Weapon{
     public ShootPattern markShoot = new ShootPattern();
 
     private @Nullable Healthc markedUnit = null;
-    public float markReduce = 2f;
+    public float markReduce = 0f;
     public float markTime = 120;
-    public float markTimer;
-    public float effectTimer;
-
-    protected float retarget1 = 0f;
+    protected float markTimer;
+    protected float effectTimer;
 
     public MarkWeapon(String name){
         super(name);
@@ -365,24 +366,13 @@ public class MarkWeapon extends Weapon{
     }
 
     protected void handleBullet(Unit unit, WeaponMount mount, Bullet bullet){
-        if(continuous){
-            float
-            weaponRotation = unit.rotation - 90 + (rotate ? mount.rotation : baseRotation),
-            mountX = unit.x + Angles.trnsx(unit.rotation - 90, x, y),
-            mountY = unit.y + Angles.trnsy(unit.rotation - 90, x, y),
-            bulletX = mountX + Angles.trnsx(weaponRotation, this.shootX, this.shootY),
-            bulletY = mountY + Angles.trnsy(weaponRotation, this.shootX, this.shootY);
-            //make sure the length updates to the last set value
-            Tmp.v1.trns(bulletRotation(unit, mount, bulletX, bulletY), shootY + mount.lastLength).add(bulletX, bulletY);
-            bullet.aimX = Tmp.v1.x;
-            bullet.aimY = Tmp.v1.y;
-        }
+        super.handleBullet(unit, mount, bullet);
     }
 
     @Override
     public void draw(Unit unit, WeaponMount mount){
         super.draw(unit, mount);
-        DrawMark(unit, mount);
+        /*DrawMark(unit, mount);*/
     }
 
     public void DrawMark(Unit unit, WeaponMount mount){
@@ -407,7 +397,9 @@ public class MarkWeapon extends Weapon{
         t.row();
         t.add("[lightgray]" + new Stat("wh-mark-chance", StatCat.function).localized() + "[white]" + (int)(markChance * 100) + "%");
         t.row();
-        StatValues.ammo(ObjectMap.of(u, markBullet)).display(t);
+        t.add(Core.bundle.format("stat.wh-markBullet"));
+        t.row();
+        UIUtils.ammo(ObjectMap.of(u, markBullet)).display(t);
     }
     public static class MarkWeaponMount extends WeaponMount{
         public ShootPattern specialShoot;

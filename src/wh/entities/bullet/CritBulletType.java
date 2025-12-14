@@ -18,12 +18,11 @@ import static mindustry.Vars.*;
 public class CritBulletType extends BasicBulletType{
     protected static Rand critRand = new Rand();
 
-    public float critChance = 0.15f, critMultiplier = 5f;
+    public float critChance = 0.1f, critMultiplier = 2f;
     public Effect critEffect = Fx.none;
     public boolean bouncing, despawnHitEffects = true;
     public boolean makePlaFire;
     public float plaFireChance = -1;
-
 
     public CritBulletType(float speed, float damage, String sprite){
         super(speed, damage, sprite);
@@ -107,6 +106,9 @@ public class CritBulletType extends BasicBulletType{
     @Override
     public void hitTile(Bullet b, Building build, float x, float y, float initialHealth, boolean direct){
         super.hitTile(b, build, x, y, initialHealth, direct);
+        if(makePlaFire && plaFireChance > 0){
+            PlasmaFire.createChance(x, y, splashDamageRadius, plaFireChance, b.team);
+        }
         if(direct){
             bounce(b);
         }
@@ -117,6 +119,7 @@ public class CritBulletType extends BasicBulletType{
         b.fdata = 1f;
         super.despawned(b);
     }
+
 
     @Override
     public void hit(Bullet b, float x, float y){
@@ -166,10 +169,12 @@ public class CritBulletType extends BasicBulletType{
 
             if(makePlaFire && plaFireChance > 0){
                 PlasmaFire.createChance(x, y, splashDamageRadius, plaFireChance, b.team);
+            }else if(plaFireChance > 1){
+                indexer.eachBlock(null, x, y, splashDamageRadius, other -> other.team != b.team, other -> PlasmaFire.create(other.tile));
             }
 
-            if(makePlaFire){
-                indexer.eachBlock(null, x, y, splashDamageRadius, other -> other.team != b.team, other -> PlasmaFire.create(other.tile));
+            if(makeFire){
+                indexer.eachBlock(null, x, y, splashDamageRadius, other -> other.team != b.team, other -> Fires.create(other.tile));
             }
         }
     }

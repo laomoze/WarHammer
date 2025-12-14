@@ -25,14 +25,16 @@ public class KellexPlanetGenerator extends SerpuloPlanetGenerator {
     }
 
     @Override
-    public void generateSector(Sector sector) {}
+    public void generateSector(Sector sector){
+        super.generateSector(sector);
+    }
 
     @Override
     public float getHeight(Vec3 position) {
         return rawHeight(position);
     }
 
-  /*  @Override
+    /*@Override
     public Color getColor(Vec3 position) {
         Color color = baseColor;
         for (ColorPass c : colors) {

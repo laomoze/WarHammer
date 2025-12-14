@@ -97,7 +97,7 @@ void main(){
             float sqrt3 = sqrt(3.);
             float hexR = 0.56;
             float hexA = mod(acos(dot(p, vec2(0., 1.))/cDist), 1.0472);
-            float hexDist = sqrt3_hexR / (sqrt3 * cos(hexA) + sin(hexA));  // 复用预计算常量
+            float hexDist = sqrt3_hexR / (sqrt3 * cos(hexA) + sin(hexA));
 
             if(cDist > hexDist){
                 float lineX = mod(u_time, 100.0);

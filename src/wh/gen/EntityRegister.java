@@ -4,6 +4,7 @@ import arc.func.*;
 import arc.struct.*;
 import mindustry.gen.*;
 import wh.entities.world.entities.*;
+import wh.entities.world.entities.powerArmorComp.*;
 
 public final class EntityRegister {
     private static final ObjectIntMap<Class<? extends Entityc>> ids = new ObjectIntMap<>();
@@ -27,6 +28,7 @@ public final class EntityRegister {
     public static int getId(Class<? extends Entityc> type) {
         return ids.get(type, -1);
     }
+
     public static void load() {
         register("PlaFire", PlasmaFire.class, PlasmaFire::new);
         register("EnergyUnit", EnergyUnit.class, EnergyUnit::new);
@@ -34,5 +36,8 @@ public final class EntityRegister {
         register("NucleoidUnit", NucleoidUnit.class, NucleoidUnit::new);
         register("AirRaiderUnit", AirRaiderUnitType.class, AirRaiderUnitType::new);
         register("StarrySkyUnit", StarrySkyEntity.class, StarrySkyEntity::new);
+        register("HoverPayloadUnit", HoverPayloadUnit.class, HoverPayloadUnit::new);
+        register("TitanUnit", TitanUnit.class, TitanUnit::create);
+        register("PowerArmourUnit", PowerArmourUnit.class, PowerArmourUnit::new);
     }
 }

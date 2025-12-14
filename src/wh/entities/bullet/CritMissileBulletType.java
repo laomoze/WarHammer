@@ -1,27 +1,29 @@
 package wh.entities.bullet;
 
-import arc.*;
 import arc.audio.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
-import arc.math.geom.*;
 import arc.util.*;
 import mindustry.*;
-import mindustry.content.*;
 import mindustry.entities.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.world.blocks.*;
-import mindustry.world.blocks.defense.turrets.*;
-import wh.gen.*;
 
-import static mindustry.Vars.*;
 import static wh.content.WHFx.rand;
 
 public class CritMissileBulletType extends CritBulletType{
     public CritMissileBulletType(){
         super();
+    }
+
+    public CritMissileBulletType(float speed, float damage, String bulletSprite){
+        super(speed, damage, bulletSprite);
+    }
+
+    public CritMissileBulletType(float speed, float damage){
+        super(speed, damage);
     }
 
     public float[] lengthWidthPans = {
@@ -84,6 +86,7 @@ public class CritMissileBulletType extends CritBulletType{
         lookAt(b.angleTo(x, y), b);
     }
 
+
     @Override
     public void update(Bullet b){
         super.update(b);
@@ -136,11 +139,12 @@ public class CritMissileBulletType extends CritBulletType{
     @Override
     public void updateWeaving(Bullet b){
         super.updateWeaving(b);
+
         if(weaveMag != 0 && weaveMagOnce){
             rand.setSeed(b.id);
-            var progress = b.fin() * Math.PI;
-            float sign = weaveRandom ? (Mathf.randomSeed(b.id, 0, 1) == 1 ? -1 : 1) : 1f;
-            b.vel.rotateRadExact(-sign * Mathf.sin((float)progress, Mathf.PI / range, rand.random(0, 1f) * sign * weaveMag) * Time.delta * Mathf.degRad);
+            float weaveRange = /*b.type.range/Vars.tilesize*/b.lifetime / Mathf.pi;
+            b.vel.rotateRadExact((float)Math.sin((b.time + Math.PI * weaveRange / 2f) / weaveRange) * weaveMag * rand.random(0.6f, 1f) *
+            (weaveRandom ? (Mathf.randomSeed(b.id, 0, 1) == 1 ? -1 : 1) : 1f) * Time.delta * Mathf.degRad);
         }
     }
 
@@ -149,7 +153,7 @@ public class CritMissileBulletType extends CritBulletType{
         if(trailLength > 0 && b.trail != null){
             //draw below bullets? TODO
             float z = Draw.z();
-            Draw.z(z - 0.0001f);
+            Draw.z(z - 0.0002f);
             if(drawTeamColor){
                 b.trail.draw(b.team != null ? b.team.color.cpy() : trailColor, trailWidth);
             }else{

@@ -41,7 +41,7 @@ public class MoveSuppressionBullet extends ContinuousBulletType{
         shootEffect = Fx.none;
         smokeEffect = Fx.none;
         drawSize = findRange * 1.5f;
-        range = findRange;
+        maxRange = range = findRange;
     }
 
     public MoveSuppressionBullet(){
@@ -86,6 +86,7 @@ public class MoveSuppressionBullet extends ContinuousBulletType{
         float in = Mathf.clamp(b.time > b.lifetime - fadeTime ? 1f - (b.time - (lifetime - fadeTime)) / fadeTime : 1f);
         float range = findRange * in;
         float angle = findAngle * in;
+        Drawf.light(b.x, b.y, range / 0.8f, color, 0.8f);
         Draw.color(color);
         Draw.z(Layer.buildBeam);
         Draw.alpha(0.8f);

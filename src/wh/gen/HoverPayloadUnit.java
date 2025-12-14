@@ -22,7 +22,7 @@ import static mindustry.Vars.world;
 
 public class HoverPayloadUnit extends ElevationMoveUnit implements Payloadc, WaterMovec{
     public Seq<Payload> payloads = new Seq<>();
-    public float LandSpeedMultiplier = 0.5f;
+    public float LandSpeedMultiplier = 0.7f;
     protected transient Trail tleft = new Trail(1);
     protected transient Color trailColor = Blocks.water.mapColor.cpy().mul(1.5F);
     protected transient Trail tright = new Trail(1);
@@ -220,7 +220,7 @@ public class HoverPayloadUnit extends ElevationMoveUnit implements Payloadc, Wat
     public void update(){
         super.update();
         if(!onLiquid()){
-            vel.scl(Math.max(LandSpeedMultiplier * Time.delta, 0));
+            vel.scl(Math.max(LandSpeedMultiplier, 0));
         }
         boolean flying = isFlying();
         for(int i = 0; i < 2; i++){

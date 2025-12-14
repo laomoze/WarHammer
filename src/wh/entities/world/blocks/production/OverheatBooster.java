@@ -338,11 +338,11 @@ public class OverheatBooster extends Block{
         public float particleLife = 110f;
         public float orbRadius = 8, orbMidScl = 0.33f, orbSinScl = 8f, orbSinMag = 1f;
         public Interp particleInterp = f -> Interp.circleOut.apply(Interp.slope.apply(f));
-        public Color particleColor = WHPal.OR;
+        public Color particleColor = Pal.lightOrange;
         @Override
         public void draw(){
             super.draw();
-            Color color = WHPal.OR;
+            Color color = particleColor;
 
             Draw.z(Layer.effect);
 

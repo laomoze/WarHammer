@@ -16,13 +16,14 @@ import arc.math.Mathf;
 import arc.math.Rand;
 import arc.math.geom.*;
 import arc.struct.*;
+import arc.util.*;
 import arc.util.Nullable;
-import arc.util.Time;
-import arc.util.Tmp;
-import arc.util.pooling.Pools;
+import arc.util.pooling.*;
+import mindustry.*;
 import mindustry.ai.types.*;
 import mindustry.core.World;
 import mindustry.entities.*;
+import mindustry.entities.Damage.*;
 import mindustry.entities.bullet.BulletType;
 import mindustry.game.Team;
 import mindustry.gen.*;
@@ -34,6 +35,8 @@ import mindustry.world.blocks.*;
 import mindustry.world.blocks.defense.turrets.ItemTurret;
 import org.jetbrains.annotations.*;
 import wh.entities.Spawner;
+import wh.entities.bullet.laser.LaserBeamBulletType.*;
+import wh.func.*;
 
 import static arc.Core.atlas;
 import static mindustry.Vars.*;
@@ -44,9 +47,6 @@ public final class WHUtils{
     public static final Rand rand = new Rand(0);
 
     private static Tile tileParma;
-    private static Posc result;
-    private static float cDistance=0;
-    private static int idx;
     private static final Vec2 tV = new Vec2(), tV2 = new Vec2(), tV3 = new Vec2();
     private static final IntSet collidedBlocks = new IntSet();
     private static final Rect rect = new Rect(), hitRect = new Rect();
@@ -54,6 +54,15 @@ public final class WHUtils{
     private static final Seq<Unit> units = new Seq<>();
     private static Building tmpBuilding;
     private static Unit tmpUnit;
+
+    static final Vec2 v1 = new Vec2();
+    static final Vec2 v2 = new Vec2();
+    static final Vec2 v3 = new Vec2();
+    static final Vec2 v4 = new Vec2();
+    static final Vec2 v5 = new Vec2();
+    private static final FloatSeq distances = new FloatSeq();
+    private static float maxDst = 0f;
+
 
     private static EntityCollisions mover = new EntityCollisions();
 
@@ -72,11 +81,11 @@ public final class WHUtils{
         };
     }
 
-    public static TextureRegion[][] splitUnLayers(String name, int size) {
+    public static TextureRegion[][] splitUnLayers(String name, int size){
         return splitUnLayers(Core.atlas.find(name), size);
     }
 
-    public static TextureRegion[][] splitUnLayers(TextureRegion region, int size) {
+    public static TextureRegion[][] splitUnLayers(TextureRegion region, int size){
         int x = region.getX();
         int y = region.getY();
         int width = region.width;
@@ -87,9 +96,9 @@ public final class WHUtils{
 
         int startX = x;
         TextureRegion[][] tiles = new TextureRegion[sw][sh];
-        for (int cy = 0; cy < sh; cy++, y += size) {
+        for(int cy = 0; cy < sh; cy++, y += size){
             x = startX;
-            for (int cx = 0; cx < sw; cx++, x += size) {
+            for(int cx = 0; cx < sw; cx++, x += size){
                 tiles[cx][cy] = new TextureRegion(region.texture, x, y, size, size);
             }
         }
@@ -122,11 +131,11 @@ public final class WHUtils{
         TextureRegion base = Core.atlas.find(name);
         if(base == null) throw new IllegalArgumentException("Texture not found: " + name);
 
-        TextureRegion[][] layers = new TextureRegion[height/size][width/size];
+        TextureRegion[][] layers = new TextureRegion[height / size][width / size];
 
-        for(int y = 0; y < height/size; y++){
-            for(int x = 0; x < width/size; x++){
-                layers[y][x] = new TextureRegion(base, x*size, y*size, size, size);
+        for(int y = 0; y < height / size; y++){
+            for(int x = 0; x < width / size; x++){
+                layers[y][x] = new TextureRegion(base, x * size, y * size, size, size);
             }
         }
         return layers;
@@ -138,7 +147,7 @@ public final class WHUtils{
      * @param height The amount of regions vertically.
      */
 
-    public static TextureRegion[] split(String name, int size, int width, int height) {
+    public static TextureRegion[] split(String name, int size, int width, int height){
         TextureRegion reg = Core.atlas.find(name);
         int textureSize = width * height;
         TextureRegion[] regions = new TextureRegion[textureSize];
@@ -146,9 +155,9 @@ public final class WHUtils{
         float tileWidth = (reg.u2 - reg.u) / width;
         float tileHeight = (reg.v2 - reg.v) / height;
 
-        for (int i = 0; i < textureSize; i++) {
-            float tileX = ((float) (i % width)) / width;
-            float tileY = ((float) (i / width)) / height;
+        for(int i = 0; i < textureSize; i++){
+            float tileX = ((float)(i % width)) / width;
+            float tileY = ((float)(i / width)) / height;
             TextureRegion region = new TextureRegion(reg);
 
             //start coordinate
@@ -177,14 +186,14 @@ public final class WHUtils{
 
     @Contract(value = "_, _ -> new", pure = true)
     public static @NotNull Position pos(float x, float y){
-        return new Position() {
+        return new Position(){
             @Override
-            public float getX() {
+            public float getX(){
                 return x;
             }
 
             @Override
-            public float getY() {
+            public float getY(){
                 return y;
             }
         };
@@ -224,6 +233,167 @@ public final class WHUtils{
         return xy == 0 ? xRotated : yRotated;
     }
 
+    public static void superEllipse(float angle, float r, float centerX, float centerY, float rotation, Vec2 out){
+        superEllipse(angle, r, r, 4, centerX, centerY, rotation, out);
+    }
+
+    /**
+     * 返回旋转 + 平移后的超椭圆上任意一点
+     * @param angle 参数角度 0~2π（0 对应最右端）
+     * @param a x 半轴
+     * @param b y 半轴
+     * @param n 超椭圆指数（2=椭圆，4≈矩形）
+     * @param centerX 中心偏移 x
+     * @param centerY 中心偏移 y
+     * @param rotation 即时旋转角（rad）
+     * @param out 输出向量
+     */
+    public static void superEllipse(float angle, float a, float b, float n, float centerX, float centerY, float rotation, Vec2 out){
+        float cosT = Mathf.cosDeg(angle);
+        float sinT = Mathf.sinDeg(angle);
+        float x = a * Mathf.sign(cosT) * Mathf.pow(Math.abs(cosT), 2f / n);
+        float y = b * Mathf.sign(sinT) * Mathf.pow(Math.abs(sinT), 2f / n);
+
+        float cosR = Mathf.cosDeg(rotation);
+        float sinR = Mathf.sinDeg(rotation);
+        out.set(x * cosR - y * sinR,
+        x * sinR + y * cosR);
+
+        out.add(centerX, centerY);
+    }
+
+    public static float findLaserPierceLength(Bullet b, int pierceCap, boolean laser, float length, float angle){
+        if(!(b instanceof LaserDataBullet data)) return 0;
+        v1.trnsExact(angle, length);
+        rect.setPosition(b.x, b.y).setSize(v1.x, v1.y).normalize().grow(3f);
+        data.stop = false;
+        maxDst = Float.POSITIVE_INFINITY;
+
+        distances.clear();
+
+        if(b.type.collidesGround && b.type.collidesTiles){
+            World.raycast(b.tileX(), b.tileY(), World.toTile(b.x + v1.x), World.toTile(b.y + v1.y), (x, y) -> {
+                //add distance to list so it can be processed
+                var build = world.build(x, y);
+
+                if(build != null && build.team != b.team && build.collide(b) && b.checkUnderBuild(build, x * tilesize, y * tilesize)){
+                    Tmp.v2.trns(b.rotation(), length * 1.5f).add(b);
+                    float dst = Intersector.distanceLinePoint(b.x, b.y, Tmp.v2.x, Tmp.v2.y, build.x, build.y);
+                    float dst2 = b.dst(build)/*-build.hitSize()*0.7f+dst*/;
+                    distances.add(dst2);
+                    data.stop = false;
+
+                    if(laser && build.absorbLasers()){
+
+                        maxDst = dst2;
+                        data.stop = true;
+                        return true;
+                    }
+                }
+                return false;
+            });
+        }
+
+        Units.nearbyEnemies(b.team, rect, u -> {
+            u.hitbox(hitRect);
+
+            if(u.checkTarget(b.type.collidesAir, b.type.collidesGround) && u.hittable() &&
+            Intersector.intersectSegmentRectangle(b.x, b.y, b.x + v1.x, b.y + v1.y, hitRect)){
+                Tmp.v2.trns(b.rotation(), length * 1.5f).add(b);
+                float dst = Intersector.distanceLinePoint(b.x, b.y, Tmp.v2.x, Tmp.v2.y, u.x, u.y);
+                float dst2 = b.dst(u) - u.hitSize() * 0.7f + dst;
+                distances.add(b.dst(u));
+            }
+        });
+
+        data.stop = distances.size > pierceCap && !data.stop;
+
+        distances.sort();
+
+        //return either the length when not enough things were pierced,
+        //or the last pierced object if there were enough blockages
+        return Math.min(distances.size < pierceCap || pierceCap < 0 ? length : Math.max(6f, distances.get(pierceCap - 1)), maxDst);
+    }
+
+    private static final Seq<Collided> collided = new Seq<>();
+    private static final Pool<Collided> collidePool = Pools.get(Collided.class, Collided::new);
+
+    public static void collideLine(Bullet hitter, Team team, float x, float y, float angle, float length, boolean large, boolean laser, int pierceCap){
+        length = findLaserPierceLength(hitter, pierceCap, laser, length, angle);
+
+        collidedBlocks.clear();
+        v1.trnsExact(angle, length);
+
+        if(hitter.type.collidesGround && hitter.type.collidesTiles){
+            v2.set(x, y);
+            v3.set(v2).add(v1);
+            World.raycastEachWorld(x, y, v3.x, v3.y, (cx, cy) -> {
+                Building tile = world.build(cx, cy);
+                boolean collide = tile != null && tile.collide(hitter) && hitter.checkUnderBuild(tile, cx * tilesize, cy * tilesize)
+                && ((tile.team != team && tile.collide(hitter)) || hitter.type.testCollision(hitter, tile)) && collidedBlocks.add(tile.pos());
+                if(collide){
+                    collided.add(collidePool.obtain().set(cx * tilesize, cy * tilesize, tile));
+
+                    for(Point2 p : Geometry.d4){
+                        Tile other = world.tile(p.x + cx, p.y + cy);
+                        if(other != null && (large || Intersector.intersectSegmentRectangle(v2, v3, other.getBounds(Tmp.r1)))){
+                            Building build = other.build;
+                            if(build != null && hitter.checkUnderBuild(build, cx * tilesize, cy * tilesize) && collidedBlocks.add(build.pos())){
+                                collided.add(collidePool.obtain().set((p.x + cx * tilesize), (p.y + cy) * tilesize, build));
+                            }
+                        }
+                    }
+                }
+                return false;
+            });
+        }
+
+        float expand = 3f;
+
+        rect.setPosition(x, y).setSize(v1.x, v1.y).normalize().grow(expand * 2f);
+        float x2 = v1.x + x, y2 = v1.y + y;
+
+        Units.nearbyEnemies(team, rect, u -> {
+            if(u.checkTarget(hitter.type.collidesAir, hitter.type.collidesGround) && u.hittable()){
+                u.hitbox(hitRect);
+
+                Vec2 vec = Geometry.raycastRect(x, y, x2, y2, hitRect.grow(expand * 2));
+
+                if(vec != null){
+                    collided.add(collidePool.obtain().set(vec.x, vec.y, u));
+                }
+            }
+        });
+
+        int[] collideCount = {0};
+        collided.sort(c -> hitter.dst2(c.x, c.y));
+        collided.each(c -> {
+            if(hitter.damage > 0 && (pierceCap <= 0 || collideCount[0] < pierceCap)){
+                if(c.target instanceof Unit u){
+                    u.collision(hitter, c.x, c.y);
+                    hitter.collision(u, c.x, c.y);
+                    collideCount[0]++;
+                }else if(c.target instanceof Building tile){
+                    float health = tile.health;
+
+                    if(tile.team != team && tile.collide(hitter)){
+                        tile.collision(hitter);
+                        hitter.type.hit(hitter, c.x, c.y);
+                        collideCount[0]++;
+                    }
+
+                    //try to heal the tile
+                    if(hitter.type.testCollision(hitter, tile)){
+                        hitter.type.hitTile(hitter, tile, c.x, c.y, health, false);
+                    }
+                }
+            }
+        });
+
+        collidePool.freeAll(collided);
+        collided.clear();
+    }
+
     /**
      * 人为移动子弹
      * @param b 要移动的子弹
@@ -231,9 +401,9 @@ public final class WHUtils{
      * @param endY 结束坐标Y
      * @param speed 速度
      */
-    public static void movePoint(Bullet b, float endX, float endY, float speed) {
+    public static void movePoint(Bullet b, float endX, float endY, float speed){
         // 计算两点之间的距离
-        float distance = (float) Math.sqrt(Math.pow(endX - b.x, 2) + Math.pow(endY - b.y, 2));
+        float distance = (float)Math.sqrt(Math.pow(endX - b.x, 2) + Math.pow(endY - b.y, 2));
 
         float moveSpeed = distance * speed;
 
@@ -244,11 +414,10 @@ public final class WHUtils{
         // 计算每个tick内移动的距离
         float moveDistance = moveSpeed * Time.delta;
 
-
         mover.move(b, dx * moveDistance, dy * moveDistance);
 
         // 检查是否到达或超过终点
-        if (Math.abs(b.x - endX) < 1e-4f && Math.abs(b.y - endY) < 1e-4f) {
+        if(Math.abs(b.x - endX) < 1e-4f && Math.abs(b.y - endY) < 1e-4f){
             b.set(endX, endY);
         }
     }
