@@ -1,19 +1,9 @@
 package wh.content;
 
-import arc.graphics.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import mindustry.content.*;
-import mindustry.graphics.g3d.*;
 import mindustry.type.*;
-import wh.maps.*;
-import wh.maps.ColorPass.*;
-import wh.maps.HeightPass.*;
 import wh.maps.planets.*;
-import wh.entities.world.type.*;
 
-import static mindustry.content.Planets.*;
+import static mindustry.content.Planets.sun;
 
 public final class WHPlanets {
     public static Planet kellex;
@@ -159,7 +149,7 @@ public final class WHPlanets {
             atmosphereRadIn = 0.05f;
             atmosphereRadOut = 0.5f;
             allowWaves = false;
-            allowWaveSimulation = false;
+            /* allowWaveSimulation = false;*/
             allowSectorInvasion = false;
         }};
     }

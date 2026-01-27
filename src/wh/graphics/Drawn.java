@@ -5,28 +5,24 @@
 
 package wh.graphics;
 
-import arc.Core;
+import arc.*;
 import arc.func.*;
-import arc.graphics.Color;
+import arc.graphics.*;
 import arc.graphics.g2d.*;
-import arc.math.Angles;
-import arc.math.Interp;
-import arc.math.Mathf;
-import arc.math.Rand;
+import arc.math.*;
 import arc.math.geom.*;
-import arc.scene.ui.layout.Scl;
+import arc.scene.ui.layout.*;
 import arc.struct.*;
-import arc.util.Time;
-import arc.util.Tmp;
-import arc.util.pooling.Pools;
-import mindustry.Vars;
+import arc.util.*;
+import arc.util.pooling.*;
+import mindustry.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.ui.Fonts;
-import wh.content.WHFx;
-import wh.math.WHInterp;
-import wh.struct.Vec2Seq;
-import wh.util.WHUtils;
+import mindustry.ui.*;
+import wh.content.*;
+import wh.math.*;
+import wh.struct.*;
+import wh.util.*;
 
 import static arc.graphics.g2d.Lines.polyline;
 import static mindustry.Vars.tilesize;
@@ -38,12 +34,14 @@ public final class Drawn{
     public static final float[] v = new float[6];
     public static final Rand rand = new Rand(0L);
     public static final Color bottomColor = Pal.gray;
-    static final Vec3[] tmpV = new Vec3[4];
-    static final Mat3D matT = new Mat3D();
-    static final Vec2 v1 = new Vec2();
-    static final Vec2 v2 = new Vec2();
-    static final Vec2 v3 = new Vec2();
-    static final Vec2 v6 = new Vec2();
+    public static final Vec3[] tmpV = new Vec3[4];
+    public static final Mat3D matT = new Mat3D();
+    public static final Vec2 v1 = new Vec2();
+    public static final Vec2 v2 = new Vec2();
+    public static final Vec2 v3 = new Vec2();
+    public static final Vec2 v4 = new Vec2();
+    public static final Vec2 v5 = new Vec2();
+    public static final Vec2 v6 = new Vec2();
     static final Color c1 = new Color();
     static final Color c2 = new Color();
     private static final float PERSPECTIVE_STRENGTH = 0.06f;
@@ -210,7 +208,7 @@ public final class Drawn{
 
     public static void arcProcessFlip(float x, float y, float rad, float in, float scl){
         float f = Mathf.cos(in % (scl * 3.0F), scl, 1.1F);
-        arcProcess(x, y, rad, 1, in + (float)(-90 * Mathf.sign(f)), 100, f > 0.0F ? f : -f);
+        arcProcess(x, y, rad, 1, in + (float)(-90 * Mathf.sign(f)), 120, f > 0.0F ? f : -f);
     }
 
     public static void posSquareLink(Color color, float stroke, float size, boolean drawBottom, float x, float y, float x2, float y2){
@@ -559,204 +557,59 @@ public final class Drawn{
         }
 
         Lines.linePoint(x2, y2);
-        //        Lines.linePoint(x2, y2);
         Lines.endLine(false);
 
     }
 
-    //伪3d
-    public static float toP3dCoord(float coord, float z3d, boolean isY){
-        float cam = (isY ? Core.camera.position.y - 48f : Core.camera.position.x);
-        return coord + (coord - cam) * z3d * PERSPECTIVE_STRENGTH;
-    }
+    public static void drawFinSine2Modifier(float x, float y, float x2, float y2, float scale, float in, float scaleSpeed, float scaleOffset, float mag,
+                                            float wavelength, Floatc2 f){
+        float dstTotal = Mathf.dst(x, y, x2, y2);
+        float ang = Angles.angle(x, y, x2, y2);
+        int dst = (int)(dstTotal / wavelength);
 
-    //单面墙
-    public static void wall(float x1, float y1, float x2, float y2,
-                            float z3d, Color colorIn, Color colorOut, float z){
-        float x1p = toP3dCoord(x1, z3d, false);
-        float y1p = toP3dCoord(y1, z3d, true);
-        float x2p = toP3dCoord(x2, z3d, false);
-        float y2p = toP3dCoord(y2, z3d, true);
+        Lines.beginLine();
 
-        Draw.z(z);
-        Fill.quad(x1, y1, colorIn.toFloatBits(),
-        x2, y2, colorIn.toFloatBits(),
-        x2p, y2p, colorOut.toFloatBits(),
-        x1p, y1p, colorOut.toFloatBits());
-    }
+        float startOffset = Mathf.sin(in + scale * scaleOffset, scale, mag);
+        v1.trns(ang, 0, startOffset).add(x, y);
+        Lines.linePoint(v1);
+        f.get(v1.x, v1.y);
 
-    //立方体
-    public static void room(float x, float y, float z3d,
-                            float w, float h, Color colorIn, Color colorOut, float zBase){
+        for(int i = 1; i < dst; i++){
+            float progress = i / (float)dst;
 
-        if(w < 0.0001f || h < 0.0001f) return;
+            float distanceAttenuation = 1f - progress;
 
-        Tmp.c1.set(colorIn);
-        Tmp.c2.set(colorOut);
+            float currentOffset = Mathf.sin(in + scale * (scaleSpeed * i + scaleOffset), scale, mag) * distanceAttenuation;
 
-        /* 4 堵墙，亮度微调 + Z 偏移 */
-        wall(x - w / 2, y - h / 2, x + w / 2, y - h / 2, z3d,
-        Tmp.c1.set(colorIn).mul(0.75f), Tmp.c2.set(colorOut).mul(0.75f),
-        zBase + calcOff(0, x, y - h / 2));
+            v1.trns(ang, i * wavelength, currentOffset).add(x, y);
+            Lines.linePoint(v1);
 
-        wall(x - w / 2, y + h / 2, x + w / 2, y + h / 2, z3d,
-        Tmp.c1.set(colorIn).mul(1.2f), Tmp.c2.set(colorOut).mul(1.2f),
-        zBase + calcOff(2, x, y + h / 2));
-
-        wall(x - w / 2, y - h / 2, x - w / 2, y + h / 2, z3d,
-        Tmp.c1.set(colorIn), Tmp.c2.set(colorOut),
-        zBase + calcOff(3, x - w / 2, y));
-
-        wall(x + w / 2, y - h / 2, x + w / 2, y + h / 2, z3d,
-        Tmp.c1.set(colorIn), Tmp.c2.set(colorOut),
-        zBase + calcOff(1, x + w / 2, y));
-    }
-
-    /* 立方体：纯色→透明 */
-    public static void roomFade(float x, float y, float z3d,
-                                float w, float h, Color color, float z){
-        Tmp.c1.set(color);
-        Tmp.c2.set(color).a(0f);
-        room(x, y, z3d, w, h, Tmp.c1, Tmp.c2, z);
-    }
-
-    //圆柱
-    public static void cylinder(float x, float y, float z3d,
-                                float rad, Color colorIn, Color colorOut, float z){
-        int sides = Lines.circleVertices(rad) * 2;
-        float ang = 360f / sides;
-        for(int i = 0; i < sides; i++){
-            float a1 = ang * i;
-            float a2 = ang * (i + 1);
-            wall(x + Mathf.cosDeg(a1) * rad, y + Mathf.sinDeg(a1) * rad,
-            x + Mathf.cosDeg(a2) * rad, y + Mathf.sinDeg(a2) * rad,
-            z3d, colorIn, colorOut, z);
         }
+
+        Lines.linePoint(x2, y2);
+
+        Lines.endLine(false);
     }
 
-    /* 圆柱：纯色→透明 */
-    public static void cylinderFade(float x, float y, float z3d,
-                                    float rad, Color color, float z){
-        Tmp.c1.set(color);
-        Tmp.c2.set(color).a(0f);
-        cylinder(x, y, z3d, rad, Tmp.c1, Tmp.c2, z);
-    }
 
-    //贴图3d
-    public static void reg(float x, float y, float z3d,
-                           TextureRegion region, float scale, float z){
-        if(region == null) return;
-        float w = region.width * 2f * scale / Vars.tilesize;
-        float h = region.height * 2f * scale / Vars.tilesize;
-        float xp = toP3dCoord(x, z3d, false);
-        float yp = toP3dCoord(y, z3d, true);
-
-        Draw.z(z);
-        Draw.rect(region, xp, yp, w, h);
-        Draw.z();
-    }
-
-    // 带底座的贴图
-    public static void regRoom(float x, float y, float z3d,
-                               TextureRegion region, float scale, float fixScale,
-                               Color baseColor, float z){
-        if(region == null) return;
-        float w = region.width * 2f * scale / Vars.tilesize;
-        float h = region.height * 2f * scale / Vars.tilesize;
-
-        room(x, y, z3d, w, h, baseColor, baseColor, z - 1.85f); // 默认 Layer.power -1.85
-        reg(x, y, z3d, region, scale * fixScale, z);
-    }
-
-    //根据方位返回 Z 偏移，避免 Z-fighting
-    private static float calcOff(int index, float x, float y){
-        boolean cx = x - Core.camera.position.x >= 0f;
-        boolean cy = y - Core.camera.position.y + 48f >= 0f;
-        if(cx && cy){
-            switch(index){
-                case 0:
-                    return 0.0003f;
-                case 1:
-                    return 0.0001f;
-                case 2:
-                    return 0.0002f;
-                case 3:
-                    return 0.0004f;
-            }
-        }else if(!cx && cy){
-            switch(index){
-                case 0:
-                    return 0.0003f;
-                case 1:
-                    return 0.0004f;
-                case 2:
-                    return 0.0002f;
-                case 3:
-                    return 0.0001f;
-            }
-        }else if(!cx && !cy){
-            switch(index){
-                case 0:
-                    return 0.0002f;
-                case 1:
-                    return 0.0004f;
-                case 2:
-                    return 0.0003f;
-                case 3:
-                    return 0.0001f;
-            }
-        }else{
-            switch(index){
-                case 0:
-                    return 0.0002f;
-                case 1:
-                    return 0.0001f;
-                case 2:
-                    return 0.0003f;
-                case 3:
-                    return 0.0004f;
-            }
-        }
-        return 0;
-    }
-
-    public static void drawEnergyOrb(Vec2 pos, float fin, Color color){
-        Draw.z(Layer.effect);
-
-        float glowSize = 8f * fin + Mathf.absin(Time.time, 2f, 2f * fin);
-        Draw.color(color, 0.3f);
-        Fill.circle(pos.x, pos.y, glowSize);
-
-        float coreSize = 4f * fin;
-        Draw.color(color);
-        Fill.circle(pos.x, pos.y, coreSize);
-
-        Draw.color(Color.white, 0.6f);
-        Fill.circle(pos.x, pos.y, coreSize * 0.6f);
-    }
-
-    public static void drawCurve(Seq<Vec2> points, Color color, float fin, float lifeProgress){
+    public static void drawCurve(Vec2 start, Vec2 end, Color color, float scl, float fin, float lifeProgress){
         Draw.z(Layer.effect);
         Lines.stroke(2f * fin * (1f - lifeProgress * 0.5f), color);
 
-        for(int i = 0; i < points.size - 1; i++){
-            Vec2 p1 = points.get(i);
-            Vec2 p2 = points.get(i + 1);
-            float dist = p1.dst(p2);
-            float controlDist = dist * 0.1f;
-            float angle = Angles.angle(p1.x, p1.y, p2.x, p2.y);
+        float dist = start.dst(end);
 
-            Vec2 c1 = p1.cpy().lerp(p2, 0.3f).add(
-            Angles.trnsx(angle + 135, Mathf.sin(Time.time / 600f + i) * controlDist * 2f),
-            Angles.trnsy(angle + 135, Mathf.sin(Time.time / 600f + i) * controlDist * 2f)
-            );
-            Vec2 c2 = p1.cpy().lerp(p2, 0.7f).add(
-            Angles.trnsx(angle - 135, Mathf.cos(Time.time / 600f + i) * controlDist * 2f),
-            Angles.trnsy(angle - 135, Mathf.cos(Time.time / 600f + i) * controlDist * 2f)
-            );
+        float angle = Angles.angle(start.x, start.y, end.x, end.y);
 
-            Lines.curve(p1.x, p1.y, c1.x, c1.y, c2.x, c2.y, p2.x, p2.y, (int)(dist / 4f));
-        }
+        Tmp.v1.set(start).lerp(end, 0.3f).add(
+        Angles.trnsx(angle + 135, Mathf.sin(Time.time / 600f) * scl),
+        Angles.trnsy(angle + 135, Mathf.sin(Time.time / 600f) * scl)
+        );
+        Tmp.v1.set(start).lerp(end, 0.7f).add(
+        Angles.trnsx(angle + 135, Mathf.cos(Time.time / 600f) * scl),
+        Angles.trnsy(angle + 135, Mathf.cos(Time.time / 600f) * scl)
+        );
+
+        Lines.curve(start.x, start.y, Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y, end.x, end.y, (int)(dist / 4f));
     }
 
 }

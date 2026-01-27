@@ -1,29 +1,21 @@
 package wh.entities.world.entities;
 
-import arc.Core;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.TextureRegion;
-import arc.math.Mathf;
-import arc.math.geom.Geometry;
-import arc.math.geom.Point2;
-import arc.math.geom.Position;
-import arc.util.Time;
-import arc.util.pooling.Pools;
-import mindustry.core.World;
-import mindustry.entities.Damage;
-import mindustry.entities.Effect;
-import mindustry.entities.Fires;
-import mindustry.entities.Puddles;
-import mindustry.game.Team;
+import arc.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.math.geom.*;
+import arc.util.*;
+import arc.util.pooling.*;
+import mindustry.core.*;
+import mindustry.entities.*;
+import mindustry.game.*;
 import mindustry.gen.*;
-import mindustry.graphics.Drawf;
-import mindustry.graphics.Layer;
-import mindustry.world.Tile;
-import mindustry.world.meta.Attribute;
-import wh.content.WHBullets;
-import wh.content.WHStatusEffects;
+import mindustry.graphics.*;
+import mindustry.world.*;
+import mindustry.world.meta.*;
+import wh.content.*;
 import wh.gen.*;
-import wh.graphics.WHPal;
+import wh.graphics.*;
 
 import static mindustry.Vars.*;
 
@@ -122,7 +114,7 @@ public class PlasmaFire extends Fire{
         warmup += Time.delta;
         animation %= frames;
         if (!headless) {
-            control.sound.loop(Sounds.fire, this, 0.07F);
+            control.sound.loop(Sounds.loopFire, this, 0.07F);
         }
         float speedMultiplier = 1.0F + Math.max(state.envAttrs.get(Attribute.water) * 10.0F, 0);
         time = Mathf.clamp(time + Time.delta * speedMultiplier, 0, lifetime);

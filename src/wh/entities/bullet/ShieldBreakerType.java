@@ -1,15 +1,12 @@
 package wh.entities.bullet;
 
-import arc.graphics.Color;
-import arc.math.Mathf;
-import mindustry.Vars;
-import mindustry.entities.Effect;
-import mindustry.entities.bullet.BasicBulletType;
-import mindustry.entities.bullet.BulletType;
-import mindustry.gen.Bullet;
-import mindustry.gen.Sounds;
-import wh.content.WHFx;
-import wh.entities.bullet.EffectBulletType;
+import arc.graphics.*;
+import arc.math.*;
+import mindustry.*;
+import mindustry.entities.*;
+import mindustry.entities.bullet.*;
+import mindustry.gen.*;
+import wh.content.*;
 
 
 public class ShieldBreakerType extends BasicBulletType{
@@ -28,7 +25,7 @@ public class ShieldBreakerType extends BasicBulletType{
             if(b.absorbed && b.data instanceof Color){
                 WHFx.shuttle.at(b.x, b.y, Mathf.random(360f), (Color)b.data, b.damage / Vars.tilesize / 2f);
                 Effect.shake(b.damage / 100, b.damage / 100, b);
-                Sounds.plasmaboom.at(b);
+                Sounds.explosionArtilleryShock.at(b);
             }
         }
     };

@@ -2,7 +2,7 @@ package wh.entities.world.entities;
 
 import arc.util.*;
 
-public class NucleoidUnitType extends AncientUnitType {
+public class NucleoidUnitType extends SuperHeavyUnitType{
     public float maxDamagedPerSec = 30000;
     public float recentDamageResume = maxDamagedPerSec / 60f;
 

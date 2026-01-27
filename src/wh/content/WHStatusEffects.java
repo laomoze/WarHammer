@@ -13,6 +13,7 @@ import mindustry.type.*;
 import wh.graphics.*;
 
 import static arc.graphics.g2d.Draw.*;
+import static arc.graphics.g2d.Lines.lineAngle;
 import static arc.math.Angles.randLenVectors;
 import static wh.content.WHFx.rand;
 
@@ -95,7 +96,7 @@ public final class WHStatusEffects{
             color = Pal.techBlue.cpy();
             reloadMultiplier = 1.5f;
             healthMultiplier = 1.4f;
-            dragMultiplier = 1.3f;
+            dragMultiplier = 1.5f;
             damageMultiplier = 1.2f;
             speedMultiplier = 1.1f;
             effectChance = 0.1f;
@@ -103,10 +104,17 @@ public final class WHStatusEffects{
             effect = new Effect(90, e -> {
                 if(!(e.data instanceof Unit u)) return;
                 rand.setSeed(e.id);
-                randLenVectors(e.id, 1, u.hitSize / 2 * rand.random(0.3f, 1f) * e.fin() + 10f, (x, y) -> {
+                randLenVectors(e.id, 1, u.hitSize / 1.5f * rand.random(0.3f, 1f) * e.fin() + 10f, (x, y) -> {
                     color(Pal.techBlue.cpy());
                     Lines.stroke(2 * e.fout(Interp.pow2Out));
                     Lines.poly(e.x + x, e.y + y, 6, Mathf.clamp(u.hitSize / 10f, 5, 12f) * e.fout(Interp.pow2Out), 60);
+                    Draw.color();
+                });
+                randLenVectors(e.id, 2, u.hitSize * rand.random(0.2f, 1.1f) + 10f, (x, y) -> {
+                    color(Pal.techBlue.cpy());
+                    Lines.stroke(2 * e.fout(Interp.pow2Out));
+                    Tmp.v1.trns(90, Mathf.randomSeed(e.id, 20, 40) * e.fin()).add(e.x, e.y);
+                    lineAngle(Tmp.v1.x + x, Tmp.v1.y + y, 90, e.finpow() * 10f * rand.random(0.5f, 1f));
                     Draw.color();
                 });
             });

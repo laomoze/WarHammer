@@ -1,27 +1,21 @@
 package wh.entities.world.entities;
 
-import arc.Core;
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Lines;
-import arc.graphics.g2d.TextureRegion;
-import arc.math.Angles;
-import arc.math.Mathf;
-import arc.scene.ui.layout.Table;
-import arc.util.Time;
-import arc.util.Tmp;
-import arc.util.io.Reads;
-import arc.util.io.Writes;
-import mindustry.Vars;
-import mindustry.content.Fx;
+import arc.*;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.scene.ui.layout.*;
+import arc.util.*;
+import arc.util.io.*;
+import mindustry.*;
+import mindustry.content.*;
 import mindustry.gen.*;
-import mindustry.graphics.Layer;
-import mindustry.graphics.Pal;
-import mindustry.type.UnitType;
-import mindustry.ui.Bar;
-import wh.content.WHFx;
-import wh.gen.EntityRegister;
-import wh.graphics.Drawn;
+import mindustry.graphics.*;
+import mindustry.type.*;
+import mindustry.ui.*;
+import wh.content.*;
+import wh.gen.*;
+import wh.graphics.*;
 
 
 public class StarrySkyEntity extends UnitEntity {
@@ -161,8 +155,8 @@ public class StarrySkyEntity extends UnitEntity {
             Tmp.c1.set(team.color).lerp(Color.white, Mathf.absin(4f, 0.3f));
             float progress = 0;
             armorRegion = Core.atlas.find(this.type.name + "-energyArmor");
-            float width = armorRegion.width * Draw.scl * size,
-                    height = armorRegion.height * Draw.scl * size;
+        float width = armorRegion.width * Draw.scl * size * 1.2f,
+        height = armorRegion.height * Draw.scl * size * 1.2f;
 
             if (Vars.renderer.animateShields) {
                 Draw.z(Layer.shields + 0.01f);
@@ -200,7 +194,7 @@ public class StarrySkyEntity extends UnitEntity {
                     Tmp.v1.add(x, y);
                     float ex = Tmp.v1.x, ey = Tmp.v1.y,
                             offsetX = Angles.trnsx(rotation, 36.25f), offsetY = Angles.trnsy(rotation, 4f);
-                    WHFx.crossSpinBlast.at(ex - offsetX, ey + offsetY, rotation, team.color, self());
+                    /*     WHFx.crossSpinBlast.at(ex - offsetX, ey + offsetY, rotation, team.color, self());*/
                     effectTriggered = true;
                 }
             }

@@ -1,11 +1,9 @@
 package wh.graphics;
 
-import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.util.*;
-import arc.util.pooling.*;
 import mindustry.entities.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
@@ -30,7 +28,7 @@ public class TrailEffect extends Effect{
     public Interp ColorInterp = Interp.linear;
 
     /** Custom trail movement function */
-    public TrailUpdater trailUpdater = (id, trail, x, y, width, length, index) -> {
+    public TrailUpdater trailUpdater = (e, trail, x, y, width, length, index) -> {
     };
 
     public Boolean drawTri = false;
@@ -52,6 +50,8 @@ public class TrailEffect extends Effect{
         this(lifetime, clipSize, amount);
         this.length = length;
         this.width = width;
+        this.colorFrom = null;
+        this.colorTo = null;
     }
 
     public TrailEffect(float lifetime, float clipSize, Color colorFrom, Color colorTo, int amount, int length, float width){
@@ -125,33 +125,21 @@ public class TrailEffect extends Effect{
         void update(EffectContainer e, Trail trail, float x, float y, float width, float length, int index);
     }
 
-    public static class TrailExplosionEffectState extends EffectState{
-        public CTrail[] trails;
-
-        public static TrailExplosionEffectState create(){
-            return Pools.obtain(TrailExplosionEffectState.class, TrailExplosionEffectState::new);
-        }
-
-        public void reset(){
-            super.reset();
-            trails = null;
-        }
-    }
-
     @Override
     protected void add(float x, float y, float rotation, Color color, Object data){
-        TrailExplosionEffectState entity = TrailExplosionEffectState.create();
+        EffectState entity = EffectState.create();
         entity.effect = this;
         entity.rotation = baseRotation + rotation;
         entity.lifetime = lifetime;
         entity.set(x, y);
         entity.color.set(color);
 
-        entity.trails = new CTrail[amount];
+        CTrail[] trails = new CTrail[amount];
         for(int i = 0; i < amount; i++){
-            entity.trails[i] = new CTrail(length);
+            trails[i] = new CTrail(length);
         }
-        entity.data = entity.trails;
+
+        entity.data = trails;
 
         if(followParent && data instanceof Posc p){
             entity.parent = p;

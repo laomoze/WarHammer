@@ -5,34 +5,21 @@
 
 package wh.graphics;
 
-import arc.func.Cons;
-import arc.graphics.Color;
-import arc.math.Mathf;
-import arc.math.Rand;
-import arc.math.geom.Geometry;
-import arc.math.geom.Position;
-import arc.math.geom.Rect;
-import arc.math.geom.Vec2;
-import arc.struct.FloatSeq;
-import arc.struct.Seq;
-
-import java.util.Iterator;
-
-import mindustry.Vars;
-import mindustry.content.Fx;
-import mindustry.content.StatusEffects;
-import mindustry.core.World;
-import mindustry.entities.Lightning;
-import mindustry.entities.Units;
-import mindustry.entities.bullet.BulletType;
-import mindustry.game.Team;
-import mindustry.gen.Building;
-import mindustry.gen.Bullet;
-import mindustry.gen.Entityc;
-import mindustry.gen.Healthc;
-import wh.content.WHFx;
-import wh.entities.bullet.EffectBulletType;
-import wh.struct.Vec2Seq;
+import arc.func.*;
+import arc.graphics.*;
+import arc.math.*;
+import arc.math.geom.*;
+import arc.struct.*;
+import mindustry.*;
+import mindustry.content.*;
+import mindustry.core.*;
+import mindustry.entities.*;
+import mindustry.entities.bullet.*;
+import mindustry.game.*;
+import mindustry.gen.*;
+import wh.content.*;
+import wh.entities.bullet.*;
+import wh.struct.*;
 
 import static mindustry.Vars.*;
 
@@ -80,16 +67,16 @@ public final class PositionLightning{
         createRange(owner, owner, owner.team, range, maxHit, color, createSubLightning, 0, 0, width, lightningNum, hitPointMovement);
     }
 
+    public static void createRange(Bullet owner, Position from, Team team, float range, int maxHit, Color color, boolean createSubLightning, float damage, int subLightningLength, float width, int lightningNum, Cons<Position> hitPointMovement){
+        createRange(owner, owner == null || owner.type.collidesAir, owner == null || owner.type.collidesGround, from, team, range, maxHit, color, createSubLightning, damage, subLightningLength, width, lightningNum, hitPointMovement);
+    }
+
     public static void createRange(Bullet owner, boolean hitAir, boolean hitGround, Position from, Team team, float range, int maxHit, Color color, boolean createSubLightning, float damage, int subLightningLength, float width, int lightningNum, Cons<Position> hitPointMovement){
         Seq<Healthc> entities = new Seq<>();
         // find all entities in range
         whetherAdd(entities, team, rect.setSize(range * 2f).setCenter(from.getX(), from.getY()), maxHit, hitGround, hitAir);
         for(Healthc p : entities)
             create(owner, team, from, p, color, createSubLightning, damage, subLightningLength, width, lightningNum, hitPointMovement);
-    }
-
-    public static void createRange(Bullet owner, Position from, Team team, float range, int maxHit, Color color, boolean createSubLightning, float damage, int subLightningLength, float width, int lightningNum, Cons<Position> hitPointMovement){
-        createRange(owner, owner == null || owner.type.collidesAir, owner == null || owner.type.collidesGround, from, team, range, maxHit, color, createSubLightning, damage, subLightningLength, width, lightningNum, hitPointMovement);
     }
 
     public static void createLength(Bullet owner, Team team, Position from, float length, float angle, Color color, boolean createSubLightning, float damage, int subLightningLength, float width, int lightningNum, Cons<Position> hitPointMovement){

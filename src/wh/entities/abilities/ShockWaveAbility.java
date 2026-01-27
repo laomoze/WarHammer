@@ -1,28 +1,21 @@
 package wh.entities.abilities;
 
 import arc.*;
-import arc.audio.Sound;
-import arc.func.Cons;
-import arc.func.Cons2;
-import arc.graphics.Color;
-import arc.math.Mathf;
-import arc.math.geom.Position;
+import arc.audio.*;
+import arc.func.*;
+import arc.graphics.*;
+import arc.math.*;
+import arc.math.geom.*;
 import arc.scene.ui.layout.*;
-import arc.struct.ObjectFloatMap;
-import arc.struct.Seq;
+import arc.struct.*;
 import arc.util.*;
-import mindustry.content.*;
-import mindustry.entities.Effect;
-import mindustry.entities.Units;
-import mindustry.entities.abilities.Ability;
-import mindustry.gen.Unit;
-import mindustry.type.StatusEffect;
-import mindustry.type.UnitType;
+import mindustry.entities.*;
+import mindustry.entities.abilities.*;
+import mindustry.gen.*;
+import mindustry.type.*;
 import mindustry.world.meta.*;
-import wh.content.WHFx;
-import wh.content.WHSounds;
-import wh.graphics.PositionLightning;
-import wh.graphics.WHPal;
+import wh.content.*;
+import wh.graphics.*;
 
 import static mindustry.Vars.tilesize;
 
@@ -46,7 +39,7 @@ public class ShockWaveAbility extends Ability{
 
     public Sound shootSound = WHSounds.shock;
 
-    public Effect shootEffect = WHFx.circleOut;
+    public Effect shootEffect = WHFx.lineCircleOut(30, 30, 3);
     public Effect hitEffect = WHFx.hitSparkLarge;
 
     public float maxSpeed = -1;

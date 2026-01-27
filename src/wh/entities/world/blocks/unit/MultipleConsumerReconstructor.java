@@ -3,7 +3,6 @@ package wh.entities.world.blocks.unit;
 import arc.*;
 import arc.Graphics.*;
 import arc.Graphics.Cursor.*;
-import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
@@ -25,15 +24,12 @@ import mindustry.logic.*;
 import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.world.blocks.payloads.*;
-import mindustry.world.blocks.production.GenericCrafter.*;
 import mindustry.world.blocks.units.*;
-import mindustry.world.blocks.units.UnitFactory.*;
 import mindustry.world.consumers.*;
 import mindustry.world.meta.*;
 import wh.graphics.*;
 
 import static mindustry.Vars.*;
-import static wh.content.WHFx.rand;
 
 public class MultipleConsumerReconstructor extends UnitBlock{
     public ObjectMap<UnitType[], ItemStack[]> upgradeCosts = new ObjectMap<>();
@@ -46,7 +42,7 @@ public class MultipleConsumerReconstructor extends UnitBlock{
         regionRotated1 = 1;
         regionRotated2 = 2;
         commandable = true;
-        ambientSound = Sounds.respawning;
+        ambientSound = Sounds.loopUnitBuilding;
         configurable = true;
         config(UnitCommand.class, (MultipleConsumerReconstructorBuild build, UnitCommand command) -> build.command = command);
         configClear((MultipleConsumerReconstructorBuild build) -> build.command = null);

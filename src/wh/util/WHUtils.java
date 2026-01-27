@@ -7,36 +7,27 @@ package wh.util;
 
 import arc.*;
 import arc.func.*;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Fill;
-import arc.graphics.g2d.TextureRegion;
-import arc.math.Angles;
-import arc.math.Interp;
-import arc.math.Mathf;
-import arc.math.Rand;
+import arc.graphics.g2d.*;
+import arc.math.*;
 import arc.math.geom.*;
 import arc.struct.*;
-import arc.util.*;
 import arc.util.Nullable;
+import arc.util.*;
 import arc.util.pooling.*;
-import mindustry.*;
 import mindustry.ai.types.*;
-import mindustry.core.World;
-import mindustry.entities.*;
+import mindustry.core.*;
 import mindustry.entities.Damage.*;
-import mindustry.entities.bullet.BulletType;
-import mindustry.game.Team;
+import mindustry.entities.*;
+import mindustry.entities.bullet.*;
+import mindustry.game.*;
 import mindustry.gen.*;
-import mindustry.type.Item;
-import mindustry.type.Liquid;
-import mindustry.type.UnitType;
-import mindustry.world.Tile;
+import mindustry.type.*;
+import mindustry.world.*;
 import mindustry.world.blocks.*;
-import mindustry.world.blocks.defense.turrets.ItemTurret;
+import mindustry.world.blocks.defense.turrets.*;
 import org.jetbrains.annotations.*;
-import wh.entities.Spawner;
+import wh.entities.*;
 import wh.entities.bullet.laser.LaserBeamBulletType.*;
-import wh.func.*;
 
 import static arc.Core.atlas;
 import static mindustry.Vars.*;
@@ -315,6 +306,54 @@ public final class WHUtils{
         return Math.min(distances.size < pierceCap || pierceCap < 0 ? length : Math.max(6f, distances.get(pierceCap - 1)), maxDst);
     }
 
+    public static float findLaserPierceLength2(Bullet b, int pierceCap, boolean laser, float length, float angle){
+        v1.trnsExact(angle, length);
+        rect.setPosition(b.x, b.y).setSize(v1.x, v1.y).normalize().grow(3f);
+        maxDst = Float.POSITIVE_INFINITY;
+
+        distances.clear();
+
+        if(b.type.collidesGround && b.type.collidesTiles){
+            World.raycast(b.tileX(), b.tileY(), World.toTile(b.x + v1.x), World.toTile(b.y + v1.y), (x, y) -> {
+                //add distance to list so it can be processed
+                var build = world.build(x, y);
+
+                if(build != null && build.team != b.team && build.collide(b) && b.checkUnderBuild(build, x * tilesize, y * tilesize)){
+                    Tmp.v2.trns(b.rotation(), length * 1.5f).add(b);
+                    float dst = Intersector.distanceLinePoint(b.x, b.y, Tmp.v2.x, Tmp.v2.y, build.x, build.y);
+                    float dst2 = b.dst(build)/*-build.hitSize()*0.7f+dst*/;
+                    distances.add(dst2);
+
+                    if(laser && build.absorbLasers()){
+
+                        maxDst = dst2;
+                        return true;
+                    }
+                }
+                return false;
+            });
+        }
+
+        Units.nearbyEnemies(b.team, rect, u -> {
+            u.hitbox(hitRect);
+
+            if(u.checkTarget(b.type.collidesAir, b.type.collidesGround) && u.hittable() &&
+            Intersector.intersectSegmentRectangle(b.x, b.y, b.x + v1.x, b.y + v1.y, hitRect)){
+                Tmp.v2.trns(b.rotation(), length * 1.5f).add(b);
+                float dst = Intersector.distanceLinePoint(b.x, b.y, Tmp.v2.x, Tmp.v2.y, u.x, u.y);
+                float dst2 = b.dst(u) - u.hitSize() * 0.7f + dst;
+                distances.add(b.dst(u));
+            }
+        });
+
+
+        distances.sort();
+
+        //return either the length when not enough things were pierced,
+        //or the last pierced object if there were enough blockages
+        return Math.min(distances.size < pierceCap || pierceCap < 0 ? length : Math.max(6f, distances.get(pierceCap - 1)), maxDst);
+    }
+
     private static final Seq<Collided> collided = new Seq<>();
     private static final Pool<Collided> collidePool = Pools.get(Collided.class, Collided::new);
 
@@ -414,11 +453,16 @@ public final class WHUtils{
         // 计算每个tick内移动的距离
         float moveDistance = moveSpeed * Time.delta;
 
-        mover.move(b, dx * moveDistance, dy * moveDistance);
+       /* mover.move(b, dx * moveDistance, dy * moveDistance,(x,y)-> false);
 
-        // 检查是否到达或超过终点
         if(Math.abs(b.x - endX) < 1e-4f && Math.abs(b.y - endY) < 1e-4f){
             b.set(endX, endY);
+        }
+*/
+        if(Math.abs(b.x - endX) < 1e-4f && Math.abs(b.y - endY) < 1e-4f){
+            b.set(endX, endY);
+        }else{
+            b.set(b.x + dx * moveDistance, b.y + dy * moveDistance);
         }
     }
 
@@ -500,7 +544,7 @@ public final class WHUtils{
         Draw.color();
     }
 
-    public static float findLaserLength(Bullet b, float angle, float length){
+   /* public static float findLaserLength(Bullet b, float angle, float length){
         Tmp.v1.trnsExact(angle, length);
 
         tileParma = null;
@@ -595,7 +639,7 @@ public final class WHUtils{
         units.sort(unit -> unit.dst2(hitter));
         units.each(cons);
     }
-
+*/
 
     public static Rand rand(long id){
         rand.setSeed(id);
@@ -620,7 +664,7 @@ public final class WHUtils{
             }
         });
         return tiles;
-    }//有效位置
+    }
 
     private static void clearTmp(){
         tileParma = null;

@@ -1,28 +1,18 @@
 package wh.entities.bullet.laser;
 
-import arc.audio.Sound;
-import arc.func.Cons;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Fill;
-import arc.graphics.g2d.Lines;
-import arc.math.Angles;
-import arc.math.Mathf;
-import arc.math.geom.Position;
-import arc.math.geom.Vec2;
-import arc.util.Time;
-import arc.util.Tmp;
-import mindustry.content.Fx;
-import mindustry.entities.Damage;
-import mindustry.entities.Effect;
-import mindustry.entities.Lightning;
-import mindustry.entities.bullet.BasicBulletType;
-import mindustry.gen.Building;
-import mindustry.gen.Bullet;
-import mindustry.gen.Sounds;
-import mindustry.graphics.Drawf;
-import mindustry.graphics.Layer;
-import wh.content.WHFx;
-import wh.graphics.PositionLightning;
+import arc.audio.*;
+import arc.func.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.math.geom.*;
+import arc.util.*;
+import mindustry.content.*;
+import mindustry.entities.*;
+import mindustry.entities.bullet.*;
+import mindustry.gen.*;
+import mindustry.graphics.*;
+import wh.content.*;
+import wh.graphics.*;
 
 import static arc.graphics.g2d.Draw.color;
 import static arc.math.Angles.randLenVectors;
@@ -38,7 +28,7 @@ public class LightningLinkerBulletType extends BasicBulletType{
     public float randomGenerateChance = 0.03f;
     public float randomLightningChance = 0.1f;
     public int randomLightningNum = 4;
-    public Sound randomGenerateSound = Sounds.plasmaboom;
+    public Sound randomGenerateSound = Sounds.explosionMissile;
 
     public Cons<Position> hitModifier = p -> {};
 

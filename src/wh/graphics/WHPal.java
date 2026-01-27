@@ -6,9 +6,9 @@
 package wh.graphics;
 
 
-import arc.graphics.Color;
-import mindustry.content.Items;
-import mindustry.graphics.Pal;
+import arc.graphics.*;
+import mindustry.content.*;
+import mindustry.graphics.*;
 
 public final class WHPal {
     public static Color ancient;
@@ -52,7 +52,7 @@ public final class WHPal {
         thurmixRedLight = Color.valueOf("ffced0");
         thurmixRedDark = thurmixRed.cpy().lerp(Color.black, 0.9F);
 
-        WHYellow = Color.valueOf("FFFBBDE1");
+        WHYellow = Color.valueOf("FFFBBDE1").lerp(Pal.slagOrange, 0.1f);
         WHYellow2 = Pal.accent.cpy().lerp(Color.white, 0.6F);
         ShootOrange = Pal.bulletYellowBack.cpy().lerp(Pal.slagOrange.cpy(), 0.25f).lerp(Color.orange.cpy(), 0.25f).lerp(Pal.coalBlack.cpy(), 0.05f);
         ShootOrangeLight = ShootOrange.cpy().lerp(Color.white.cpy(), 0.7F);

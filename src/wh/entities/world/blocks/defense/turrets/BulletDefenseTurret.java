@@ -1,31 +1,22 @@
 package wh.entities.world.blocks.defense.turrets;
 
-import arc.audio.Sound;
-import arc.graphics.Blending;
-import arc.graphics.Color;
+import arc.audio.*;
+import arc.graphics.*;
 import arc.graphics.g2d.*;
-import arc.math.Angles;
-import arc.math.Mathf;
-import arc.util.Nullable;
-import arc.util.Time;
-import arc.util.Tmp;
-import arc.util.io.Reads;
-import arc.util.io.Writes;
-import mindustry.content.Fx;
-import mindustry.entities.Effect;
-import mindustry.entities.bullet.BulletType;
-import mindustry.entities.bullet.InterceptorBulletType;
+import arc.math.*;
+import arc.util.*;
+import arc.util.io.*;
+import mindustry.content.*;
+import mindustry.entities.*;
+import mindustry.entities.bullet.*;
 import mindustry.entities.effect.*;
-import mindustry.gen.Bullet;
-import mindustry.gen.Groups;
-import mindustry.gen.Sounds;
-import mindustry.graphics.Pal;
-import mindustry.world.blocks.defense.turrets.Turret;
-import mindustry.world.draw.DrawTurret;
-import mindustry.world.meta.Stat;
-import mindustry.world.meta.StatUnit;
+import mindustry.gen.*;
+import mindustry.graphics.*;
+import mindustry.world.blocks.defense.turrets.*;
+import mindustry.world.draw.*;
+import mindustry.world.meta.*;
 import wh.core.*;
-import wh.entities.world.drawer.part.AimLaserPart;
+import wh.entities.world.drawer.part.*;
 
 public class BulletDefenseTurret extends Turret {
 
@@ -76,7 +67,7 @@ public class BulletDefenseTurret extends Turret {
     };
 
     public Effect shootEffect = Fx.sparkShoot;
-    public Sound shootSound = Sounds.lasershoot;
+    public Sound shootSound = Sounds.shootDisperse;
 
     public BulletDefenseTurret(String name) {
         super(name);

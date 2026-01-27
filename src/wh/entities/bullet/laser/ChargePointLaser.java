@@ -4,7 +4,6 @@ import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
-import arc.struct.*;
 import arc.util.*;
 import arc.util.pooling.*;
 import mindustry.*;
@@ -15,7 +14,6 @@ import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import wh.content.*;
-import wh.entities.world.drawer.*;
 import wh.graphics.*;
 import wh.util.*;
 
@@ -33,8 +31,6 @@ public class ChargePointLaser extends PointLaserBulletType{
     public boolean DrawLighting = false;
     public float curveInterval = 15f;
     public boolean DrawCurve = true;
-
-    private final Seq<DrawEnergyCurve> activeCurves = new Seq<>();
 
     public ChargePointLaser(){
 
@@ -113,7 +109,6 @@ public class ChargePointLaser extends PointLaserBulletType{
         updateBulletInterval(b);
         b.chargeTimer = Math.min(b.chargeTimer, chargeReload + lerpReload / 2f);
 
-        activeCurves.removeAll(DrawEnergyCurve::isExpired);
 
         b.curveStart.set(b.x, b.y);
         float fin = b.dst(b.aimX, b.aimY) / length;
@@ -140,7 +135,8 @@ public class ChargePointLaser extends PointLaserBulletType{
                 if(DrawLighting) PositionLightning.createEffect(b, Tmp.v1.set(b.curveEnd.x, b.curveEnd.y), to, 1, 2);
                 if(Mathf.chance(0.4)) WHFx.hitSparkLarge.at(b.x, b.y, to);
             }
-         /*   if(!Vars.headless && DrawCurve && b.timer(4, curveInterval)){
+
+          /*  if(!Vars.headless && DrawCurve && b.timer(4, curveInterval)){
                 activeCurves.add(new DrawEnergyCurve(b.curveStart, b.curveEnd, getColor(b)));
             }*/
 

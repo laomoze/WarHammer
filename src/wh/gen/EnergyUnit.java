@@ -11,8 +11,8 @@ import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
 import wh.content.*;
-import wh.graphics.*;
 import wh.entities.world.entities.*;
+import wh.graphics.*;
 
 import static mindustry.Vars.*;
 
@@ -40,7 +40,7 @@ public class EnergyUnit extends UnitEntity implements Energyc {
             Fx.trailFade.at(x, y, type.trailScl, team.color, trails[i].copy());
         }
 
-        WHFx.energyUnitBlast.at(x, y, hitSize * 4, team.color);
+        /*WHFx.energyUnitBlast.at(x, y, hitSize * 4, team.color);
 
         Vec2 v = new Vec2().set(this);
 
@@ -51,7 +51,7 @@ public class EnergyUnit extends UnitEntity implements Energyc {
                     Drawn.randFadeLightningEffect(v.x, v.y, Mathf.random(360), Mathf.random(12, 28), team.color, Mathf.chance(0.5));
                 }
             });
-        }
+        }*/
     }
 
     @Override
@@ -146,8 +146,8 @@ public class EnergyUnit extends UnitEntity implements Energyc {
         super.update();
         if (type instanceof EnergyUnitType eType) {
             if (!headless && lastPos.dst(this) > eType.effectTriggerLen) {
-                Sounds.plasmaboom.at(this);
-                Sounds.plasmaboom.at(lastPos);
+               /* Sounds.plasmaboom.at(this);
+                Sounds.plasmaboom.at(lastPos);*/
 
                 eType.teleport.at(x, y, hitSize / 2, team.color);
                 eType.teleport.at(lastPos.x, lastPos.y, hitSize / 2, team.color);

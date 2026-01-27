@@ -9,18 +9,25 @@ import mindustry.world.meta.*;
 import wh.content.*;
 
 public class AccelerateReload extends Ability{
-    public float reloadMultiplier = 1f;
+
     public float maxMultiplier = 2f;
     public float resetTime = 120;
 
     public float increaseTime = 300;
     public float decreaseTime = 60;
+    public boolean liner = true;
 
-    protected float timer;
+    protected float timer = 0;
+    protected float reloadMultiplier = 1f;
 
     public AccelerateReload(){
 
     }
+
+   /* @Override
+    public void displayBars(Unit unit, Table bars){
+        bars.add(new Bar("[lightgray]" + WHStats.maxBoostPercent.localized(), Pal.accent, () -> reloadMultiplier / maxMultiplier)).row();
+    }*/
 
     public AccelerateReload(float maxMultiplier, float resetTime){
         this.maxMultiplier = maxMultiplier;
@@ -38,19 +45,22 @@ public class AccelerateReload extends Ability{
     public void update(Unit unit){
         super.update(unit);
 
-        float increment = 1;
-        if(unit.isShooting){
-            increment = Mathf.approachDelta(increment, maxMultiplier, reloadMultiplier / increaseTime);
+        float re = Mathf.clamp(reloadMultiplier, 1, maxMultiplier);
+        if(timer <= resetTime){
+            if(unit.isShooting){
+                reloadMultiplier = Mathf.approachDelta(re, maxMultiplier, (liner ? 1 : re) / increaseTime);
+                timer = 0;
+            }else if(reloadMultiplier >= maxMultiplier){
+                timer += Time.delta;
+            }
         }else{
-            timer += Time.delta;
+            reloadMultiplier = Mathf.approachDelta(reloadMultiplier, 1, (liner ? 1 : re) / decreaseTime);
+            if(Mathf.equal(reloadMultiplier, 1, 0.01f)){
+                timer = 0;
+            }
         }
 
-        if(timer >= resetTime && !unit.isShooting){
-            increment = Mathf.approachDelta(increment, 1, reloadMultiplier / decreaseTime);
-            if(increment == 1) timer = 0;
-        }
-
-        unit.reloadMultiplier *= Mathf.clamp(increment, 1, maxMultiplier);
+        unit.reloadMultiplier *= re;
     }
 
     @Override

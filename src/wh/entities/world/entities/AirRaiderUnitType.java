@@ -12,8 +12,8 @@ import mindustry.entities.*;
 import mindustry.entities.abilities.*;
 import mindustry.entities.part.*;
 import mindustry.entities.units.*;
-import mindustry.game.*;
 import mindustry.game.EventType.*;
+import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.io.*;
@@ -27,7 +27,7 @@ import wh.gen.*;
 import static arc.graphics.g2d.Draw.xscl;
 import static mindustry.Vars.*;
 
-/** Spaghetti Code **/
+/** 史 **/
 public class AirRaiderUnitType extends TimedKillUnit{
     public float alpha = 0.01f;
     public float fadeOutTime;

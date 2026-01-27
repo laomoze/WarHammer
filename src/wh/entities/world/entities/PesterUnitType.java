@@ -7,9 +7,9 @@ import mindustry.entities.*;
 import mindustry.entities.bullet.*;
 import wh.content.*;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.tilesize;
 
-public class PesterUnitType extends AncientUnitType {
+public class PesterUnitType extends SuperHeavyUnitType{
     public float bossWeaponRange = 80f * tilesize;
     public float reflectRange = 120f * tilesize;
 

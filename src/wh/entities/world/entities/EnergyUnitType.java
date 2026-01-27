@@ -13,10 +13,10 @@ import mindustry.graphics.*;
 import wh.content.*;
 import wh.graphics.*;
 
-import static arc.Core.*;
-import static mindustry.Vars.*;
+import static arc.Core.atlas;
+import static mindustry.Vars.tilesize;
 
-public class EnergyUnitType extends AncientUnitType {
+public class EnergyUnitType extends SuperHeavyUnitType{
     public float outerEyeScl = 0.25f;
     public float innerEyeScl = 0.18f;
     /*

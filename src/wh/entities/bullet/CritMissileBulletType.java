@@ -43,7 +43,7 @@ public class CritMissileBulletType extends CritBulletType{
     public boolean drawMissile = false;
     public boolean drawTeamColor = false;
 
-    public Sound loopSound = Sounds.missileTrail;
+    public Sound loopSound = Sounds.loopMissileTrail;
     public float loopSoundVolume = 0.1f;
 
     @Override

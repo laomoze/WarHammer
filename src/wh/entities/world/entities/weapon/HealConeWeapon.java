@@ -3,15 +3,14 @@ package wh.entities.world.entities.weapon;
 import arc.*;
 import arc.math.*;
 import arc.math.geom.*;
-import arc.scene.ui.layout.Table;
+import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.audio.*;
 import mindustry.entities.*;
 import mindustry.entities.units.*;
 import mindustry.gen.*;
 import mindustry.type.*;
-import mindustry.world.meta.Stat;
-import mindustry.world.meta.StatUnit;
+import mindustry.world.meta.*;
 import wh.entities.bullet.*;
 
 import static mindustry.Vars.*;
@@ -21,7 +20,7 @@ public class HealConeWeapon extends Weapon{
 
     public HealConeWeapon(String name){
         this.name = name;
-        shootSound = Sounds.pulse;
+        shootSound = Sounds.loopPulse;
         cooldownTime = 180;
         shoot.firstShotDelay = 60;
         autoTarget = continuous = true;

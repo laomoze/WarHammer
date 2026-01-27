@@ -5,24 +5,16 @@
 
 package wh.core;
 
-import mindustry.mod.ClassMap;
+import mindustry.mod.*;
 import wh.content.*;
-import wh.entities.abilities.AdaptedHealAbility;
-import wh.entities.abilities.MendFieldAbility;
-import wh.entities.abilities.ShockWaveAbility;
+import wh.entities.abilities.*;
 import wh.entities.bullet.*;
-import wh.entities.bullet.laser.ChainLightingBulletType;
-import wh.entities.bullet.laser.LightningLinkerBulletType;
-import wh.entities.bullet.laser.PositionLightningBulletType;
+import wh.entities.bullet.laser.*;
+import wh.entities.world.blocks.defense.*;
+import wh.entities.world.blocks.defense.turrets.*;
+import wh.entities.world.blocks.storage.*;
 import wh.entities.world.drawer.part.*;
-import wh.entities.world.entities.AncientUnitType;
-import wh.entities.world.entities.NucleoidUnitType;
-import wh.entities.world.entities.PesterUnitType;
-import wh.entities.world.blocks.defense.AirRaider;
-import wh.entities.world.blocks.defense.BombLauncher;
-import wh.entities.world.blocks.defense.turrets.SpeedupTurret;
-import wh.entities.world.blocks.storage.FrontlineCoreBlock;
-import wh.entities.world.blocks.storage.UnloaderF;
+import wh.entities.world.entities.*;
 import wh.util.*;
 
 final class WHClassMap {
@@ -41,7 +33,7 @@ final class WHClassMap {
         ClassMap.classes.put("PositionLightningBulletType", PositionLightningBulletType.class);
         ClassMap.classes.put("ShieldBreakerType", ShieldBreakerType.class);
         ClassMap.classes.put("TrailFadeBulletType", TrailFadeBulletType.class);
-        ClassMap.classes.put("AncientUnitType", AncientUnitType.class);
+        ClassMap.classes.put("SuperHeavyUnitType", SuperHeavyUnitType.class);
         ClassMap.classes.put("AncientEngine", AncientEngine.class);
         ClassMap.classes.put("NucleoidUnitType", NucleoidUnitType.class);
         ClassMap.classes.put("PesterUnitType", PesterUnitType.class);

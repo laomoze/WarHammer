@@ -11,7 +11,6 @@ import mindustry.*;
 import mindustry.content.*;
 import mindustry.entities.*;
 import mindustry.entities.bullet.*;
-import mindustry.entities.effect.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
@@ -30,7 +29,13 @@ public class SizeDamageBullet extends EffectBulletType{
     public float hitSizeLightingScale = 0;
     public float hitSizeDamage;
     public Color hitSizeColor;
-    public Effect hitSizeEffect = new MultiEffect(WHFx.square45_8_45, WHFx.hitSparkHuge, WHFx.crossBlast_45);
+    public getB getSizeDamageCreate = b -> {
+    };
+
+
+    public interface getB{
+        void getBullet(BulletType b);
+    }
 
     protected BulletType sizeDamageCreate = new EffectBulletType(15){
         {
@@ -45,7 +50,7 @@ public class SizeDamageBullet extends EffectBulletType{
         public void init(){
             super.init();
             hitSizeColor = hitColor;
-            hitSizeEffect = hitEffect = despawnEffect;
+            hitEffect = despawnEffect;
         }
 
         @Override
@@ -196,6 +201,7 @@ public class SizeDamageBullet extends EffectBulletType{
             lightningLength + Mathf.random(lightningLengthRand));
         }
         sizeDamageCreate.create(b.owner, team, x, y, 0, hitSizeDamage * dynamic, 1, 1, data);
+        getSizeDamageCreate.getBullet(sizeDamageCreate);
     }
 
     @Override

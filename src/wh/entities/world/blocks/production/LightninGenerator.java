@@ -1,9 +1,7 @@
 package wh.entities.world.blocks.production;
 
 import arc.*;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Fill;
-import arc.graphics.g2d.Lines;
+import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.util.*;
@@ -15,13 +13,10 @@ import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
 import mindustry.world.blocks.power.*;
-import mindustry.world.consumers.Consume;
-import mindustry.world.consumers.ConsumeItems;
-import mindustry.world.consumers.ConsumeLiquid;
 import mindustry.world.meta.*;
-import wh.graphics.WHPal;
+import wh.graphics.*;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.tilesize;
 //unused
 public class LightninGenerator extends NuclearReactor {
     public static final float range = 36f;
@@ -46,7 +41,7 @@ public class LightninGenerator extends NuclearReactor {
         lightningDamage = 3f;
         lightning = 5;
         lightningLength = 12;
-        hitSound = Sounds.release;
+        hitSound = Sounds.explosion;
 
         hitEffect = new Effect(60f, e -> {
             Draw.color(WHPal.SkyBlueF);
@@ -150,7 +145,6 @@ public class LightninGenerator extends NuclearReactor {
         public void updateTile() {
             if (items.total() == itemCapacity && !working) {
                 Start.at(this);
-                Sounds.lasercharge2.at(x, y, 1.5f);
                 Units.nearby(null, x, y, range * 2, unit -> {
                     unit.impulse(Tmp.v3.set(unit).sub(x, y).nor().scl(-pullPower));
                 });

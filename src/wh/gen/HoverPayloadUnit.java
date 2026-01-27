@@ -7,6 +7,7 @@ import arc.math.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
+import arc.util.io.*;
 import mindustry.*;
 import mindustry.content.*;
 import mindustry.core.*;
@@ -217,11 +218,17 @@ public class HoverPayloadUnit extends ElevationMoveUnit implements Payloadc, Wat
     }
 
     @Override
+    public float floorSpeedMultiplier(){
+
+        Floor on = isFlying() || type.hovering ? Blocks.air.asFloor() : floorOn();
+        float liquidSpeed = onLiquid() ? 1 : LandSpeedMultiplier;
+        return (float)Math.pow(on.speedMultiplier, type.floorMultiplier) * liquidSpeed * speedMultiplier;
+    }
+
+    @Override
     public void update(){
         super.update();
-        if(!onLiquid()){
-            vel.scl(Math.max(LandSpeedMultiplier, 0));
-        }
+
         boolean flying = isFlying();
         for(int i = 0; i < 2; i++){
             Trail t = i == 0 ? tleft : tright;
@@ -230,6 +237,27 @@ public class HoverPayloadUnit extends ElevationMoveUnit implements Payloadc, Wat
             float cx = Angles.trnsx(rotation - 90, type.waveTrailX * sign, type.waveTrailY) + x;
             float cy = Angles.trnsy(rotation - 90, type.waveTrailX * sign, type.waveTrailY) + y;
             t.update(cx, cy, world.floorWorld(cx, cy).isLiquid && onLiquid() && !flying ? 1 : 0);
+        }
+    }
+
+    @Override
+    public void read(Reads read){
+        super.read(read);
+
+        int payloads_LENGTH = read.i();
+        this.payloads.clear();
+        for(int INDEX = 0; INDEX < payloads_LENGTH; INDEX++){
+            mindustry.world.blocks.payloads.Payload payloads_ITEM = mindustry.io.TypeIO.readPayload(read);
+            if(payloads_ITEM != null) this.payloads.add(payloads_ITEM);
+        }
+    }
+
+    @Override
+    public void write(Writes write){
+        super.write(write);
+        write.i(this.payloads.size);
+        for(int INDEX = 0; INDEX < this.payloads.size; INDEX++){
+            mindustry.io.TypeIO.writePayload(write, this.payloads.get(INDEX));
         }
     }
 }

@@ -3,21 +3,19 @@ package wh.entities.bullet.laser;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
-import arc.math.geom.*;
 import arc.util.*;
 import arc.util.pooling.*;
 import mindustry.content.*;
 import mindustry.entities.*;
-import mindustry.entities.bullet.ContinuousBulletType;
+import mindustry.entities.bullet.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import wh.content.WHFx;
-import wh.entities.bullet.laser.ChargePointLaser.*;
-import wh.graphics.PositionLightning;
+import wh.content.*;
+import wh.graphics.*;
 import wh.util.*;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.state;
 
 /**
  * 这么不是我们boomBeach的激光吗
@@ -257,8 +255,8 @@ public class LaserBeamBulletType extends ContinuousBulletType{
             LasergroundEffect.at(effectX, effectY, 0, hitColor, data.currentLength);
         }
 
-        if(drawPositionLighting && b.timer.get(2, 10) && Mathf.chanceDelta(0.004) && !state.isPaused()){
-            PositionLightning.createEffect(b, Tmp.v2.trns(rot, data.currentLength).add(b), lightningColor, 2, Mathf.random(1, 2));
+        if(drawPositionLighting && b.timer(3, 10) && !state.isPaused()){
+            PositionLightning.createEffect(b, Tmp.v2.trns(rot, b.fdata).add(b), lightningColor, 2, Mathf.random(1, 2));
         }
 
     }

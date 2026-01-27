@@ -5,17 +5,12 @@
 
 package wh.entities.bullet.laser;
 
-import mindustry.content.Fx;
-import mindustry.entities.Damage;
-import mindustry.entities.Effect;
-import mindustry.entities.bullet.BulletType;
-import mindustry.gen.Building;
-import mindustry.gen.Bullet;
-import mindustry.gen.Healthc;
-import mindustry.gen.Hitboxc;
-import mindustry.gen.Sounds;
-import wh.content.WHFx;
-import wh.graphics.PositionLightning;
+import mindustry.content.*;
+import mindustry.entities.*;
+import mindustry.entities.bullet.*;
+import mindustry.gen.*;
+import wh.content.*;
+import wh.graphics.*;
 
 public class PositionLightningBulletType extends BulletType {
     public int boltNum = 2;
@@ -25,7 +20,7 @@ public class PositionLightningBulletType extends BulletType {
         speed = 0f;
         scaleLife = true;
         hitShake = 2f;
-        hitSound = Sounds.spark;
+        hitSound = Sounds.shootArc;
         absorbable = keepVelocity = false;
         instantDisappear = true;
         collides = false;
@@ -40,7 +35,7 @@ public class PositionLightningBulletType extends BulletType {
         speed = 0f;
         scaleLife = true;
         hitShake = 2f;
-        hitSound = Sounds.spark;
+        hitSound = Sounds.shootArc;
         absorbable = keepVelocity = false;
         instantDisappear = true;
         collides = false;
@@ -53,7 +48,7 @@ public class PositionLightningBulletType extends BulletType {
     public void init() {
         super.init();
         drawSize = Math.max(drawSize, maxRange * 2);
-        if (hitEffect == WHFx.boolSelector) hitEffect = WHFx.lightningHitLarge(lightningColor,40,6,5);
+        if(hitEffect == WHFx.boolSelector) hitEffect = WHFx.generalExplosion(50, lightningColor, 5, 6, false);
         if (smokeEffect == WHFx.boolSelector) smokeEffect = Fx.shootBigSmoke;
         if (shootEffect == WHFx.boolSelector) shootEffect = WHFx.shootLineSmall(lightningColor);
     }

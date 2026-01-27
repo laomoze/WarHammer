@@ -1,24 +1,21 @@
 package wh.entities.abilities;
 
-import arc.Core;
-import arc.func.Cons;
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Lines;
-import arc.math.Mathf;
-import arc.scene.ui.layout.Table;
+import arc.*;
+import arc.func.*;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.scene.ui.layout.*;
 import arc.util.*;
-import mindustry.Vars;
-import mindustry.content.Fx;
-import mindustry.entities.Effect;
-import mindustry.entities.abilities.Ability;
+import mindustry.*;
+import mindustry.content.*;
+import mindustry.entities.*;
+import mindustry.entities.abilities.*;
 import mindustry.gen.*;
-import mindustry.graphics.Layer;
-import mindustry.graphics.Pal;
-import mindustry.ui.Bar;
+import mindustry.graphics.*;
+import mindustry.ui.*;
 import wh.content.*;
-import wh.graphics.Drawn;
-import wh.util.*;
+import wh.graphics.*;
 
 import static mindustry.Vars.tilesize;
 import static wh.core.WarHammerMod.name;
@@ -46,9 +43,6 @@ public class EllipseForceFieldAbility extends Ability{
     public float regenThreshold = 0.1f;
     protected boolean shouldRegen = false;
     protected boolean start = false;
-
-    protected float fullAbsorbTimer = 0f;
-    protected int lastTriggeredThreshold = -1;
 
     protected float alpha, size, lastShield, cooldownTimer = 0f;
     protected boolean wasBroken = true;
@@ -117,7 +111,7 @@ public class EllipseForceFieldAbility extends Ability{
             float ty = calculateInEllipse(bullet, paramUnit, paramField.longAxis, paramField.minorAxis, 0);
 
             if(tx * tx + ty * ty <= 1f){
-                if(Mathf.chance(paramField.reflectChance) && paramField.fullAbsorbTimer<0){
+                if(Mathf.chance(paramField.reflectChance)){
                     reflectBullet(bullet, paramUnit);
                 }else{
                     absorbBullet(bullet, paramUnit);
@@ -153,7 +147,6 @@ public class EllipseForceFieldAbility extends Ability{
 
     @Override
     public void update(Unit unit){
-        fullAbsorbTimer -= Time.delta;
 
         if(unit.shield <= 0f && !wasBroken){
             unit.shield = -0.1f;
@@ -169,7 +162,6 @@ public class EllipseForceFieldAbility extends Ability{
 
         if(wasBroken){
             shouldRegen = start = false;
-            lastTriggeredThreshold = -1;
         }
 
         if(cooldownTimer > 0){
@@ -180,7 +172,7 @@ public class EllipseForceFieldAbility extends Ability{
         }
 
         if(unit.shield < max && cooldownTimer <= 0){
-            unit.shield += fullAbsorbTimer > 0 ? 0 : Time.delta * regen;
+            unit.shield += Time.delta * regen;
             unit.shield += (percentRegen ? Time.delta * max * (percentRegenAmount / 60) : 0);
         }else if(unit.shield > max&&unit.shield < max*1.1f){
             start = true;

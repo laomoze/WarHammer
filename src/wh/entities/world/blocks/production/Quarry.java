@@ -1,46 +1,31 @@
 package wh.entities.world.blocks.production;
 
-import arc.Core;
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Lines;
-import arc.graphics.g2d.TextureRegion;
-import arc.graphics.gl.FrameBuffer;
-import arc.math.Angles;
-import arc.math.Interp;
-import arc.math.Mathf;
+import arc.*;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.graphics.gl.*;
+import arc.math.*;
 import arc.math.geom.*;
-import arc.struct.EnumSet;
-import arc.struct.Seq;
-import arc.util.Eachable;
-import arc.util.Time;
-import arc.util.Tmp;
-import arc.util.io.Reads;
-import arc.util.io.Writes;
-import mindustry.Vars;
-import mindustry.content.Blocks;
-import mindustry.content.Fx;
-import mindustry.core.World;
-import mindustry.entities.Effect;
-import mindustry.entities.effect.MultiEffect;
-import mindustry.entities.units.BuildPlan;
-import mindustry.game.Team;
-import mindustry.gen.Building;
-import mindustry.gen.Sounds;
-import mindustry.graphics.Drawf;
-import mindustry.graphics.Layer;
-import mindustry.graphics.Pal;
-import mindustry.type.Item;
-import mindustry.world.Block;
-import mindustry.world.Tile;
+import arc.struct.*;
+import arc.util.*;
+import arc.util.io.*;
+import mindustry.*;
+import mindustry.content.*;
+import mindustry.core.*;
+import mindustry.entities.*;
+import mindustry.entities.effect.*;
+import mindustry.entities.units.*;
+import mindustry.game.*;
+import mindustry.gen.*;
+import mindustry.graphics.*;
+import mindustry.type.*;
+import mindustry.world.*;
 import mindustry.world.meta.*;
-import wh.util.WorldDef;
+import wh.util.*;
 
-import static arc.Core.atlas;
-import static arc.Core.graphics;
+import static arc.Core.*;
 import static arc.graphics.g2d.Draw.color;
-import static arc.math.Mathf.clamp;
-import static arc.math.Mathf.rand;
+import static arc.math.Mathf.*;
 import static mindustry.Vars.*;
 
 public class Quarry extends Block {
@@ -96,7 +81,7 @@ public class Quarry extends Block {
         updateInUnits = false;
         quickRotate = false;
         ambientSoundVolume = 0.05f;
-        ambientSound = Sounds.minebeam;
+        ambientSound = Sounds.loopMineBeam;
     }
 
     @Override

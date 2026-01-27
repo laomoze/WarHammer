@@ -1,7 +1,7 @@
 
 package wh.entities.world.blocks.distribution;
 
-import arc.Core;
+import arc.*;
 import arc.func.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
@@ -49,7 +49,7 @@ public class CoverdConveyor extends Block implements Autotiler{
         conveyorPlacement = true;
         underBullets = true;
 
-        ambientSound = Sounds.conveyor;
+        ambientSound = Sounds.loopConveyor;
         ambientSoundVolume = 0.0022f;
         unloadable = false;
         noUpdateDisabled = false;

@@ -5,50 +5,31 @@
 
 package wh.gen;
 
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Fill;
-import arc.graphics.g2d.Lines;
-import arc.math.Mathf;
-import arc.math.Rand;
-import arc.math.geom.Position;
-import arc.math.geom.Vec2;
-import arc.struct.ObjectFloatMap;
-import arc.struct.ObjectIntMap;
-import arc.struct.Seq;
-import arc.util.Time;
-import arc.util.Tmp;
-import arc.util.io.Reads;
-import arc.util.io.Writes;
-import java.util.Iterator;
-import mindustry.Vars;
-import mindustry.ai.types.MissileAI;
-import mindustry.content.Fx;
-import mindustry.content.StatusEffects;
-import mindustry.core.World;
-import mindustry.entities.Effect;
-import mindustry.entities.Sized;
-import mindustry.entities.Units;
-import mindustry.entities.units.UnitController;
-import mindustry.gen.Building;
-import mindustry.gen.Bullet;
-import mindustry.gen.Entityc;
-import mindustry.gen.Groups;
-import mindustry.gen.Healthc;
-import mindustry.gen.Hitboxc;
-import mindustry.gen.Player;
-import mindustry.gen.Teamc;
-import mindustry.gen.Unit;
-import mindustry.gen.UnitEntity;
-import mindustry.graphics.Trail;
-import mindustry.type.UnitType;
-import mindustry.world.meta.BlockGroup;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.math.geom.*;
+import arc.struct.*;
+import arc.util.*;
+import arc.util.io.*;
+import mindustry.*;
+import mindustry.ai.types.*;
+import mindustry.content.*;
+import mindustry.core.*;
+import mindustry.entities.*;
+import mindustry.entities.units.*;
+import mindustry.gen.*;
+import mindustry.graphics.*;
+import mindustry.type.*;
+import mindustry.world.meta.*;
 import wh.content.*;
-import wh.entities.WHUnitSorts;
-import wh.graphics.Drawn;
-import wh.math.WHInterp;
-import wh.entities.world.entities.PesterUnitType;
-import wh.util.WHUtils;
+import wh.entities.*;
+import wh.entities.world.entities.*;
+import wh.graphics.*;
+import wh.math.*;
+import wh.util.*;
+
+import java.util.*;
 
 public class PesterUnit extends UnitEntity implements Pesterc {
     public static final ObjectIntMap<Healthc> checked = new ObjectIntMap();
@@ -291,7 +272,7 @@ public class PesterUnit extends UnitEntity implements Pesterc {
         nextTargets.clear();
         if (!Vars.headless && itr > 0) {
             WHSounds.hugeShoot.at(ex, ey);
-            WHFx.crossSpinBlast.at(ex, ey, 0.0F, team.color, this);
+            /* WHFx.crossSpinBlast.at(ex, ey, 0.0F, team.color, this);*/
         }
         if (!Vars.headless &&  isBoss) {
             Rand rand = WHUtils.rand;

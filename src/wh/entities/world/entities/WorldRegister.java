@@ -1,11 +1,7 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
 
 package wh.entities.world.entities;
 
-import arc.Events;
+import arc.*;
 import arc.struct.*;
 import mindustry.game.*;
 import wh.entities.world.blocks.defense.AirRaiderCallBlock.*;

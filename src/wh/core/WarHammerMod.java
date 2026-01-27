@@ -5,21 +5,19 @@
 
 package wh.core;
 
-import arc.Core;
-import arc.Events;
-import arc.util.Time;
-import java.util.Objects;
-import mindustry.Vars;
-import mindustry.game.EventType;
-import mindustry.mod.Mod;
-import mindustry.ui.dialogs.ResearchDialog;
+import arc.*;
+import arc.util.*;
+import mindustry.*;
+import mindustry.game.*;
+import mindustry.mod.*;
+import mindustry.ui.dialogs.*;
 import wh.content.*;
-import wh.gen.EntityRegister;
-import wh.content.WHSounds;
-import wh.entities.world.entities.WorldRegister;
-import wh.graphics.MainRenderer;
-import wh.graphics.WHShaders;
-import wh.ui.dialogs.WHResearchDialog;
+import wh.entities.world.entities.*;
+import wh.gen.*;
+import wh.graphics.*;
+import wh.ui.dialogs.*;
+
+import java.util.*;
 
 public class WarHammerMod extends Mod {
     public static String ModName = "wh";
@@ -66,10 +64,12 @@ public class WarHammerMod extends Mod {
         WHUnitTypes.load();
         WHBlocksEnvironment.load();
         WHBlocks.load();
-        WHOverride.load();
 
         WHPlanets.load();
         WHTechTree.load();
+
+        WHEvents.load();
+        WHOverride.load();
 
     }
 }

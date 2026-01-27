@@ -10,10 +10,8 @@ import arc.scene.style.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
-import arc.struct.EnumSet;
 import arc.util.*;
 import arc.util.io.*;
-import wh.ui.*;
 import mindustry.content.*;
 import mindustry.core.*;
 import mindustry.ctype.*;
@@ -28,8 +26,9 @@ import mindustry.world.*;
 import mindustry.world.consumers.*;
 import mindustry.world.draw.*;
 import mindustry.world.meta.*;
+import wh.ui.*;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.tilesize;
 
 /**
  * MultiCrafter. You can freely choose to change the production formula.
@@ -61,7 +60,7 @@ public class MultiCrafter extends Block {
         solid = true;
         hasItems = true;
         consumesPower = false;
-        ambientSound = Sounds.machine;
+        ambientSound = Sounds.loopMachine;
         sync = true;
         ambientSoundVolume = 0.03f;
         flags = EnumSet.of(BlockFlag.factory);

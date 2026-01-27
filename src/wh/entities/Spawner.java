@@ -1,49 +1,33 @@
 package wh.entities;
 
-import arc.Events;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.TextureRegion;
+import arc.*;
+import arc.graphics.g2d.*;
 import arc.math.*;
-import arc.math.geom.Position;
-import arc.math.geom.Vec2;
-import arc.struct.Seq;
-import arc.util.Interval;
-import arc.util.Time;
-import arc.util.Tmp;
-import arc.util.io.Reads;
-import arc.util.io.Writes;
-import mindustry.Vars;
-import mindustry.ai.types.CommandAI;
-import mindustry.audio.SoundLoop;
-import mindustry.content.Fx;
-import mindustry.content.StatusEffects;
-import mindustry.content.UnitTypes;
-import mindustry.entities.Effect;
-import mindustry.entities.Units;
-import mindustry.entities.units.StatusEntry;
-import mindustry.game.EventType;
-import mindustry.game.Team;
+import arc.math.geom.*;
+import arc.struct.*;
+import arc.util.*;
+import arc.util.io.*;
+import mindustry.*;
+import mindustry.ai.types.*;
+import mindustry.audio.*;
+import mindustry.content.*;
+import mindustry.entities.*;
+import mindustry.entities.units.*;
+import mindustry.game.*;
 import mindustry.gen.*;
-import mindustry.graphics.Drawf;
-import mindustry.graphics.Layer;
-import mindustry.graphics.Pal;
-import mindustry.graphics.Trail;
-import mindustry.io.TypeIO;
-import mindustry.type.StatusEffect;
-import mindustry.type.UnitType;
-import mindustry.ui.Fonts;
-import mindustry.world.blocks.environment.Floor;
-import wh.content.WHContent;
-import wh.content.WHFx;
-import wh.gen.EntityRegister;
-import wh.graphics.Drawn;
-import wh.util.WHUtils;
+import mindustry.graphics.*;
+import mindustry.io.*;
+import mindustry.type.*;
+import mindustry.ui.*;
+import mindustry.world.blocks.environment.*;
+import wh.content.*;
+import wh.gen.*;
+import wh.graphics.*;
+import wh.util.*;
 
-import java.nio.FloatBuffer;
+import java.nio.*;
 
-import static mindustry.Vars.headless;
-import static mindustry.Vars.tilesize;
-import static wh.util.WHUtils.rand;
+import static mindustry.Vars.*;
 
 public class Spawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
     public Team team = Team.derelict;
@@ -69,7 +53,7 @@ public class Spawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
     public final Seq<Trail> trails = Seq.with(new Trail(30), new Trail(50), new Trail(70));
     public float trailWidth = 3f;
 
-    public static float delaySpawnTime = 30f;
+    public static float delaySpawnTime = 12f;
 
     public boolean airdrop;
     public float airDropTime = 110f;
@@ -332,6 +316,7 @@ public class Spawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
     public void readSync(Reads read){
         x = read.f();
         y = read.f();
+        effectTriggered = read.bool();
         lifetime = read.f();
         time = read.f();
         rotation = read.f();
@@ -349,6 +334,7 @@ public class Spawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
     public void writeSync(Writes write){
         write.f(x);
         write.f(y);
+        write.bool(effectTriggered);
         write.f(lifetime);
         write.f(time);
         write.f(rotation);

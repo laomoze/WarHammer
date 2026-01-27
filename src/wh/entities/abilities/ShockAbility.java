@@ -3,7 +3,6 @@ package wh.entities.abilities;
 import arc.*;
 import arc.audio.*;
 import arc.graphics.*;
-import arc.math.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
@@ -12,9 +11,8 @@ import mindustry.entities.*;
 import mindustry.entities.abilities.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.world.meta.*;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.tilesize;
 import static wh.core.WarHammerMod.name;
 
 public class ShockAbility extends Ability{
@@ -24,7 +22,7 @@ public class ShockAbility extends Ability{
     public float falloffCount = 20f;
     public float shake = 2f;
 
-    public Sound shootSound = Sounds.bang;
+    public Sound shootSound = Sounds.explosion;
     public Color waveColor = Pal.accent;
     public Effect hitEffect = Fx.hitSquaresColor;
     public Effect waveEffect = Fx.pointShockwave;
