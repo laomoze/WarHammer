@@ -25,8 +25,9 @@ sourceCompatibility = 17
 ext{
     //the build number that this mod is made for
     mindustryVersion = 'v154'
-    arcVersion = 'c10d68b7a1'
+    arcVersion = 'v154'
     jabelVersion = "93fde537c7"
+
     isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
     sdkRoot = System.getenv("ANDROID_HOME")
 }
@@ -80,7 +81,7 @@ jar{
     }
 
     from(rootDir){
-        include "mod.json"
+        include "mod.hjson"
     }
 
     from("assets/"){
