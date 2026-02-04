@@ -11,8 +11,9 @@ import mindustry.content.*;
 import mindustry.gen.*;
 import mindustry.type.*;
 import mindustry.world.blocks.environment.*;
+import wh.entities.world.entities.*;
 
-public class PowerArmourUnitType extends UnitType{
+public class PowerArmourUnitType extends WHUnitType{
 
     public static final float shadowTX = -12, shadowTY = -13;
     private static final Vec2 legOffset = new Vec2();

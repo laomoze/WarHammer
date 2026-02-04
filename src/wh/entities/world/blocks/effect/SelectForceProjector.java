@@ -1,48 +1,26 @@
 package wh.entities.world.blocks.effect;
 
 
-import arc.Core;
-import arc.Events;
-import arc.graphics.Blending;
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Fill;
-import arc.graphics.g2d.Lines;
-import arc.graphics.g2d.TextureRegion;
-import arc.math.Angles;
-import arc.math.Mathf;
-import arc.math.geom.Intersector;
-import arc.math.geom.Point2;
-import arc.scene.ui.layout.Table;
-import arc.struct.IntSeq;
-import arc.struct.Seq;
+import arc.*;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.math.geom.*;
+import arc.scene.ui.layout.*;
+import arc.struct.*;
 import arc.util.*;
-import arc.util.io.Reads;
-import arc.util.io.Writes;
-import mindustry.content.Fx;
-import mindustry.content.Items;
-import mindustry.entities.Effect;
-import mindustry.game.EventType;
-import mindustry.game.Team;
-import mindustry.gen.Building;
-import mindustry.gen.Groups;
-import mindustry.gen.Tex;
-import mindustry.graphics.Drawf;
-import mindustry.graphics.Layer;
-import mindustry.graphics.Pal;
-import mindustry.graphics.Trail;
-import mindustry.logic.Ranged;
-import mindustry.ui.Bar;
-import mindustry.ui.Styles;
-import mindustry.world.Block;
-import mindustry.world.Tile;
-import mindustry.world.consumers.Consume;
-import mindustry.world.consumers.ConsumeCoolant;
-import mindustry.world.meta.BlockGroup;
-import mindustry.world.meta.Env;
-import mindustry.world.meta.Stat;
-import mindustry.world.meta.StatUnit;
-import wh.graphics.WHPal;
+import arc.util.io.*;
+import mindustry.content.*;
+import mindustry.entities.*;
+import mindustry.game.*;
+import mindustry.gen.*;
+import mindustry.graphics.*;
+import mindustry.logic.*;
+import mindustry.ui.*;
+import mindustry.world.*;
+import mindustry.world.consumers.*;
+import mindustry.world.meta.*;
+import wh.graphics.*;
 import wh.util.*;
 
 import static arc.Core.atlas;
@@ -122,7 +100,7 @@ public class SelectForceProjector extends Block {
     public void setStats() {
         super.setStats();
         stats.add(Stat.range, range / tilesize, StatUnit.blocks);
-        stats.add(Stat.shieldHealth,  Core.bundle.format("bar.wh-shield-health-detail", OneTileShieldHealth,shieldPercent));
+        stats.add(Stat.shieldHealth, Core.bundle.format("stat.wh-shield-health-detail", OneTileShieldHealth, shieldPercent));
     }
 
 

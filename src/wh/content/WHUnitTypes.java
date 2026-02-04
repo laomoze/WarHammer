@@ -28,7 +28,6 @@ import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
 import mindustry.type.ammo.*;
-import mindustry.type.unit.*;
 import mindustry.type.weapons.*;
 import mindustry.world.meta.*;
 import wh.entities.abilities.*;
@@ -2110,7 +2109,7 @@ public final class WHUnitTypes{
             }
         };
 
-        tankEn1 = new TankUnitType("tankEn1"){
+        tankEn1 = new WHTankUnitType("tankEn1"){
 
             {
                 constructor = TankUnit::create;
@@ -2118,6 +2117,10 @@ public final class WHUnitTypes{
                 hitSize = 40;
                 speed = 1f;
                 rotateSpeed = 1.5f;
+                squareShape = true;
+                omniMovement = false;
+                rotateMoveFirst = true;
+                envDisabled = Env.none;
                 health = 20000;
                 armor = 24;
                 itemCapacity = 0;
@@ -2324,7 +2327,7 @@ public final class WHUnitTypes{
             }
         };
 
-        tank3s = new TankUnitType("tank3s"){
+        tank3s = new WHTankUnitType("tank3s"){
             {
                 constructor = TankUnit::create;
 
@@ -2413,7 +2416,7 @@ public final class WHUnitTypes{
 
         ;
 
-        tank2s = new TankUnitType("tank2s"){
+        tank2s = new WHTankUnitType("tank2s"){
             {
 
                 constructor = TankUnit::create;
@@ -2676,7 +2679,7 @@ public final class WHUnitTypes{
         };
 
 
-        tank1s = new TankUnitType("tank1s"){
+        tank1s = new WHTankUnitType("tank1s"){
             {
                 constructor = TankUnit::create;
 
@@ -2883,7 +2886,7 @@ public final class WHUnitTypes{
             }
         };
 
-        tank3 = new TankUnitType("tank3"){
+        tank3 = new WHTankUnitType("tank3"){
             {
                 constructor = TankUnit::create;
 
@@ -3113,7 +3116,7 @@ public final class WHUnitTypes{
             }
         };
 
-        tank2 = new TankUnitType("tank2"){
+        tank2 = new WHTankUnitType("tank2"){
             {
                 constructor = TankUnit::create;
 
@@ -3365,7 +3368,7 @@ public final class WHUnitTypes{
             }
         };
 
-        tank1 = new TankUnitType("tank1"){
+        tank1 = new WHTankUnitType("tank1"){
 
             {
                 constructor = TankUnit::create;
@@ -3824,7 +3827,7 @@ public final class WHUnitTypes{
             }
         };
 
-        Mecha6 = new UnitType("mecha6"){
+        Mecha6 = new WHUnitType("mecha6"){
             {
                 constructor = MechUnit::create;
 
@@ -4073,7 +4076,7 @@ public final class WHUnitTypes{
             }
         };
 
-        Mecha5 = new UnitType("mecha5"){
+        Mecha5 = new WHUnitType("mecha5"){
             {
                 constructor = MechUnit::create;
 
@@ -4228,7 +4231,7 @@ public final class WHUnitTypes{
             }
         };
 
-        Mecha4 = new UnitType("mecha4"){
+        Mecha4 = new WHUnitType("mecha4"){
             {
                 constructor = MechUnit::create;
 
@@ -4475,7 +4478,7 @@ public final class WHUnitTypes{
             }
         };
 
-        Mecha3 = new UnitType("mecha3"){
+        Mecha3 = new WHUnitType("mecha3"){
             {
                 constructor = MechUnit::create;
 
@@ -4620,7 +4623,7 @@ public final class WHUnitTypes{
             }
         };
 
-        Mecha2 = new UnitType("mecha2"){
+        Mecha2 = new WHUnitType("mecha2"){
             {
                 constructor = LegsUnit::create;
 
@@ -5454,7 +5457,7 @@ public final class WHUnitTypes{
             }
         };
 
-        air6 = new UnitType("air6"){
+        air6 = new WHUnitType("air6"){
             {
                 constructor = PayloadUnit::create;
 
@@ -5712,7 +5715,7 @@ public final class WHUnitTypes{
         };
 
 
-        air5 = new UnitType("air5"){
+        air5 = new WHUnitType("air5"){
             {
                 constructor = UnitTypes.eclipse.constructor;
 
@@ -5933,12 +5936,8 @@ public final class WHUnitTypes{
                     }
                 });
             }
-        }
-
-        ;
-        air4 = new
-
-        UnitType("air4"){
+        };
+        air4 = new WHUnitType("air4"){
             {
                 lowAltitude = false;
                 constructor = UnitTypes.flare.constructor;
@@ -6148,9 +6147,7 @@ public final class WHUnitTypes{
 
         ;
 
-        air3 = new
-
-        UnitType("air3"){
+        air3 = new WHUnitType("air3"){
             {
                 constructor = PayloadUnit::create;
                 speed = 2f;
@@ -6283,9 +6280,7 @@ public final class WHUnitTypes{
 
         ;
 
-        air2 = new
-
-        UnitType("air2"){
+        air2 = new WHUnitType("air2"){
             {
                 constructor = UnitTypes.flare.constructor;
                 lowAltitude = true;
@@ -6363,9 +6358,7 @@ public final class WHUnitTypes{
 
         ;
 
-        air1 = new
-
-        UnitType("air1"){
+        air1 = new WHUnitType("air1"){
             {
                 constructor = UnitTypes.flare.constructor;
                 circleTarget = true;
@@ -6446,9 +6439,7 @@ public final class WHUnitTypes{
         ;
 
 
-        airB1 = new
-
-        UnitType("airB1"){
+        airB1 = new WHUnitType("airB1"){
             {
                 constructor = UnitTypes.mono.constructor;
                 defaultCommand = UnitCommand.mineCommand;
@@ -6473,14 +6464,10 @@ public final class WHUnitTypes{
                 mineTier = 3;
                 mineSpeed = 3.5f;
             }
-        }
-
-        ;
+        };
 
 
-        airB2 = new
-
-        UnitType("airB2"){
+        airB2 = new WHUnitType("airB2"){
             {
                 researchCostMultiplier = 0.9f;
                 constructor = UnitTypes.poly.constructor;
@@ -6562,9 +6549,7 @@ public final class WHUnitTypes{
 
         ;
 
-        airB3 = new
-
-        UnitType("airB3"){
+        airB3 = new WHUnitType("airB3"){
             {
                 researchCostMultiplier = 0.8f;
                 constructor = UnitTypes.mega.constructor;
@@ -6703,9 +6688,7 @@ public final class WHUnitTypes{
 
         ;
 
-        airB4 = new
-
-        UnitType("airB4"){
+        airB4 = new WHUnitType("airB4"){
             {
                 researchCostMultiplier = 0.7f;
                 constructor = UnitTypes.mega.constructor;
@@ -6899,9 +6882,7 @@ public final class WHUnitTypes{
 
         ;
 
-        airB5 = new
-
-        UnitType("airB5"){
+        airB5 = new WHUnitType("airB5"){
             {
                 researchCostMultiplier = 0.6f;
                 constructor = UnitTypes.poly.constructor;
@@ -7134,7 +7115,7 @@ public final class WHUnitTypes{
         ;
 
 
-        airB6 = new UnitType("airB6"){
+        airB6 = new WHUnitType("airB6"){
             {
                 researchCostMultiplier = 0.7f;
                 constructor = UnitTypes.mega.constructor;
@@ -7500,7 +7481,7 @@ public final class WHUnitTypes{
             }
         };
 
-        M6 = new UnitType("m6"){
+        M6 = new WHUnitType("m6"){
             {
 
                 constructor = MechUnit::create;
@@ -8073,9 +8054,7 @@ public final class WHUnitTypes{
 
         ;
 
-        M4A = new
-
-        PowerArmourUnitType("m4A"){
+        M4A = new PowerArmourUnitType("m4A"){
             {
                 speed = 1.5f;
                 hitSize = 28f;
@@ -8282,13 +8261,9 @@ public final class WHUnitTypes{
                 }}
                 );
             }
-        }
+        };
 
-        ;
-
-        M4B = new
-
-        PowerArmourUnitType("m4B"){
+        M4B = new PowerArmourUnitType("m4B"){
             {
                 speed = 1.5f;
                 hitSize = 28f;
@@ -8493,9 +8468,7 @@ public final class WHUnitTypes{
 
         ;
 
-        M4C = new
-
-        PowerArmourUnitType("m4C"){
+        M4C = new PowerArmourUnitType("m4C"){
             {
                 speed = 1.5f;
                 hitSize = 28f;
@@ -8731,9 +8704,7 @@ public final class WHUnitTypes{
 
         ;
 
-        M4D = new
-
-        PowerArmourUnitType("m4D"){
+        M4D = new PowerArmourUnitType("m4D"){
             {
                 speed = 1.8f;
                 hitSize = 22f;
@@ -8941,13 +8912,9 @@ public final class WHUnitTypes{
                 }}
                 );
             }
-        }
+        };
 
-        ;
-
-        M3 = new
-
-        PowerArmourUnitType("m3"){
+        M3 = new PowerArmourUnitType("m3"){
             {
                 speed = 1;
                 hitSize = 18f;
@@ -9089,13 +9056,9 @@ public final class WHUnitTypes{
                 }}
                 );
             }
-        }
+        };
 
-        ;
-
-        M2 = new
-
-        PowerArmourUnitType("m2"){
+        M2 = new PowerArmourUnitType("m2"){
             {
                 speed = 0.9f;
                 hitSize = 12;
@@ -9398,9 +9361,7 @@ public final class WHUnitTypes{
 
         ;
 
-        MEn1 = new
-
-        PowerArmourUnitType("mEn1"){
+        MEn1 = new PowerArmourUnitType("mEn1"){
             {
 
                 String n = name;

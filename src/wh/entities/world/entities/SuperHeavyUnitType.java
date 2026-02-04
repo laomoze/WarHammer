@@ -2,21 +2,16 @@ package wh.entities.world.entities;
 
 import arc.math.*;
 import arc.struct.*;
-import arc.util.*;
 import mindustry.*;
 import mindustry.content.*;
 import mindustry.type.*;
 import mindustry.type.ammo.*;
-import mindustry.world.meta.*;
 import wh.content.*;
 import wh.entities.world.drawer.part.*;
 import wh.graphics.*;
 
-import static arc.Core.bundle;
-
-public class SuperHeavyUnitType extends UnitType{
-    public float damageMultiplier = 1f;
-
+public class SuperHeavyUnitType extends WHUnitType{
+    public boolean immuniseAll = true;
     public SuperHeavyUnitType(String name){
         super(name);
 
@@ -32,9 +27,9 @@ public class SuperHeavyUnitType extends UnitType{
     @Override
     public void setStats() {
         super.setStats();
-        if (damageMultiplier < 1f) {
+       /* if (damageMultiplier < 1f) {
             stats.add( new Stat("wh-damage-reduction"), bundle.format("bar.wh-damage-reduction", Strings.autoFixed((1f - damageMultiplier) * 100, 2)));
-        }
+        }*/
     }
 
 
@@ -50,7 +45,7 @@ public class SuperHeavyUnitType extends UnitType{
         }
     }
 
-    public boolean immuniseAll = true;
+
     public void init(){
         super.init();
 
@@ -70,9 +65,8 @@ public class SuperHeavyUnitType extends UnitType{
             statuses.remove(WHStatusEffects.bless);
             statuses.remove(WHStatusEffects.plasma);
             statuses.add(StatusEffects.wet);
-            statuses.add(StatusEffects.unmoving);
+            /* statuses.add(StatusEffects.unmoving);*/
         }
-
         type.immunities.addAll(statuses);
     }
 }

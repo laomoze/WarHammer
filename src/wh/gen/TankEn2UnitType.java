@@ -11,11 +11,12 @@ import mindustry.type.*;
 import wh.content.*;
 import wh.entities.bullet.*;
 import wh.entities.world.drawer.part.*;
+import wh.entities.world.entities.*;
 import wh.graphics.*;
 
 import static wh.core.WarHammerMod.name;
 
-public class TankEn2UnitType extends UnitType{
+public class TankEn2UnitType extends WHUnitType{
     public TankEn2UnitType(String name){
         super(name);
     }

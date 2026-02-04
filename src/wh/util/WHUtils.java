@@ -682,14 +682,15 @@ public final class WHUtils{
         return type.hitSize / tilesize / tilesize / 3.25f;
     }
 
-    /** [0]For flying, [1] for navy, [2] for ground */
+    /** [0]For flying, [1] for navy, [2] for ground,[3] for hover */
     public static Seq<Boolf<Tile>> formats(){
-        Seq<Boolf<Tile>> seq = new Seq<>(3);
+        Seq<Boolf<Tile>> seq = new Seq<>(4);
 
         seq.add(
         tile -> world.getQuadBounds(Tmp.r1).contains(tile.getBounds(Tmp.r2)),
         tile -> tile.floor().isLiquid && !tile.cblock().solid && !tile.floor().solid && !tile.overlay().solid && !tile.block().solidifes,
-        tile -> !tile.floor().isDeep() && !tile.cblock().solid && !tile.floor().solid && !tile.overlay().solid && !tile.block().solidifes
+        tile -> !tile.floor().isDeep() && !tile.cblock().solid && !tile.floor().solid && !tile.overlay().solid && !tile.block().solidifes,
+        tile -> !tile.cblock().solid && !tile.floor().solid && !tile.overlay().solid && !tile.block().solidifes
         );
 
         return seq;
@@ -702,6 +703,8 @@ public final class WHUtils{
 
         if(type.flying){
             boolf = boolves.get(0);
+        }else if(type.hovering){
+            boolf = boolves.get(3);
         }else if(WaterMovec.class.isAssignableFrom(type.constructor.get().getClass())){
             boolf = boolves.get(1);
         }else{

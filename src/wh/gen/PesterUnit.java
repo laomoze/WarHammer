@@ -465,7 +465,7 @@ public class PesterUnit extends UnitEntity implements Pesterc {
         UnitType var3 =  type;
         if (var3 instanceof PesterUnitType) {
             PesterUnitType pType = (PesterUnitType)var3;
-            super.rawDamage(pType.damageMultiplier * amount);
+            super.rawDamage(/*pType.damageMultiplier**/ amount);
         }
 
     }

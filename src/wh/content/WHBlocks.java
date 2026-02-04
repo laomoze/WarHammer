@@ -82,7 +82,7 @@ public final class WHBlocks{
     armorFluidRouter, mixedFluidJunction, steelConduit, lightConduit,
     tiSteelBridgeConduit, T2BridgeConduit;
     //effect
-    public static Block wrapProjector, wrapOverdrive, armoredVault,
+    public static Block wrapProjector, wrapOverdrive, shelterDome, armoredVault,
     T2RepairTower, fortlessShield, strongholdCore, T1strongholdCore, T2strongholdCore, selectProjector;
     //distribution
     public static Block armorInvertedSorter, armorSorter, armorJunction, armorOverflowGate,
@@ -1678,6 +1678,16 @@ public final class WHBlocks{
                 researchCostMultiplier = 0.7f;
                 //亚空间超速仪
                 //通过亚空间能量扭曲部分时空，拉近现在与未来的帷幕来实现超速[red]摧毁会发生能量泄露
+            }
+        };
+
+        shelterDome = new ShelterDome("shelter-dome"){
+            {
+                requirements(Category.effect, with(Items.silicon, 200, WHItems.ceramite, 50, WHItems.resonantCrystal, 100));
+                size = 4;
+                range = 300;
+                consumePower(1200 / 60f);
+                researchCostMultiplier = 0.7f;
             }
         };
 

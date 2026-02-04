@@ -33,9 +33,7 @@ public final class EntityRegister {
     public static void load() {
         register("PlaFire", PlasmaFire.class, PlasmaFire::new);
 
-        register("EnergyUnit", EnergyUnit.class, EnergyUnit::new);
         register("PesterUnit", PesterUnit.class, PesterUnit::new);
-        register("NucleoidUnit", NucleoidUnit.class, NucleoidUnit::new);
         register("AirRaiderUnit", AirRaiderUnitType.class, AirRaiderUnitType::new);
         register("StarrySkyUnit", StarrySkyEntity.class, StarrySkyEntity::new);
 
