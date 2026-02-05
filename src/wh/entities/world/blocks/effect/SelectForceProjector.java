@@ -640,14 +640,11 @@ public class SelectForceProjector extends Block {
                 write.i(targets.items[i]);
             }
 
-            Log.info("save");
-
         }
 
         @Override
         public void read(Reads read, byte revision) {
             super.read(read, revision);
-            Log.info("read");
             warmup = read.f();
             shieldData.clear();
 

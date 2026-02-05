@@ -52,7 +52,7 @@ import static arc.math.Angles.*;
 import static mindustry.Vars.tilesize;
 import static mindustry.gen.Sounds.*;
 import static mindustry.type.ItemStack.with;
-import static wh.content.WHFx.trailCharge;
+import static wh.content.WHFx.*;
 import static wh.graphics.Drawn.arcProcessFlip;
 import static wh.graphics.WHPal.*;
 import static wh.util.WHUtils.rand;
@@ -1188,7 +1188,7 @@ public final class WHBlocks{
                     spinSprite = true;
                 }},
                 new DrawRegion("-mid"), new DrawCrucibleFlame(),
-                new DrawDefault(), new DrawHeatInput());
+                new DrawDefault(), new DrawHeatOutput());
                 updateEffect = WHFx.square(CeramiteColor, 35f, 4, 16f, 4f);
                 craftEffect = new RadialEffect(Fx.surgeCruciSmoke, 4, 90f, 7f);
             }
@@ -2443,7 +2443,7 @@ public final class WHBlocks{
             researchCostMultiplier = 0.5f;
         }};
 
-        jumpBeacon = new UnitCallBlock2("jump-beacon"){{
+        jumpBeacon = new UnitCallBlock("jump-beacon"){{
             requirements(Category.units, with(Items.silicon, 500, WHItems.titaniumSteel, 300, WHItems.ceramite, 200, WHItems.protocolChip, 100));
 
             health = 1000;
@@ -2462,18 +2462,41 @@ public final class WHBlocks{
             WHItems.molybdenumAlloy, 400, Items.silicon, 2500)));
 
             drawBlock = b -> {
-                arcProcessFlip(b.x, b.y, size * tilesize * b.warmup * Mathf.sin(Time.time, 0.3f), Time.time, 20);
-                Lines.stroke((1.5f + Mathf.absin(Time.time, 8.0F, 1)) * b.warmup);
+                Draw.z(Layer.effect);
+                Draw.color(b.team.color.cpy());
+                arcProcessFlip(b.x, b.y, b.hitSize() * 0.8f * b.warmup * (1 - Mathf.sin(Time.time, 0.2f)), Time.time, 20);
                 for(int i = 0; i < 3; i++){
-                    Tmp.v1.trns(90, 10 * i).add(b.x, b.y);
+                    float f = (Time.time - 100 / 3f * i) % 100 / 100;
+                    Tmp.v1.trns(90 + 30, 40 * (1 - f)).add(b.x, b.y);
                     rand.setSeed(b.id);
-                    Lines.square(Tmp.v1.x, Tmp.v1.y, size * tilesize * 0.7f * (3 - i) / 3, (rand.random(60f) + Time.time * b.warmup) % 360f);
+                    Lines.stroke(f * fout(f, 0.9f) * (1.5f + Mathf.absin(Time.time, 8.0F, 1)) * b.warmup);
+                    Lines.square(Tmp.v1.x, Tmp.v1.y, f * size * tilesize * 0.5f, (rand.random(60f) + Time.time / 3) * b.warmup % 360f);
                 }
             };
             consumePower(1500 / 60f);
+
+            drawer = new DrawMulti(
+            new DrawCrucibleFlame(){{
+                particleRad = 8;
+            }},
+            new DrawSoftParticles(){{
+                alpha = 0.8f;
+                particleRad = 10;
+                particleSize = 7f;
+            }},
+            new DrawArcSmelt(){{
+                drawCenter = false;
+                midColor = flameColor = WHPal.ShootOrange;
+                particleRad = 8;
+                particleLen = 7f;
+                particles = 15;
+                particleLife = 60f;
+            }},
+            new DrawDefault()
+            );
         }};
 
-        energyWarpGate = new UnitCallBlock2("energy-warp-gate"){{
+        energyWarpGate = new UnitCallBlock("energy-warp-gate"){{
             requirements(Category.units, with(WHItems.titaniumSteel, 2000, Items.carbide, 2000, WHItems.refineCeramite, 1500, WHItems.protocolChip, 1000));
             health = 4000;
             size = 6;
@@ -2489,11 +2512,57 @@ public final class WHBlocks{
             );
 
             drawBlock = b -> {
-                arcProcessFlip(b.x, b.y, size * tilesize * b.warmup * Mathf.sin(Time.time, 0.3f), Time.time, 20);
+                Draw.z(Layer.effect);
+                Draw.color(b.team.color.cpy());
+                rand.setSeed(b.id);
+                arcProcessFlip(b.x, b.y, b.hitSize() * 0.7f * (1 - b.warmup * Mathf.sin(Time.time, 0.8f)), Time.time, 20);
                 Lines.stroke((1.5f + Mathf.absin(Time.time, 8.0F, 1)) * b.warmup);
-                Lines.square(b.x, b.y, size * tilesize * 0.7f, Time.time * b.warmup % 360f);
+                Lines.square(b.x, b.y, size * tilesize * 0.7f * (1 - Mathf.sin(Time.time, 0.3f)), Time.time / 2 * b.warmup % 360f);
+                Lines.square(b.x, b.y, size * tilesize * 0.3f * (1 - Mathf.sin(Time.time, 0.2f)), rand.random(180f) - Time.time / 4 * b.warmup % 360f);
+
+                Tmp.v1.trns(90, 5 * tilesize * b.warmup);
+
+                for(int m : Mathf.signs){
+                    for(int i = 1; i <= 4; i++){
+                        Tmp.v2.trns(180, m * 2.5f * tilesize + m * i * tilesize * 2 * b.warmup);
+                        float f = (100f - (Time.time - 25f * i) % 100f) / 100f;
+                        TextureRegion arrowRegion = WHContent.arrowRegion;
+                        Draw.scl(1.5f);
+                        Draw.rect(arrowRegion, Tmp.v1.x + Tmp.v2.x + b.x, Tmp.v1.y + Tmp.v2.y + b.y, arrowRegion.width * Draw.scl * f, arrowRegion.height * Draw.scl * f, 180f + 90 * m);
+                    }
+                    Tmp.v2.trns(90, m * 2.5f * tilesize);//上下对称
+                    Lines.stroke((1.5f + Mathf.absin(Time.time, 8.0F, 1)) * b.warmup);
+                    for(int m1 : Mathf.signs){
+                        Tmp.v3.trns(180, m1 * 6 * tilesize);//左右对称
+                        Lines.lineAngle(Tmp.v1.x + Tmp.v2.x + Tmp.v3.x + b.x, Tmp.v1.y + Tmp.v2.y + Tmp.v3.y + b.y, 180 * m, m1 * tilesize * 8f * b.warmup);
+                    }
+                }
+
             };
+
+
             consumePower(8000 / 60f);
+
+            drawer = new DrawMulti(
+            new DrawCrucibleFlame(){{
+                particleRad = 8;
+            }},
+            new DrawArcSmelt(){{
+                drawCenter = false;
+                midColor = flameColor = WHPal.ShootOrange;
+                particleRad = 15;
+                particleLen = 8f;
+                particleLife = 90;
+            }},
+            new DrawDefault(),
+            new DrawArcs(){{
+                flameColor = WHPal.ShootOrange;
+                midColor = ShootOrangeLight;
+                arcLife = 90f;
+                arcs = 15;
+                arcRad = 25f;
+            }}
+            );
         }};
 
 

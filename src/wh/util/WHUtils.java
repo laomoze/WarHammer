@@ -736,6 +736,7 @@ public final class WHUtils{
             Tile[] positions = tSeq.shrink();
             if(positions.length < num) return false;
             spawnPoints.add(new Vec2().set(positions[rand.nextInt(positions.length)]));
+            spawnPoints.shrink();
         }
 
         return true;
@@ -747,7 +748,6 @@ public final class WHUtils{
         clearTmp();
         Seq<Vec2> vectorSeq = new Seq<>();
 
-        // 获取有效生成位置
         if(!ableToSpawnPoints(vectorSeq, type, x, y, spawnRange, spawnNum, rand.nextLong())) return false;
 
         int i = 0;

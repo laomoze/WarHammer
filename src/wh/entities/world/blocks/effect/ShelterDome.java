@@ -17,6 +17,7 @@ import mindustry.world.blocks.defense.turrets.Turret.*;
 import mindustry.world.blocks.payloads.*;
 import mindustry.world.meta.*;
 import wh.content.*;
+import wh.entities.world.blocks.unit.UnitCallBlock.*;
 import wh.graphics.*;
 
 import static mindustry.Vars.*;
@@ -24,10 +25,10 @@ import static mindustry.Vars.*;
 public class ShelterDome extends PayloadBlock{
     public float maxPayloadSize = 3.9f;
     public float range = 160f;
-    public float blockMaxSpeedBoost = 1.4f;
-    public float payloadBlockMaxSpeedBoost = 1.8f;
+    public float blockMaxSpeedBoost = 1.5f;
+    public float payloadBlockMaxSpeedBoost = 2f;
     public float buildSpeedRate = 4f;
-    public float deconstructSpeed = 2f;
+    public float deconstructSpeed = 1.5f;
     public Color baseColor = WHPal.ShootOrange;
     public Color baseColor2 = WHPal.ShootOrangeLight;
 
@@ -137,7 +138,7 @@ public class ShelterDome extends PayloadBlock{
         @Override
         public void updateTile(){
             super.updateTile();
-            heat = Mathf.lerpDelta(heat, canConsume() ? 1f : 0f, 0.08f);
+            heat = Mathf.lerpDelta(heat, consumePayload != null ? 1f : 0f, 0.08f);
 
             if(consumePayload != null){
                 float reload = consumePayload.buildTime() / deconstructSpeed;
@@ -148,11 +149,11 @@ public class ShelterDome extends PayloadBlock{
                 float p = progress / reload;
                 if(p >= 1){
                     progress = 0f;
-                    indexer.eachBlock(this, range(), other -> other.block.canOverdrive && other instanceof PayloadBlockBuild<?>,
+                    indexer.eachBlock(this, range(), other -> other.block.canOverdrive && (other instanceof PayloadBlockBuild<?> || other instanceof UnitCallBlockBuild),
                     other -> other.applyBoost(getHeat() * payloadBlockMaxSpeedBoost, reload + 1f));
 
                     indexer.eachBlock(this, range(), other -> other.block.canOverdrive &&
-                    !(other instanceof TurretBuild) && !(other instanceof PayloadBlockBuild<?>),
+                    !(other instanceof TurretBuild) && !(other instanceof PayloadBlockBuild<?>) && !(other instanceof UnitCallBlockBuild),
                     other -> other.applyBoost(getHeat() * blockMaxSpeedBoost, reload + 1f));
 
                     Fx.breakBlock.at(x, y, consumePayload.size() / tilesize);

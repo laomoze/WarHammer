@@ -65,7 +65,7 @@ public class WHUnitType extends UnitType{
                 return plan.requirements;
             }else{
                 //find unitCallBlock
-                var unitCallBlock = (UnitCallBlock2)content.blocks().find(u -> u instanceof UnitCallBlock2 uf && uf.plans.contains(p -> p.unit == this));
+                var unitCallBlock = (UnitCallBlock)content.blocks().find(u -> u instanceof UnitCallBlock uf && uf.plans.contains(p -> p.unit == this));
                 if(unitCallBlock != null){
 
                     var plan = unitCallBlock.plans.find(p -> p.unit == this);
