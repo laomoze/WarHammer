@@ -23,7 +23,6 @@ import mindustry.world.*;
 import mindustry.world.blocks.defense.*;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.distribution.*;
-import mindustry.world.blocks.environment.*;
 import mindustry.world.blocks.heat.*;
 import mindustry.world.blocks.liquid.*;
 import mindustry.world.blocks.power.*;
@@ -59,8 +58,7 @@ import static wh.graphics.WHPal.*;
 import static wh.util.WHUtils.rand;
 
 public final class WHBlocks{
-    public static Block promethium;
-    public static Block vibraniumOre;
+
     //factory
     public static Block
     siliconMixFurnace, atmosphericSeparator, largeKiln, T2PlastaniumCompressor, T2Electrolyzer, T2SporePress,
@@ -102,6 +100,12 @@ public final class WHBlocks{
     public static Block airFactory, groundFactory, mechaFactory, tankFactory,
     t2Module, t3Module, t4Module, t5Module, t6Module, jumpBeacon, energyWarpGate, serpuloT6Assembler,
     t2PayloadMassDriver;
+
+    //walls
+    public static Block primarySteelWall, largePrimarySteelWall, heavySteelWall, largeHeavySteelWall, heavySteelDoor,
+    ceramiteWall, largeCeramiteWall, ceramiteDoor, refineCeramiteWall, largeRefineCeramiteWall, promethiumChargeWall,
+    denseExplosionProofWall;
+
     //turrets
     public static Block
     //22
@@ -118,15 +122,14 @@ public final class WHBlocks{
     Hector, Mezoa;
 
     //TEST
-    public static Block randomer, sb, sb3, sb4, sb5, sb6, sb7, sb8, sb9, sb10;
+    public static Block randomer, sb6, sb7, sb10;
 
 
     private WHBlocks(){
     }
 
     public static void load(){
-        promethium = new Floor("promethium");
-        vibraniumOre = new OreBlock("vibranium-ore");
+
 
         atmosphericSeparator = new HeatCrafter("atmospheric-separator"){
             {
@@ -1250,9 +1253,12 @@ public final class WHBlocks{
                 }},
                 new DrawRegion("-mid"), new DrawCrucibleFlame(),
                 new DrawDefault(), new DrawHeatOutput());
-                updateEffect = new MultiEffect(new RadialEffect(Fx.surgeCruciSmoke, 4, 90, 7),
-                WHFx.square(CeramiteColor, 35f, 4, 16f, 4f));
-                craftEffect = new MultiEffect(new RadialEffect(Fx.surgeCruciSmoke, 4, 45, 10f));
+                updateEffect = new MultiEffect(WHFx.square(CeramiteColor, 35f, 4, 16f, 4f));
+                craftEffect = new MultiEffect(
+                new RadialEffect(Fx.surgeCruciSmoke, 4, 90, 7),
+                new RadialEffect(Fx.surgeCruciSmoke, 4, 90, 13f){{
+                    rotationOffset = 45f;
+                }});
             }
         };
 
@@ -2749,6 +2755,165 @@ public final class WHBlocks{
 
             itemConsumer = consumeItem(WHItems.sealedPromethium).boost();
             consumePower(100f);
+        }};
+
+        primarySteelWall = new Wall("primary-steel-wall"){{
+            requirements(Category.defense, with(Items.lead, 6, WHItems.titaniumSteel, 4));
+            health = 500;
+            researchCostMultiplier = 0.25f;
+        }};
+
+        largePrimarySteelWall = new Wall("large-primary-steel-wall"){{
+            requirements(Category.defense, ItemStack.mult(primarySteelWall.requirements, 4));
+            health = 500 * 4;
+            size = 2;
+
+            researchCostMultiplier = 0.3f;
+        }};
+
+        heavySteelWall = new ReactionArmorWall("heavy-steel-wall"){{
+            requirements(Category.defense, with(WHItems.molybdenumAlloy, 10, Items.carbide, 15));
+            health = 3000;
+            frequency = 20;
+            armor = 15;
+            immunityAccount = 2;
+            chanceDeflect = 30;
+
+            researchCostMultiplier = 0.6f;
+        }};
+
+        largeHeavySteelWall = new ReactionArmorWall("large-heavy-steel-wall"){{
+            requirements(Category.defense, with(WHItems.molybdenumAlloy, 40, Items.carbide, 60, Items.surgeAlloy, 20));
+            health = 3000 * 4 + 2000;
+            size = 2;
+            armor = 20;
+            frequency = 20;
+            immunityAccount = 2;
+            chanceDeflect = 30;
+
+            researchCostMultiplier = 0.6f;
+        }};
+
+        heavySteelDoor = new AutoDoor("heavy-steel-door"){{
+            requirements(Category.defense, with(Items.silicon, 50, WHItems.ceramite, 40, Items.carbide, 40, WHItems.molybdenum, 50));
+            health = 2500 * 4 + 1500;
+            size = 2;
+            armor = 22;
+            chanceDeflect = 30;
+
+            researchCostMultiplier = 0.6f;
+        }};
+
+        ceramiteWall = new ReactionArmorWall("ceramite-wall"){{
+            requirements(Category.defense, with(WHItems.ceramite, 10, Items.tungsten, 10));
+            health = 1800;
+            armor = 6;
+            insulated = true;
+            frequency = 20;
+            immunityAccount = 2;
+
+            researchCostMultiplier = 0.6f;
+        }};
+
+        largeCeramiteWall = new ReactionArmorWall("large-ceramite-wall"){{
+            requirements(Category.defense, with(WHItems.ceramite, 40, Items.tungsten, 40, WHItems.titaniumSteel, 15));
+            health = 8000;
+            armor = 10;
+            insulated = true;
+            frequency = 20;
+            immunityAccount = 2;
+
+            researchCostMultiplier = 0.6f;
+        }};
+
+        ceramiteDoor = new AutoDoor("ceramite-door"){{
+            requirements(Category.defense, with(Items.plastanium, 30, WHItems.ceramite, 40, Items.tungsten, 40, WHItems.titaniumSteel, 15));
+            health = 7500;
+            size = 2;
+            armor = 12;
+            insulated = true;
+
+            researchCostMultiplier = 0.6f;
+        }};
+
+        refineCeramiteWall = new ReactionArmorWall("refine-ceramite-wall"){{
+            requirements(Category.defense, with(WHItems.refineCeramite, 10, WHItems.molybdenumAlloy, 5));
+            health = 5500;
+            armor = 8;
+            insulated = true;
+            frequency = 20;
+            immunityAccount = 2;
+            shareDamage = true;
+            maxShareStep = 1;
+            lightningChance = 0.1f;
+            lightningLength = 12;
+            lightningDamage = 75;
+            lightningColor = WHItems.refineCeramite.color.cpy();
+
+            researchCostMultiplier = 0.8f;
+        }};
+
+        largeRefineCeramiteWall = new ReactionArmorWall("large-refine-ceramite-wall"){{
+            requirements(Category.defense, with(WHItems.refineCeramite, 40, WHItems.molybdenumAlloy, 25));
+            health = 24000;
+            size = 2;
+            armor = 15;
+            insulated = true;
+            frequency = 20;
+            immunityAccount = 3;
+            shareDamage = true;
+            maxShareStep = 2;
+            lightningChance = 0.1f;
+            lightningLength = 18;
+            lightningDamage = 75;
+            lightningColor = WHItems.refineCeramite.color.cpy();
+
+            researchCostMultiplier = 0.8f;
+        }};
+
+        promethiumChargeWall = new ReactionArmorShieldWall("promethium-charge-wall"){{
+            requirements(Category.defense, with(WHItems.refineCeramite, 70, WHItems.sealedPromethium, 60, WHItems.protocolChip, 50));
+            health = 13000;
+            size = 2;
+            frequency = 15;
+            immunityAccount = 2;
+            shareDamage = false;
+            shieldHealth = 8000;
+            breakCooldown = 60 * 15f;
+            regenSpeed = 800 / 60f;
+            chanceDeflect = 75f;
+
+            outputsPower = false;
+            hasPower = true;
+            consumesPower = true;
+            conductivePower = true;
+
+            consumePower(100 / 60f);
+
+            researchCostMultiplier = 0.8f;
+        }};
+
+        denseExplosionProofWall = new ReactionArmorShieldWall("dense-explosion-proof-wall"){{
+            requirements(Category.defense, with(WHItems.adamantium, 80, WHItems.refineCeramite, 120, WHItems.sealedPromethium, 60, WHItems.protocolChip, 20));
+            health = 28000;
+            size = 2;
+            frequency = 15;
+            immunityAccount = 2;
+            shareDamage = true;
+            maxShareStep = 2;
+            shieldHealth = 12000;
+            breakCooldown = 60 * 20f;
+            regenSpeed = 1200 / 60f;
+            /*insulated = true;*/
+
+            outputsPower = false;
+            hasPower = true;
+            consumesPower = true;
+            conductivePower = true;
+
+            consumePower(180 / 60f);
+
+            researchCostMultiplier = 0.8f;
         }};
 
         Crush = new ItemTurret("Crush"){{
@@ -4620,7 +4785,7 @@ public final class WHBlocks{
 
         AirRaiderCallBlock test = new AirRaiderCallBlock("tactical-command-center"){{
             requirements(Category.turret, with(WHItems.titaniumSteel, 500, Items.carbide, 200, WHItems.ceramite, 200, WHItems.refineCeramite, 100, WHItems.sealedPromethium, 50));
-
+            buildVisibility = BuildVisibility.sandboxOnly;
             size = 4;
 
             consumePower(100f);
@@ -4628,7 +4793,7 @@ public final class WHBlocks{
 
         AirRaider airRaider = new AirRaider("air-raider"){{
             requirements(Category.turret, with(WHItems.titaniumSteel, 500, Items.carbide, 200, WHItems.ceramite, 200, WHItems.refineCeramite, 100, WHItems.sealedPromethium, 50));
-
+            buildVisibility = BuildVisibility.sandboxOnly;
             shoot = new ShootSummon(0, 0, 120, 0){{
                 shots = 4;
                 shotDelay = 8f;
@@ -4660,6 +4825,7 @@ public final class WHBlocks{
 
         TestShaderBlock testShaderBlock = new TestShaderBlock("test-shader-block"){{
             requirements(Category.effect, with(Items.lead, 100, Items.titanium, 75, Items.silicon, 125));
+            buildVisibility = BuildVisibility.sandboxOnly;
             size = 3;
             phaseRadiusBoost = 80f;
             radius = 101.7f;
@@ -4675,6 +4841,7 @@ public final class WHBlocks{
 
         sb6 = new PowerTurret("lancer"){{
             requirements(Category.turret, with(Items.copper, 60, Items.lead, 70, Items.silicon, 60, Items.titanium, 30));
+            buildVisibility = BuildVisibility.sandboxOnly;
             range = 165f;
 
             shoot.firstShotDelay = 40f;
@@ -4712,38 +4879,10 @@ public final class WHBlocks{
                 pierceCap = 4;
             }};
         }};
-        sb7 = new MultReconstructor("草泥马reconstructor"){{
-            requirements(Category.units, with(Items.copper, 200, Items.lead, 120, Items.silicon, 90));
-
-            size = 3;
-            consumePower(3f);
-
-            constructTime = 60f * 10f;
-
-            addUpgrade(UnitTypes.dagger, UnitTypes.mace,
-            new ItemStack(Items.silicon, 10),
-            new ItemStack(Items.metaglass, 20)
-            );
-
-            addUpgrade(UnitTypes.mace, UnitTypes.fortress,
-            new ItemStack(Items.silicon, 20),
-            new ItemStack(Items.titanium, 30)
-            );
-
-            addUpgrade(UnitTypes.flare, UnitTypes.horizon,
-            new ItemStack(Items.silicon, 20),
-            new ItemStack(Items.lead, 30)
-            );
-
-            addUpgrade(UnitTypes.mono, UnitTypes.poly,
-            new ItemStack(Items.silicon, 20),
-            new ItemStack(Items.graphite, 30)
-            );
-        }};
 
         sb7 = new OverheatGenericCrafter("过热工厂"){{
             requirements(Category.crafting, with(Items.copper, 200, Items.lead, 120, Items.silicon, 90));
-
+            buildVisibility = BuildVisibility.sandboxOnly;
             craftEffect = Fx.pulverizeMedium;
             outputItem = new ItemStack(Items.graphite, 1);
             craftTime = 90f;
@@ -4759,6 +4898,7 @@ public final class WHBlocks{
         sb10 = new OverheatBooster("过热助推器"){
             {
                 requirements(Category.crafting, with(Items.copper, 200, Items.lead, 120, Items.silicon, 90));
+                buildVisibility = BuildVisibility.sandboxOnly;
                 size = 2;
                 dymamicHeat = 2;
                 heatReduceMax = 1f;
@@ -4771,11 +4911,10 @@ public final class WHBlocks{
             }
         };
 
-        sb6 = new
-
-        PowerTurret("laser3"){
+        sb6 = new PowerTurret("laser3"){
             {
                 requirements(Category.turret, with(Items.copper, 1200, Items.lead, 350, Items.graphite, 300, Items.surgeAlloy, 325, Items.silicon, 325));
+                buildVisibility = BuildVisibility.sandboxOnly;
                 shootEffect = WHFx.circleLightning(Pal.heal.cpy(), 180, 15, 15, 100);
                 shootCone = 40f;
                 recoil = 4f;

@@ -69,6 +69,7 @@ public final class WHFx{
     public static Effect attackWarningPos;
 
     public static Effect PlasmaFireBurn;
+    public static Effect shareDamage;
 
     public static Effect spawn;
     public static Effect jumpTrail;
@@ -1451,6 +1452,13 @@ public final class WHFx{
             });
         }));
 
+
+        shareDamage = new Effect(45f, e -> {
+            if(!(e.data instanceof Float f)) return;
+            Draw.color(e.color);
+            Draw.alpha(f * e.fout());
+            Fill.square(e.x, e.y, e.rotation);
+        });
 
         chainLightningFade = new Effect(220f, 500f, e -> {
             if(!(e.data instanceof Position)) return;
