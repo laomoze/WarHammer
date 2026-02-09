@@ -5,6 +5,7 @@ import arc.math.*;
 import arc.struct.*;
 import arc.util.io.*;
 import mindustry.gen.*;
+import mindustry.graphics.*;
 import mindustry.world.blocks.defense.*;
 import wh.content.*;
 
@@ -88,10 +89,12 @@ public class ReactionArmorWall extends Wall{
         public void drawSelect(){
             super.drawSelect();
             if(shareDamage){
+                findLinkWalls();
                 for(Building wall : toDamage){
-                    Draw.color(team.color);
-                    Draw.alpha(0.5f);
-                    Fill.square(wall.x, wall.y, 2);
+                    Draw.z(Layer.effect);
+                    Draw.color(team.color.cpy().lerp(Pal.techBlue, 0.2f));
+                    Draw.alpha(0.7f);
+                    Fill.square(wall.x, wall.y, 2.5f);
                 }
                 Draw.reset();
             }

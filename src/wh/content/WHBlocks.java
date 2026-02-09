@@ -1753,7 +1753,7 @@ public final class WHBlocks{
 
         wrapOverdrive = new SelectOverdriveProjector("wrap-overdrive"){
             {
-                requirements(Category.effect, with(Items.silicon, 250, WHItems.titaniumSteel, 250, Items.surgeAlloy, 150, Items.phaseFabric, 80, WHItems.sealedPromethium, 50));
+                requirements(Category.effect, BuildVisibility.sandboxOnly, with(Items.silicon, 250, WHItems.titaniumSteel, 250, Items.surgeAlloy, 150, Items.phaseFabric, 80, WHItems.sealedPromethium, 50));
 
                 health = 100;
                 size = 3;
@@ -1773,8 +1773,6 @@ public final class WHBlocks{
                 consumeItems(with(WHItems.sealedPromethium, 1)).boost();
                 destroyBullet = WHBullets.warpBreak;
                 researchCostMultiplier = 0.7f;
-                //亚空间超速仪
-                //通过亚空间能量扭曲部分时空，拉近现在与未来的帷幕来实现超速[red]摧毁会发生能量泄露
             }
         };
 
