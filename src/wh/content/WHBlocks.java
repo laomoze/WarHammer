@@ -2277,7 +2277,7 @@ public final class WHBlocks{
                 liquidCapacity = 120 * 10f;
                 consumeLiquid(WHLiquids.liquidNitrogen, 120 / 60f);
                 consumeLiquid(WHLiquids.refinePromethium, 120 / 60f);
-                powerProduction = 1600;
+                powerProduction = 2000;
                 maxHeat = 120f;
                 drawer = new DrawMulti(
                 new DrawRegion("-bottom"),
