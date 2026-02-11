@@ -16,6 +16,9 @@ public class WHOverride{
         Blocks.multiPress.requirements(Category.crafting, with(Items.silicon, 25, Items.lead, 80, Items.graphite, 50, WHItems.titaniumSteel, 50));
         Blocks.multiPress.itemCapacity = 30;*/
 
+        Blocks.darksand.attributes.set(WHBlocksEnvironment.hasPromethium, 0.5f);
+        Blocks.sand.attributes.set(WHBlocksEnvironment.hasPromethium, 0.5f);
+
         Weapon scepterWeapon1 = UnitTypes.scepter.weapons.get(0);
         scepterWeapon1.layerOffset = -0.001f;
         scepterWeapon1.top = false;

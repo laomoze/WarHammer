@@ -686,7 +686,7 @@ public final class WHFx{
 
 
     public static Effect subEffect(float lifetime, float radius, int num, float childLifetime, Interp spreadOutInterp, EffectParam drawer){
-        return new Effect(lifetime, radius * 2f, e -> {
+        return new Effect(lifetime, Mathf.clamp(radius * 2f, 300, 1000), e -> {
             rand.setSeed(e.id);
             float finT = e.lifetime * e.fin(spreadOutInterp);
 
@@ -714,28 +714,30 @@ public final class WHFx{
     public static Effect multipRings(Color color, float radius, float amount, float baseLifetime){
         return new MultiEffect(
         new Effect(baseLifetime, radius * 2f, e -> {
-            color(color, color, e.fout(Interp.pow10Out));
-            stroke(2f);
+            color(color);
+            stroke(2f * e.fout());
             float height = 150f;
             for(int i = 0; i < amount; i++){
-                float yOffset = height / amount * i * e.fin(Interp.pow10In);
+                float yOffset = height * i * e.fin(Interp.pow2Out) / amount;
                 randLenVectors(e.id, 1, yOffset, 90, 0, (x, y) -> {
-                    circle(x + e.x, y + e.y, radius * e.fout());
+                    circle(x + e.x, y + e.y, radius * 1.2f);
                 });
             }
         }),
-        WHFx.subEffect(240, radius * 2f, 12, 60f, Interp.pow3Out, (id, x, y, rotation, fin) -> {
-            float height = 150f;
+        WHFx.subEffect(baseLifetime, radius, 15, 60f, Interp.pow3Out, (id, x, y, rotation, fin) -> {
+            float height = 120f;
             float yOffset = height * fin;
+            color(color);
             Tmp.v1.trns(90, yOffset);
-            randLenVectors(id, 1, radius * fin, (a, b) -> {
-                stroke(2f);
-                lineAngle(a + x, Tmp.v1.y + b + y, 90, 25 * Interp.pow10Out.apply(fin) * Mathf.randomSeed(id, 2.5f));
+            rand.random(id);
+            float r = rand.random(0.5f, 2f), fout = 1 - fin;
+            stroke(3f * Mathf.curve(fin, 0, 0.2f) * WHFx.fout(fin, 0.85f));
+            randLenVectors(id, 2, radius * rand.random(1) * fout, (a, b) -> {
+                lineAngle(a + x, Tmp.v1.y + b + y, 90, 12 * Interp.pow10Out.apply(fin) * r);
             });
-            Tmp.v2.trns(90, height * (1 - fin));
-            randLenVectors(id, 2, radius * fin, (c, d) -> {
-                stroke(2f);
-                lineAngle(x + c, Tmp.v2.y + d + y, 90, 12 * Interp.pow2Out.apply(fin) * Mathf.randomSeed(id + 100, 2.5f));
+            Tmp.v2.trns(90, height * fout);
+            randLenVectors(id, 2, radius * rand.random(1) * fin, (c, d) -> {
+                lineAngle(x + c, Tmp.v2.y + d + y, 90, 12 * Interp.pow2Out.apply(fin) * r);
             });
         }));
     }

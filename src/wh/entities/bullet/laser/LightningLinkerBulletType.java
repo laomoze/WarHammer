@@ -74,8 +74,6 @@ public class LightningLinkerBulletType extends BasicBulletType{
         trailWidth = -1;
     }
 
-
-
     public LightningLinkerBulletType(){
     }
 

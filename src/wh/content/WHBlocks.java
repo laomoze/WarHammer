@@ -48,6 +48,7 @@ import wh.graphics.*;
 import wh.ui.*;
 
 import static arc.graphics.g2d.Draw.*;
+import static arc.graphics.g2d.Lines.*;
 import static arc.math.Angles.*;
 import static mindustry.Vars.*;
 import static mindustry.gen.Sounds.*;
@@ -179,8 +180,7 @@ public final class WHBlocks{
                     circleStroke = 1.5f;
                     flameRadiusScl = 2.5f;
                     flameRadiusMag = 0.2f;
-                }}, new DrawDefault(),
-                new DrawHeatOutput());
+                }}, new DrawDefault());
                 ambientSound = loopSmelter;
                 ambientSoundVolume = 0.11f;
                 researchCostMultiplier = 0.5f;
@@ -1001,7 +1001,6 @@ public final class WHBlocks{
                 new DrawHeatInput(){{
                     suffix = "-heat";
                 }});
-                ;
                 drawer = new DrawMulti(new DrawDefault(),
                 new DrawHeatOutput(),
                 new DrawHeatInput(){{
@@ -1521,7 +1520,8 @@ public final class WHBlocks{
                 pumpAmount = 15 / 60f;
                 rotateSpeed = 1.3f;
                 result = WHLiquids.orePromethium;
-                attribute = Attribute.oil;
+                /*  attribute = Attribute.oil;*/
+                attribute = WHBlocksEnvironment.hasPromethium;
                 consumePower(1.5f);
                 itemUseTime = 60f;
                 consumeItems(new ItemStack(WHItems.oreSand, 2));
@@ -2197,17 +2197,19 @@ public final class WHBlocks{
 
         T2impactReactor = new ImpactReactor("detonation-reactor"){
             {
-                requirements(Category.power, with(Items.lead, 2000, WHItems.titaniumSteel, 1500, Items.tungsten, 800, WHItems.vibranium, 600, WHItems.refineCeramite, 350));
+                requirements(Category.power, with(Items.tungsten, 2000, WHItems.titaniumSteel, 800, WHItems.molybdenumAlloy, 400, WHItems.refineCeramite, 200));
 
                 size = 4;
                 health = 10000;
-                liquidCapacity = 600;
-                itemCapacity = 110;
+                armor = 10;
+                liquidCapacity = 240;
+                itemCapacity = 40;
                 hasItems = true;
                 hasLiquids = true;
                 outputsPower = true;
-                powerProduction = 750;
-                itemDuration = 1.5f * 60f * 60f;
+                powerProduction = 720;
+                itemDuration = 10 * 60f;
+                warmupSpeed = 0.0014f;
                 drawer = new DrawMulti(
                 new DrawRegion("-bottom"),
                 new DrawPlasma(){{
@@ -2218,34 +2220,65 @@ public final class WHBlocks{
                 new DrawDefault()
                 );
                 consumePower(15);
-                consumeItem(WHItems.sealedPromethium, 50);
-                consumeLiquid(WHLiquids.refinePromethium, 10 / 60f);
+                consumeItems(with(WHItems.sealedPromethium, 5, Items.blastCompound, 10));
+                consumeLiquid(WHLiquids.refinePromethium, 60 / 60f);
                 ambientSound = loopPulse;
                 ambientSoundVolume = 0.1f;
+                explosionShake = 8f;
+                explosionShakeDuration = 20f;
+                explosionRadius = 20;
+                explosionDamage = 3000 * 4;
+                explosionMinWarmup = 0.85f;
+                float r = explosionRadius / 2f * tilesize;
+                explodeEffect = new MultiEffect(
+                WHFx.generalExplosion(120, ShootOrange, r * 1.5f, 10, false),
+                WHFx.hitSpark(ShootOrange, 120, 30, r * 2, 2.5f, 11f),
+                WHFx.trailCircleHitSpark(ShootOrange, 60, 20, r * 2, 2, 12f),
+                WHFx.multipRings(ShootOrange, r * 1.5f, 3, 70),
+                WHFx.circleOut(ShootOrange, 120, r * 2f),
+                WHFx.subEffect(200, r * 1.5f, 8, 50, Interp.pow2In, (id, x, y, rot, fin) -> {
+                    Draw.color(ShootOrange);
+                    blend(Blending.additive);
+                    float radius = Interp.pow3Out.apply(fin) * 50;
+                    float fout = 1 - fin;
+                    Fill.light(x, y, circleVertices(radius), radius, Color.clear, Tmp.c1.set(ShootOrange).a(Interp.pow3Out.apply(fout)));
+                    Drawf.light(x, y, radius * 1.3F, ShootOrange, 0.7F * WHFx.fout(fin, 0.5f));
+                    blend();
+
+                    Lines.stroke(2.5f * Interp.pow10Out.apply(fout));
+                    Lines.circle(x, y, radius);
+                    rand.setSeed(id);
+                    randLenVectors(id, 15, radius * rand.random(0.1f, 1.2f), (x1, y1) -> {
+                        float ang = Mathf.angle(x1, y1);
+                        Lines.stroke(2f * fin);
+                        lineAngle(x + x1, y + y1, ang, fout * rand.random(0.35f, 1.25f) * 12f);
+                    });
+                }));
+                explodeSound = Sounds.explosionReactor2;
+
                 researchCostMultiplier = 0.8f;
-                //爆破放射反应堆
             }
         };
 
 
         plaRector = new PlaRector("plasma-reactor"){
             {
-                requirements(Category.power, with(Items.silicon, 4000, Items.carbide, 2000, WHItems.titaniumSteel, 4000, WHItems.refineCeramite, 1600, WHItems.adamantium, 800, WHItems.sealedPromethium, 800));
+                requirements(Category.power, with(Items.silicon, 4000, Items.carbide, 1000, WHItems.ceramite, 2000, WHItems.refineCeramite, 1600, WHItems.adamantium, 800, WHItems.sealedPromethium, 800));
 
                 health = 20000;
                 size = 5;
                 ambientSound = Sounds.loopFlux;
                 ambientSoundVolume = 0.13f;
                 effectChance = 0.05f;
-                explosionMinWarmup = 0.8f;
-                explosionRadius = 20;
+
                 hasItems = true;
                 hasLiquids = true;
                 itemCapacity = 120;
-                liquidCapacity = 1200;
-                consumeLiquid(Liquids.cryofluid, 0.5f);
-                consumeLiquid(WHLiquids.refinePromethium, 0.5f);
-                powerProduction = 2000;
+                liquidCapacity = 120 * 10f;
+                consumeLiquid(WHLiquids.liquidNitrogen, 120 / 60f);
+                consumeLiquid(WHLiquids.refinePromethium, 120 / 60f);
+                powerProduction = 1600;
+                maxHeat = 120f;
                 drawer = new DrawMulti(
                 new DrawRegion("-bottom"),
                 new DrawLiquidTile(WHLiquids.refinePromethium),
@@ -2259,16 +2292,28 @@ public final class WHBlocks{
                     color2 = WHPal.SkyBlueF;
                 }},
                 new DrawRegion("-mid"),
+                new DrawBubbles(){{
+                    spread = 1;
+                    recurrence = 20;
+                    radius = amount = 10;
+                }},
+                new DrawArcs(){{
+                    flameColor = midColor = SkyBlueF.cpy().a(0);
+                }},
+                new DrawArcs(){{
+                    flameColor = midColor = SkyBlueF;
+                    arcs = 5;
+                    flameRad = 2f;
+                }},
                 new DrawDefault(),
                 new DrawHeatInput(),
                 new DrawGlowRegion("-ventglow"){{
                     color = Color.valueOf("32603a");
-                }}
-                );
+                }});
+
+
+
                 researchCostMultiplier = 0.6f;
-                //等离子反应堆
-                //直接利用地核中的等离子体用来发热，不冷却会发生剧烈爆炸
-                //[red]地 核 抽 取 机
             }
         };
 
