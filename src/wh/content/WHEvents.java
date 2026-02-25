@@ -2,7 +2,7 @@ package wh.content;
 
 import arc.*;
 import mindustry.game.EventType.*;
-import wh.entities.world.entities.*;
+import wh.gen.*;
 
 public class WHEvents{
     public static void load(){

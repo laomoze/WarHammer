@@ -35,11 +35,11 @@ import wh.entities.bullet.*;
 import wh.entities.bullet.laser.*;
 import wh.entities.world.drawer.part.*;
 import wh.entities.world.entities.*;
-import wh.entities.world.entities.AirRaiderAI.*;
 import wh.entities.world.entities.AirRaiderUnitType.*;
 import wh.entities.world.entities.powerArmorComp.*;
 import wh.entities.world.entities.weapon.*;
 import wh.gen.*;
+import wh.gen.AirRaiderAI.*;
 import wh.graphics.*;
 import wh.util.*;
 
@@ -88,6 +88,8 @@ public final class WHUnitTypes{
 
     //原版
     public static UnitType airS6, airSGreen6, mechaS6, mechaSGreen6, meshSPurple6, navyS6, navySGreen6;
+
+    //
 
     private WHUnitTypes(){
     }
@@ -2394,6 +2396,8 @@ public final class WHUnitTypes{
                             sideWidth = 2;
                             sideLength = 40;
                             moveSpeed = 0.05f;
+
+                            renderingDistortion = true;
 
                             Color c = lightningColor = hitColor = WHPal.ShootOrange.cpy();
                             colors = new Color[]{c.a(0.2f), c.a(0.5f), c.a(0.7f), c, Color.white};
@@ -7808,7 +7812,7 @@ public final class WHUnitTypes{
 
                     inaccuracy = 3f;
 
-                    shootSound = shootLaser;
+                    shootSound = WHSounds.pistonLaser;
 
                     float reY = -8f / 4f, reRot = -6f;
                     float bw = 8 / 4f, bh = 54 / 4f;

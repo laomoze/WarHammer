@@ -1,4 +1,4 @@
-package wh.entities.world.entities;
+package wh.gen;
 
 import arc.*;
 import arc.func.*;
@@ -16,7 +16,7 @@ import mindustry.graphics.*;
 import mindustry.type.*;
 import mindustry.ui.*;
 import wh.content.*;
-import wh.gen.*;
+import wh.entities.world.entities.*;
 import wh.graphics.*;
 
 public class TitanUnit extends MechUnit{

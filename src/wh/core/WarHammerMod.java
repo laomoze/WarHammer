@@ -6,18 +6,13 @@
 package wh.core;
 
 import arc.*;
-import arc.util.*;
 import mindustry.*;
 import mindustry.game.*;
 import mindustry.mod.*;
-import mindustry.ui.dialogs.*;
 import wh.content.*;
-import wh.entities.world.entities.*;
+import wh.entities.*;
 import wh.gen.*;
 import wh.graphics.*;
-import wh.ui.dialogs.*;
-
-import java.util.*;
 
 public class WarHammerMod extends Mod {
     public static String ModName = "wh";
@@ -27,7 +22,10 @@ public class WarHammerMod extends Mod {
         Events.on(EventType.FileTreeInitEvent.class, (e) -> {
             if (!Vars.headless) {
                 WHSounds.load();
-                Core.app.post(WHShaders::init);
+                Core.app.post(() -> {
+                    MainRenderer.init();
+                    WHShaders.init();
+                });
             }
         });
     }
@@ -39,14 +37,13 @@ public class WarHammerMod extends Mod {
 
     @Override
     public void init() {
-        MainRenderer.init();
-        WHResearchDialog dialog = new WHResearchDialog();
+      /*  WHResearchDialog dialog = new WHResearchDialog();
         ResearchDialog research = Vars.ui.research;
         research.shown(() -> {
             dialog.show();
             Objects.requireNonNull(research);
             Time.runTask(1.0F, research::hide);
-        });
+        });*/
     }
 
     @Override
@@ -69,6 +66,7 @@ public class WarHammerMod extends Mod {
         WHTechTree.load();
 
         WHEvents.load();
+        WHAutoTriggerSetup.load();
         WHOverride.load();
 
     }

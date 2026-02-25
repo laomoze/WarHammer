@@ -17,13 +17,13 @@ import mindustry.logic.*;
 import mindustry.ui.*;
 import mindustry.world.meta.*;
 import wh.content.*;
-import wh.entities.world.entities.*;
+import wh.entities.*;
 import wh.graphics.*;
 import wh.ui.*;
 
-import static arc.Core.*;
+import static arc.Core.bundle;
 import static mindustry.Vars.*;
-import static wh.ui.UIUtils.*;
+import static wh.ui.UIUtils.LEN;
 
 public abstract class CommandableAttackerBlock extends CommandableBlock{
     public float spread = 120f;

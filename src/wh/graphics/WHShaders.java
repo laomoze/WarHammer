@@ -5,37 +5,32 @@
 
 package wh.graphics;
 
-import arc.Core;
-import arc.files.Fi;
+import arc.*;
+import arc.files.*;
 import arc.graphics.*;
-import arc.graphics.Texture.*;
 import arc.graphics.g2d.*;
-import arc.graphics.g3d.Camera3D;
-import arc.graphics.gl.Shader;
+import arc.graphics.gl.*;
 import arc.math.*;
-import arc.math.geom.*;
 import arc.scene.ui.layout.*;
+import arc.struct.*;
 import arc.util.*;
-import mindustry.Vars;
+import mindustry.*;
+import mindustry.game.EventType.*;
 import mindustry.graphics.Shaders.*;
-import wh.WHVars;
-import wh.entities.world.type.BetterPlanet;
+import wh.*;
 
 import static arc.Core.files;
 import static mindustry.Vars.*;
 
 public class WHShaders{
-    public static DepthShader depth;
-    public static DepthAtmosphereShader depthAtmosphere;
-    public static @Nullable HexagonalTextureShieldShader HexagonalShield;
+    public static @Nullable HexagonalTextureShieldShader hexagonalShield;
     public static OutlineShader powerArea, powerDynamicArea;
+    public static ShockwaveShader shockwave;
 
     private WHShaders(){
     }
 
     public static void init(){
-        depth = new DepthShader();
-        depthAtmosphere = new DepthAtmosphereShader();
         powerArea = new OutlineShader() {
             @Override
             public float thick() {
@@ -48,12 +43,13 @@ public class WHShaders{
             }
         };
         try{
-            HexagonalShield = new HexagonalTextureShieldShader();
+            hexagonalShield = new HexagonalTextureShieldShader();
         }catch(Throwable t){
             //don't load shield shader
-            HexagonalShield = null;
+            hexagonalShield = null;
             t.printStackTrace();
         }
+        shockwave = new ShockwaveShader();
     }
 
 
@@ -131,53 +127,107 @@ public class WHShaders{
         }
     }
 
+    public static class ShockwaveShader extends LoadShader{
+        static final int max = 64;
+        static final int size = 5;
 
-    //这个想想还是删了吧
-    public static final class DepthShader extends Shader{
-        public Camera3D camera;
+        //x y radius life[1-0] lifetime
+        protected FloatSeq data = new FloatSeq();
+        protected FloatSeq uniforms = new FloatSeq();
+        protected boolean hadAny = false;
+        protected FrameBuffer buffer = new FrameBuffer();
 
-        private DepthShader(){
-            super(WHShaders.mv("depth"), WHShaders.mf("depth"));
+        public float lifetime = 20f;
+
+        public ShockwaveShader(){
+            super("shockwave", "screenspace");
+
+            Events.run(Trigger.update, () -> {
+                if(state.isPaused()) return;
+                if(state.isMenu()){
+                    data.size = 0;
+                    return;
+                }
+
+                var items = data.items;
+                for(int i = 0; i < data.size; i += size){
+                    //decrease lifetime
+                    items[i + 3] -= Time.delta / items[i + 4];
+
+                    if(items[i + 3] <= 0f){
+                        //swap with head.
+                        if(data.size > size){
+                            System.arraycopy(items, data.size - size, items, i, size);
+                        }
+
+                        data.size -= size;
+                        i -= size;
+                    }
+                }
+            });
+
+            Events.run(Trigger.preDraw, () -> {
+                hadAny = data.size > 0;
+
+                if(hadAny){
+                    buffer.resize(Core.graphics.getWidth(), Core.graphics.getHeight());
+                    buffer.begin(Color.clear);
+                }
+            });
+
+            Events.run(Trigger.postDraw, () -> {
+                if(hadAny){
+                    buffer.end();
+                    Draw.blend(Blending.disabled);
+                    buffer.blit(this);
+                    Draw.blend();
+                }
+            });
         }
-
-        public void apply(){
-            this.setUniformf("u_camPos", this.camera.position);
-            this.setUniformf("u_camRange", this.camera.near, this.camera.far - this.camera.near);
-        }
-    }
-
-    public static class DepthAtmosphereShader extends Shader{
-        private static final Mat3D mat = new Mat3D();
-
-        public Camera3D camera;
-        public BetterPlanet planet;
-
-        /**
-         * The only instance of this class: {@link #depthAtmosphere}.
-         */
-        private DepthAtmosphereShader(){
-            super(WHShaders.mv("depth-atmosphere"), WHShaders.mf("depth-atmosphere"));
-        }
-
 
         @Override
         public void apply(){
-            setUniformMatrix4("u_proj", camera.combined.val);
-            setUniformMatrix4("u_trans", planet.getTransform(mat).val);
+            int count = data.size / size;
 
-            setUniformf("u_camPos", camera.position);
-            setUniformf("u_relCamPos", Tmp.v31.set(camera.position).sub(planet.position));
-            setUniformf("u_camRange", camera.near, camera.far - camera.near);
-            setUniformf("u_center", planet.position);
-            setUniformf("u_light", planet.getLightNormal());
-            setUniformf("u_color", planet.atmosphereColor.r, planet.atmosphereColor.g, planet.atmosphereColor.b);
+            setUniformi("u_shockwave_count", count);
+            if(count > 0){
+                setUniformf("u_resolution", Core.camera.width, Core.camera.height);
+                setUniformf("u_campos", Core.camera.position.x - Core.camera.width / 2f, Core.camera.position.y - Core.camera.height / 2f);
 
-            setUniformf("u_innerRadius", planet.radius + planet.atmosphereRadIn);
-            setUniformf("u_outerRadius", planet.radius + planet.atmosphereRadOut);
+                uniforms.clear();
 
-            planet.buffer.getTexture().bind(0);
-            setUniformi("u_topology", 0);
-            setUniformf("u_viewport", Core.graphics.getWidth(), Core.graphics.getHeight());
+                var items = data.items;
+                for(int i = 0; i < count; i++){
+                    int offset = i * size;
+
+                    uniforms.add(
+                    items[offset], items[offset + 1], //xy
+                    items[offset + 2] * (1f - items[offset + 3]), //radius * time
+                    items[offset + 3] //time
+                    //lifetime ignored
+                    );
+                }
+
+                setUniform4fv("u_shockwaves", uniforms.items, 0, uniforms.size);
+            }
+        }
+
+        public void add(float x, float y, float radius){
+            add(x, y, radius, 20f);
+        }
+
+        public void add(float x, float y, float radius, float lifetime){
+            //replace first entry
+            if(data.size / size >= max){
+                var items = data.items;
+                items[0] = x;
+                items[1] = y;
+                items[2] = radius;
+                items[3] = 1f;
+                items[4] = lifetime;
+            }else{
+                data.addAll(x, y, radius, 1f, lifetime);
+            }
         }
     }
 

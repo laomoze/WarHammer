@@ -23,7 +23,9 @@ import mindustry.world.*;
 import mindustry.world.consumers.*;
 import mindustry.world.meta.*;
 import wh.content.*;
+import wh.entities.*;
 import wh.entities.world.entities.*;
+import wh.gen.*;
 import wh.graphics.*;
 import wh.ui.*;
 

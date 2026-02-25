@@ -27,7 +27,7 @@ public final class WHPal {
     public static Color Heat;
     public static Color SkyBlue;
     public static Color SkyBlueF;
-    public static Color TiSteelColor;
+    public static Color MnSteelColor;
     public static Color CeramiteColor;
     public static Color RefineCeramiteColor;
     public static Color RefinePromethiumColor;
@@ -59,7 +59,7 @@ public final class WHPal {
 
         SkyBlue=Color.valueOf("579ED4FF");
         SkyBlueF=Color.valueOf("DBFFFDFF");
-        TiSteelColor=Color.valueOf("80D2F3FF");
+        MnSteelColor = Color.valueOf("DC9B94FF");
         CeramiteColor=Color.valueOf("A3BF65FF");
         RefineCeramiteColor=Color.valueOf("EAE28AFF");
         RefinePromethiumColor= Color.valueOf("999CA8FF");

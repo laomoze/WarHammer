@@ -2,15 +2,13 @@ package wh.entities.world.drawer.part;
 
 import arc.graphics.*;
 import arc.graphics.g2d.*;
-import arc.math.Interp;
-import arc.math.Mathf;
-import arc.math.Rand;
+import arc.math.*;
 import arc.util.*;
-import mindustry.gen.Unit;
+import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.type.UnitType;
-import wh.content.WHFx;
-import wh.util.WHUtils;
+import mindustry.type.*;
+import wh.content.*;
+import wh.util.*;
 
 public class WHUnitEngine extends UnitType.UnitEngine{
     public boolean line = false;
@@ -25,7 +23,6 @@ public class WHUnitEngine extends UnitType.UnitEngine{
         this.baseLength = length;
         this.maxLength = lengthMax;
     }
-
 
     //length, radius,pan,alpha
     public float[] lengthradiusPans = {

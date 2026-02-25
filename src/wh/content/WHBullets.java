@@ -27,7 +27,7 @@ import wh.entities.bullet.*;
 import wh.entities.bullet.laser.*;
 import wh.entities.world.blocks.defense.turrets.HeatTurret.*;
 import wh.entities.world.blocks.defense.turrets.ShootMatchTurret.*;
-import wh.entities.world.entities.*;
+import wh.gen.*;
 import wh.graphics.*;
 import wh.util.*;
 
@@ -958,8 +958,8 @@ public final class WHBullets{
             status = StatusEffects.slow;
             statusDuration = 20;
             shootEffect = Fx.shootSmall;
-            hitEffect = new WrapEffect(Fx.flakExplosion, WHPal.TiSteelColor);
-            backColor = hitColor = trailColor = WHPal.TiSteelColor;
+            hitEffect = new WrapEffect(Fx.flakExplosion, WHPal.MnSteelColor);
+            backColor = hitColor = trailColor = WHPal.MnSteelColor;
             collidesGround = true;
         }};
 
@@ -1032,7 +1032,7 @@ public final class WHBullets{
             critMultiplier = 2f;
             knockback = 0.8f;
             lifetime = 240 / 8.5f;
-            backColor = hitColor = trailColor = WHPal.TiSteelColor;
+            backColor = hitColor = trailColor = WHPal.MnSteelColor;
             width = 8.3f;
             height = 18f;
             trailWidth = 2f;
@@ -1044,7 +1044,7 @@ public final class WHBullets{
             splashDamageRadius = 20;
             splashDamage = 55;
             trailChance = 0.1f;
-            critEffect = WHFx.square(WHItems.titaniumSteel.color, 20, 1, 10, 6f);
+            critEffect = WHFx.square(WHItems.manganeseSteel.color, 20, 1, 10, 6f);
             shootEffect = Fx.shootBig;
             smokeEffect = Fx.shootBigSmoke;
             despawnEffect = hitEffect = Fx.explosion;
@@ -1117,7 +1117,7 @@ public final class WHBullets{
             trailSinScl = 12f;
             trailSinMag = 0.12f;
             sprite = name("large-missile");
-            hitColor = trailColor = backColor = WHItems.titaniumSteel.color.cpy();
+            hitColor = trailColor = backColor = WHItems.manganeseSteel.color.cpy();
             width = 18f;
             height = 60;
             hitSize = 10f;
@@ -1126,12 +1126,12 @@ public final class WHBullets{
             smokeEffect = Fx.shootSmallFlame;
             shootEffect = new MultiEffect(Fx.shootBigColor, Fx.colorSparkBig);
             hitEffect = despawnEffect = new MultiEffect(Fx.flakExplosionBig,
-            WHFx.hitSpark(WHItems.titaniumSteel.color, 30, 8, 40, 1, 5));
-            critEffect = WHFx.square(WHItems.titaniumSteel.color, 30, 1, 10, 5f);
+            WHFx.hitSpark(WHItems.manganeseSteel.color, 30, 8, 40, 1, 5));
+            critEffect = WHFx.square(WHItems.manganeseSteel.color, 30, 1, 10, 5f);
             flameWidth = 3f;
             flameLength = 16f;
             lengthOffset = 5;
-            colors = new Color[]{WHItems.titaniumSteel.color.cpy().a(0.4f), WHItems.titaniumSteel.color.cpy().a(0.8f), Pal.lancerLaser};
+            colors = new Color[]{WHItems.manganeseSteel.color.cpy().a(0.4f), WHItems.manganeseSteel.color.cpy().a(0.8f), Pal.lancerLaser};
         }};
         SSWordPlastanium = new CritMissileBulletType(){{
             critChance = 0.1f;

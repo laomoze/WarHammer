@@ -6,6 +6,7 @@ import mindustry.entities.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.type.*;
+import wh.gen.*;
 
 public class TitanUnitType extends UnitType{
     public TitanUnitType(String name){

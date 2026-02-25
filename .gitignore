@@ -167,6 +167,11 @@ nb-configuration.xml
 .gradle/
 gradle-app.setting
 
+build-unused.gradle
+gradle.properties
+settings.gradle
+
+
 ## OS Specific
 .DS_Store
 Thumbs.db

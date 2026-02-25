@@ -1,4 +1,4 @@
-package wh.entities.world.entities;
+package wh.gen;
 
 import arc.*;
 import arc.graphics.g2d.*;
@@ -14,7 +14,6 @@ import mindustry.graphics.*;
 import mindustry.world.*;
 import mindustry.world.meta.*;
 import wh.content.*;
-import wh.gen.*;
 import wh.graphics.*;
 
 import static mindustry.Vars.*;

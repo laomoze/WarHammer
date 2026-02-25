@@ -17,7 +17,7 @@ public class WHUnitType extends UnitType{
         super(name);
         outlineColor = WHPal.Outline;
         envDisabled = Env.space;
-        ammoType = new ItemAmmoType(WHItems.titaniumSteel);
+        ammoType = new ItemAmmoType(WHItems.manganeseSteel);
         researchCostMultiplier = 10;
     }
 

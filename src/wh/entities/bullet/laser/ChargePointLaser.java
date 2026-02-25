@@ -18,6 +18,7 @@ import wh.graphics.*;
 import wh.util.*;
 
 import static mindustry.Vars.*;
+import static wh.graphics.Drawn.rand;
 
 public class ChargePointLaser extends PointLaserBulletType{
     private final Color tmpColor = new Color();
@@ -215,7 +216,10 @@ public class ChargePointLaser extends PointLaserBulletType{
             float a = phaseOffset * i + Time.time * 0.5f;
             Lines.stroke(1.5f * (1 + Mathf.sin(Time.time, 12, 0.3f)));
             Tmp.v1.trns(a, width / 2);
-            Drawn.drawSine2Modifier(b.x + Tmp.v1.x, b.y + Tmp.v1.y, b.curveEnd.x + Tmp.v1.x, b.curveEnd.y + Tmp.v1.y, Time.time * 0.4f, 6f, 0.6f, phaseOffset * Mathf.degreesToRadians, width / 2, 6, ((x1, y1) -> {
+            rand.setSeed(b.id);
+            Drawn.drawSine2Modifier(b.x + Tmp.v1.x, b.y + Tmp.v1.y, b.curveEnd.x + Tmp.v1.x, b.curveEnd.y + Tmp.v1.y,
+            -Time.time * 0.4f, 6f + rand.random(2), 0.6f + rand.random(0.5f), phaseOffset * Mathf.degreesToRadians + rand.random(90f),
+            width / 2, 6, ((x1, y1) -> {
                 Fill.circle(x1, y1, Lines.getStroke());
             }));
             Fill.circle(b.curveEnd.x, b.curveEnd.y, Lines.getStroke());

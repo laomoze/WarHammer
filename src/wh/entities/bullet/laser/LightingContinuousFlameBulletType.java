@@ -33,7 +33,7 @@ public class LightingContinuousFlameBulletType extends ContinuousFlameBulletType
         Draw.color(hitColor);
         Fill.circle(Tmp.v1.x, Tmp.v1.y, Lines.getStroke());
         Drawn.drawFinSine2Modifier(
-        Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y, 6f, Time.time * 0.4f, 0.6f, 0, width * 2, waveLength,
+        Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y, 6f, -Time.time * 0.4f, 0.6f, 0, width * 2, waveLength,
         ((x1, y1) -> {
             Fill.circle(x1, y1, Lines.getStroke());
         }));

@@ -33,6 +33,7 @@ public class LaserBeamBulletType extends ContinuousBulletType{
     public float sideLength = 29f, sideWidth = 0.7f;
     public float sideAngle = 90f;
     public boolean drawPositionLighting = false;
+    public boolean renderingDistortion = false;
     public boolean rotate = false;
     public float rotateAngle = 20;
     public float damageMult = 0;
@@ -161,6 +162,7 @@ public class LaserBeamBulletType extends ContinuousBulletType{
         Draw.reset();
         Tmp.v1.trns(rot, realLength * 1.1f);
         Drawf.light(b.x, b.y, b.x + Tmp.v1.x, b.y + Tmp.v1.y, width * 1.2f * b.fout(), colors[0], 0.6f);
+        if(renderingDistortion) MainRenderer.addShockCircle(b.x + Tmp.v1.x, b.y + Tmp.v1.y, width, b.lifetime());
     }
 
     @Override

@@ -20,7 +20,11 @@ public final class WHSounds{
     rocket = new Sound(),
     energyShoot = new Sound(),
     LaserGatling = new Sound(),
-    machineGunShoot = new Sound();
+    machineGunShoot = new Sound(),
+    sniperShoot = new Sound(),
+    pistonLaser = new Sound(),
+    rifleLaser = new Sound(),
+    shootGunDouble = new Sound();
 
     private WHSounds(){
     }
@@ -41,6 +45,10 @@ public final class WHSounds{
             energyShoot = new Sound(ogg("JG1"));
             LaserGatling = new Sound(ogg("trLaserGatling"));
             machineGunShoot = new Sound(ogg("mgsvGatling"));
+            sniperShoot = new Sound(wav("sniper-shoot"));
+            pistonLaser = new Sound(wav("piston-laser"));
+            rifleLaser = new Sound(wav("rifle-laser"));
+            shootGunDouble = new Sound(ogg("shoot-gun-double"));
         }catch(Exception e){
             Log.err("Failed to load Sound.", e);
         }
@@ -48,6 +56,10 @@ public final class WHSounds{
 
     static Fi ogg(String name){
         return WHVars.internalTree.child("sounds/" + name + ".ogg");
+    }
+
+    static Fi wav(String name){
+        return WHVars.internalTree.child("sounds/" + name + ".wav");
     }
 
     static Fi mp3(String name){

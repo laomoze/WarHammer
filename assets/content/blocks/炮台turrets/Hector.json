@@ -1,3 +1,4 @@
+/*
 {
 	"type": "ItemTurret",
 	"name": "赫克托",
@@ -605,4 +606,4 @@
 	"category": "turret",
 	"researchCostMultiplier": 0.4,
 	"research": "Melta"
-}
+}*/

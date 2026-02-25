@@ -1,9 +1,9 @@
 package wh.ui;
 
-import arc.Core;
+import arc.*;
 import arc.audio.*;
 import arc.func.*;
-import arc.graphics.Color;
+import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.input.*;
 import arc.math.*;
@@ -16,7 +16,7 @@ import arc.scene.ui.TextButton.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
-import mindustry.content.StatusEffects;
+import mindustry.content.*;
 import mindustry.core.*;
 import mindustry.ctype.*;
 import mindustry.entities.bullet.*;
@@ -32,6 +32,7 @@ import wh.entities.bullet.laser.*;
 import java.text.*;
 
 import static arc.Core.*;
+import static mindustry.Vars.content;
 import static mindustry.Vars.*;
 import static mindustry.world.meta.StatValues.*;
 
@@ -39,6 +40,8 @@ public final class UIUtils{
     public static final float LEN = 60f;
     public static final float OFFSET = 12f;
     public static final TextArea textArea = headless ? null : new TextArea("");
+    //only allocate once, dont break unit tests
+    static @Nullable TextureRegionDrawable noteIcon = Icon.arrowNoteSmall != null ? new TextureRegionDrawable(Icon.arrowNoteSmall) : null;
 
     private static final Vec2 ctrlVec = new Vec2();
     private static final DecimalFormat df = new DecimalFormat("######0.0");
@@ -409,6 +412,7 @@ public final class UIUtils{
     }
 
     //何以为
+
     public static <T extends UnlockableContent> StatValue ammo(ObjectMap<T, BulletType> map, boolean nested, boolean showUnit){
         return table -> {
 
@@ -444,43 +448,8 @@ public final class UIUtils{
                     }
 
                     if(type.damage > 0 && (type.collides || type.splashDamage <= 0)){
-                        if(type.continuousDamage() > 0){
-                            bt.add(Core.bundle.format("bullet.damage", type.continuousDamage()) + StatUnit.perSecond.localized());
-                        }else{
-                            bt.add(Core.bundle.format("bullet.damage", type.damage));
-                        }
-                    }
-
-                    if(type instanceof CritBulletType stype){
-                        sep(bt, bundle.format("bullet.wh-crit-chance", (int)(stype.critChance * 100f)));
-                        sep(bt, bundle.format("bullet.wh-crit-multiplier",  Strings.fixed(stype.critMultiplier,1)));
-                    }
-
-                    if(type instanceof DOTBulletType stype){
-                        sep(bt, bundle.format("bullet.wh-continuous-splash-damage", stype.continuousDamage(), (stype.radIncrease*60) / tilesize));
-                        sep(bt, bundle.format("bullet.wh-continuous-splash-damage-radius",  Strings.fixed(stype.DOTRadius / tilesize,1)));
-                    }
-
-                    if(type instanceof LightningLinkerBulletType stype){
-                        sep(bt, bundle.format("bullet.wh-lighting-per-second",  stype.hitSpacing,  Strings.fixed(60/stype.hitSpacing,2)));
-                        if(stype.maxHit>0)sep(bt, bundle.format("bullet.wh-max-hit",  Strings.fixed(stype.maxHit,2)));
-                        if(stype.randomGenerateRange>0)sep(bt, bundle.format("bullet.wh-random-generate-range",  Strings.fixed(stype.randomGenerateRange/tilesize,2)));
-                        if(stype.randomGenerateChance>0)sep(bt, bundle.format("bullet.wh-random-generate-chance",  Strings.fixed(stype.randomGenerateChance,2)));
-                    }
-
-                    if(type instanceof LaserBeamBulletType stype){
-                        sep(bt, bundle.format("bullet.wh-extension-length",  Strings.fixed((stype.extensionProportion*stype.length)/tilesize,1)));
-                        sep(bt, bundle.format("bullet.wh-max-damgae",  Strings.fixed((stype.damageMult*stype.damage)/60,1)));
-                    }
-
-                    if(type instanceof ChainLightingBulletType stype){
-                        sep(bt, bundle.format("bullet.wh-max-hit",  Strings.fixed(stype.maxHit,2)));
-                        sep(bt, bundle.format("bullet.wh-lightning-length",  Strings.fixed(stype.length/tilesize,2)));
-                        sep(bt, bundle.format("bullet.wh-lightning-range",  Strings.fixed(stype.chainRange/tilesize,2)));
-                    }
-
-                    if(type instanceof PositionLightningBulletType stype){
-                        sep(bt, bundle.format("bullet.wh-lightning-length",  Strings.fixed(stype.maxRange/tilesize,1)));
+                        bt.add(Core.bundle.format("bullet.damage", type.damage) + (type.continuousDamage() > 0 ?
+                        "[lightgray] ~ [stat]" + Core.bundle.format("bullet.damage", type.continuousDamage()) + StatUnit.perSecond.localized() : ""));
                     }
 
                     if(type.buildingDamageMultiplier != 1){
@@ -532,12 +501,82 @@ public final class UIUtils{
                         sep(bt, "@bullet.homing");
                     }
 
+
+                    if(type instanceof CritBulletType stype){
+                        sep(bt, bundle.format("bullet.wh-crit-chance", (int)(stype.critChance * 100f)));
+                        sep(bt, bundle.format("bullet.wh-crit-multiplier", Strings.fixed(stype.critMultiplier, 1)));
+                    }
+
+                    if(type instanceof DOTBulletType stype){
+                        sep(bt, bundle.format("bullet.wh-continuous-splash-damage", stype.continuousDamage(), (stype.radIncrease * 60) / tilesize));
+                        sep(bt, bundle.format("bullet.wh-continuous-splash-damage-radius", Strings.fixed(stype.DOTRadius / tilesize, 1)));
+                    }
+
+                    if(type instanceof LightningLinkerBulletType stype){
+                        sep(bt, bundle.format("bullet.wh-lighting-per-second", stype.hitSpacing, Strings.fixed(60 / stype.hitSpacing, 2)));
+                        if(stype.maxHit > 0) sep(bt, bundle.format("bullet.wh-max-hit", Strings.fixed(stype.maxHit, 2)));
+                        if(stype.randomGenerateRange > 0) sep(bt, bundle.format("bullet.wh-random-generate-range", Strings.fixed(stype.randomGenerateRange / tilesize, 2)));
+                        if(stype.randomGenerateChance > 0) sep(bt, bundle.format("bullet.wh-random-generate-chance", Strings.fixed(stype.randomGenerateChance, 2)));
+                    }
+
+                    if(type instanceof LaserBeamBulletType stype){
+                        sep(bt, bundle.format("bullet.wh-extension-length", Strings.fixed((stype.extensionProportion * stype.length) / tilesize, 1)));
+                        sep(bt, bundle.format("bullet.wh-max-damgae", Strings.fixed((stype.damageMult * stype.damage) / 60, 1)));
+                    }
+
+                    if(type instanceof ChainLightingBulletType stype){
+                        sep(bt, bundle.format("bullet.wh-max-hit", Strings.fixed(stype.maxHit, 2)));
+                        sep(bt, bundle.format("bullet.wh-lightning-length", Strings.fixed(stype.length / tilesize, 2)));
+                        sep(bt, bundle.format("bullet.wh-lightning-range", Strings.fixed(stype.chainRange / tilesize, 2)));
+                    }
+
+                    if(type instanceof PositionLightningBulletType stype){
+                        sep(bt, bundle.format("bullet.wh-lightning-length", Strings.fixed(stype.maxRange / tilesize, 1)));
+                    }
+
                     if(type.lightning > 0){
                         sep(bt, Core.bundle.format("bullet.lightning", type.lightning, type.lightningDamage < 0 ? type.damage : type.lightningDamage));
                     }
 
+                    if(type instanceof LaserBulletType b && b.lightningSpacing > 0){
+                        int count = (int)(b.length / b.lightningSpacing) * 2 + 2;
+                        float damage = b.lightningDamage < 0 ? b.damage : b.lightningDamage;
+                        sep(bt, Core.bundle.format("bullet.lightning", count, damage));
+                        note(bt, Core.bundle.format("bullet.lightninginterval", Strings.autoFixed(b.lightningSpacing / tilesize, 2), Strings.autoFixed(b.lightningLength, 2))).left();
+                    }
+
+                    if(type instanceof EmpBulletType b && b.radius > 0f){
+                        sep(bt, Core.bundle.format("bullet.empradius", Strings.fixed(b.radius / tilesize, 1)));
+                        if(b.timeDuration > 0f && b.timeIncrease > 1f){
+                            sep(bt, Core.bundle.format("bullet.empboost", Strings.autoFixed(b.timeIncrease * 100f, 2),
+                            Strings.autoFixed(b.timeDuration / 60f, 1)) + " " + StatUnit.seconds.localized());
+                        }
+                        if(b.timeDuration > 0f && b.powerSclDecrease < 1f){
+                            sep(bt, Core.bundle.format("bullet.empslowdown",
+                            (b.powerSclDecrease < 1f ? "[negstat]" : "") + Strings.autoFixed((b.powerSclDecrease - 1f) * 100f, 2),
+                            Strings.autoFixed(b.timeDuration / 60f, 1)) + " " + StatUnit.seconds.localized());
+                        }
+                        if(!Mathf.equal(b.powerDamageScl, 1f)){
+                            sep(bt, Core.bundle.format("bullet.empdamage", Strings.autoFixed(b.powerDamageScl * 100f, 2)));
+                        }
+                        if(b.hitUnits){
+                            sep(bt, Core.bundle.format("bullet.empunitdamage",
+                            (b.unitDamageScl < 1f ? "[negstat]" : "") + Strings.autoFixed(b.unitDamageScl * 100f, 2)));
+                        }
+                    }
+
                     if(type.pierceArmor){
                         sep(bt, "@bullet.armorpierce");
+                    }
+
+                    if(type.armorMultiplier != 1f){
+                        if(type.armorMultiplier > 1f){
+                            sep(bt, Core.bundle.format("bullet.armorweakness", (int)(type.armorMultiplier * 100)));
+                        }else if(Mathf.sign(type.armorMultiplier) == 1){
+                            sep(bt, Core.bundle.format("bullet.armorpiercing", (int)((1 - type.armorMultiplier) * 100)));
+                        }else{
+                            sep(bt, Core.bundle.format("bullet.antiarmor", (-type.armorMultiplier)));
+                        }
                     }
 
                     if(type.maxDamageFraction > 0){
@@ -548,13 +587,9 @@ public final class UIUtils{
                         sep(bt, Core.bundle.format("bullet.suppression", Strings.autoFixed(type.suppressionDuration / 60f, 2), Strings.fixed(type.suppressionRange / tilesize, 1)));
                     }
 
-                    if(type.status != StatusEffects.none&& type.statusDuration > 0&& type.status!=null){
+                    if(type.status != StatusEffects.none){
                         sep(bt, (type.status.hasEmoji() ? type.status.emoji() : "") + "[stat]" + type.status.localizedName + (type.status.reactive ? "" : "[lightgray] ~ [stat]" +
                         Strings.autoFixed(type.statusDuration / 60f, 1) + "[lightgray] " + Core.bundle.get("unit.seconds"))).with(c -> withTooltip(c, type.status));
-                    }
-
-                    if(type instanceof CritBulletType stype && stype.bouncing){
-                        sep(bt, Core.bundle.format("@bullet.wh-bouncing"));
                     }
 
                     if(!type.targetMissiles){
@@ -600,10 +635,45 @@ public final class UIUtils{
                         bt.row();
                         bt.add(coll);
                     }
+
+                    if(type.spawnBullets != null && type.spawnBullets.size > 0){
+                        bt.row();
+
+                        Table sc = new Table();
+                        for(BulletType spawn : type.spawnBullets){
+                            if(spawn.showStats) ammo(ObjectMap.of(t, spawn), true, false).display(sc);
+                        }
+                        Collapser coll = new Collapser(sc, true);
+                        coll.setDuration(0.1f);
+
+                        bt.table(st -> {
+                            st.left().defaults().left();
+
+                            st.add(Core.bundle.format("bullet.spawnBullets", type.spawnBullets.size));
+                            if(sc.getChildren().size > 0) st.button(Icon.downOpen, Styles.emptyi, () -> coll.toggle(false)).update(i -> i.getStyle().imageUp = (!coll.isCollapsed() ? Icon.upOpen : Icon.downOpen)).size(8).padLeft(16f).expandX();
+                        });
+                        bt.row();
+                        bt.add(coll);
+                    }
+
                 }).padLeft(5).padTop(5).padBottom(compact ? 0 : 5).growX().margin(compact ? 0 : 10);
                 table.row();
             }
         };
+    }
+
+
+    //add a note under a value
+    private static Cell<?> note(Table table, String text){
+        table.row();
+        return table.table(t -> {
+            if(noteIcon != null){
+                noteIcon.setMinWidth(15f);
+                noteIcon.setMinHeight(15f);
+                t.image(noteIcon).color(Pal.stat).scaling(Scaling.fit).padRight(6).padLeft(12);
+            }
+            t.add(text);
+        });
     }
 
     private static Cell<?> sep(Table table, String text){

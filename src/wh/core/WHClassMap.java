@@ -35,8 +35,6 @@ final class WHClassMap {
         ClassMap.classes.put("TrailFadeBulletType", TrailFadeBulletType.class);
         ClassMap.classes.put("SuperHeavyUnitType", SuperHeavyUnitType.class);
         ClassMap.classes.put("AncientEngine", AncientEngine.class);
-        ClassMap.classes.put("NucleoidUnitType", NucleoidUnitType.class);
-        ClassMap.classes.put("PesterUnitType", PesterUnitType.class);
         ClassMap.classes.put("AirRaider", AirRaider.class);
         ClassMap.classes.put("AirRaiderBuild", AirRaider.AirRaiderBuild.class);
         ClassMap.classes.put("BombLauncher", BombLauncher.class);

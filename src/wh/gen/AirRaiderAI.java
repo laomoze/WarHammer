@@ -1,4 +1,4 @@
-package wh.entities.world.entities;
+package wh.gen;
 
 import arc.math.geom.*;
 import arc.util.*;
@@ -6,6 +6,7 @@ import mindustry.ai.types.*;
 import mindustry.entities.*;
 import mindustry.gen.*;
 import mindustry.type.*;
+import wh.entities.world.entities.*;
 
 import static mindustry.Vars.tilesize;
 

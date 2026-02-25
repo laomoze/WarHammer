@@ -5,9 +5,8 @@
 
 package wh.content;
 
-import arc.Core;
-import arc.graphics.g2d.TextureRegion;
-import arc.util.*;
+import arc.*;
+import arc.graphics.g2d.*;
 import mindustry.ctype.*;
 import mindustry.graphics.*;
 import wh.core.*;
@@ -17,7 +16,7 @@ import static wh.core.WarHammerMod.name;
 public class WHContent extends Content{
     public static TextureRegion arrowRegion,
      pointerRegion,
-    strafeRegion, missileRegion, bombRegion,annihilateArrow;
+    strafeRegion, missileRegion, bombRegion, annihilateArrow, fleet;
 
     public static final float HEXAGONAL_SHIELD = Layer.shields + 12f;
     public static final float VOID_SHIELD = Layer.shields + 9f;
@@ -39,5 +38,6 @@ public class WHContent extends Content{
         missileRegion = Core.atlas.find(name("missile-mode"));
         bombRegion = Core.atlas.find(name("bomb-mode"));
         annihilateArrow= Core.atlas.find(WarHammerMod.name("Annihilate-arrow"));
+        fleet = Core.atlas.find(name("fleet"));
     }
 }

@@ -2,7 +2,6 @@ package wh.content;
 
 import arc.struct.*;
 import mindustry.content.*;
-import mindustry.content.TechTree.*;
 import mindustry.ctype.*;
 import mindustry.game.Objectives.*;
 import mindustry.type.*;
@@ -17,7 +16,7 @@ public final class WHTechTree {
     public static void load() {
         TechNode root = nodeRoot("[yellow]IMPERIUM", WHPlanets.kellex, () -> {
             nodeProduce(WHItems.imperium, () -> {
-                nodeProduce(WHItems.titaniumSteel, () -> {
+                nodeProduce(WHItems.manganeseSteel, () -> {
                     nodeProduce(WHItems.ceramite, () -> {
                         nodeProduce(WHItems.refineCeramite, () -> {
                             nodeProduce(WHItems.vibranium, () -> {

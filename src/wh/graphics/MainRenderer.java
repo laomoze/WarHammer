@@ -1,20 +1,19 @@
 package wh.graphics;
 
 import arc.*;
-import arc.graphics.Color;
+import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.graphics.gl.*;
 import arc.struct.*;
-import arc.util.Tmp;
-import arc.util.pooling.Pool;
-import arc.util.pooling.Pools;
-import mindustry.Vars;
+import arc.util.*;
+import arc.util.pooling.*;
+import mindustry.*;
 import mindustry.game.*;
-import mindustry.game.EventType.*;
 import mindustry.graphics.*;
 import wh.content.*;
 
 import static arc.Core.*;
+import static wh.graphics.WHShaders.shockwave;
 
 public class MainRenderer{
     private final Seq<BlackHole> holes = new Seq<>();
@@ -34,15 +33,15 @@ public class MainRenderer{
         }
     }
 
-    public void draw() {
+    public void draw(){
         width = graphics.getWidth();
         height = graphics.getHeight();
 
         buffer2.resize(graphics.getWidth(), graphics.getHeight());
        /* drawShader(WHShaders.powerArea, WHContent.POWER_AREA,1);
         drawShader(WHShaders.powerDynamicArea, WHContent.POWER_DYNAMIC, 1);*/
-        if (Vars.renderer.animateShields) {
-            drawShader(WHShaders.HexagonalShield, WHContent.HEXAGONAL_SHIELD,1);
+        if(Vars.renderer.animateShields){
+            drawShader(WHShaders.hexagonalShield, WHContent.HEXAGONAL_SHIELD, 1);
         }
         advancedDraw();
     }
@@ -54,13 +53,17 @@ public class MainRenderer{
         }
     }
 
-    public void drawShader(Shader shader, float layer,float range) {
-        if (shader != null) {
+    public void drawShader(Shader shader, float layer, float range){
+        if(shader != null){
             Draw.drawRange(layer, range, () -> buffer2.begin(Color.clear), () -> {
                 buffer2.end();
                 buffer2.blit(shader);
             });
         }
+    }
+
+    public static void addShockCircle(float x, float y, float r, float life){
+        if(shockwave != null && !Vars.headless) shockwave.add(x, y, r, life);
     }
 
     public static void addBlackHole(float x, float y, float inRadius, float outRadius, float alpha){
@@ -72,7 +75,7 @@ public class MainRenderer{
     }
 
     private void advancedDraw(){
-        if(settings.getBool("pixelate") || holes.size >= 512) {
+        if(settings.getBool("pixelate") || holes.size >= 512){
             holes.clear();
             return;
         }
@@ -81,7 +84,7 @@ public class MainRenderer{
             if(!buffer.isBound()) buffer.begin();
         });
 
-        Draw.draw(Layer.space +16, () -> {
+        Draw.draw(Layer.space + 16, () -> {
             if(buffer.isBound()) buffer.end();
 
             if(holes.size >= WHShaders.MaxCont) WHShaders.createHoleShader();

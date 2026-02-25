@@ -18,7 +18,7 @@ import mindustry.world.*;
 import mindustry.world.blocks.environment.*;
 import mindustry.world.blocks.storage.CoreBlock.*;
 import mindustry.world.draw.*;
-import wh.entities.world.entities.*;
+import wh.entities.*;
 
 import static mindustry.Vars.*;
 

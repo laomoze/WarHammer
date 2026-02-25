@@ -1,4 +1,4 @@
-package wh.entities.world.entities;
+package wh.gen;
 
 import arc.*;
 import arc.graphics.*;
@@ -19,7 +19,6 @@ import mindustry.world.blocks.defense.Wall.*;
 import mindustry.world.blocks.defense.turrets.Turret.*;
 import wh.content.*;
 import wh.entities.bullet.ApproachBullet.*;
-import wh.gen.*;
 import wh.util.*;
 
 import static mindustry.io.TypeIO.*;

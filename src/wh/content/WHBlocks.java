@@ -62,18 +62,25 @@ public final class WHBlocks{
 
     //factory
     public static Block
-    siliconMixFurnace, atmosphericSeparator, largeKiln, T2PlastaniumCompressor, T2Electrolyzer, T2SporePress,
-    t2MultiPress, T2CarbideCrucible, T2Cultivator, T2CryofluidMixer, T2PhaseSynthesizer, largeSurgeSmelter,
+    scrapCrusher, scrapFurance, sandSeparator,
+    heatSiliconSmelter, waterPurifier, T2WaterPurifier,
+    pyratiteBlender, pyratiteSeparator,
 
-    titaniumSteelFurnace, T2TiSteelFurnace,
+    manganeseSteelFurnace, T2ManganeseSteelFurnace,
+    arcKiln, multiPress, siliconMixFurnace,
+
+    T2PlastaniumCompressor, atmosphericSeparator, T2Electrolyzer, T2SporePress,
+    T2CarbideCrucible,
+
+    T2Cultivator,
+
+    T2CryofluidMixer, T2PhaseSynthesizer, largeSurgeSmelter,
+
     ceramiteSteelFoundry, T2ceramiteSteelFoundry, crystalEngraver, laserEngraver,
     moSurgeSmelter, ceramiteRefinery, ADMill,
     //promethium
     promethiumRefinery, sealedPromethiumMill, LiquidNitrogenPlant, slagfurnace,
 
-    scrapCrusher, scrapFurance, sandSeparator,
-    heatSiliconSmelter, waterPurifier, T2WaterPurifier,
-    pyratiteBlender, pyratiteSeparator,
     //heat
     combustionHeater, decayHeater, slagHeatMaker, promethiumHeater, smallHeatRouter, heatBelt, heatBridge, T2heatBridge,
     tungstenConverter, molybdenumConverter, vibraniumConverter;
@@ -131,11 +138,211 @@ public final class WHBlocks{
 
     public static void load(){
 
+        waterPurifier = new GenericCrafter("water-purifier"){
+            {
+                requirements(Category.crafting, with(Items.silicon, 40, WHItems.manganeseSteel, 80, Items.graphite, 50));
+                health = 600;
+                hasItems = hasPower = hasLiquids = true;
+                craftTime = 120;
+                itemCapacity = 12;
+                liquidCapacity = 300;
+                size = 3;
+                consumePower(8);
+                consumeItems(with(WHItems.oreSand, 2, Items.graphite, 2));
+                consumeLiquid(WHLiquids.swageWater, 100 / 60f);
+                outputLiquid = new LiquidStack(Liquids.water, 70 / 60f);
+                drawer = new DrawMulti(new DrawRegion("-bottom"),
+                new DrawLiquidTile(WHLiquids.swageWater),
+                new DrawLiquidTile(Liquids.water),
+                new DrawBubbles(WHLiquids.swageWater.color.cpy().lerp(Liquids.water.color.cpy(), 0.5f)){{
+                    sides = 10;
+                    recurrence = 3f;
+                    spread = 6;
+                    radius = 1.5f;
+                    amount = 20;
+                }}, new DrawCircles(){{
+                    color = WHLiquids.swageWater.color.cpy().lerp(Liquids.water.color.cpy(), 0.5f);
+                    amount = 3;
+                    strokeMax = 1.5f;
+                }},
+                new DrawDefault(),
+                new DrawRegion("-rotator"){{
+                    rotateSpeed = 2;
+                    spinSprite = true;
+                }},
+                new DrawRegion("-top"),
+                new DrawGlowRegion(){{
+                    alpha = 0.7f;
+                    color = Color.valueOf("c4bdf3");
+                    glowIntensity = 0.3f;
+                    glowScale = 6f;
+                }});
+            }
+        };
+
+        T2WaterPurifier = new GenericCrafter("t2-water-purifier"){
+            {
+                requirements(Category.crafting, with(Items.silicon, 80, Items.carbide, 30, WHItems.molybdenum, 100, WHItems.manganeseSteel, 40, Items.graphite, 50));
+                health = 1400;
+                hasItems = hasPower = hasLiquids = true;
+                craftTime = 120;
+                itemCapacity = 30;
+                liquidCapacity = 600;
+                size = 4;
+                consumePower(15);
+                consumeItems(with(WHItems.oreSand, 1, Items.plastanium, 1, Items.graphite, 2));
+                consumeLiquid(WHLiquids.swageWater, 400 / 60f);
+                outputLiquid = new LiquidStack(Liquids.water, 340 / 60f);
+                drawer = new DrawMulti(new DrawRegion("-bottom"),
+                new DrawLiquidTile(WHLiquids.swageWater),
+                new DrawLiquidTile(Liquids.water),
+                new DrawBubbles(WHLiquids.swageWater.color.cpy().lerp(Liquids.water.color.cpy(), 0.3f)){{
+                    sides = 10;
+                    recurrence = 3f;
+                    spread = 6;
+                    radius = 1.5f;
+                    amount = 20;
+                }}, new DrawCircles(){{
+                    color = WHLiquids.swageWater.color.cpy().lerp(Liquids.water.color.cpy(), 0.3f);
+                    amount = 3;
+                    strokeMax = 1.5f;
+                }}, new DrawCrucibleFlame(){{
+                    flameColor = WHLiquids.swageWater.color.cpy().lerp(Liquids.water.color.cpy(), 0.3f);
+                    particleRad = 15f;
+                }}, new DrawDefault());
+                updateEffect = new RadialEffect(Fx.steamCoolSmoke, 4, 90f, 55 / 4f){{
+                    rotationOffset = 45F;
+                }};
+                updateEffectSpread = 0;
+            }
+        };
+
+        manganeseSteelFurnace = new GenericCrafter("manganese-steel-furnace"){
+            {
+                Color color = WHPal.MnSteelColor;
+                requirements(Category.crafting, with(WHItems.manganese, 40));
+
+                health = 300;
+                hasItems = hasPower = true;
+                craftTime = 60;
+                itemCapacity = 10;
+                size = 2;
+                drawer = new DrawMulti(new DrawDefault(), new DrawFlame(color));
+                consumePower(1);
+                consumeItems(with(WHItems.manganese, 2, WHItems.chromium, 2));
+                craftEffect = WHFx.square(MnSteelColor, 35f, 4, 16f, 4f);
+                outputItem = new ItemStack(WHItems.manganeseSteel, 1);
+                researchCostMultiplier = 0.2f;
+            }
+        };
+
+        T2ManganeseSteelFurnace = new GenericCrafter("t2-manganese-steel-furnace"){
+            {
+                Color color = WHPal.MnSteelColor;
+                requirements(Category.crafting, with(Items.silicon, 100, WHItems.ceramite, 70, WHItems.manganeseSteel, 70));
+                health = 700;
+                hasItems = hasPower = true;
+                craftTime = 60;
+                itemCapacity = 40;
+                size = 3;
+                consumePower(5);
+                consumeItems(with(WHItems.manganese, 6, WHItems.chromium, 3, Items.tungsten, 2));
+                consumeLiquid(Liquids.water, 6 / 60f);
+                outputItem = new ItemStack(WHItems.manganeseSteel, 4);
+                drawer = new DrawMulti(
+                new DrawLiquidTile(Liquids.water){{
+                    padding = 0.88f;
+                }},
+                new DrawDefault(),
+                new DrawCrucibleFlame(),
+                new DrawFlame(color){{
+                    flameRadius = 6;
+                }});
+                craftEffect = WHFx.square(MnSteelColor, 35f, 6, 26f, 5f);
+                researchCostMultiplier = 0.5f;
+            }
+        };
+
+
+        arcKiln = new GenericCrafter("arc-kiln"){
+            {
+                requirements(Category.crafting, with(WHItems.manganese, 30, Items.graphite, 60, Items.silicon, 60));
+
+                size = 3;
+                health = 360;
+                itemCapacity = 40;
+                hasPower = hasItems = true;
+                craftTime = 120;
+
+                consumePower(180f / 60f);
+                consumeItems(with(WHItems.oreSand, 8, WHItems.manganese, 6));
+                outputItem = new ItemStack(Items.metaglass, 10);
+                drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawFlame(){{
+                    flameRadius = 0;
+                }},
+                new DrawArcSmelt(), new DrawDefault(),
+                new DrawGlowRegion(){{
+                    color = Color.valueOf("ffc999");
+                }},
+                new LargekilnDrawer(Color.valueOf("ffc999")));
+
+                ambientSound = loopSmelter;
+                ambientSoundVolume = 0.11f;
+                researchCostMultiplier = 0.8f;
+            }
+        };
+
+        multiPress = new GenericCrafter("multi-press"){
+            {
+                requirements(Category.crafting, with(WHItems.manganese, 30, WHItems.chromium, 50));
+                health = 500;
+                hasItems = hasPower = hasLiquids = true;
+                craftTime = 120;
+                itemCapacity = 64;
+                size = 3;
+                consumePower(3);
+                consumeItems(with(Items.coal, 12));
+                consumeLiquid(WHLiquids.swageWater, 15 / 60f);
+                outputItem = new ItemStack(Items.graphite, 10);
+                drawer = new DrawMulti(new DrawRegion("-bottom"),
+                new DrawLiquidTile(Liquids.water),
+                new DrawPistons(){{
+                    angleOffset = 45f;
+                    sinMag = 3f;
+                    sinScl = 5f;
+                    sides = 4;
+                    sideOffset = Mathf.PI / 2f;
+                }}, new DrawDefault());
+                craftEffect = Fx.pulverizeMedium;
+            }
+        };
+
+        T2PlastaniumCompressor = new GenericCrafter("t2-plastanium-compressor"){
+            {
+
+                requirements(Category.crafting, with(WHItems.manganese, 300, Items.titanium, 200, Items.graphite, 150, WHItems.manganeseSteel, 200));
+                size = 3;
+                health = 650;
+                hasItems = hasPower = hasLiquids = true;
+                craftTime = 60;
+                liquidCapacity = 120;
+                itemCapacity = 30;
+                consumePower(10f);
+                consumeLiquid(Liquids.oil, 1);
+                consumeItems(with(Items.titanium, 8));
+                outputItem = new ItemStack(Items.plastanium, 5);
+                drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawDefault(), new T2PlastaniumCompresserDrawer(WHPal.ShootOrange), new DrawFade());
+                craftEffect = Fx.formsmoke;
+                updateEffect = Fx.plasticburn;
+                researchCostMultiplier = 0.6f;
+            }
+        };
+
 
         atmosphericSeparator = new HeatCrafter("atmospheric-separator"){
             {
 
-                requirements(Category.crafting, with(Items.graphite, 50, Items.silicon, 100, WHItems.titaniumSteel, 70));
+                requirements(Category.crafting, with(Items.graphite, 50, Items.silicon, 100, WHItems.manganeseSteel, 70));
 
                 hasItems = false;
                 hasPower = hasLiquids = true;
@@ -165,7 +372,7 @@ public final class WHBlocks{
 
         siliconMixFurnace = new GenericCrafter("silicon-mix-furnace"){
             {
-                requirements(Category.crafting, with(Items.silicon, 80, Items.graphite, 100, Items.silicon, 50, WHItems.titaniumSteel, 50));
+                requirements(Category.crafting, with(Items.silicon, 80, Items.graphite, 100, Items.silicon, 50, WHItems.manganeseSteel, 50));
 
                 size = 3;
                 health = 900;
@@ -189,7 +396,7 @@ public final class WHBlocks{
         };
 
         heatSiliconSmelter = new HeatCrafter("heat-silicon-smelter"){{
-            requirements(Category.crafting, with(WHItems.molybdenumAlloy, 50, Items.carbide, 120, Items.pyratite, 30, Items.silicon, 200, WHItems.titaniumSteel, 100));
+            requirements(Category.crafting, with(WHItems.molybdenumAlloy, 50, Items.carbide, 120, Items.pyratite, 30, Items.silicon, 200, WHItems.manganeseSteel, 100));
             size = 4;
             health = 2000;
             hasPower = hasItems = true;
@@ -226,7 +433,7 @@ public final class WHBlocks{
 
         T2CarbideCrucible = new HeatCrafter("t2-carbide-crucible"){{
 
-            requirements(Category.crafting, with(Items.tungsten, 100, Items.graphite, 80, WHItems.titaniumSteel, 40));
+            requirements(Category.crafting, with(Items.tungsten, 100, Items.graphite, 80, WHItems.manganeseSteel, 40));
             size = 3;
             health = 1200;
             itemCapacity = 45;
@@ -241,52 +448,10 @@ public final class WHBlocks{
             researchCostMultiplier = 0.45f;
         }};
 
-        largeKiln = new GenericCrafter("large-kiln"){
-            {
-                requirements(Category.crafting, with(Items.lead, 60, Items.graphite, 60, WHItems.titaniumSteel, 50));
 
-                size = 3;
-                health = 360;
-                itemCapacity = 40;
-                hasPower = hasItems = true;
-                craftTime = 90;
-
-
-                consumePower(180f / 60f);
-                consumeItems(with(Items.sand, 5, Items.lead, 5));
-                outputItem = new ItemStack(Items.metaglass, 8);
-                drawer = new DrawMulti(new DrawDefault(), new DrawFlame(), new DrawGlowRegion(){{
-                    color = Color.valueOf("ffc999");
-                }}, new LargekilnDrawer(Color.valueOf("ffc999")));
-
-                ambientSound = loopSmelter;
-                ambientSoundVolume = 0.11f;
-                researchCostMultiplier = 0.8f;
-            }
-        };
-        T2PlastaniumCompressor = new GenericCrafter("t2-plastanium-compressor"){
-            {
-
-                requirements(Category.crafting, with(Items.lead, 300, Items.titanium, 200, Items.graphite, 150, WHItems.titaniumSteel, 200));
-                size = 3;
-                health = 650;
-                hasItems = hasPower = hasLiquids = true;
-                craftTime = 60;
-                liquidCapacity = 120;
-                itemCapacity = 30;
-                consumePower(10f);
-                consumeLiquid(Liquids.oil, 1);
-                consumeItems(with(Items.titanium, 8));
-                outputItem = new ItemStack(Items.plastanium, 5);
-                drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawDefault(), new T2PlastaniumCompresserDrawer(WHPal.ShootOrange), new DrawFade());
-                craftEffect = Fx.formsmoke;
-                updateEffect = Fx.plasticburn;
-                researchCostMultiplier = 0.6f;
-            }
-        };
         T2Electrolyzer = new GenericCrafter("t2-electrolyzer"){
             {
-                requirements(Category.crafting, with(Items.lead, 120, Items.silicon, 100, Items.graphite, 80, WHItems.titaniumSteel, 40));
+                requirements(Category.crafting, with(WHItems.manganese, 120, Items.silicon, 100, Items.graphite, 80, WHItems.manganeseSteel, 40));
 
                 size = 3;
                 health = 750;
@@ -326,7 +491,7 @@ public final class WHBlocks{
 
         slagfurnace = new Separator("slag-furnace"){{
 
-            requirements(Category.crafting, with(WHItems.titaniumSteel, 400, WHItems.resonantCrystal, 100, WHItems.protocolChip, 100, WHItems.refineCeramite, 100));
+            requirements(Category.crafting, with(WHItems.manganeseSteel, 400, WHItems.resonantCrystal, 100, WHItems.protocolChip, 100, WHItems.refineCeramite, 100));
             size = 3;
             health = 850;
             hasPower = hasLiquids = hasItems = true;
@@ -351,73 +516,10 @@ public final class WHBlocks{
 
         }};
 
-        //钛钢
-        titaniumSteelFurnace = new GenericCrafter("titanium-steel-furnace"){
-            {
-                Color color = WHPal.TiSteelColor;
-                requirements(Category.crafting, with(Items.lead, 30, Items.copper, 20, Items.silicon, 30));
-
-                health = 150;
-                hasItems = hasPower = true;
-                craftTime = 60;
-                itemCapacity = 10;
-                size = 2;
-                drawer = new DrawMulti(new DrawDefault(), new DrawFlame(color));
-                consumePower(1);
-                consumeItems(with(Items.titanium, 1, Items.metaglass, 2));
-                craftEffect = WHFx.square(TiSteelColor, 35f, 4, 16f, 4f);
-                outputItem = new ItemStack(WHItems.titaniumSteel, 1);
-                researchCostMultiplier = 0.2f;
-            }
-        };
-
-        T2TiSteelFurnace = new GenericCrafter("t2-ti-steel-furnace"){
-            {
-                Color color = WHPal.TiSteelColor;
-                requirements(Category.crafting, with(Items.silicon, 100, Items.carbide, 70, WHItems.ceramite, 50, WHItems.titaniumSteel, 70));
-                health = 700;
-                hasItems = hasPower = true;
-                craftTime = 60;
-                itemCapacity = 40;
-                size = 3;
-                consumePower(5);
-                consumeItems(with(Items.titanium, 6, Items.metaglass, 9));
-                consumeLiquid(Liquids.water, 15 / 60f);
-                outputItem = new ItemStack(WHItems.titaniumSteel, 6);
-                drawer = new DrawMulti(new DrawDefault(), new DrawFlame(color));
-                craftEffect = WHFx.square(TiSteelColor, 35f, 6, 26f, 5f);
-                researchCostMultiplier = 0.45f;
-            }
-        };
-
-        t2MultiPress = new GenericCrafter("t2-multi-press"){
-            {
-                requirements(Category.crafting, with(Items.thorium, 90, Items.graphite, 50, Items.plastanium, 50));
-                health = 500;
-                hasItems = hasPower = hasLiquids = true;
-                craftTime = 60;
-                itemCapacity = 64;
-                size = 3;
-                consumePower(5);
-                consumeItems(with(Items.coal, 15));
-                consumeLiquid(Liquids.water, 30 / 60f);
-                outputItem = new ItemStack(Items.graphite, 12);
-                drawer = new DrawMulti(new DrawRegion("-bottom"),
-                new DrawLiquidTile(Liquids.water),
-                new DrawPistons(){{
-                    angleOffset = 45f;
-                    sinMag = 3f;
-                    sinScl = 5f;
-                    sides = 4;
-                    sideOffset = Mathf.PI / 2f;
-                }}, new DrawDefault());
-                craftEffect = Fx.pulverizeMedium;
-            }
-        };
 
         sandSeparator = new HeatProducer("sand-separator"){
             {
-                requirements(Category.crafting, with(Items.copper, 80, Items.lead, 60, Items.graphite, 40, WHItems.titaniumSteel, 20));
+                requirements(Category.crafting, with(WHItems.manganese, 80, WHItems.manganese, 60, Items.graphite, 40, WHItems.manganeseSteel, 20));
                 health = 300;
                 hasItems = hasPower = hasLiquids = true;
                 craftTime = 60;
@@ -466,7 +568,7 @@ public final class WHBlocks{
 
         moSurgeSmelter = new HeatProducer("mo-surge-smelter"){
             {
-                requirements(Category.crafting, with(Items.tungsten, 60, Items.plastanium, 50, Items.surgeAlloy, 30, WHItems.titaniumSteel, 70));
+                requirements(Category.crafting, with(Items.tungsten, 60, Items.plastanium, 50, Items.surgeAlloy, 30, WHItems.manganeseSteel, 70));
                 health = 900;
                 hasItems = hasPower = hasLiquids = true;
                 craftTime = 60;
@@ -491,7 +593,7 @@ public final class WHBlocks{
 
         crystalEngraver = new GenericCrafter("crystal-engraver"){
             {
-                requirements(Category.crafting, with(Items.metaglass, 50, Items.silicon, 40, WHItems.titaniumSteel, 40, WHItems.ceramite, 70));
+                requirements(Category.crafting, with(Items.metaglass, 50, Items.silicon, 40, WHItems.manganeseSteel, 40, WHItems.ceramite, 70));
 
                 health = 1600;
                 hasItems = hasPower = true;
@@ -519,7 +621,7 @@ public final class WHBlocks{
 
         laserEngraver = new HeatProducer("laser-engraver"){
             {
-                requirements(Category.crafting, with(Items.phaseFabric, 50, Items.carbide, 80, WHItems.resonantCrystal, 70, WHItems.titaniumSteel, 80));
+                requirements(Category.crafting, with(Items.phaseFabric, 50, Items.carbide, 80, WHItems.resonantCrystal, 70, WHItems.manganeseSteel, 80));
 
                 health = 2500;
                 hasItems = hasPower = hasLiquids = true;
@@ -554,88 +656,9 @@ public final class WHBlocks{
             }
         };
 
-        waterPurifier = new GenericCrafter("water-purifier"){
-            {
-                requirements(Category.crafting, with(Items.silicon, 40, WHItems.titaniumSteel, 80, Items.graphite, 50));
-                health = 600;
-                hasItems = hasPower = hasLiquids = true;
-                craftTime = 120;
-                itemCapacity = 12;
-                liquidCapacity = 300;
-                size = 3;
-                consumePower(8);
-                consumeItems(with(WHItems.oreSand, 2, Items.graphite, 2));
-                consumeLiquid(WHLiquids.swageWater, 100 / 60f);
-                outputLiquid = new LiquidStack(Liquids.water, 70 / 60f);
-                drawer = new DrawMulti(new DrawRegion("-bottom"),
-                new DrawLiquidTile(WHLiquids.swageWater),
-                new DrawLiquidTile(Liquids.water),
-                new DrawBubbles(WHLiquids.swageWater.color.cpy().lerp(Liquids.water.color.cpy(), 0.5f)){{
-                    sides = 10;
-                    recurrence = 3f;
-                    spread = 6;
-                    radius = 1.5f;
-                    amount = 20;
-                }}, new DrawCircles(){{
-                    color = WHLiquids.swageWater.color.cpy().lerp(Liquids.water.color.cpy(), 0.5f);
-                    amount = 3;
-                    strokeMax = 1.5f;
-                }},
-                new DrawDefault(),
-                new DrawRegion("-rotator"){{
-                    rotateSpeed = 2;
-                    spinSprite = true;
-                }},
-                new DrawRegion("-top"),
-                new DrawGlowRegion(){{
-                    alpha = 0.7f;
-                    color = Color.valueOf("c4bdf3");
-                    glowIntensity = 0.3f;
-                    glowScale = 6f;
-                }});
-            }
-        };
-
-        T2WaterPurifier = new GenericCrafter("t2-water-purifier"){
-            {
-                requirements(Category.crafting, with(Items.silicon, 80, Items.carbide, 30, WHItems.molybdenum, 100, WHItems.titaniumSteel, 40, Items.graphite, 50));
-                health = 1400;
-                hasItems = hasPower = hasLiquids = true;
-                craftTime = 120;
-                itemCapacity = 30;
-                liquidCapacity = 600;
-                size = 4;
-                consumePower(15);
-                consumeItems(with(WHItems.oreSand, 1, Items.plastanium, 1, Items.graphite, 2));
-                consumeLiquid(WHLiquids.swageWater, 400 / 60f);
-                outputLiquid = new LiquidStack(Liquids.water, 340 / 60f);
-                drawer = new DrawMulti(new DrawRegion("-bottom"),
-                new DrawLiquidTile(WHLiquids.swageWater),
-                new DrawLiquidTile(Liquids.water),
-                new DrawBubbles(WHLiquids.swageWater.color.cpy().lerp(Liquids.water.color.cpy(), 0.3f)){{
-                    sides = 10;
-                    recurrence = 3f;
-                    spread = 6;
-                    radius = 1.5f;
-                    amount = 20;
-                }}, new DrawCircles(){{
-                    color = WHLiquids.swageWater.color.cpy().lerp(Liquids.water.color.cpy(), 0.3f);
-                    amount = 3;
-                    strokeMax = 1.5f;
-                }}, new DrawCrucibleFlame(){{
-                    flameColor = WHLiquids.swageWater.color.cpy().lerp(Liquids.water.color.cpy(), 0.3f);
-                    particleRad = 15f;
-                }}, new DrawDefault());
-                updateEffect = new RadialEffect(Fx.steamCoolSmoke, 4, 90f, 55 / 4f){{
-                    rotationOffset = 45F;
-                }};
-                updateEffectSpread = 0;
-            }
-        };
-
         pyratiteBlender = new GenericCrafter("pyratite-blender"){
             {
-                requirements(Category.crafting, with(Items.copper, 80, Items.silicon, 40, Items.graphite, 50, WHItems.titaniumSteel, 50));
+                requirements(Category.crafting, with(WHItems.manganese, 80, Items.silicon, 40, Items.graphite, 50, WHItems.manganeseSteel, 50));
 
                 hasItems = true;
                 hasPower = true;
@@ -656,7 +679,7 @@ public final class WHBlocks{
 
         pyratiteSeparator = new GenericCrafter("pyratite-separator"){
             {
-                requirements(Category.crafting, with(WHItems.ceramite, 20, Items.phaseFabric, 30, WHItems.molybdenum, 50, WHItems.titaniumSteel, 40));
+                requirements(Category.crafting, with(WHItems.ceramite, 20, Items.phaseFabric, 30, WHItems.molybdenum, 50, WHItems.manganeseSteel, 40));
                 health = 1500;
                 hasItems = hasPower = hasLiquids = true;
                 craftTime = 180;
@@ -690,7 +713,7 @@ public final class WHBlocks{
 
         T2SporePress = new GenericCrafter("t2-spore-press"){{
 
-            requirements(Category.crafting, with(Items.graphite, 30, Items.silicon, 60, Items.plastanium, 30, WHItems.titaniumSteel, 70));
+            requirements(Category.crafting, with(Items.graphite, 30, Items.silicon, 60, Items.plastanium, 30, WHItems.manganeseSteel, 70));
             health = 700;
             hasItems = hasPower = hasLiquids = true;
             craftTime = 60;
@@ -712,7 +735,7 @@ public final class WHBlocks{
         }};
 
         T2Cultivator = new AttributeCrafter("t2-cultivator"){{
-            requirements(Category.crafting, with(Items.copper, 90, Items.silicon, 60, WHItems.titaniumSteel, 50));
+            requirements(Category.crafting, with(WHItems.manganese, 90, Items.silicon, 60, WHItems.manganeseSteel, 50));
             health = 400;
             hasItems = hasPower = hasLiquids = true;
             craftTime = 120;
@@ -740,7 +763,7 @@ public final class WHBlocks{
 
         T2CryofluidMixer = new GenericCrafter("t2-cryofluid-mixer"){
             {
-                requirements(Category.crafting, with(Items.silicon, 80, Items.tungsten, 50, WHItems.titaniumSteel, 50));
+                requirements(Category.crafting, with(Items.silicon, 80, Items.tungsten, 50, WHItems.manganeseSteel, 50));
                 health = 600;
                 hasItems = hasPower = hasLiquids = true;
                 craftTime = 60;
@@ -762,7 +785,7 @@ public final class WHBlocks{
 
         T2PhaseSynthesizer = new GenericCrafter("t2-phase-synthesizer"){{
 
-            requirements(Category.crafting, with(WHItems.titaniumSteel, 80, Items.silicon, 150, Items.carbide, 50, WHItems.ceramite, 50));
+            requirements(Category.crafting, with(WHItems.manganeseSteel, 80, Items.silicon, 150, Items.carbide, 50, WHItems.ceramite, 50));
             health = 1000;
             hasItems = hasPower = hasLiquids = true;
             craftTime = 120;
@@ -790,7 +813,7 @@ public final class WHBlocks{
         promethiumRefinery = new GenericCrafter("promethium-refinery"){
             {
 
-                requirements(Category.crafting, with(Items.phaseFabric, 20, Items.tungsten, 50, WHItems.ceramite, 20, WHItems.titaniumSteel, 50));
+                requirements(Category.crafting, with(Items.phaseFabric, 20, Items.tungsten, 50, WHItems.ceramite, 20, WHItems.manganeseSteel, 50));
 
                 health = 1200;
                 hasItems = hasPower = hasLiquids = true;
@@ -870,7 +893,7 @@ public final class WHBlocks{
 
        /* scrapCrusher = new MultiCrafter("scrap-crusher"){{
 
-            requirements(Category.crafting, with(Items.silicon, 50, Items.lead, 50, WHItems.titaniumSteel, 30, Items.graphite, 80));
+            requirements(Category.crafting, with(Items.silicon, 50, WHItems.manganese, 50, WHItems.manganeseSteel, 30, Items.graphite, 80));
 
             health = 400;
             hasItems = hasPower = true;
@@ -887,23 +910,23 @@ public final class WHBlocks{
                 outputItems = with(Items.sand, 4);
                 consumePower(100 / 60f);
                 craftEffect = new MultiEffect(WHFx.square(Items.scrap.color, 35f, 4, 16f, 5f),
-                WHFx.arcSmelt(Items.copper.color, 13f, 6, 60f));
+                WHFx.arcSmelt(WHItems.manganese.color, 13f, 6, 60f));
             }}
             , new CraftPlan(){{
                 craftTime = 20f;
-                consumeItem(Items.copper, 1);
+                consumeItem(WHItems.manganese, 1);
                 outputItems = with(Items.scrap, 2);
                 consumePower(100 / 60f);
-                craftEffect = new MultiEffect(WHFx.square(Items.copper.color, 35f, 4, 16f, 5f),
-                WHFx.arcSmelt(Items.copper.color, 13f, 6, 60f));
+                craftEffect = new MultiEffect(WHFx.square(WHItems.manganese.color, 35f, 4, 16f, 5f),
+                WHFx.arcSmelt(WHItems.manganese.color, 13f, 6, 60f));
             }}
             , new CraftPlan(){{
                 craftTime = 30f;
-                consumeItem(Items.lead, 1);
+                consumeItem(WHItems.manganese, 1);
                 outputItems = with(Items.sand, 2);
                 consumePower(100 / 60f);
-                craftEffect = new MultiEffect(WHFx.square(Items.lead.color, 35f, 4, 16f, 5f),
-                WHFx.arcSmelt(Items.lead.color, 13f, 6, 60f));
+                craftEffect = new MultiEffect(WHFx.square(WHItems.manganese.color, 35f, 4, 16f, 5f),
+                WHFx.arcSmelt(WHItems.manganese.color, 13f, 6, 60f));
             }}, new CraftPlan(){{
                 craftTime = 30f;
                 consumeItem(Items.titanium, 1);
@@ -915,7 +938,7 @@ public final class WHBlocks{
         }};*/
 
         scrapFurance = new GenericCrafter("scrap-furance"){{
-            requirements(Category.crafting, with(WHItems.titaniumSteel, 100, Items.lead, 120, Items.graphite, 120));
+            requirements(Category.crafting, with(WHItems.manganeseSteel, 100, WHItems.manganese, 120, Items.graphite, 120));
             health = 800;
             outputLiquid = new LiquidStack(Liquids.slag, 1);
             size = 2;
@@ -929,7 +952,7 @@ public final class WHBlocks{
         }};
 
         largeSurgeSmelter = new GenericCrafter("large-surge-smelter"){{
-            requirements(Category.crafting, with(WHItems.titaniumSteel, 120, WHItems.molybdenum, 180, Items.carbide, 120, WHItems.ceramite, 100));
+            requirements(Category.crafting, with(WHItems.manganeseSteel, 120, WHItems.molybdenum, 180, Items.carbide, 120, WHItems.ceramite, 100));
 
             size = 4;
             craftTime = 120f;
@@ -938,7 +961,7 @@ public final class WHBlocks{
             liquidCapacity = 50;
             itemCapacity = 150;
             consumePower(8f);
-            consumeItems(with(Items.copper, 30, Items.silicon, 25, WHItems.titaniumSteel, 10));
+            consumeItems(with(WHItems.manganese, 30, Items.silicon, 25, WHItems.manganeseSteel, 10));
             consumeLiquid(WHLiquids.refinePromethium, 10 / 60f);
             outputItem = new ItemStack(Items.surgeAlloy, 12);
             drawer = new DrawMulti(new DrawDefault(),
@@ -961,7 +984,7 @@ public final class WHBlocks{
 
         LiquidNitrogenPlant = new GenericCrafter("Liquid-nitrogen-plant"){{
 
-            requirements(Category.crafting, with(WHItems.titaniumSteel, 80, Items.plastanium, 60, Items.carbide, 40, WHItems.ceramite, 40));
+            requirements(Category.crafting, with(WHItems.manganeseSteel, 80, Items.plastanium, 60, Items.carbide, 40, WHItems.ceramite, 40));
 
             size = 2;
             craftTime = 60f;
@@ -988,7 +1011,7 @@ public final class WHBlocks{
         //热量
         combustionHeater = new FlammabilityHeatProducer("combustion-heater"){
             {
-                requirements(Category.crafting, with(WHItems.titaniumSteel, 50, Items.lead, 60, Items.silicon, 40));
+                requirements(Category.crafting, with(WHItems.manganeseSteel, 50, WHItems.manganese, 60, Items.silicon, 40));
                 size = 2;
                 craftTime = 45f;
                 health = 200;
@@ -1034,7 +1057,7 @@ public final class WHBlocks{
         };
 
         slagHeatMaker = new HeatProducer("slag-heat-maker"){{
-            requirements(Category.crafting, with(WHItems.titaniumSteel, 30, Items.graphite, 30, Items.silicon, 30, Items.tungsten, 30));
+            requirements(Category.crafting, with(WHItems.manganeseSteel, 30, Items.graphite, 30, Items.silicon, 30, Items.tungsten, 30));
 
             size = 3;
             itemCapacity = 0;
@@ -1048,7 +1071,7 @@ public final class WHBlocks{
         }};
 
         promethiumHeater = new HeatProducer("promethium-heater"){{
-            requirements(Category.crafting, with(Items.thorium, 220, Items.silicon, 150, Items.carbide, 100, WHItems.ceramite, 100, WHItems.titaniumSteel, 100));
+            requirements(Category.crafting, with(Items.thorium, 220, Items.silicon, 150, Items.carbide, 100, WHItems.ceramite, 100, WHItems.manganeseSteel, 100));
 
             size = 3;
             craftTime = 4f;
@@ -1073,7 +1096,7 @@ public final class WHBlocks{
         smallHeatRouter = new HeatConductor("small-heat-router"){
             {
 
-                requirements(Category.distribution, with(Items.copper, 15, Items.graphite, 10, Items.titanium, 10));
+                requirements(Category.distribution, with(WHItems.manganese, 15, Items.graphite, 10, Items.titanium, 10));
 
                 researchCostMultiplier = 2f;
 
@@ -1088,7 +1111,7 @@ public final class WHBlocks{
 
         heatBelt = new HeatBelt("Heat-Belt"){
             {
-                requirements(Category.distribution, with(Items.lead, 7, Items.graphite, 2, WHItems.titaniumSteel, 2));
+                requirements(Category.distribution, with(WHItems.manganese, 7, Items.graphite, 2, WHItems.manganeseSteel, 2));
                 researchCostMultiplier = 10f;
                 rotate = true;
                 hasPower = false;
@@ -1101,7 +1124,7 @@ public final class WHBlocks{
         heatBridge = new HeatDirectionBridge("heat-bridge"){
 
             {
-                requirements(Category.distribution, with(Items.silicon, 10, Items.lead, 15, Items.graphite, 10));
+                requirements(Category.distribution, with(Items.silicon, 10, WHItems.manganese, 15, Items.graphite, 10));
                 size = 1;
                 range = 4;
                 health = 100;
@@ -1115,7 +1138,7 @@ public final class WHBlocks{
 
         T2heatBridge = new HeatDirectionBridge("t2-heat-bridge"){
             {
-                requirements(Category.distribution, with(WHItems.resonantCrystal, 10, Items.tungsten, 15, WHItems.titaniumSteel, 10));
+                requirements(Category.distribution, with(WHItems.resonantCrystal, 10, Items.tungsten, 15, WHItems.manganeseSteel, 10));
                 size = 1;
                 range = 10;
                 health = 200;
@@ -1129,7 +1152,7 @@ public final class WHBlocks{
         };
 
         tungstenConverter = new HeatCrafter("tungsten-converter"){{
-            requirements(Category.crafting, with(WHItems.titaniumSteel, 50, Items.plastanium, 60, Items.phaseFabric, 20));
+            requirements(Category.crafting, with(WHItems.manganeseSteel, 50, Items.plastanium, 60, Items.phaseFabric, 20));
 
             size = 2;
             craftTime = 60f;
@@ -1213,7 +1236,7 @@ public final class WHBlocks{
         ceramiteSteelFoundry = new GenericCrafter("ceramite-steel-foundry"){
             {
                 Color color = CeramiteColor;
-                requirements(Category.crafting, with(Items.lead, 100, Items.silicon, 50, Items.tungsten, 25, Items.plastanium, 25));
+                requirements(Category.crafting, with(WHItems.manganese, 100, Items.silicon, 50, Items.tungsten, 25, Items.plastanium, 25));
                 health = 300;
                 hasItems = hasPower = true;
                 craftTime = 60;
@@ -1290,7 +1313,7 @@ public final class WHBlocks{
 
         ADMill = new HeatProducer("admantium-mill"){
             {
-                requirements(Category.crafting, with(Items.silicon, 200, WHItems.titaniumSteel, 50, WHItems.ceramite, 50, WHItems.refineCeramite, 30));
+                requirements(Category.crafting, with(Items.silicon, 200, WHItems.manganeseSteel, 50, WHItems.ceramite, 50, WHItems.refineCeramite, 30));
 
                 hasItems = true;
                 health = 600;
@@ -1313,7 +1336,7 @@ public final class WHBlocks{
         };
         //Drill
         electronicPneumaticDrill = new Drill("t2-pneumatic-drill"){{
-            requirements(Category.production, with(Items.copper, 30, Items.silicon, 15, Items.graphite, 20));
+            requirements(Category.production, with(WHItems.manganese, 30, Items.silicon, 15, Items.graphite, 20));
             tier = 3;
             drillTime = 250;
             size = 2;
@@ -1323,7 +1346,7 @@ public final class WHBlocks{
         }};
         MechanicalQuarry = new Quarry("mechanical-quarry"){{
 
-            requirements(Category.production, with(Items.lead, 50, Items.graphite, 30, WHItems.titaniumSteel, 30, Items.silicon, 60));
+            requirements(Category.production, with(WHItems.manganese, 50, Items.graphite, 30, WHItems.manganeseSteel, 30, Items.silicon, 60));
 
             health = 300;
             size = 3;
@@ -1348,7 +1371,7 @@ public final class WHBlocks{
         }};
         heavyCuttingDrill = new BurstDrill("heavy-cutting-drill"){
             {
-                requirements(Category.production, with(Items.copper, 100, Items.lead, 100, Items.graphite, 100, Items.silicon, 200, WHItems.titaniumSteel, 100));
+                requirements(Category.production, with(WHItems.manganese, 100, WHItems.manganese, 100, Items.graphite, 100, Items.silicon, 200, WHItems.manganeseSteel, 100));
 
                 health = 2900;
                 size = 4;
@@ -1400,7 +1423,7 @@ public final class WHBlocks{
 
         SpecialCuttingDrill = new SpecialDrill("heavy-steel-laser-drill"){
             {
-                requirements(Category.production, with(WHItems.titaniumSteel, 80, Items.silicon, 200, Items.plastanium, 100, WHItems.ceramite, 80));
+                requirements(Category.production, with(WHItems.manganeseSteel, 80, Items.silicon, 200, Items.plastanium, 100, WHItems.ceramite, 80));
 
                 health = 3200;
                 drillTime = 500;
@@ -1436,7 +1459,7 @@ public final class WHBlocks{
         };
         strengthenOilExtractor = new Fracker("strengthen-oil-extractor"){
             {
-                requirements(Category.production, with(Items.graphite, 60, Items.silicon, 120, Items.tungsten, 80, WHItems.titaniumSteel, 50));
+                requirements(Category.production, with(Items.graphite, 60, Items.silicon, 120, Items.tungsten, 80, WHItems.manganeseSteel, 50));
                 health = 800;
                 size = 3;
                 floating = true;
@@ -1485,7 +1508,7 @@ public final class WHBlocks{
 
         slagExtractor = new AttributeCrafter("slag-extractor"){
             {
-                requirements(Category.production, with(Items.thorium, 100, Items.graphite, 100, Items.silicon, 150, WHItems.titaniumSteel, 50));
+                requirements(Category.production, with(Items.thorium, 100, Items.graphite, 100, Items.silicon, 150, WHItems.manganeseSteel, 50));
 
                 health = 450;
                 size = 3;
@@ -1499,7 +1522,7 @@ public final class WHBlocks{
                 consumePower(10);
                 outputLiquid = new LiquidStack(Liquids.slag, 1f);
                 craftTime = 60f;
-                consumeItems(new ItemStack(WHItems.titaniumSteel, 1));
+                consumeItems(new ItemStack(WHItems.manganeseSteel, 1));
                 baseEfficiency = 0.3f;
                 maxBoost = 6;
                 boostScale = 0.334f;
@@ -1511,7 +1534,7 @@ public final class WHBlocks{
 
         promethiumExtractor = new Fracker("promethium-extractor"){
             {
-                requirements(Category.production, with(Items.silicon, 90, Items.graphite, 120, WHItems.titaniumSteel, 90, Items.thorium, 80));
+                requirements(Category.production, with(Items.silicon, 90, Items.graphite, 120, WHItems.manganeseSteel, 90, Items.thorium, 80));
 
                 health = 550;
                 size = 3;
@@ -1535,7 +1558,7 @@ public final class WHBlocks{
 
         heavyExtractor = new EnhancedWaterExtractor("heavy-extractor"){
             {
-                requirements(Category.production, with(Items.copper, 100, Items.silicon, 90, WHItems.titaniumSteel, 40));
+                requirements(Category.production, with(WHItems.manganese, 100, Items.silicon, 90, WHItems.manganeseSteel, 40));
                 health = 400;
                 size = 3;
                 hasPower = true;
@@ -1554,7 +1577,7 @@ public final class WHBlocks{
 
         gravityPump = new Pump("gravity-pump"){
             {
-                requirements(Category.liquid, with(Items.metaglass, 300, WHItems.titaniumSteel, 150, Items.plastanium, 130, Items.surgeAlloy, 50, WHItems.ceramite, 50));
+                requirements(Category.liquid, with(Items.metaglass, 300, WHItems.manganeseSteel, 150, Items.plastanium, 130, Items.surgeAlloy, 50, WHItems.ceramite, 50));
                 health = 1400;
                 size = 4;
                 drawer = new DrawMulti(new DrawPumpLiquid(), new DrawDefault());
@@ -1571,7 +1594,7 @@ public final class WHBlocks{
 
         tiSteelPump = new Pump("titanium-steel-pump"){
             {
-                requirements(Category.liquid, with(Items.copper, 50, WHItems.titaniumSteel, 30, Items.silicon, 50));
+                requirements(Category.liquid, with(WHItems.manganese, 50, WHItems.manganeseSteel, 30, Items.silicon, 50));
                 health = 320;
                 size = 2;
                 drawer = new DrawMulti(new DrawPumpLiquid(), new DrawDefault());
@@ -1587,7 +1610,7 @@ public final class WHBlocks{
 
         steelConduit = new TubeConduit("steel-conduit"){
             {
-                requirements(Category.liquid, with(WHItems.titaniumSteel, 1, WHItems.ceramite, 1));
+                requirements(Category.liquid, with(WHItems.manganeseSteel, 1, WHItems.ceramite, 1));
                 health = 600;
                 armor = 5;
                 liquidCapacity = 80f;
@@ -1600,7 +1623,7 @@ public final class WHBlocks{
 
         lightConduit = new TubeConduit("light-conduit"){
             {
-                requirements(Category.liquid, with(Items.metaglass, 3, WHItems.titaniumSteel, 1));
+                requirements(Category.liquid, with(Items.metaglass, 3, WHItems.manganeseSteel, 1));
                 health = 250;
                 liquidCapacity = 35f;
                 liquidPressure = 2.5f;
@@ -1612,7 +1635,7 @@ public final class WHBlocks{
 
         T2LiquidTank = new LiquidRouter("t2-ti-steel-liquid-tank"){
             {
-                requirements(Category.liquid, with(Items.tungsten, 50, Items.lead, 150, WHItems.titaniumSteel, 100, Items.plastanium, 100));
+                requirements(Category.liquid, with(Items.tungsten, 50, WHItems.manganese, 150, WHItems.manganeseSteel, 100, Items.plastanium, 100));
                 health = 1500;
                 size = 3;
                 liquidCapacity = 5000;
@@ -1624,7 +1647,7 @@ public final class WHBlocks{
 
         armorLiquidTank = new LiquidRouter("armor-liquid-tank"){
             {
-                requirements(Category.liquid, with(Items.tungsten, 100, Items.lead, 150, WHItems.titaniumSteel, 100, WHItems.ceramite, 50));
+                requirements(Category.liquid, with(Items.tungsten, 100, WHItems.manganese, 150, WHItems.manganeseSteel, 100, WHItems.ceramite, 50));
                 health = 3000;
                 armor = 10;
                 size = 3;
@@ -1636,7 +1659,7 @@ public final class WHBlocks{
         };
 
         armorFluidJunction = new LiquidJunction("armor-fluid-junction"){{
-            requirements(Category.liquid, with(Items.graphite, 4, WHItems.titaniumSteel, 4, WHItems.molybdenum, 4));
+            requirements(Category.liquid, with(Items.graphite, 4, WHItems.manganeseSteel, 4, WHItems.molybdenum, 4));
             buildCostMultiplier = 3f;
             health = 450;
             armor = 5;
@@ -1647,7 +1670,7 @@ public final class WHBlocks{
         }};
 
         mixedFluidJunction = new MixedFluidJunction("mixed-fluid-junction"){{
-            requirements(Category.liquid, with(Items.graphite, 10, WHItems.titaniumSteel, 8, WHItems.molybdenumAlloy, 4));
+            requirements(Category.liquid, with(Items.graphite, 10, WHItems.manganeseSteel, 8, WHItems.molybdenumAlloy, 4));
             buildCostMultiplier = 2f;
             health = 450;
             armor = 5;
@@ -1659,7 +1682,7 @@ public final class WHBlocks{
         }};
 
         armorFluidRouter = new LiquidRouter("armor-fluid-router"){{
-            requirements(Category.liquid, with(Items.graphite, 4, WHItems.titaniumSteel, 4, WHItems.molybdenum, 4));
+            requirements(Category.liquid, with(Items.graphite, 4, WHItems.manganeseSteel, 4, WHItems.molybdenum, 4));
             liquidCapacity = 150f;
             liquidPadding = 3f / 4f;
             researchCostMultiplier = 3;
@@ -1674,7 +1697,7 @@ public final class WHBlocks{
 
         tiSteelBridgeConduit = new LiquidBridge("steel-bridge-conduit"){
             {
-                requirements(Category.liquid, with(Items.lead, 20, Items.silicon, 25, WHItems.titaniumSteel, 10));
+                requirements(Category.liquid, with(WHItems.manganese, 20, Items.silicon, 25, WHItems.manganeseSteel, 10));
                 health = 330;
                 armor = 2;
                 rotate = false;
@@ -1691,7 +1714,7 @@ public final class WHBlocks{
 
         T2BridgeConduit = new LiquidBridge("low-resistance-conduit"){
             {
-                requirements(Category.liquid, with(Items.metaglass, 15, WHItems.resonantCrystal, 10, WHItems.titaniumSteel, 20, Items.phaseFabric, 10));
+                requirements(Category.liquid, with(Items.metaglass, 15, WHItems.resonantCrystal, 10, WHItems.manganeseSteel, 20, Items.phaseFabric, 10));
                 health = 230;
                 rotate = false;
                 range = 18;
@@ -1708,7 +1731,7 @@ public final class WHBlocks{
 
         wrapProjector = new RegenProjector("wrap-projector"){
             {
-                requirements(Category.effect, with(Items.plastanium, 100, Items.silicon, 200, WHItems.titaniumSteel, 100, Items.carbide, 100, WHItems.sealedPromethium, 50));
+                requirements(Category.effect, with(Items.plastanium, 100, Items.silicon, 200, WHItems.manganeseSteel, 100, Items.carbide, 100, WHItems.sealedPromethium, 50));
 
                 health = 1500;
                 size = 3;
@@ -1753,7 +1776,7 @@ public final class WHBlocks{
 
         wrapOverdrive = new SelectOverdriveProjector("wrap-overdrive"){
             {
-                requirements(Category.effect, BuildVisibility.sandboxOnly, with(Items.silicon, 250, WHItems.titaniumSteel, 250, Items.surgeAlloy, 150, Items.phaseFabric, 80, WHItems.sealedPromethium, 50));
+                requirements(Category.effect, BuildVisibility.sandboxOnly, with(Items.silicon, 250, WHItems.manganeseSteel, 250, Items.surgeAlloy, 150, Items.phaseFabric, 80, WHItems.sealedPromethium, 50));
 
                 health = 100;
                 size = 3;
@@ -1788,7 +1811,7 @@ public final class WHBlocks{
 
         armoredVault = new StorageBlock("armored-vault"){
             {
-                requirements(Category.effect, with(Items.silicon, 2800, WHItems.titaniumSteel, 1500, Items.plastanium, 1000, WHItems.ceramite, 800));
+                requirements(Category.effect, with(Items.silicon, 2800, WHItems.manganeseSteel, 1500, Items.plastanium, 1000, WHItems.ceramite, 800));
 
                 health = 2800;
                 size = 3;
@@ -1801,7 +1824,7 @@ public final class WHBlocks{
         };
         T2RepairTower = new RepairTower("energy-repair-tower"){
             {
-                requirements(Category.effect, with(Items.plastanium, 400, WHItems.titaniumSteel, 300, WHItems.ceramite, 300, WHItems.sealedPromethium, 200));
+                requirements(Category.effect, with(Items.plastanium, 400, WHItems.manganeseSteel, 300, WHItems.ceramite, 300, WHItems.sealedPromethium, 200));
 
                 health = 1500;
                 size = 3;
@@ -1823,7 +1846,7 @@ public final class WHBlocks{
 
         fortlessShield = new BaseForceProjector("fortless-level-void-shield"){
             {
-                requirements(Category.effect, with(Items.tungsten, 1500, WHItems.titaniumSteel, 1500, WHItems.ceramite, 650, WHItems.refineCeramite, 300));
+                requirements(Category.effect, with(Items.tungsten, 1500, WHItems.manganeseSteel, 1500, WHItems.ceramite, 650, WHItems.refineCeramite, 300));
                 health = 8500;
                 size = 5;
                 radius = 300;
@@ -1847,7 +1870,7 @@ public final class WHBlocks{
 
         strongholdCore = new FrontlineCoreBlock("s-core"){
             {
-                requirements(Category.effect, with(Items.copper, 1000, Items.lead, 2000, Items.silicon, 1000, WHItems.titaniumSteel, 500));
+                requirements(Category.effect, with(WHItems.manganese, 1000, WHItems.manganese, 2000, Items.silicon, 1000, WHItems.manganeseSteel, 500));
 
                 unitType = UnitTypes.evoke;
                 armor = 22;
@@ -1862,7 +1885,7 @@ public final class WHBlocks{
 
         T1strongholdCore = new CoreBlock("m-core"){
             {
-                requirements(Category.effect, with(Items.tungsten, 2000, Items.silicon, 2000, Items.surgeAlloy, 500, WHItems.titaniumSteel, 5000, WHItems.ceramite, 800));
+                requirements(Category.effect, with(Items.tungsten, 2000, Items.silicon, 2000, Items.surgeAlloy, 500, WHItems.manganeseSteel, 5000, WHItems.ceramite, 800));
                 unitType = UnitTypes.evoke;
                 armor = 35;
                 health = 12000;
@@ -1876,7 +1899,7 @@ public final class WHBlocks{
 
         T2strongholdCore = new CoreBlock("l-core"){
             {
-                requirements(Category.effect, with(WHItems.molybdenum, 3000, Items.silicon, 8000, WHItems.molybdenumAlloy, 1000, WHItems.refineCeramite, 1000, WHItems.titaniumSteel, 5000));
+                requirements(Category.effect, with(WHItems.molybdenum, 3000, Items.silicon, 8000, WHItems.molybdenumAlloy, 1000, WHItems.refineCeramite, 1000, WHItems.manganeseSteel, 5000));
                 unitType = UnitTypes.evoke;
                 armor = 35;
                 health = 30000;
@@ -1889,7 +1912,7 @@ public final class WHBlocks{
         };
 
         armorInvertedSorter = new Sorter("armor-inverted-sorter"){{
-            requirements(Category.distribution, with(Items.lead, 2, Items.tungsten, 2, WHItems.titaniumSteel, 1));
+            requirements(Category.distribution, with(WHItems.manganese, 2, Items.tungsten, 2, WHItems.manganeseSteel, 1));
             buildCostMultiplier = 3f;
             health = 300;
             armor = 5;
@@ -1897,14 +1920,14 @@ public final class WHBlocks{
         }};
 
         armorSorter = new Sorter("armor-sorter"){{
-            requirements(Category.distribution, with(Items.lead, 2, Items.tungsten, 2, WHItems.titaniumSteel, 1));
+            requirements(Category.distribution, with(WHItems.manganese, 2, Items.tungsten, 2, WHItems.manganeseSteel, 1));
             buildCostMultiplier = 3f;
             health = 300;
             armor = 5;
         }};
 
         armorJunction = new Junction("armor-junction"){{
-            requirements(Category.distribution, with(Items.graphite, 10, WHItems.titaniumSteel, 3));
+            requirements(Category.distribution, with(Items.graphite, 10, WHItems.manganeseSteel, 3));
             speed = 30;
             capacity = 10;
             displayedSpeed = 18.5f;
@@ -1914,7 +1937,7 @@ public final class WHBlocks{
         }};
 
         armorRouter = new Router("armor-router"){{
-            requirements(Category.distribution, with(Items.graphite, 6, WHItems.titaniumSteel, 3));
+            requirements(Category.distribution, with(Items.graphite, 6, WHItems.manganeseSteel, 3));
             buildCostMultiplier = 2f;
             health = 200;
             armor = 2;
@@ -1922,7 +1945,7 @@ public final class WHBlocks{
         }};
 
         armorOverflowGate = new OverflowDuct("armor-overflow-gate"){{
-            requirements(Category.distribution, with(Items.graphite, 8, WHItems.titaniumSteel, 3));
+            requirements(Category.distribution, with(Items.graphite, 8, WHItems.manganeseSteel, 3));
             health = 300;
             armor = 2;
             speed = 2f;
@@ -1931,7 +1954,7 @@ public final class WHBlocks{
         }};
 
         armorUnderflowGate = new OverflowDuct("armor-underflow-gate"){{
-            requirements(Category.distribution, with(Items.graphite, 8, WHItems.titaniumSteel, 3));
+            requirements(Category.distribution, with(Items.graphite, 8, WHItems.manganeseSteel, 3));
             health = 300;
             armor = 2;
             speed = 2f;
@@ -1942,7 +1965,7 @@ public final class WHBlocks{
 
         steelDust = new CoverdConveyor("steel-dust"){{
 
-            requirements(Category.distribution, with(WHItems.titaniumSteel, 2, Items.lead, 1, Items.silicon, 2));
+            requirements(Category.distribution, with(WHItems.manganeseSteel, 2, WHItems.manganese, 1, Items.silicon, 2));
 
             health = 150;
             underBullets = true;
@@ -1961,7 +1984,7 @@ public final class WHBlocks{
 
         steelBridge = new ItemBridge("steel-bridge-conveyor"){{
             {
-                requirements(Category.distribution, with(Items.lead, 10, Items.silicon, 15, WHItems.titaniumSteel, 6, Items.metaglass, 10));
+                requirements(Category.distribution, with(WHItems.manganese, 10, Items.silicon, 15, WHItems.manganeseSteel, 6, Items.metaglass, 10));
 
                 health = 230;
                 range = 8;
@@ -1977,7 +2000,7 @@ public final class WHBlocks{
 
         T2steelBridge = new ItemBridge("low-resistance-bridge"){{
             {
-                requirements(Category.distribution, with(WHItems.titaniumSteel, 15, WHItems.sealedPromethium, 10, Items.phaseFabric, 10));
+                requirements(Category.distribution, with(WHItems.manganeseSteel, 15, WHItems.sealedPromethium, 10, Items.phaseFabric, 10));
 
                 health = 400;
                 range = 25;
@@ -1994,7 +2017,7 @@ public final class WHBlocks{
 
         steelUnloader = new UnloaderF("titanium-steel-unloader"){{
 
-            requirements(Category.distribution, with(Items.lead, 20, Items.silicon, 15, WHItems.titaniumSteel, 30, Items.metaglass, 20));
+            requirements(Category.distribution, with(WHItems.manganese, 20, Items.silicon, 15, WHItems.manganeseSteel, 30, Items.metaglass, 20));
             size = 1;
             update = true;
             hasItems = true;
@@ -2007,7 +2030,7 @@ public final class WHBlocks{
 
         ceramiteConveyor = new BetterStackConvyor("ceramite-conveyor"){{
 
-            requirements(Category.distribution, with(Items.lead, 5, Items.silicon, 4, WHItems.titaniumSteel, 2, WHItems.ceramite, 1));
+            requirements(Category.distribution, with(WHItems.manganese, 5, Items.silicon, 4, WHItems.manganeseSteel, 2, WHItems.ceramite, 1));
 
             health = 550;
             size = 1;
@@ -2022,7 +2045,7 @@ public final class WHBlocks{
 
         armorCoverStackBelt = new TubeStackConveyor("armor-cover-stack-belt"){
             {
-                requirements(Category.distribution, with(Items.metaglass, 3, WHItems.titaniumSteel, 2, WHItems.ceramite, 2));
+                requirements(Category.distribution, with(Items.metaglass, 3, WHItems.manganeseSteel, 2, WHItems.ceramite, 2));
                 health = 1000;
                 size = 1;
                 update = true;
@@ -2056,7 +2079,7 @@ public final class WHBlocks{
 
         trackDriver = new MassDriver("track-driver"){
             {
-                requirements(Category.distribution, with(WHItems.titaniumSteel, 120, Items.phaseFabric, 50, Items.carbide, 50, WHItems.ceramite, 50));
+                requirements(Category.distribution, with(WHItems.manganeseSteel, 120, Items.phaseFabric, 50, Items.carbide, 50, WHItems.ceramite, 50));
 
                 health = 2800;
                 size = 3;
@@ -2077,7 +2100,7 @@ public final class WHBlocks{
         };
 
         ventDistiller = new ThermalGenerator("vent-distiller"){{
-            requirements(Category.production, with(Items.graphite, 50, Items.silicon, 150, Items.plastanium, 50, WHItems.titaniumSteel, 40));
+            requirements(Category.production, with(Items.graphite, 50, Items.silicon, 150, Items.plastanium, 50, WHItems.manganeseSteel, 40));
 
             attribute = Attribute.steam;
             group = BlockGroup.liquids;
@@ -2107,7 +2130,7 @@ public final class WHBlocks{
 
         turboGenerator = new ConsumeGenerator("turbo-generator"){
             {
-                requirements(Category.power, with(Items.thorium, 50, Items.metaglass, 100, Items.silicon, 250, WHItems.resonantCrystal, 30, WHItems.titaniumSteel, 50));
+                requirements(Category.power, with(Items.thorium, 50, Items.metaglass, 100, Items.silicon, 250, WHItems.resonantCrystal, 30, WHItems.manganeseSteel, 50));
                 size = 3;
                 health = 500;
                 hasItems = hasLiquids = true;
@@ -2138,7 +2161,7 @@ public final class WHBlocks{
 
         crackingGenerator = new ConsumeGenerator("cracking-generator"){
             {
-                requirements(Category.power, with(Items.silicon, 100, Items.graphite, 100, Items.carbide, 20, WHItems.titaniumSteel, 70, WHItems.ceramite, 20));
+                requirements(Category.power, with(Items.silicon, 100, Items.graphite, 100, Items.carbide, 20, WHItems.manganeseSteel, 70, WHItems.ceramite, 20));
                 powerProduction = 2000 / 60f;
 
                 drawer = new DrawMulti(new DrawRegion("-bottom"),
@@ -2178,7 +2201,7 @@ public final class WHBlocks{
 
         T2thermalGenerator = new ThermalGenerator("t2-geothermal-generator"){
             {
-                requirements(Category.power, with(Items.silicon, 120, WHItems.titaniumSteel, 70, Items.plastanium, 50, Items.tungsten, 50, WHItems.resonantCrystal, 50));
+                requirements(Category.power, with(Items.silicon, 120, WHItems.manganeseSteel, 70, Items.plastanium, 50, Items.tungsten, 50, WHItems.resonantCrystal, 50));
 
                 size = 3;
                 health = 1400;
@@ -2197,7 +2220,7 @@ public final class WHBlocks{
 
         T2impactReactor = new ImpactReactor("detonation-reactor"){
             {
-                requirements(Category.power, with(Items.tungsten, 2000, WHItems.titaniumSteel, 800, WHItems.molybdenumAlloy, 400, WHItems.refineCeramite, 200));
+                requirements(Category.power, with(Items.tungsten, 2000, WHItems.manganeseSteel, 800, WHItems.molybdenumAlloy, 400, WHItems.refineCeramite, 200));
 
                 size = 4;
                 health = 10000;
@@ -2319,7 +2342,7 @@ public final class WHBlocks{
 
         promethiunmRector = new NuclearReactor("promethium-reactor"){
             {
-                requirements(Category.power, with(Items.lead, 200, Items.silicon, 200, Items.carbide, 30, WHItems.titaniumSteel, 110, WHItems.resonantCrystal, 50, WHItems.molybdenumAlloy, 20));
+                requirements(Category.power, with(WHItems.manganese, 200, Items.silicon, 200, Items.carbide, 30, WHItems.manganeseSteel, 110, WHItems.resonantCrystal, 50, WHItems.molybdenumAlloy, 20));
 
                 health = 3500;
                 size = 3;
@@ -2345,7 +2368,7 @@ public final class WHBlocks{
         Mbattery = new Battery("middle-battery"){
 
             {
-                requirements(Category.power, with(Items.lead, 120, Items.silicon, 110, WHItems.titaniumSteel, 50));
+                requirements(Category.power, with(WHItems.manganese, 120, Items.silicon, 110, WHItems.manganeseSteel, 50));
                 health = 250;
                 size = 2;
                 emptyLightColor = Color.valueOf("5757C1FF");
@@ -2360,7 +2383,7 @@ public final class WHBlocks{
 
         Lbattery = new Battery("large-battery"){
             {
-                requirements(Category.power, with(Items.lead, 400, WHItems.titaniumSteel, 400, WHItems.refineCeramite, 50, WHItems.sealedPromethium, 30));
+                requirements(Category.power, with(WHItems.manganese, 400, WHItems.manganeseSteel, 400, WHItems.refineCeramite, 50, WHItems.sealedPromethium, 30));
                 health = 2900;
                 size = 4;
                 drawer = new DrawMulti(new DrawDefault(), new DrawPower(), new DrawRegion("-top"));
@@ -2374,7 +2397,7 @@ public final class WHBlocks{
         MK3battery = new ShieldWall("MK3-reinforced-battery"){
             {
 
-                requirements(Category.power, with(Items.silicon, 800, WHItems.titaniumSteel, 400, WHItems.refineCeramite, 400, WHItems.sealedPromethium, 200));
+                requirements(Category.power, with(Items.silicon, 800, WHItems.manganeseSteel, 400, WHItems.refineCeramite, 400, WHItems.sealedPromethium, 200));
 
                 health = 3800;
                 size = 4;
@@ -2397,7 +2420,7 @@ public final class WHBlocks{
         };
 
         SmallTiNode = new PowerNode("composite-node"){{
-            requirements(Category.power, with(Items.lead, 8, WHItems.titaniumSteel, 1, Items.silicon, 2));
+            requirements(Category.power, with(WHItems.manganese, 8, WHItems.manganeseSteel, 1, Items.silicon, 2));
 
             health = 150;
             size = 1;
@@ -2410,12 +2433,12 @@ public final class WHBlocks{
         }};
 
         airFactory = new UnitFactory("air-factory"){{
-            requirements(Category.units, with(Items.lead, 100, Items.graphite, 35, Items.silicon, 120, WHItems.titaniumSteel, 25f));
+            requirements(Category.units, with(WHItems.manganese, 100, Items.graphite, 35, Items.silicon, 120, WHItems.manganeseSteel, 25f));
 
             size = 3;
             plans = Seq.with(
             new UnitPlan(WHUnitTypes.air1, 60f * 30, with(Items.graphite, 50, Items.metaglass, 30, Items.silicon, 70)),
-            new UnitPlan(WHUnitTypes.airB1, 60f * 40, with(Items.graphite, 50, Items.silicon, 40, WHItems.titaniumSteel, 15))
+            new UnitPlan(WHUnitTypes.airB1, 60f * 40, with(Items.graphite, 50, Items.silicon, 40, WHItems.manganeseSteel, 15))
             );
             fogRadius = 3;
             consumePower(180 / 60f);
@@ -2423,9 +2446,9 @@ public final class WHBlocks{
         }};
 
         groundFactory = new UnitFactory("ground-factory"){{
-            requirements(Category.units, with(Items.graphite, 50, Items.lead, 150, Items.silicon, 100));
+            requirements(Category.units, with(Items.graphite, 50, WHItems.manganese, 150, Items.silicon, 100));
             plans = Seq.with(
-            new UnitPlan(WHUnitTypes.M1, 60f * 20, with(Items.graphite, 30, Items.silicon, 30, Items.lead, 30))
+            new UnitPlan(WHUnitTypes.M1, 60f * 20, with(Items.graphite, 30, Items.silicon, 30, WHItems.manganese, 30))
             );
             size = 3;
             fogRadius = 3;
@@ -2434,10 +2457,10 @@ public final class WHBlocks{
         }};
 
         mechaFactory = new UnitFactory("mecha-factory"){{
-            requirements(Category.units, with(WHItems.titaniumSteel, 100, Items.tungsten, 120, Items.silicon, 100, Items.plastanium, 50));
+            requirements(Category.units, with(WHItems.manganeseSteel, 100, Items.tungsten, 120, Items.silicon, 100, Items.plastanium, 50));
 
             plans = Seq.with(
-            new UnitPlan(WHUnitTypes.Mecha2, 60f * 60, with(WHItems.titaniumSteel, 50, Items.thorium, 100, Items.silicon, 150, Items.plastanium, 35))
+            new UnitPlan(WHUnitTypes.Mecha2, 60f * 60, with(WHItems.manganeseSteel, 50, Items.thorium, 100, Items.silicon, 150, Items.plastanium, 35))
             );
 
             size = 3;
@@ -2447,7 +2470,7 @@ public final class WHBlocks{
         }};
 
         tankFactory = new UnitFactory("tank-factory"){{
-            requirements(Category.units, with(Items.thorium, 1000, Items.silicon, 1500, WHItems.titaniumSteel, 800, WHItems.ceramite, 300, WHItems.resonantCrystal, 200));
+            requirements(Category.units, with(Items.thorium, 1000, Items.silicon, 1500, WHItems.manganeseSteel, 800, WHItems.ceramite, 300, WHItems.resonantCrystal, 200));
 
             size = 7;
             consumePower(30f);
@@ -2456,23 +2479,23 @@ public final class WHBlocks{
             createSound = Sounds.unitCreateBig;
 
             plans = Seq.with(
-            new UnitPlan(WHUnitTypes.tank1, 60f * 150f, with(WHItems.titaniumSteel, 800, Items.carbide, 250, WHItems.ceramite, 400, WHItems.resonantCrystal, 100, WHItems.molybdenumAlloy, 100, Items.silicon, 800)),
-            new UnitPlan(WHUnitTypes.tank1s, 60f * 150f, with(WHItems.titaniumSteel, 500, Items.carbide, 400, WHItems.ceramite, 400, WHItems.resonantCrystal, 100, WHItems.molybdenumAlloy, 150, Items.silicon, 800))
+            new UnitPlan(WHUnitTypes.tank1, 60f * 150f, with(WHItems.manganeseSteel, 800, Items.carbide, 250, WHItems.ceramite, 400, WHItems.resonantCrystal, 100, WHItems.molybdenumAlloy, 100, Items.silicon, 800)),
+            new UnitPlan(WHUnitTypes.tank1s, 60f * 150f, with(WHItems.manganeseSteel, 500, Items.carbide, 400, WHItems.ceramite, 400, WHItems.resonantCrystal, 100, WHItems.molybdenumAlloy, 150, Items.silicon, 800))
             );
 
             researchCostMultiplier = 0.75f;
         }};
 
         t2Module = new MultReconstructor("t2-modification-module"){{
-            requirements(Category.units, with(WHItems.titaniumSteel, 80, Items.tungsten, 80, Items.silicon, 200, Items.plastanium, 50));
+            requirements(Category.units, with(WHItems.manganeseSteel, 80, Items.tungsten, 80, Items.silicon, 200, Items.plastanium, 50));
 
             size = 3;
             consumePower(8f);
             consumeLiquid(Liquids.hydrogen, 15f / 60f);
 
-            addUpgrade(WHUnitTypes.M1, WHUnitTypes.M2, with(WHItems.titaniumSteel, 60, Items.thorium, 50, Items.silicon, 70));
-            addUpgrade(WHUnitTypes.air1, WHUnitTypes.air2, with(WHItems.titaniumSteel, 70, Items.graphite, 80, Items.silicon, 40));
-            addUpgrade(WHUnitTypes.airB1, WHUnitTypes.airB2, with(WHItems.titaniumSteel, 70, Items.tungsten, 50, Items.silicon, 70));
+            addUpgrade(WHUnitTypes.M1, WHUnitTypes.M2, with(WHItems.manganeseSteel, 60, Items.thorium, 50, Items.silicon, 70));
+            addUpgrade(WHUnitTypes.air1, WHUnitTypes.air2, with(WHItems.manganeseSteel, 70, Items.graphite, 80, Items.silicon, 40));
+            addUpgrade(WHUnitTypes.airB1, WHUnitTypes.airB2, with(WHItems.manganeseSteel, 70, Items.tungsten, 50, Items.silicon, 70));
 
             constructTime = 60f * 20f;
             researchCostMultiplier = 0.75f;
@@ -2480,24 +2503,24 @@ public final class WHBlocks{
 
 
         t3Module = new MultReconstructor("t3-modification-module"){{
-            requirements(Category.units, with(Items.thorium, 300, WHItems.titaniumSteel, 200, Items.silicon, 500, WHItems.ceramite, 90, Items.phaseFabric, 150));
+            requirements(Category.units, with(Items.thorium, 300, WHItems.manganeseSteel, 200, Items.silicon, 500, WHItems.ceramite, 90, Items.phaseFabric, 150));
 
             size = 5;
             consumePower(15f);
             consumeLiquid(Liquids.nitrogen, 40 / 60f);
 
-            addUpgrade(WHUnitTypes.M2, WHUnitTypes.M3, with(WHItems.titaniumSteel, 120, Items.tungsten, 150, Items.plastanium, 70, Items.silicon, 200));
-            addUpgrade(WHUnitTypes.air2, WHUnitTypes.air3, with(WHItems.titaniumSteel, 120, WHItems.ceramite, 70, Items.silicon, 130));
-            addUpgrade(WHUnitTypes.airB2, WHUnitTypes.airB3, with(WHItems.titaniumSteel, 120, Items.tungsten, 150, Items.plastanium, 50, Items.silicon, 130));
+            addUpgrade(WHUnitTypes.M2, WHUnitTypes.M3, with(WHItems.manganeseSteel, 120, Items.tungsten, 150, Items.plastanium, 70, Items.silicon, 200));
+            addUpgrade(WHUnitTypes.air2, WHUnitTypes.air3, with(WHItems.manganeseSteel, 120, WHItems.ceramite, 70, Items.silicon, 130));
+            addUpgrade(WHUnitTypes.airB2, WHUnitTypes.airB3, with(WHItems.manganeseSteel, 120, Items.tungsten, 150, Items.plastanium, 50, Items.silicon, 130));
 
-            addUpgrade(WHUnitTypes.Mecha2, WHUnitTypes.Mecha3, with(WHItems.titaniumSteel, 300, Items.phaseFabric, 150, WHItems.ceramite, 150, WHItems.sealedPromethium, 100, Items.silicon, 600));
+            addUpgrade(WHUnitTypes.Mecha2, WHUnitTypes.Mecha3, with(WHItems.manganeseSteel, 300, Items.phaseFabric, 150, WHItems.ceramite, 150, WHItems.sealedPromethium, 100, Items.silicon, 600));
 
             constructTime = 60f * 40f;
             researchCostMultiplier = 0.75f;
         }};
 
         t4Module = new MultReconstructor("t4-modification-module"){{
-            requirements(Category.units, with(Items.thorium, 1000, Items.silicon, 1500, WHItems.titaniumSteel, 800, WHItems.ceramite, 300, WHItems.resonantCrystal, 400));
+            requirements(Category.units, with(Items.thorium, 1000, Items.silicon, 1500, WHItems.manganeseSteel, 800, WHItems.ceramite, 300, WHItems.resonantCrystal, 400));
 
             size = 7;
             consumePower(30f);
@@ -2507,12 +2530,12 @@ public final class WHBlocks{
 
             constructTime = 60f * 70f;
 
-            addUpgrade(WHUnitTypes.M3, WHUnitTypes.M4A, with(WHItems.titaniumSteel, 500, Items.carbide, 200, WHItems.ceramite, 300, Items.silicon, 800));
+            addUpgrade(WHUnitTypes.M3, WHUnitTypes.M4A, with(WHItems.manganeseSteel, 500, Items.carbide, 200, WHItems.ceramite, 300, Items.silicon, 800));
 
-            addUpgrade(WHUnitTypes.air3, WHUnitTypes.air4, with(WHItems.titaniumSteel, 300, Items.surgeAlloy, 300, Items.carbide, 300, WHItems.ceramite, 150, Items.silicon, 800));
-            addUpgrade(WHUnitTypes.airB3, WHUnitTypes.airB4, with(WHItems.titaniumSteel, 400, Items.phaseFabric, 200, WHItems.ceramite, 150, Items.silicon, 1500));
+            addUpgrade(WHUnitTypes.air3, WHUnitTypes.air4, with(WHItems.manganeseSteel, 300, Items.surgeAlloy, 300, Items.carbide, 300, WHItems.ceramite, 150, Items.silicon, 800));
+            addUpgrade(WHUnitTypes.airB3, WHUnitTypes.airB4, with(WHItems.manganeseSteel, 400, Items.phaseFabric, 200, WHItems.ceramite, 150, Items.silicon, 1500));
 
-            addUpgrade(WHUnitTypes.Mecha3, WHUnitTypes.Mecha4, with(WHItems.titaniumSteel, 300, WHItems.molybdenumAlloy, 250,
+            addUpgrade(WHUnitTypes.Mecha3, WHUnitTypes.Mecha4, with(WHItems.manganeseSteel, 300, WHItems.molybdenumAlloy, 250,
             WHItems.ceramite, 400, WHItems.resonantCrystal, 100, Items.silicon, 800));
 
             researchCostMultiplier = 0.75f;
@@ -2520,7 +2543,7 @@ public final class WHBlocks{
 
 
         t5Module = new MultReconstructor("t5-modification-module"){{
-            requirements(Category.units, with(WHItems.titaniumSteel, 1500, Items.silicon, 3000, Items.surgeAlloy, 1000, WHItems.ceramite, 800, WHItems.molybdenumAlloy, 300, WHItems.protocolChip, 150, WHItems.refineCeramite, 150));
+            requirements(Category.units, with(WHItems.manganeseSteel, 1500, Items.silicon, 3000, Items.surgeAlloy, 1000, WHItems.ceramite, 800, WHItems.molybdenumAlloy, 300, WHItems.protocolChip, 150, WHItems.refineCeramite, 150));
 
             size = 9;
             consumePower(50f);
@@ -2552,7 +2575,7 @@ public final class WHBlocks{
 
 
         t6Module = new MultReconstructor("exterminate-reconstructor"){{
-            requirements(Category.units, with(WHItems.titaniumSteel, 3000, WHItems.resonantCrystal, 1500, WHItems.ceramite, 1500, WHItems.protocolChip, 500, WHItems.refineCeramite, 1000));
+            requirements(Category.units, with(WHItems.manganeseSteel, 3000, WHItems.resonantCrystal, 1500, WHItems.ceramite, 1500, WHItems.protocolChip, 500, WHItems.refineCeramite, 1000));
 
             size = 11;
             consumePower(100f);
@@ -2583,7 +2606,7 @@ public final class WHBlocks{
         }};
 
         jumpBeacon = new UnitCallBlock("jump-beacon"){{
-            requirements(Category.units, with(Items.silicon, 500, WHItems.titaniumSteel, 300, WHItems.ceramite, 200, WHItems.protocolChip, 100));
+            requirements(Category.units, with(Items.silicon, 500, WHItems.manganeseSteel, 300, WHItems.ceramite, 200, WHItems.protocolChip, 100));
 
             health = 1000;
             range = 150;
@@ -2591,13 +2614,13 @@ public final class WHBlocks{
             size = 4;
 
             plans = Seq.with(
-            new UnitPlan(WHUnitTypes.airB1, 60f * 40, false, with(Items.graphite, 50, Items.silicon, 40, WHItems.titaniumSteel, 15)),
-            new UnitPlan(WHUnitTypes.airB2, 60f * 60, false, with(WHItems.titaniumSteel, 50, Items.graphite, 80, Items.silicon, 40)),
-            new UnitPlan(WHUnitTypes.airB3, 60f * 80, false, with(WHItems.titaniumSteel, 200, Items.tungsten, 200, Items.plastanium, 100, Items.silicon, 200)),
-            new UnitPlan(WHUnitTypes.airB4, 60f * 140, false, with(WHItems.titaniumSteel, 500, WHItems.ceramite, 400, WHItems.sealedPromethium, 100, Items.silicon, 2000)),
+            new UnitPlan(WHUnitTypes.airB1, 60f * 40, false, with(Items.graphite, 50, Items.silicon, 40, WHItems.manganeseSteel, 15)),
+            new UnitPlan(WHUnitTypes.airB2, 60f * 60, false, with(WHItems.manganeseSteel, 50, Items.graphite, 80, Items.silicon, 40)),
+            new UnitPlan(WHUnitTypes.airB3, 60f * 80, false, with(WHItems.manganeseSteel, 200, Items.tungsten, 200, Items.plastanium, 100, Items.silicon, 200)),
+            new UnitPlan(WHUnitTypes.airB4, 60f * 140, false, with(WHItems.manganeseSteel, 500, WHItems.ceramite, 400, WHItems.sealedPromethium, 100, Items.silicon, 2000)),
 
-            new UnitPlan(WHUnitTypes.tankEn1, 60f * 150, true, with(WHItems.titaniumSteel, 500, WHItems.ceramite, 300, WHItems.resonantCrystal, 150, Items.silicon, 2000)),
-            new UnitPlan(WHUnitTypes.tankEn2, 60f * 250, true, with(WHItems.titaniumSteel, 500, WHItems.ceramite, 400, WHItems.protocolChip, 200,
+            new UnitPlan(WHUnitTypes.tankEn1, 60f * 150, true, with(WHItems.manganeseSteel, 500, WHItems.ceramite, 300, WHItems.resonantCrystal, 150, Items.silicon, 2000)),
+            new UnitPlan(WHUnitTypes.tankEn2, 60f * 250, true, with(WHItems.manganeseSteel, 500, WHItems.ceramite, 400, WHItems.protocolChip, 200,
             WHItems.molybdenumAlloy, 400, Items.silicon, 2500)));
 
             drawBlock = b -> {
@@ -2637,17 +2660,17 @@ public final class WHBlocks{
         }};
 
         energyWarpGate = new UnitCallBlock("energy-warp-gate"){{
-            requirements(Category.units, with(WHItems.titaniumSteel, 2000, Items.carbide, 2000, WHItems.refineCeramite, 1500, WHItems.protocolChip, 1000));
+            requirements(Category.units, with(WHItems.manganeseSteel, 2000, Items.carbide, 2000, WHItems.refineCeramite, 1500, WHItems.protocolChip, 1000));
             health = 4000;
             size = 6;
             range = 300;
             spawnRange = 150;
             plans = Seq.with(
-            new UnitPlan(WHUnitTypes.air7, 60f * 60f * 7.5f, true, with(WHItems.titaniumSteel, 4000, WHItems.ceramite, 2000,
+            new UnitPlan(WHUnitTypes.air7, 60f * 60f * 7.5f, true, with(WHItems.manganeseSteel, 4000, WHItems.ceramite, 2000,
             WHItems.adamantium, 2000, WHItems.refineCeramite, 1000, WHItems.protocolChip, 1200)),
-            new UnitPlan(WHUnitTypes.tankAG, 60f * 60f * 7.5f, true, with(WHItems.titaniumSteel, 4000, WHItems.ceramite, 3000,
+            new UnitPlan(WHUnitTypes.tankAG, 60f * 60f * 7.5f, true, with(WHItems.manganeseSteel, 4000, WHItems.ceramite, 3000,
             WHItems.adamantium, 2000, WHItems.refineCeramite, 1000, WHItems.protocolChip, 800)),
-            new UnitPlan(WHUnitTypes.Mecha7, 60f * 60f * 7.5f, true, with(WHItems.titaniumSteel, 4000, WHItems.ceramite, 2500,
+            new UnitPlan(WHUnitTypes.Mecha7, 60f * 60f * 7.5f, true, with(WHItems.manganeseSteel, 4000, WHItems.ceramite, 2500,
             WHItems.adamantium, 2500, WHItems.refineCeramite, 1000, WHItems.protocolChip, 800))
             );
 
@@ -2708,7 +2731,7 @@ public final class WHBlocks{
                 float s = 15f * b.warmup * (1 - Mathf.sin(Time.time, 20, 0.08f));
                 Fill.circle(b.x + Tmp.v1.x, b.y + Tmp.v1.y, s);
                 Draw.color(Pal.coalBlack);
-                Fill.circle(b.x + Tmp.v1.x, b.y + Tmp.v1.y, s * 0.8f);
+                Fill.circle(b.x + Tmp.v1.x, b.y + Tmp.v1.y, s * 0.65f);
                 if(Mathf.chanceDelta(0.02f) && b.warmup > 0.99f && !state.isPaused()){
                     t.at(b.x + Tmp.v1.x, b.y + Tmp.v1.y, 0, b.team.color.cpy());
                     t2.at(b.x, b.y, 0, b.team.color.cpy(), new Vec2().set(b).add(Tmp.v1));
@@ -2741,7 +2764,7 @@ public final class WHBlocks{
         }};
 
         t2PayloadMassDriver = new PayloadMassDriver2("t2-payload-mass-driver"){{
-            requirements(Category.units, with(WHItems.ceramite, 100, WHItems.titaniumSteel, 150, WHItems.resonantCrystal, 80));
+            requirements(Category.units, with(WHItems.ceramite, 100, WHItems.manganeseSteel, 150, WHItems.resonantCrystal, 80));
             size = 5;
             reload = 120f;
             chargeTime = 90f;
@@ -2754,7 +2777,7 @@ public final class WHBlocks{
 
         TiNode = new PowerNode("t2-composite-node"){
             {
-                requirements(Category.power, with(Items.lead, 20, WHItems.titaniumSteel, 10, Items.silicon, 15));
+                requirements(Category.power, with(WHItems.manganese, 20, WHItems.manganeseSteel, 10, Items.silicon, 15));
 
                 health = 400;
                 size = 2;
@@ -2771,7 +2794,7 @@ public final class WHBlocks{
 
         T2TiNode = new CompositePoweNode("armor-power-tower"){
             {
-                requirements(Category.power, with(WHItems.titaniumSteel, 20, WHItems.resonantCrystal, 20, WHItems.molybdenumAlloy, 20));
+                requirements(Category.power, with(WHItems.manganeseSteel, 20, WHItems.resonantCrystal, 20, WHItems.molybdenumAlloy, 20));
 
                 health = 850;
                 size = 3;
@@ -2788,7 +2811,7 @@ public final class WHBlocks{
         };
 
         selectProjector = new SelectForceProjector("select-projector"){{
-            requirements(Category.effect, with(Items.silicon, 300, WHItems.resonantCrystal, 100, WHItems.refineCeramite, 100, WHItems.titaniumSteel, 500, WHItems.protocolChip, 100, WHItems.sealedPromethium, 100));
+            requirements(Category.effect, with(Items.silicon, 300, WHItems.resonantCrystal, 100, WHItems.refineCeramite, 100, WHItems.manganeseSteel, 500, WHItems.protocolChip, 100, WHItems.sealedPromethium, 100));
             size = 4;
             OneTileShieldHealth = 250f;
             cooldownNormal = 1.5f;
@@ -2801,7 +2824,7 @@ public final class WHBlocks{
         }};
 
         primarySteelWall = new Wall("primary-steel-wall"){{
-            requirements(Category.defense, with(Items.lead, 6, WHItems.titaniumSteel, 4));
+            requirements(Category.defense, with(WHItems.manganese, 6, WHItems.manganeseSteel, 4));
             health = 500;
             researchCostMultiplier = 0.25f;
         }};
@@ -2859,7 +2882,7 @@ public final class WHBlocks{
         }};
 
         largeCeramiteWall = new ReactionArmorWall("large-ceramite-wall"){{
-            requirements(Category.defense, with(WHItems.ceramite, 40, Items.tungsten, 40, WHItems.titaniumSteel, 15));
+            requirements(Category.defense, with(WHItems.ceramite, 40, Items.tungsten, 40, WHItems.manganeseSteel, 15));
             health = 8000;
             armor = 10;
             insulated = true;
@@ -2870,7 +2893,7 @@ public final class WHBlocks{
         }};
 
         ceramiteDoor = new AutoDoor("ceramite-door"){{
-            requirements(Category.defense, with(Items.plastanium, 30, WHItems.ceramite, 40, Items.tungsten, 40, WHItems.titaniumSteel, 15));
+            requirements(Category.defense, with(Items.plastanium, 30, WHItems.ceramite, 40, Items.tungsten, 40, WHItems.manganeseSteel, 15));
             health = 7500;
             size = 2;
             armor = 12;
@@ -2961,7 +2984,7 @@ public final class WHBlocks{
 
         Crush = new ItemTurret("Crush"){{
 
-            requirements(Category.turret, with(Items.copper, 80, Items.lead, 80));
+            requirements(Category.turret, with(WHItems.manganese, 80, WHItems.manganese, 80));
 
             buildCostMultiplier = 8f;
             health = 800;
@@ -2984,9 +3007,9 @@ public final class WHBlocks{
             coolant = consumeCoolant(0.2f);
             drawer = new DrawTurret(WarHammerMod.name("turret-"));
             ammo(
-            Items.lead, WHBullets.CrushBulletLead,
+            WHItems.manganese, WHBullets.CrushBulletLead,
             Items.metaglass, WHBullets.CrushBulletMetaGlass,
-            WHItems.titaniumSteel, WHBullets.CrushBulletTiSteel
+            WHItems.manganeseSteel, WHBullets.CrushBulletTiSteel
             );
             alwaysUnlocked = true;
             researchCostMultiplier = 0.6f;
@@ -2994,7 +3017,7 @@ public final class WHBlocks{
 
         AutoGun = new ItemTurret("Auto-gun"){{
 
-            requirements(Category.turret, with(Items.copper, 80, Items.graphite, 50, Items.silicon, 50, WHItems.titaniumSteel, 50));
+            requirements(Category.turret, with(WHItems.manganese, 80, Items.graphite, 50, Items.silicon, 50, WHItems.manganeseSteel, 50));
 
             buildCostMultiplier = 8f;
             health = 1500;
@@ -3024,7 +3047,7 @@ public final class WHBlocks{
             Items.graphite, WHBullets.AutoGunGraphite,
             Items.silicon, WHBullets.AutoGunSilicon,
             Items.pyratite, WHBullets.AutoGunPyratite,
-            WHItems.titaniumSteel, WHBullets.AutoGunTiSteel
+            WHItems.manganeseSteel, WHBullets.AutoGunTiSteel
             );
             alwaysUnlocked = true;
             researchCostMultiplier = 0.6f;
@@ -3032,7 +3055,7 @@ public final class WHBlocks{
 
         Blaze = new ContinuousTurret("Blaze"){
             {
-                requirements(Category.turret, with(Items.silicon, 100, Items.graphite, 100, WHItems.titaniumSteel, 50, Items.plastanium, 50));
+                requirements(Category.turret, with(Items.silicon, 100, Items.graphite, 100, WHItems.manganeseSteel, 50, Items.plastanium, 50));
 
 
                 buildCostMultiplier = 8f;
@@ -3122,7 +3145,7 @@ public final class WHBlocks{
                                 ly = b.aimY + Tmp.v1.y;
                                 float random = rand.random(0.5f, 1f);
                                 Drawn.drawSine2Modifier(b.x + Tmp.v1.x, b.y + Tmp.v1.y, lx, ly,
-                                Time.time * 0.7f * random, 8, 0.8f,
+                                -Time.time * 0.7f * random, 8, 0.8f,
                                 phaseOffset * Mathf.degreesToRadians, width * 3f * (1 - 0.6f * charge) * random,
                                 /*b.dst(b.aimX,b.aimY)*/ r / 10, ((x1, y1) -> {
                                     Fill.circle(x1, y1, Lines.getStroke());
@@ -3172,7 +3195,7 @@ public final class WHBlocks{
         };
 
         Lcarus = new EnhancedPowerTurret("Lcarus"){{
-            requirements(Category.turret, with(WHItems.titaniumSteel, 90, Items.silicon, 80, Items.metaglass, 80, Items.graphite, 60));
+            requirements(Category.turret, with(WHItems.manganeseSteel, 90, Items.silicon, 80, Items.metaglass, 80, Items.graphite, 60));
 
             buildCostMultiplier = 5f;
             health = 3000;
@@ -3201,7 +3224,7 @@ public final class WHBlocks{
         }};
 
         SSWord = new ShootMatchTurret("S-sword"){{
-            requirements(Category.turret, with(WHItems.titaniumSteel, 80, Items.silicon, 150, Items.plastanium, 80, Items.phaseFabric, 20));
+            requirements(Category.turret, with(WHItems.manganeseSteel, 80, Items.silicon, 150, Items.plastanium, 80, Items.phaseFabric, 20));
 
             buildCostMultiplier = 5f;
             size = 3;
@@ -3241,7 +3264,7 @@ public final class WHBlocks{
             velocityRnd = 0.03f;
 
             ammo(
-            WHItems.titaniumSteel, WHBullets.SSWordTiSteel,
+            WHItems.manganeseSteel, WHBullets.SSWordTiSteel,
             Items.plastanium, WHBullets.SSWordPlastanium,
             Items.pyratite, WHBullets.SSWordPyratite,
             Items.surgeAlloy, WHBullets.SSWordSurgeAlloy
@@ -3315,7 +3338,7 @@ public final class WHBlocks{
         }};
 
         Prevent = new ItemTurret("Prevent"){{
-            requirements(Category.turret, with(Items.thorium, 50, WHItems.titaniumSteel, 100, Items.graphite, 150, WHItems.resonantCrystal, 20));
+            requirements(Category.turret, with(Items.thorium, 50, WHItems.manganeseSteel, 100, Items.graphite, 150, WHItems.resonantCrystal, 20));
 
             buildCostMultiplier = 4f;
             health = 1800;
@@ -3350,7 +3373,7 @@ public final class WHBlocks{
 
         Deflection = new BulletDefenseTurret("Deflection"){{
 
-            requirements(Category.turret, with(WHItems.titaniumSteel, 500, Items.carbide, 200, WHItems.ceramite, 200, WHItems.refineCeramite, 100, WHItems.sealedPromethium, 50));
+            requirements(Category.turret, with(WHItems.manganeseSteel, 500, Items.carbide, 200, WHItems.ceramite, 200, WHItems.refineCeramite, 100, WHItems.sealedPromethium, 50));
 
             buildCostMultiplier = 3f;
             size = 4;
@@ -3370,7 +3393,7 @@ public final class WHBlocks{
 
         Flash = new SpeedupTurret("Flash"){
             {
-                requirements(Category.turret, with(WHItems.titaniumSteel, 180, WHItems.resonantCrystal, 60, Items.carbide, 100, WHItems.ceramite, 150));
+                requirements(Category.turret, with(WHItems.manganeseSteel, 180, WHItems.resonantCrystal, 60, Items.carbide, 100, WHItems.ceramite, 150));
                 buildCostMultiplier = 3f;
                 armor = 5;
                 health = 2500;
@@ -3427,7 +3450,7 @@ public final class WHBlocks{
         };
 
         HeavyHammer = new ShootMatchTurret("Heavy-hammer"){{
-            requirements(Category.turret, with(Items.silicon, 200, Items.plastanium, 100, Items.thorium, 300, WHItems.titaniumSteel, 120, WHItems.molybdenumAlloy, 50));
+            requirements(Category.turret, with(Items.silicon, 200, Items.plastanium, 100, Items.thorium, 300, WHItems.manganeseSteel, 120, WHItems.molybdenumAlloy, 50));
 
             buildCostMultiplier = 3f;
             health = 3500;
@@ -3480,7 +3503,7 @@ public final class WHBlocks{
 
         Viper = new PowerTurret("Viper"){
             {
-                requirements(Category.turret, with(WHItems.titaniumSteel, 100, WHItems.resonantCrystal, 100, WHItems.ceramite, 100, WHItems.molybdenumAlloy, 50));
+                requirements(Category.turret, with(WHItems.manganeseSteel, 100, WHItems.resonantCrystal, 100, WHItems.ceramite, 100, WHItems.molybdenumAlloy, 50));
                 health = 3000;
                 size = 4;
                 buildCostMultiplier = 5f;
@@ -3492,7 +3515,7 @@ public final class WHBlocks{
                 liquidCapacity = 100;
                 coolantMultiplier = 2.5f;
                 shootSound = shootLancer;
-                heatColor = WHPal.TiSteelColor.cpy().lerp(WHPal.Heat, 0.5f);
+                heatColor = WHPal.MnSteelColor.cpy().lerp(WHPal.Heat, 0.5f);
                 cooldownTime = 110;
                 shootY = 14;
                 consumePower(1500 / 60f);
@@ -3501,7 +3524,7 @@ public final class WHBlocks{
                     parts.add(new RegionPart("-light"){{
                         layer = 110;
                         colorTo = WHPal.SkyBlueF;
-                        color = WHPal.TiSteelColor.cpy();
+                        color = WHPal.MnSteelColor.cpy();
                         progress = PartProgress.heat;
                         outline = false;
                     }});
@@ -3517,7 +3540,7 @@ public final class WHBlocks{
                         sideLength = 8;
                         pierce = true;
                         pierceCap = 5;
-                        lightningColor = hitColor = WHPal.TiSteelColor;
+                        lightningColor = hitColor = WHPal.MnSteelColor;
                         shootEffect = WHFx.shootLine(6, 30);
                         colors = new Color[]{WHPal.SkyBlue.cpy().a(0.4f).lerp(Pal.techBlue.cpy(), 0.3f),
                         WHPal.SkyBlue.cpy().a(0.6f).lerp(Pal.techBlue.cpy(), 0.3f), WHPal.SkyBlueF.lerp(Pal.techBlue.cpy(), 0.3f)};
@@ -3663,7 +3686,7 @@ public final class WHBlocks{
 
         Pyros = new HeatTurret("Pyros"){
             {
-                requirements(Category.turret, with(WHItems.titaniumSteel, 200, WHItems.ceramite, 300, WHItems.resonantCrystal, 120, WHItems.molybdenumAlloy, 150));
+                requirements(Category.turret, with(WHItems.manganeseSteel, 200, WHItems.ceramite, 300, WHItems.resonantCrystal, 120, WHItems.molybdenumAlloy, 150));
                 buildCostMultiplier = 5f;
                 outlineColor = WHPal.Outline;
                 outlineRadius = 3;
@@ -3698,7 +3721,7 @@ public final class WHBlocks{
 
         RoaringFlame = new ContinuousLiquidTurret("Roaring-flame"){{
 
-            requirements(Category.turret, with(WHItems.titaniumSteel, 200, WHItems.ceramite, 200, WHItems.molybdenumAlloy, 180, WHItems.sealedPromethium, 50));
+            requirements(Category.turret, with(WHItems.manganeseSteel, 200, WHItems.ceramite, 200, WHItems.molybdenumAlloy, 180, WHItems.sealedPromethium, 50));
 
             buildCostMultiplier = 5f;
             outlineColor = WHPal.Outline;
@@ -3822,7 +3845,7 @@ public final class WHBlocks{
 
         Collapse = new ShootMatchTurret("Collapse"){{
 
-            requirements(Category.turret, with(WHItems.titaniumSteel, 200, WHItems.ceramite, 200, WHItems.molybdenumAlloy, 180, WHItems.sealedPromethium, 50));
+            requirements(Category.turret, with(WHItems.manganeseSteel, 200, WHItems.ceramite, 200, WHItems.molybdenumAlloy, 180, WHItems.sealedPromethium, 50));
 
             buildCostMultiplier = 5f;
             outlineColor = WHPal.Outline;
@@ -3885,7 +3908,7 @@ public final class WHBlocks{
 
         CycloneMissleLauncher = new ShootMatchTurret("Cyclone-missile-launcher"){{
 
-            requirements(Category.turret, with(WHItems.titaniumSteel, 800, WHItems.resonantCrystal, 150, WHItems.ceramite, 400, WHItems.molybdenumAlloy, 300, WHItems.sealedPromethium, 150, WHItems.adamantium, 90));
+            requirements(Category.turret, with(WHItems.manganeseSteel, 800, WHItems.resonantCrystal, 150, WHItems.ceramite, 400, WHItems.molybdenumAlloy, 300, WHItems.sealedPromethium, 150, WHItems.adamantium, 90));
 
             buildCostMultiplier = 5f;
             outlineColor = WHPal.Outline;
@@ -4131,7 +4154,7 @@ public final class WHBlocks{
 
         Colossus = new ShootMatchTurret("Colossus"){{
 
-            requirements(Category.turret, with(WHItems.titaniumSteel, 200, Items.carbide, 200, WHItems.ceramite, 250, WHItems.molybdenumAlloy, 100, WHItems.resonantCrystal, 80, WHItems.sealedPromethium, 50));
+            requirements(Category.turret, with(WHItems.manganeseSteel, 200, Items.carbide, 200, WHItems.ceramite, 250, WHItems.molybdenumAlloy, 100, WHItems.resonantCrystal, 80, WHItems.sealedPromethium, 50));
             buildCostMultiplier = 5f;
             outlineColor = WHPal.Outline;
             outlineRadius = 3;
@@ -4249,7 +4272,7 @@ public final class WHBlocks{
         }};
 
         Melta = new LaserBeamTurret("Melta"){{
-            requirements(Category.turret, with(Items.surgeAlloy, 600, WHItems.titaniumSteel, 1000, WHItems.protocolChip, 300,
+            requirements(Category.turret, with(Items.surgeAlloy, 600, WHItems.manganeseSteel, 1000, WHItems.protocolChip, 300,
             WHItems.molybdenumAlloy, 500, WHItems.vibranium, 500, WHItems.refineCeramite, 250, WHItems.adamantium, 100));
 
             buildCostMultiplier = 5f;
@@ -4387,7 +4410,7 @@ public final class WHBlocks{
         }};
 
         Reckoning = new ReckoningTurret("Reckoning"){{
-            requirements(Category.turret, with(Items.carbide, 300, WHItems.titaniumSteel, 900, WHItems.protocolChip, 200,
+            requirements(Category.turret, with(Items.carbide, 300, WHItems.manganeseSteel, 900, WHItems.protocolChip, 200,
             WHItems.molybdenumAlloy, 200, WHItems.vibranium, 300, WHItems.refineCeramite, 100));
 
             buildCostMultiplier = 5f;
@@ -4445,7 +4468,7 @@ public final class WHBlocks{
         }};
 
         Hydra = new ShootMatchTurret("Hydra"){{
-            requirements(Category.turret, with(Items.surgeAlloy, 500, WHItems.protocolChip, 200, WHItems.titaniumSteel, 600,
+            requirements(Category.turret, with(Items.surgeAlloy, 500, WHItems.protocolChip, 200, WHItems.manganeseSteel, 600,
             WHItems.resonantCrystal, 200, WHItems.ceramite, 600, WHItems.vibranium, 300, WHItems.refineCeramite, 100));
 
             buildCostMultiplier = 5f;
@@ -4536,7 +4559,7 @@ public final class WHBlocks{
 
         Annihilate = new PowerTurret("Annihilate"){
             {
-                requirements(Category.turret, with(WHItems.titaniumSteel, 800, Items.surgeAlloy, 800, WHItems.vibranium, 150,
+                requirements(Category.turret, with(WHItems.manganeseSteel, 800, Items.surgeAlloy, 800, WHItems.vibranium, 150,
                 WHItems.molybdenumAlloy, 500, WHItems.resonantCrystal, 200, WHItems.sealedPromethium, 400, WHItems.refineCeramite, 200));
 
                 buildCostMultiplier = 5f;
@@ -4601,7 +4624,7 @@ public final class WHBlocks{
 
         Erase = new ShootMatchTurret("Erase"){
             {
-                requirements(Category.turret, with(WHItems.titaniumSteel, 800, Items.surgeAlloy, 800, WHItems.protocolChip, 300, WHItems.ceramite, 800,
+                requirements(Category.turret, with(WHItems.manganeseSteel, 800, Items.surgeAlloy, 800, WHItems.protocolChip, 300, WHItems.ceramite, 800,
                 WHItems.molybdenumAlloy, 500, WHItems.resonantCrystal, 800, WHItems.adamantium, 200, WHItems.sealedPromethium, 300));
                 buildCostMultiplier = 5f;
                 outlineColor = WHPal.Outline;
@@ -4827,7 +4850,7 @@ public final class WHBlocks{
 
 
         AirRaiderCallBlock test = new AirRaiderCallBlock("tactical-command-center"){{
-            requirements(Category.turret, with(WHItems.titaniumSteel, 500, Items.carbide, 200, WHItems.ceramite, 200, WHItems.refineCeramite, 100, WHItems.sealedPromethium, 50));
+            requirements(Category.turret, with(WHItems.manganeseSteel, 500, Items.carbide, 200, WHItems.ceramite, 200, WHItems.refineCeramite, 100, WHItems.sealedPromethium, 50));
             buildVisibility = BuildVisibility.sandboxOnly;
             size = 4;
 
@@ -4835,7 +4858,7 @@ public final class WHBlocks{
         }};
 
         AirRaider airRaider = new AirRaider("air-raider"){{
-            requirements(Category.turret, with(WHItems.titaniumSteel, 500, Items.carbide, 200, WHItems.ceramite, 200, WHItems.refineCeramite, 100, WHItems.sealedPromethium, 50));
+            requirements(Category.turret, with(WHItems.manganeseSteel, 500, Items.carbide, 200, WHItems.ceramite, 200, WHItems.refineCeramite, 100, WHItems.sealedPromethium, 50));
             buildVisibility = BuildVisibility.sandboxOnly;
             shoot = new ShootSummon(0, 0, 120, 0){{
                 shots = 4;
@@ -4867,7 +4890,7 @@ public final class WHBlocks{
         }};
 
         TestShaderBlock testShaderBlock = new TestShaderBlock("test-shader-block"){{
-            requirements(Category.effect, with(Items.lead, 100, Items.titanium, 75, Items.silicon, 125));
+            requirements(Category.effect, with(WHItems.manganese, 100, Items.titanium, 75, Items.silicon, 125));
             buildVisibility = BuildVisibility.sandboxOnly;
             size = 3;
             phaseRadiusBoost = 80f;
@@ -4883,7 +4906,7 @@ public final class WHBlocks{
 
 
         sb6 = new PowerTurret("lancer"){{
-            requirements(Category.turret, with(Items.copper, 60, Items.lead, 70, Items.silicon, 60, Items.titanium, 30));
+            requirements(Category.turret, with(WHItems.manganese, 60, WHItems.manganese, 70, Items.silicon, 60, Items.titanium, 30));
             buildVisibility = BuildVisibility.sandboxOnly;
             range = 165f;
 
@@ -4924,7 +4947,7 @@ public final class WHBlocks{
         }};
 
         sb7 = new OverheatGenericCrafter("过热工厂"){{
-            requirements(Category.crafting, with(Items.copper, 200, Items.lead, 120, Items.silicon, 90));
+            requirements(Category.crafting, with(WHItems.manganese, 200, WHItems.manganese, 120, Items.silicon, 90));
             buildVisibility = BuildVisibility.sandboxOnly;
             craftEffect = Fx.pulverizeMedium;
             outputItem = new ItemStack(Items.graphite, 1);
@@ -4940,7 +4963,7 @@ public final class WHBlocks{
 
         sb10 = new OverheatBooster("过热助推器"){
             {
-                requirements(Category.crafting, with(Items.copper, 200, Items.lead, 120, Items.silicon, 90));
+                requirements(Category.crafting, with(WHItems.manganese, 200, WHItems.manganese, 120, Items.silicon, 90));
                 buildVisibility = BuildVisibility.sandboxOnly;
                 size = 2;
                 dymamicHeat = 2;
@@ -4956,7 +4979,7 @@ public final class WHBlocks{
 
         sb6 = new PowerTurret("laser3"){
             {
-                requirements(Category.turret, with(Items.copper, 1200, Items.lead, 350, Items.graphite, 300, Items.surgeAlloy, 325, Items.silicon, 325));
+                requirements(Category.turret, with(WHItems.manganese, 1200, WHItems.manganese, 350, Items.graphite, 300, Items.surgeAlloy, 325, Items.silicon, 325));
                 buildVisibility = BuildVisibility.sandboxOnly;
                 shootEffect = WHFx.circleLightning(Pal.heal.cpy(), 180, 15, 15, 100);
                 shootCone = 40f;

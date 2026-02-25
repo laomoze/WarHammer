@@ -1,5 +1,5 @@
 
-package wh.entities.world.entities;
+package wh.entities;
 
 import arc.*;
 import arc.struct.*;

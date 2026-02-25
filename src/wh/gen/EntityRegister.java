@@ -4,6 +4,7 @@ import arc.func.*;
 import arc.struct.*;
 import mindustry.gen.*;
 import wh.entities.bullet.ApproachBullet.*;
+import wh.entities.event.*;
 import wh.entities.world.entities.*;
 import wh.entities.world.entities.powerArmorComp.*;
 
@@ -46,6 +47,8 @@ public final class EntityRegister {
         register("RevengeUnit", RevengeUnit.class, RevengeUnit::new);
 
         register("ApproachB", AB.class, AB::new);
+
+        register("PortableAutoEventTrigger", PortableAutoEventTrigger.Trigger.class, PortableAutoEventTrigger.Trigger::new);
 
     }
 }
