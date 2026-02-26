@@ -62,15 +62,15 @@ public final class WHBlocks{
 
     //factory
     public static Block
-    scrapCrusher, scrapFurance, sandSeparator,
+    scrapCrusher, scrapFurance, sandSeparator, T2sandSeparator,
     heatSiliconSmelter, waterPurifier, T2WaterPurifier,
     pyratiteBlender, pyratiteSeparator,
 
     manganeseSteelFurnace, T2ManganeseSteelFurnace,
     arcKiln, multiPress, siliconMixFurnace,
 
-    T2PlastaniumCompressor, atmosphericSeparator, T2Electrolyzer, T2SporePress,
-    T2CarbideCrucible,
+    plastaniumCompressor, atmosphericSeparator, electrolyzer, T2SporePress,
+    T2CarbideCrucible, cobaltNitrideChamber,
 
     T2Cultivator,
 
@@ -137,6 +137,100 @@ public final class WHBlocks{
     }
 
     public static void load(){
+        scrapFurance = new GenericCrafter("scrap-furance"){{
+            requirements(Category.crafting, with(WHItems.manganeseSteel, 30, WHItems.chromium, 40, Items.plastanium, 30));
+            health = 800;
+            outputLiquid = new LiquidStack(Liquids.slag, 1);
+            size = 2;
+            craftTime = 10f;
+            hasLiquids = hasPower = true;
+            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.slag), new DrawDefault());
+
+            consumePower(3f);
+            consumeItem(Items.scrap, 4);
+            researchCostMultiplier = 0.6f;
+        }};
+
+        sandSeparator = new GenericCrafter("sand-separator"){
+            {
+                requirements(Category.crafting, with(WHItems.cobalt, 80, Items.graphite, 40, WHItems.manganeseSteel, 20));
+                health = 300;
+                hasItems = hasPower = hasLiquids = true;
+                craftTime = 60;
+                liquidCapacity = itemCapacity = 40;
+                size = 2;
+                dumpExtraLiquid = true;
+                ignoreLiquidFullness = true;
+                consumePower(2);
+                consumeItems(with(WHItems.oreSand, 8));
+                outputItem = new ItemStack(Items.sand, 6);
+                outputLiquid = new LiquidStack(Liquids.slag, 10 / 60f);
+                drawer = new DrawMulti(new DrawRegion("-bottom"),
+                new DrawRegion("-rotator", -4){{
+                    spinSprite = true;
+                }},
+                new DrawGlowRegion("-glow"){{
+                    color = Pal.slagOrange.cpy().lerp(Pal.turretHeat, 0.3f);
+                }},
+                new DrawDefault());
+                craftEffect = Fx.smokeCloud;
+                updateEffect = new Effect(20, e -> {
+                    color(Pal.gray, Color.lightGray, e.fin());
+                    randLenVectors(e.id, 6, 3f + e.fin() * 6f, (x, y) ->
+                    Fill.square(e.x + x, e.y + y, e.fout() * 2f, 45));
+                });
+                researchCostMultiplier = 0.5f;
+            }
+        };
+
+        T2sandSeparator = new HeatProducer("large-sand-separator"){
+            {
+                requirements(Category.crafting, with(Items.graphite, 80, WHItems.manganeseSteel, 40, WHItems.ceramite, 50));
+                health = 800;
+                hasItems = hasPower = hasLiquids = true;
+                craftTime = 60;
+                itemCapacity = 60;
+                liquidCapacity = 90;
+                size = 3;
+                dumpExtraLiquid = true;
+                ignoreLiquidFullness = true;
+                consumePower(4);
+                heatOutput = 2;
+                consumeItems(with(WHItems.oreSand, 20));
+                outputItem = new ItemStack(Items.sand, 15);
+                outputLiquid = new LiquidStack(Liquids.slag, 30 / 60f);
+                drawer = new DrawMulti(new DrawRegion("-bottom"),
+                new DrawLiquidTile(Liquids.slag),
+                new DrawRegion("-rotator", -4){{
+                    x = -13 / 4f;
+                    y = 13 / 4f;
+                    spinSprite = true;
+                }},
+                new DrawRegion("-rotator", 4){{
+                    x = 13 / 4f;
+                    y = 13 / 4f;
+                    spinSprite = true;
+                }},
+                new DrawRegion("-rotator", -4){{
+                    x = 13 / 4f;
+                    y = -13 / 4f;
+                    spinSprite = true;
+                }},
+                new DrawRegion("-rotator", 4){{
+                    x = -13 / 4f;
+                    y = -13 / 4f;
+                    spinSprite = true;
+                }},
+                new DrawDefault(), new DrawHeatOutput());
+                craftEffect = Fx.smokeCloud;
+                updateEffect = new Effect(20, e -> {
+                    color(Pal.gray, Color.lightGray, e.fin());
+                    randLenVectors(e.id, 6, 3f + e.fin() * 6f, (x, y) ->
+                    Fill.square(e.x + x, e.y + y, e.fout() * 2f, 45));
+                });
+                researchCostMultiplier = 0.5f;
+            }
+        };
 
         waterPurifier = new GenericCrafter("water-purifier"){
             {
@@ -229,7 +323,7 @@ public final class WHBlocks{
                 size = 2;
                 drawer = new DrawMulti(new DrawDefault(), new DrawFlame(color));
                 consumePower(1);
-                consumeItems(with(WHItems.manganese, 2, WHItems.chromium, 2));
+                consumeItems(with(WHItems.manganese, 2, WHItems.chromium, 2, Items.metaglass, 1));
                 craftEffect = WHFx.square(MnSteelColor, 35f, 4, 16f, 4f);
                 outputItem = new ItemStack(WHItems.manganeseSteel, 1);
                 researchCostMultiplier = 0.2f;
@@ -246,7 +340,7 @@ public final class WHBlocks{
                 itemCapacity = 40;
                 size = 3;
                 consumePower(5);
-                consumeItems(with(WHItems.manganese, 6, WHItems.chromium, 3, Items.tungsten, 2));
+                consumeItems(with(WHItems.manganese, 6, WHItems.chromium, 3, Items.metaglass, 2));
                 consumeLiquid(Liquids.water, 6 / 60f);
                 outputItem = new ItemStack(WHItems.manganeseSteel, 4);
                 drawer = new DrawMulti(
@@ -266,7 +360,7 @@ public final class WHBlocks{
 
         arcKiln = new GenericCrafter("arc-kiln"){
             {
-                requirements(Category.crafting, with(WHItems.manganese, 30, Items.graphite, 60, Items.silicon, 60));
+                requirements(Category.crafting, with(WHItems.manganese, 30, Items.graphite, 30, Items.silicon, 40));
 
                 size = 3;
                 health = 360;
@@ -294,16 +388,16 @@ public final class WHBlocks{
 
         multiPress = new GenericCrafter("multi-press"){
             {
-                requirements(Category.crafting, with(WHItems.manganese, 30, WHItems.chromium, 50));
+                requirements(Category.crafting, with(WHItems.manganese, 50, WHItems.chromium, 30));
                 health = 500;
                 hasItems = hasPower = hasLiquids = true;
                 craftTime = 120;
                 itemCapacity = 64;
                 size = 3;
-                consumePower(3);
-                consumeItems(with(Items.coal, 12));
+                consumePower(4);
+                consumeItems(with(Items.coal, 10));
                 consumeLiquid(WHLiquids.swageWater, 15 / 60f);
-                outputItem = new ItemStack(Items.graphite, 10);
+                outputItem = new ItemStack(Items.graphite, 8);
                 drawer = new DrawMulti(new DrawRegion("-bottom"),
                 new DrawLiquidTile(Liquids.water),
                 new DrawPistons(){{
@@ -317,10 +411,35 @@ public final class WHBlocks{
             }
         };
 
-        T2PlastaniumCompressor = new GenericCrafter("t2-plastanium-compressor"){
+        siliconMixFurnace = new GenericCrafter("silicon-mix-furnace"){
+            {
+                requirements(Category.crafting, with(WHItems.manganese, 40, WHItems.chromium, 20, Items.graphite, 30));
+
+                size = 3;
+                health = 600;
+                craftTime = 90;
+                itemCapacity = 60;
+                hasPower = hasItems = true;
+                consumePower(2f);
+                outputItem = new ItemStack(Items.silicon, 8);
+                consumeItems(with(Items.sand, 12, Items.graphite, 5));
+                /*      consumeLiquid(Liquids.water, 0.1f);*/
+                drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawArcSmelt(){{
+                    circleStroke = 1.5f;
+                    flameRadiusScl = 2.5f;
+                    flameRadiusMag = 0.2f;
+                }}, new DrawDefault());
+                ambientSound = loopSmelter;
+                ambientSoundVolume = 0.11f;
+                researchCostMultiplier = 0.5f;
+
+            }
+        };
+
+        plastaniumCompressor = new GenericCrafter("plastanium-compressor"){
             {
 
-                requirements(Category.crafting, with(WHItems.manganese, 300, Items.titanium, 200, Items.graphite, 150, WHItems.manganeseSteel, 200));
+                requirements(Category.crafting, with(WHItems.chromium, 80, Items.graphite, 120, WHItems.manganeseSteel, 110));
                 size = 3;
                 health = 650;
                 hasItems = hasPower = hasLiquids = true;
@@ -330,7 +449,7 @@ public final class WHBlocks{
                 consumePower(10f);
                 consumeLiquid(Liquids.oil, 1);
                 consumeItems(with(Items.titanium, 8));
-                outputItem = new ItemStack(Items.plastanium, 5);
+                outputItem = new ItemStack(Items.plastanium, 4);
                 drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawDefault(), new T2PlastaniumCompresserDrawer(WHPal.ShootOrange), new DrawFade());
                 craftEffect = Fx.formsmoke;
                 updateEffect = Fx.plasticburn;
@@ -353,9 +472,9 @@ public final class WHBlocks{
                 updateEffect = Fx.none;
                 ambientSound = Sounds.loopExtract;
                 ambientSoundVolume = 0.06f;
-                consumePower(1.5f);
-                heatRequirement = 10;
-                maxEfficiency = 2;
+                consumePower(2);
+                heatRequirement = 8;
+                maxEfficiency = 1.5f;
                 outputLiquid = new LiquidStack(Liquids.nitrogen, 20f / 60f);
                 drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.nitrogen, 4.1f),
                 new DrawParticles(){{
@@ -370,28 +489,57 @@ public final class WHBlocks{
             }
         };
 
-        siliconMixFurnace = new GenericCrafter("silicon-mix-furnace"){
+       /* cobaltNitrideChamber= new GenericCrafter("cobalt-nitride-chamber"){
             {
-                requirements(Category.crafting, with(Items.silicon, 80, Items.graphite, 100, Items.silicon, 50, WHItems.manganeseSteel, 50));
+                requirements(Category.crafting, with(WHItems.cobalt, 40, Items.metaglass, 40, Items.graphite, 40, WHItems.manganeseSteel, 20));
+                size = 3;
+                health = 750;
+                hasPower = hasLiquids = true;
+                craftTime = 60;
+                liquidCapacity = 60;
+                itemCapacity = 20;
+                consumePower(4f);
+
+            }
+        };*/
+
+        electrolyzer = new GenericCrafter("t2-electrolyzer"){
+            {
+                requirements(Category.crafting, with(WHItems.cobalt, 90, Items.metaglass, 80, Items.graphite, 80, WHItems.manganeseSteel, 40));
 
                 size = 3;
-                health = 900;
-                craftTime = 90;
-                itemCapacity = 60;
-                hasPower = hasItems = true;
-                consumePower(2f);
-                outputItem = new ItemStack(Items.silicon, 8);
-                consumeItems(with(Items.sand, 12, Items.graphite, 5));
-                /*      consumeLiquid(Liquids.water, 0.1f);*/
-                drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawArcSmelt(){{
-                    circleStroke = 1.5f;
-                    flameRadiusScl = 2.5f;
-                    flameRadiusMag = 0.2f;
-                }}, new DrawDefault());
-                ambientSound = loopSmelter;
-                ambientSoundVolume = 0.11f;
-                researchCostMultiplier = 0.5f;
+                health = 750;
+                hasPower = hasLiquids = true;
+                craftTime = 60;
+                liquidCapacity = 60;
+                itemCapacity = 0;
 
+                rotate = true;
+                invertFlip = true;
+                consumePower(4f);
+                consumeLiquid(WHLiquids.swageWater, 1f);
+                outputLiquids = LiquidStack.with(Liquids.ozone, 30f / 60, Liquids.hydrogen, 45f / 60);
+                drawer = new DrawMulti(
+                new DrawRegion("-bottom"),
+                new DrawLiquidTile(Liquids.water, 0.9f),
+                new DrawBubbles(Color.valueOf("7693e3")){{
+                    sides = 10;
+                    recurrence = 3f;
+                    spread = 6;
+                    radius = 1.5f;
+                    amount = 20;
+                }},
+                new DrawRegion(),
+                new DrawLiquidOutputs(),
+                new DrawGlowRegion(){{
+                    alpha = 0.7f;
+                    color = Color.valueOf("c4bdf3");
+                    glowIntensity = 0.3f;
+                    glowScale = 6f;
+                }}
+                );
+                regionRotated1 = 3;
+                liquidOutputDirections = new int[]{2, 4};
             }
         };
 
@@ -449,45 +597,7 @@ public final class WHBlocks{
         }};
 
 
-        T2Electrolyzer = new GenericCrafter("t2-electrolyzer"){
-            {
-                requirements(Category.crafting, with(WHItems.manganese, 120, Items.silicon, 100, Items.graphite, 80, WHItems.manganeseSteel, 40));
 
-                size = 3;
-                health = 750;
-                hasPower = hasLiquids = true;
-                craftTime = 60;
-                liquidCapacity = 60;
-                itemCapacity = 0;
-
-                rotate = true;
-                invertFlip = true;
-                consumePower(4f);
-                consumeLiquid(Liquids.water, 1f);
-                outputLiquids = LiquidStack.with(Liquids.ozone, 30f / 60, Liquids.hydrogen, 45f / 60);
-                drawer = new DrawMulti(
-                new DrawRegion("-bottom"),
-                new DrawLiquidTile(Liquids.water, 2f),
-                new DrawBubbles(Color.valueOf("7693e3")){{
-                    sides = 10;
-                    recurrence = 3f;
-                    spread = 6;
-                    radius = 1.5f;
-                    amount = 20;
-                }},
-                new DrawRegion(),
-                new DrawLiquidOutputs(),
-                new DrawGlowRegion(){{
-                    alpha = 0.7f;
-                    color = Color.valueOf("c4bdf3");
-                    glowIntensity = 0.3f;
-                    glowScale = 6f;
-                }}
-                );
-                regionRotated1 = 3;
-                liquidOutputDirections = new int[]{2, 4};
-            }
-        };
 
         slagfurnace = new Separator("slag-furnace"){{
 
@@ -516,55 +626,6 @@ public final class WHBlocks{
 
         }};
 
-
-        sandSeparator = new HeatProducer("sand-separator"){
-            {
-                requirements(Category.crafting, with(WHItems.manganese, 80, WHItems.manganese, 60, Items.graphite, 40, WHItems.manganeseSteel, 20));
-                health = 300;
-                hasItems = hasPower = hasLiquids = true;
-                craftTime = 60;
-                itemCapacity = 60;
-                liquidCapacity = 90;
-                size = 3;
-                dumpExtraLiquid = true;
-                ignoreLiquidFullness = true;
-                consumePower(6);
-                heatOutput = 2;
-                consumeItems(with(WHItems.oreSand, 20, Items.graphite, 1));
-                outputItem = new ItemStack(Items.sand, 15);
-                outputLiquid = new LiquidStack(Liquids.slag, 30 / 60f);
-                drawer = new DrawMulti(new DrawRegion("-bottom"),
-                new DrawLiquidTile(Liquids.slag),
-                new DrawRegion("-rotator", -4){{
-                    x = -13 / 4f;
-                    y = 13 / 4f;
-                    spinSprite = true;
-                }},
-                new DrawRegion("-rotator", 4){{
-                    x = 13 / 4f;
-                    y = 13 / 4f;
-                    spinSprite = true;
-                }},
-                new DrawRegion("-rotator", -4){{
-                    x = 13 / 4f;
-                    y = -13 / 4f;
-                    spinSprite = true;
-                }},
-                new DrawRegion("-rotator", 4){{
-                    x = -13 / 4f;
-                    y = -13 / 4f;
-                    spinSprite = true;
-                }},
-                new DrawDefault(), new DrawHeatOutput());
-                craftEffect = Fx.smokeCloud;
-                updateEffect = new Effect(20, e -> {
-                    color(Pal.gray, Color.lightGray, e.fin());
-                    randLenVectors(e.id, 6, 3f + e.fin() * 6f, (x, y) ->
-                    Fill.square(e.x + x, e.y + y, e.fout() * 2f, 45));
-                });
-                researchCostMultiplier = 0.5f;
-            }
-        };
 
         moSurgeSmelter = new HeatProducer("mo-surge-smelter"){
             {
@@ -937,19 +998,7 @@ public final class WHBlocks{
             }});
         }};*/
 
-        scrapFurance = new GenericCrafter("scrap-furance"){{
-            requirements(Category.crafting, with(WHItems.manganeseSteel, 100, WHItems.manganese, 120, Items.graphite, 120));
-            health = 800;
-            outputLiquid = new LiquidStack(Liquids.slag, 1);
-            size = 2;
-            craftTime = 10f;
-            hasLiquids = hasPower = true;
-            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.slag), new DrawDefault());
 
-            consumePower(3f);
-            consumeItem(Items.scrap, 4);
-            researchCostMultiplier = 0.6f;
-        }};
 
         largeSurgeSmelter = new GenericCrafter("large-surge-smelter"){{
             requirements(Category.crafting, with(WHItems.manganeseSteel, 120, WHItems.molybdenum, 180, Items.carbide, 120, WHItems.ceramite, 100));

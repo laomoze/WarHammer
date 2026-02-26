@@ -162,7 +162,6 @@ public class LaserBeamBulletType extends ContinuousBulletType{
         Draw.reset();
         Tmp.v1.trns(rot, realLength * 1.1f);
         Drawf.light(b.x, b.y, b.x + Tmp.v1.x, b.y + Tmp.v1.y, width * 1.2f * b.fout(), colors[0], 0.6f);
-        if(renderingDistortion) MainRenderer.addShockCircle(b.x + Tmp.v1.x, b.y + Tmp.v1.y, width, b.lifetime());
     }
 
     @Override
@@ -247,6 +246,10 @@ public class LaserBeamBulletType extends ContinuousBulletType{
         Tmp.v1.trns(rot, data.currentLength);
         float effectX = b.x + Tmp.v1.x;
         float effectY = b.y + Tmp.v1.y;
+
+        if(renderingDistortion && b.timer(4, 3f)){
+            MainRenderer.addShockCircle(effectX, effectY, width * 6f, 36f, 12f);
+        }
 
         if(b.timer(0, 3 * b.fin() + 2)){
             LasergroundEffect.at(effectX, effectY, 0, hitColor, data.currentLength);

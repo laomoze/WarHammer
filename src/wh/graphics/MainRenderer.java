@@ -13,7 +13,7 @@ import mindustry.graphics.*;
 import wh.content.*;
 
 import static arc.Core.*;
-import static wh.graphics.WHShaders.shockwave;
+import static wh.graphics.WHShaders.convex;
 
 public class MainRenderer{
     private final Seq<BlackHole> holes = new Seq<>();
@@ -25,6 +25,7 @@ public class MainRenderer{
 
     private static final float[][] initFloat = new float[512][];
     private static final Pool<BlackHole> holePool = Pools.get(BlackHole.class, BlackHole::new);
+    private static boolean warnedConvexMissing = false;
 
     protected MainRenderer(){
         if(!Vars.headless){
@@ -62,9 +63,33 @@ public class MainRenderer{
         }
     }
 
-    public static void addShockCircle(float x, float y, float r, float life){
-        if(shockwave != null && !Vars.headless) shockwave.add(x, y, r, life);
+    public static void addShockCircle(float x, float y, float r, float lifetime){
+        if(Vars.headless) return;
+        if(convex == null){
+            if(!warnedConvexMissing){
+                warnedConvexMissing = true;
+                Log.warn("Convex lens shader is null; WHShaders.init() may have failed.");
+            }
+            return;
+        }
+        convex.add(x, y, r, lifetime);
     }
+
+    public static void addShockCircle(float x, float y, float r, float lifetime, float strength){
+        if(Vars.headless) return;
+        if(convex == null){
+            if(!warnedConvexMissing){
+                warnedConvexMissing = true;
+                Log.warn("Convex lens shader is null; WHShaders.init() may have failed.");
+            }
+            return;
+        }
+        convex.add(x, y, r, lifetime, strength);
+    }
+
+   /* public static void addShockEsp(float x, float y, float r, float life,float rot){
+        if(shockwave != null&&!Vars.headless) shockwave.addLensEllipse(x, y, r,r,rot,life,0.2f);
+    }*/
 
     public static void addBlackHole(float x, float y, float inRadius, float outRadius, float alpha){
         if(!Vars.headless) renderer.addHole(x, y, inRadius, outRadius, alpha);

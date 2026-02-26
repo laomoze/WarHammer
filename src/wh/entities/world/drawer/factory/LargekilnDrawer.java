@@ -1,16 +1,16 @@
 package wh.entities.world.drawer.factory;
 
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.math.Mathf;
-import arc.util.Tmp;
-import mindustry.gen.Building;
-import mindustry.world.Block;
-import mindustry.world.draw.DrawBlock;
-import wh.content.WHFx;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.math.geom.*;
+import mindustry.*;
+import mindustry.gen.*;
+import mindustry.world.*;
+import mindustry.world.draw.*;
+import wh.graphics.*;
 
-import static mindustry.Vars.state;
-import static mindustry.Vars.tilesize;
+import static mindustry.Vars.*;
 
 public class LargekilnDrawer extends DrawBlock {
     public Color lightingColor;
@@ -26,13 +26,12 @@ public class LargekilnDrawer extends DrawBlock {
         if (build.warmup() > 0f && lightingColor.a > 0.001f) {
             Block block = build.block;
             Draw.color(lightingColor);
-            if (build.wasVisible && !state.isPaused() && Mathf.chance(updateEffectChance)) {
-                Tmp.v1.rnd(1.8f * tilesize * block.size * 0.9f).add(build.tile);
-                WHFx.chainLightningFade.at(build.x, build.y, 12f, lightingColor, Tmp.v1.cpy());
-            }
-            if (build.wasVisible && !state.isPaused() && Mathf.chance(updateEffectChance)) {
-                Tmp.v1.rnd(1.5f * tilesize * block.size * 0.9f).add(build.tile);
-                WHFx.chainLightningFadeReversed.at(build.x, build.y, 12f, lightingColor, Tmp.v1.cpy());
+            Vec2 tile = new Vec2().set(build.tile);
+            if(!Vars.headless && !state.isPaused() && Mathf.chanceDelta(updateEffectChance)){
+                Drawn.randFadeLightningEffectScl(tile.x, tile.y, 1.8f * tilesize * block.size * 0.9f,
+                0.55F, 1.1F, 12f, lightingColor, false);
+                Drawn.randFadeLightningEffectScl(tile.x, tile.y, 1.8f * tilesize * block.size * 0.9f,
+                0.55F, 1.1F, 12f, lightingColor, true);
             }
         }
     }

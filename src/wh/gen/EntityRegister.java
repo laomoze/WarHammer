@@ -48,7 +48,7 @@ public final class EntityRegister {
 
         register("ApproachB", AB.class, AB::new);
 
-        register("PortableAutoEventTrigger", PortableAutoEventTrigger.Trigger.class, PortableAutoEventTrigger.Trigger::new);
+        register("PortableAutoEventTrigger", Trigger.class, Trigger::new);
 
     }
 }

@@ -11,6 +11,7 @@ import mindustry.game.*;
 import mindustry.mod.*;
 import wh.content.*;
 import wh.entities.*;
+import wh.entities.event.logic.*;
 import wh.gen.*;
 import wh.graphics.*;
 
@@ -23,8 +24,8 @@ public class WarHammerMod extends Mod {
             if (!Vars.headless) {
                 WHSounds.load();
                 Core.app.post(() -> {
-                    MainRenderer.init();
                     WHShaders.init();
+                    MainRenderer.init();
                 });
             }
         });
@@ -32,18 +33,6 @@ public class WarHammerMod extends Mod {
 
     public static String name(String add) {
         return ModName + "-" + add;
-    }
-
-
-    @Override
-    public void init() {
-      /*  WHResearchDialog dialog = new WHResearchDialog();
-        ResearchDialog research = Vars.ui.research;
-        research.shown(() -> {
-            dialog.show();
-            Objects.requireNonNull(research);
-            Time.runTask(1.0F, research::hide);
-        });*/
     }
 
     @Override
@@ -67,6 +56,7 @@ public class WarHammerMod extends Mod {
 
         WHEvents.load();
         WHAutoTriggerSetup.load();
+        WHLogicStatements.load();
         WHOverride.load();
 
     }

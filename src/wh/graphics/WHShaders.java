@@ -16,6 +16,7 @@ import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.game.EventType.*;
+import mindustry.graphics.*;
 import mindustry.graphics.Shaders.*;
 import wh.*;
 
@@ -25,7 +26,7 @@ import static mindustry.Vars.*;
 public class WHShaders{
     public static @Nullable HexagonalTextureShieldShader hexagonalShield;
     public static OutlineShader powerArea, powerDynamicArea;
-    public static ShockwaveShader shockwave;
+    public static ConvexLensShader convex;
 
     private WHShaders(){
     }
@@ -42,6 +43,7 @@ public class WHShaders{
                 return 2f * Interp.slope.apply(Time.time / 240f % 1f);
             }
         };
+        convex = new ConvexLensShader();
         try{
             hexagonalShield = new HexagonalTextureShieldShader();
         }catch(Throwable t){
@@ -49,7 +51,6 @@ public class WHShaders{
             hexagonalShield = null;
             t.printStackTrace();
         }
-        shockwave = new ShockwaveShader();
     }
 
 
@@ -127,25 +128,30 @@ public class WHShaders{
         }
     }
 
-    public static class ShockwaveShader extends LoadShader{
+    public static class ConvexLensShader extends LoadShader{
         static final int max = 64;
-        static final int size = 5;
+        static final int size = 6;
 
-        //x y radius life[1-0] lifetime
+        //x y radius life[1-0] lifetime strength
         protected FloatSeq data = new FloatSeq();
         protected FloatSeq uniforms = new FloatSeq();
         protected boolean hadAny = false;
         protected FrameBuffer buffer = new FrameBuffer();
+        protected int lensesUniformLoc = Integer.MIN_VALUE;
+        protected boolean warnedMissingLensUniform = false;
 
         public float lifetime = 20f;
+        public float strength = 0.9f;
+        public boolean debugDraw = true;
+        public boolean debugForceVisible = false;
 
-        public ShockwaveShader(){
-            super("shockwave", "screenspace");
+        public ConvexLensShader(){
+            super("convex", "screenspace");
 
             Events.run(Trigger.update, () -> {
                 if(state.isPaused()) return;
                 if(state.isMenu()){
-                    data.size = 0;
+                    clear();
                     return;
                 }
 
@@ -155,11 +161,9 @@ public class WHShaders{
                     items[i + 3] -= Time.delta / items[i + 4];
 
                     if(items[i + 3] <= 0f){
-                        //swap with head.
                         if(data.size > size){
                             System.arraycopy(items, data.size - size, items, i, size);
                         }
-
                         data.size -= size;
                         i -= size;
                     }
@@ -168,7 +172,6 @@ public class WHShaders{
 
             Events.run(Trigger.preDraw, () -> {
                 hadAny = data.size > 0;
-
                 if(hadAny){
                     buffer.resize(Core.graphics.getWidth(), Core.graphics.getHeight());
                     buffer.begin(Color.clear);
@@ -178,56 +181,107 @@ public class WHShaders{
             Events.run(Trigger.postDraw, () -> {
                 if(hadAny){
                     buffer.end();
+                    // Replace with distorted capture directly; alpha blending can hide the effect.
                     Draw.blend(Blending.disabled);
                     buffer.blit(this);
                     Draw.blend();
                 }
             });
+
+            Events.run(Trigger.draw, () -> {
+                if(debugDraw){
+                    Draw.proj(Core.camera);
+                    Draw.z(Layer.effect + 1f);
+                    Draw.color(Pal.remove);
+                    Lines.stroke(1.2f);
+
+                    var items = data.items;
+                    for(int i = 0; i < data.size; i += size){
+                        float fin = 1f - items[i + 3];
+                        float pulse = Mathf.pow(Mathf.sin(Mathf.clamp(fin) * Mathf.pi), 0.55f);
+                        float currentRadius = items[i + 2] * pulse;
+
+                        Fill.circle(items[i], items[i + 1], 4f);
+                        if(currentRadius > 0.5f){
+                            Lines.circle(items[i], items[i + 1], currentRadius);
+                        }
+                    }
+
+                    Draw.color();
+                }
+            });
+
         }
 
         @Override
         public void apply(){
-            int count = data.size / size;
+            int count = Math.min(data.size / size, max);
 
-            setUniformi("u_shockwave_count", count);
-            if(count > 0){
-                setUniformf("u_resolution", Core.camera.width, Core.camera.height);
-                setUniformf("u_campos", Core.camera.position.x - Core.camera.width / 2f, Core.camera.position.y - Core.camera.height / 2f);
+            setUniformf("u_resolution", Core.camera.width, Core.camera.height);
+            setUniformf("u_campos",
+            Core.camera.position.x - Core.camera.width / 2f,
+            Core.camera.position.y - Core.camera.height / 2f
+            );
+            setUniformi("u_lens_count", count);
+            setUniformi("u_debug_force", debugForceVisible && count > 0 ? 1 : 0);
 
-                uniforms.clear();
+            if(count <= 0) return;
 
-                var items = data.items;
-                for(int i = 0; i < count; i++){
-                    int offset = i * size;
+            uniforms.clear();
 
-                    uniforms.add(
-                    items[offset], items[offset + 1], //xy
-                    items[offset + 2] * (1f - items[offset + 3]), //radius * time
-                    items[offset + 3] //time
-                    //lifetime ignored
-                    );
+            var items = data.items;
+            for(int i = 0; i < count; i++){
+                int offset = i * size;
+                float fin = 1f - items[offset + 3];
+                float pulse = Mathf.pow(Mathf.sin(Mathf.clamp(fin) * Mathf.pi), 0.55f);
+
+                uniforms.add(
+                items[offset], items[offset + 1],
+                items[offset + 2] * pulse,
+                items[offset + 5] * pulse
+                );
+            }
+
+            if(lensesUniformLoc == Integer.MIN_VALUE){
+                lensesUniformLoc = getUniformLocation("u_lenses");
+                if(lensesUniformLoc < 0){
+                    lensesUniformLoc = getUniformLocation("u_lenses[0]");
                 }
+            }
 
-                setUniform4fv("u_shockwaves", uniforms.items, 0, uniforms.size);
+            if(lensesUniformLoc >= 0){
+                setUniform4fv(lensesUniformLoc, uniforms.items, 0, uniforms.size);
+            }else if(debugDraw && !warnedMissingLensUniform){
+                warnedMissingLensUniform = true;
+                Log.warn("Convex lens uniform array not found: u_lenses / u_lenses[0]");
             }
         }
 
-        public void add(float x, float y, float radius){
-            add(x, y, radius, 20f);
+        public void add(float x, float y, float radius, float lifetime){
+            add(x, y, radius, lifetime, strength);
         }
 
-        public void add(float x, float y, float radius, float lifetime){
+        public void add(float x, float y, float radius, float lifetime, float strength){
+            float safeRadius = Math.max(radius, 0.001f);
+            float safeLifetime = Math.max(lifetime, 1f);
+            float safeStrength = Math.max(strength, 0f);
+
             //replace first entry
             if(data.size / size >= max){
                 var items = data.items;
                 items[0] = x;
                 items[1] = y;
-                items[2] = radius;
+                items[2] = safeRadius;
                 items[3] = 1f;
-                items[4] = lifetime;
+                items[4] = safeLifetime;
+                items[5] = safeStrength;
             }else{
-                data.addAll(x, y, radius, 1f, lifetime);
+                data.addAll(x, y, safeRadius, 1f, safeLifetime, safeStrength);
             }
+        }
+
+        public void clear(){
+            data.size = 0;
         }
     }
 
