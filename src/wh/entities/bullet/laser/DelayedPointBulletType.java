@@ -5,14 +5,14 @@ import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.util.*;
-import arc.util.pooling.*;
 import arc.util.pooling.Pool.*;
+import arc.util.pooling.*;
 import mindustry.*;
 import mindustry.entities.*;
 import mindustry.entities.bullet.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.world.blocks.distribution.MassDriver.*;
+import wh.graphics.*;
 
 public class DelayedPointBulletType extends BulletType{
     protected static float cdist = 0f;
@@ -56,6 +56,10 @@ public class DelayedPointBulletType extends BulletType{
     public float width = 8f;
     public float trailSpacing = 10f;
     public float delayEffectLifeTime = 30f;
+
+    public boolean renderingDistortion = false;
+    public float pathDistortionRectWidthScale = 2;
+    public float pathDistortionRectStrength = 0.8f;
 
     public DelayedPointBulletType(){
         scaleLife = true;
@@ -118,7 +122,26 @@ public class DelayedPointBulletType extends BulletType{
 
         b.rotation(rot);
 
+        addRectPathDistortion(b, data, rot);
+
         super.init(b);
+    }
+
+    private void addRectPathDistortion(Bullet b, DPBData data, float rot){
+        if(renderingDistortion){
+            Position target = data.target;
+
+            float tX = target.getX();
+            float tY = target.getY();
+            float rectLength = Math.max(b.dst(tX, tY), 1f);
+            float rectWidth = Math.max(width * pathDistortionRectWidthScale, 1f);
+
+            Tmp.v2.trns(rot, -width);
+            Tmp.v3.trns(rot, rectLength * 0.5f + width / 2);
+            MainRenderer.addShockRect(
+            b.x + Tmp.v2.x + Tmp.v3.x, b.y + Tmp.v2.y + Tmp.v3.y,
+            rectLength, rectWidth, rot, delayEffectLifeTime, pathDistortionRectStrength);
+        }
     }
 
     @Override

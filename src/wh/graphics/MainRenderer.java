@@ -11,6 +11,7 @@ import mindustry.*;
 import mindustry.game.*;
 import mindustry.graphics.*;
 import wh.content.*;
+import wh.core.*;
 
 import static arc.Core.*;
 import static wh.graphics.WHShaders.convex;
@@ -24,6 +25,7 @@ public class MainRenderer{
     public int width, height;
 
     private static final float[][] initFloat = new float[512][];
+    private static final float[][] initStrength = new float[512][];
     private static final Pool<BlackHole> holePool = Pools.get(BlackHole.class, BlackHole::new);
     private static boolean warnedConvexMissing = false;
 
@@ -51,6 +53,7 @@ public class MainRenderer{
         if(renderer == null) renderer = new MainRenderer();
         for(int i = 0; i < 512; i++){
             initFloat[i] = new float[i * 4];
+            initStrength[i] = new float[i * 4];
         }
     }
 
@@ -64,39 +67,52 @@ public class MainRenderer{
     }
 
     public static void addShockCircle(float x, float y, float r, float lifetime){
-        if(Vars.headless) return;
-        if(convex == null){
-            if(!warnedConvexMissing){
-                warnedConvexMissing = true;
-                Log.warn("Convex lens shader is null; WHShaders.init() may have failed.");
-            }
-            return;
-        }
-        convex.add(x, y, r, lifetime);
+        addShockCircle(x, y, r, lifetime, convex == null ? 0f : convex.strength);
     }
 
     public static void addShockCircle(float x, float y, float r, float lifetime, float strength){
-        if(Vars.headless) return;
+        float scaledStrength = resolveDistortionStrength(strength);
+        if(scaledStrength <= 0.0001f || convex == null) return;
+        convex.add(x, y, r, lifetime, scaledStrength);
+    }
+
+    public static void addShockRect(float x, float y, float length, float width, float angle, float lifetime){
+        addShockRect(x, y, length, width, angle, lifetime, convex == null ? 0f : convex.strength);
+    }
+
+    public static void addShockRect(float x, float y, float length, float width, float angle, float lifetime, float strength){
+        float scaledStrength = resolveDistortionStrength(strength);
+        if(scaledStrength <= 0.0001f || convex == null) return;
+        convex.addRect(x, y, length, width, angle, lifetime, scaledStrength);
+    }
+
+    private static float resolveDistortionStrength(float baseStrength){
+        if(Vars.headless || !WHSettings.distortionEnabled()) return 0f;
+        float scale = WHSettings.distortionStrengthScale();
+        if(scale <= 0.0001f) return 0f;
+
         if(convex == null){
             if(!warnedConvexMissing){
                 warnedConvexMissing = true;
                 Log.warn("Convex lens shader is null; WHShaders.init() may have failed.");
             }
-            return;
+            return 0f;
         }
-        convex.add(x, y, r, lifetime, strength);
+
+        float scaledStrength = baseStrength * scale;
+        return scaledStrength <= 0.0001f ? 0f : scaledStrength;
     }
 
-   /* public static void addShockEsp(float x, float y, float r, float life,float rot){
-        if(shockwave != null&&!Vars.headless) shockwave.addLensEllipse(x, y, r,r,rot,life,0.2f);
-    }*/
-
     public static void addBlackHole(float x, float y, float inRadius, float outRadius, float alpha){
-        if(!Vars.headless) renderer.addHole(x, y, inRadius, outRadius, alpha);
+        addBlackHole(x, y, inRadius, outRadius, alpha, 1f);
     }
 
     public static void addBlackHole(float x, float y, float inRadius, float outRadius){
-        if(!Vars.headless) renderer.addHole(x, y, inRadius, outRadius, 1);
+        addBlackHole(x, y, inRadius, outRadius, 1f, 1f);
+    }
+
+    public static void addBlackHole(float x, float y, float inRadius, float outRadius, float alpha, float strength){
+        if(!Vars.headless) renderer.addHole(x, y, inRadius, outRadius, alpha, strength);
     }
 
     private void advancedDraw(){
@@ -110,50 +126,73 @@ public class MainRenderer{
         });
 
         Draw.draw(Layer.space + 16, () -> {
-            if(buffer.isBound()) buffer.end();
+            int holeCount = holes.size;
+            if(holeCount >= WHShaders.MaxCont) WHShaders.createHoleShader();
 
-            if(holes.size >= WHShaders.MaxCont) WHShaders.createHoleShader();
+            float[] blackholes = initFloat[holeCount];
+            float[] strengths = initStrength[holeCount];
 
-            float[] blackholes = initFloat[holes.size];
+            //Keep black core circles inside the source buffer so post effects don't overwrite them.
+            if(!buffer.isBound()) buffer.begin();
 
-            for(int i = 0; i < holes.size; i++){
+            for(int i = 0; i < holeCount; i++){
                 var hole = holes.get(i);
                 blackholes[i * 4] = hole.x;
                 blackholes[i * 4 + 1] = hole.y;
                 blackholes[i * 4 + 2] = hole.inRadius;
                 blackholes[i * 4 + 3] = hole.outRadius;
+                strengths[i * 4] = hole.strength;
+            }
 
+            if(buffer.isBound()) buffer.end();
+
+            WHShaders.holeShader.blackHoles = blackholes;
+            WHShaders.holeShader.blackHoleStrengths = strengths;
+
+            //Compose blackhole pass into buffer2 first, so convex can sample the already-distorted image.
+            buffer2.resize(graphics.getWidth(), graphics.getHeight());
+            buffer2.begin(Color.clear);
+            buffer.blit(WHShaders.holeShader);
+            buffer2.end();
+
+            if(convex != null && convex.hasAny()){
+                convex.blitFrom(buffer2);
+            }else{
+                buffer2.blit(Shaders.screenspace);
+            }
+
+            //Draw black cores after post-processing to avoid donut-like rings from re-sampling.
+            for(int i = 0; i < holeCount; i++){
+                var hole = holes.get(i);
                 Draw.color(Tmp.c2.set(Color.black).a(hole.alpha));
                 Fill.circle(hole.x, hole.y, hole.inRadius * 1.5f);
-                Draw.color();
-
                 holePool.free(hole);
             }
-            WHShaders.holeShader.blackHoles = blackholes;
-            buffer.blit(WHShaders.holeShader);
-
-            if(!buffer.isBound()) buffer.begin();
-            Draw.rect();
-            if(buffer.isBound()) buffer.end();
+            Draw.color();
             holes.clear();
         });
     }
 
-    private void addHole(float x, float y, float inRadius, float outRadius, float alpha){
+    private void addHole(float x, float y, float inRadius, float outRadius, float alpha, float strength){
         if(inRadius > outRadius || outRadius <= 0) return;
 
-        holes.add(holePool.obtain().set(x, y, inRadius, outRadius, alpha));
+        float safeStrength = Math.max(strength, 0.0001f);
+        float scaledStrength = safeStrength * WHSettings.distortionStrengthScale();
+        if(!WHSettings.distortionEnabled()) scaledStrength = 0f;
+
+        holes.add(holePool.obtain().set(x, y, inRadius, outRadius, alpha, scaledStrength));
     }
 
     private static class BlackHole{
-        float x, y, inRadius, outRadius, alpha;
+        float x, y, inRadius, outRadius, alpha, strength;
 
-        public BlackHole set(float x, float y, float inRadius, float outRadius, float alpha){
+        public BlackHole set(float x, float y, float inRadius, float outRadius, float alpha, float strength){
             this.x = x;
             this.y = y;
             this.inRadius = inRadius;
             this.outRadius = outRadius;
             this.alpha = alpha;
+            this.strength = strength;
             return this;
         }
 

@@ -131,19 +131,25 @@ public class WHShaders{
     public static class ConvexLensShader extends LoadShader{
         static final int max = 64;
         static final int size = 6;
+        static final int rectMax = 64;
+        static final int rectSize = 8;
 
         //x y radius life[1-0] lifetime strength
         protected FloatSeq data = new FloatSeq();
         protected FloatSeq uniforms = new FloatSeq();
-        protected boolean hadAny = false;
-        protected FrameBuffer buffer = new FrameBuffer();
+        //x y length width rotation life[1-0] lifetime strength
+        protected FloatSeq rectData = new FloatSeq();
+        protected FloatSeq rectUniformA = new FloatSeq();
+        protected FloatSeq rectUniformB = new FloatSeq();
         protected int lensesUniformLoc = Integer.MIN_VALUE;
-        protected boolean warnedMissingLensUniform = false;
+        protected int rectAUniformLoc = Integer.MIN_VALUE;
+        protected int rectBUniformLoc = Integer.MIN_VALUE;
+        protected float snapLeft, snapBottom, snapWidth = 1f, snapHeight = 1f;
+        protected boolean hasSnapshot = false;
 
         public float lifetime = 20f;
         public float strength = 0.9f;
-        public boolean debugDraw = true;
-        public boolean debugForceVisible = false;
+        public boolean debugDraw = false;
 
         public ConvexLensShader(){
             super("convex", "screenspace");
@@ -168,27 +174,32 @@ public class WHShaders{
                         i -= size;
                     }
                 }
-            });
 
-            Events.run(Trigger.preDraw, () -> {
-                hadAny = data.size > 0;
-                if(hadAny){
-                    buffer.resize(Core.graphics.getWidth(), Core.graphics.getHeight());
-                    buffer.begin(Color.clear);
-                }
-            });
+                var rectItems = rectData.items;
+                for(int i = 0; i < rectData.size; i += rectSize){
+                    rectItems[i + 5] -= Time.delta / rectItems[i + 6];
 
-            Events.run(Trigger.postDraw, () -> {
-                if(hadAny){
-                    buffer.end();
-                    // Replace with distorted capture directly; alpha blending can hide the effect.
-                    Draw.blend(Blending.disabled);
-                    buffer.blit(this);
-                    Draw.blend();
+                    if(rectItems[i + 5] <= 0f){
+                        if(rectData.size > rectSize){
+                            System.arraycopy(rectItems, rectData.size - rectSize, rectItems, i, rectSize);
+                        }
+                        rectData.size -= rectSize;
+                        i -= rectSize;
+                    }
                 }
             });
 
             Events.run(Trigger.draw, () -> {
+                if(data.size <= 0) return;
+
+                if(Core.camera != null){
+                    snapWidth = Math.max(Core.camera.width, 0.0001f);
+                    snapHeight = Math.max(Core.camera.height, 0.0001f);
+                    snapLeft = Core.camera.position.x - snapWidth / 2f;
+                    snapBottom = Core.camera.position.y - snapHeight / 2f;
+                    hasSnapshot = true;
+                }
+
                 if(debugDraw){
                     Draw.proj(Core.camera);
                     Draw.z(Layer.effect + 1f);
@@ -216,44 +227,132 @@ public class WHShaders{
         @Override
         public void apply(){
             int count = Math.min(data.size / size, max);
+            int rectCount = Math.min(rectData.size / rectSize, rectMax);
 
-            setUniformf("u_resolution", Core.camera.width, Core.camera.height);
-            setUniformf("u_campos",
-            Core.camera.position.x - Core.camera.width / 2f,
-            Core.camera.position.y - Core.camera.height / 2f
-            );
-            setUniformi("u_lens_count", count);
-            setUniformi("u_debug_force", debugForceVisible && count > 0 ? 1 : 0);
+            float screenW = Core.graphics.getWidth();
+            float screenH = Core.graphics.getHeight();
+            setUniformf("u_screen", screenW, screenH);
 
-            if(count <= 0) return;
+            float camWidth = hasSnapshot ? snapWidth : Math.max(Core.camera.width, 0.0001f);
+            float camHeight = hasSnapshot ? snapHeight : Math.max(Core.camera.height, 0.0001f);
+            float camLeft = hasSnapshot ? snapLeft : (Core.camera.position.x - camWidth / 2f);
+            float camBottom = hasSnapshot ? snapBottom : (Core.camera.position.y - camHeight / 2f);
+            float invCamWidth = screenW / camWidth;
+            float invCamHeight = screenH / camHeight;
 
             uniforms.clear();
+            int packed = 0;
 
-            var items = data.items;
-            for(int i = 0; i < count; i++){
-                int offset = i * size;
-                float fin = 1f - items[offset + 3];
-                float pulse = Mathf.pow(Mathf.sin(Mathf.clamp(fin) * Mathf.pi), 0.55f);
+            if(count > 0){
+                var items = data.items;
+                for(int i = 0; i < count; i++){
+                    int offset = i * size;
+                    float fin = 1f - items[offset + 3];
+                    float pulse = Mathf.pow(Mathf.sin(Mathf.clamp(fin) * Mathf.pi), 0.55f);
+                    float worldRadius = items[offset + 2] * pulse;
+                    float localStrength = items[offset + 5] * pulse;
 
-                uniforms.add(
-                items[offset], items[offset + 1],
-                items[offset + 2] * pulse,
-                items[offset + 5] * pulse
-                );
-            }
+                    if(worldRadius <= 0.001f || localStrength <= 0.0001f) continue;
 
-            if(lensesUniformLoc == Integer.MIN_VALUE){
-                lensesUniformLoc = getUniformLocation("u_lenses");
-                if(lensesUniformLoc < 0){
-                    lensesUniformLoc = getUniformLocation("u_lenses[0]");
+                    float sx = (items[offset] - camLeft) * invCamWidth;
+                    float sy = (items[offset + 1] - camBottom) * invCamHeight;
+                    float sr = worldRadius * invCamWidth;
+
+                    //Skip lenses entirely outside the screen.
+                    if(sx + sr < 0f || sx - sr > screenW || sy + sr < 0f || sy - sr > screenH) continue;
+
+                    uniforms.add(
+                    sx, sy,
+                    sr,
+                    localStrength
+                    );
+                    packed++;
+
+                    if(packed >= max) break;
                 }
             }
 
-            if(lensesUniformLoc >= 0){
-                setUniform4fv(lensesUniformLoc, uniforms.items, 0, uniforms.size);
-            }else if(debugDraw && !warnedMissingLensUniform){
-                warnedMissingLensUniform = true;
-                Log.warn("Convex lens uniform array not found: u_lenses / u_lenses[0]");
+            setUniformi("u_lens_count", packed);
+
+            if(packed > 0){
+                if(lensesUniformLoc == Integer.MIN_VALUE){
+                    lensesUniformLoc = getUniformLocation("u_lenses");
+                    if(lensesUniformLoc < 0){
+                        lensesUniformLoc = getUniformLocation("u_lenses[0]");
+                    }
+                }
+
+                if(lensesUniformLoc >= 0){
+                    setUniform4fv(lensesUniformLoc, uniforms.items, 0, uniforms.size);
+                }else{
+                    setUniformi("u_lens_count", 0);
+                }
+            }
+
+            rectUniformA.clear();
+            rectUniformB.clear();
+            int rectPacked = 0;
+
+            if(rectCount > 0){
+                var rectItems = rectData.items;
+                for(int i = 0; i < rectCount; i++){
+                    int offset = i * rectSize;
+                    float life = Mathf.clamp(rectItems[offset + 5]);
+                    float worldLen = rectItems[offset + 2];
+                    float worldWid = rectItems[offset + 3];
+                    float localStrength = rectItems[offset + 7] * life;
+
+                    if(worldLen <= 0.001f || worldWid <= 0.001f || localStrength <= 0.0001f) continue;
+
+                    float sx = (rectItems[offset] - camLeft) * invCamWidth;
+                    float sy = (rectItems[offset + 1] - camBottom) * invCamHeight;
+                    float halfLen = worldLen * invCamWidth * 0.5f;
+                    float halfWid = worldWid * invCamHeight * 0.5f;
+
+                    float bound = Mathf.sqrt(halfLen * halfLen + halfWid * halfWid);
+                    if(sx + bound < 0f || sx - bound > screenW || sy + bound < 0f || sy - bound > screenH) continue;
+
+                    float rad = rectItems[offset + 4] * Mathf.degRad;
+                    float cos = Mathf.cos(rad), sin = Mathf.sin(rad);
+
+                    rectUniformA.add(
+                    sx, sy,
+                    halfLen,
+                    halfWid
+                    );
+                    rectUniformB.add(
+                    cos, sin,
+                    localStrength,
+                    0f
+                    );
+
+                    rectPacked++;
+                    if(rectPacked >= rectMax) break;
+                }
+            }
+
+            setUniformi("u_rect_count", rectPacked);
+            if(rectPacked <= 0) return;
+
+            if(rectAUniformLoc == Integer.MIN_VALUE){
+                rectAUniformLoc = getUniformLocation("u_rectsA");
+                if(rectAUniformLoc < 0){
+                    rectAUniformLoc = getUniformLocation("u_rectsA[0]");
+                }
+            }
+
+            if(rectBUniformLoc == Integer.MIN_VALUE){
+                rectBUniformLoc = getUniformLocation("u_rectsB");
+                if(rectBUniformLoc < 0){
+                    rectBUniformLoc = getUniformLocation("u_rectsB[0]");
+                }
+            }
+
+            if(rectAUniformLoc >= 0 && rectBUniformLoc >= 0){
+                setUniform4fv(rectAUniformLoc, rectUniformA.items, 0, rectUniformA.size);
+                setUniform4fv(rectBUniformLoc, rectUniformB.items, 0, rectUniformB.size);
+            }else{
+                setUniformi("u_rect_count", 0);
             }
         }
 
@@ -280,8 +379,45 @@ public class WHShaders{
             }
         }
 
+        public void addRect(float x, float y, float length, float width, float rotation, float lifetime){
+            addRect(x, y, length, width, rotation, lifetime, strength);
+        }
+
+        public void addRect(float x, float y, float length, float width, float rotation, float lifetime, float strength){
+            float safeLength = Math.max(length, 0.001f);
+            float safeWidth = Math.max(width, 0.001f);
+            float safeLifetime = Math.max(lifetime, 1f);
+            float safeStrength = Math.max(strength, 0f);
+
+            if(rectData.size / rectSize >= rectMax){
+                var items = rectData.items;
+                items[0] = x;
+                items[1] = y;
+                items[2] = safeLength;
+                items[3] = safeWidth;
+                items[4] = rotation;
+                items[5] = 1f;
+                items[6] = safeLifetime;
+                items[7] = safeStrength;
+            }else{
+                rectData.addAll(x, y, safeLength, safeWidth, rotation, 1f, safeLifetime, safeStrength);
+            }
+        }
+
         public void clear(){
             data.size = 0;
+            rectData.size = 0;
+        }
+
+        public boolean hasAny(){
+            return data.size > 0 || rectData.size > 0;
+        }
+
+        public void blitFrom(FrameBuffer source){
+            if(source == null || !hasAny()) return;
+            Draw.blend(Blending.disabled);
+            source.blit(this);
+            Draw.blend();
         }
     }
 
@@ -301,6 +437,7 @@ public class WHShaders{
 
     public static class HoleShader extends Shader{
         public float[] blackHoles;
+        public float[] blackHoleStrengths;
 
         public HoleShader(){
             super(
@@ -314,6 +451,7 @@ public class WHShaders{
             this.setUniformf("u_resolution", Core.camera.width, Core.camera.height);
             this.setUniformi("u_blackholecount", blackHoles.length / 4);
             this.setUniform4fv("u_blackholes", blackHoles, 0, blackHoles.length);
+            this.setUniform4fv("u_blackholeStrengths", blackHoleStrengths, 0, blackHoleStrengths.length);
         }
     }
 }

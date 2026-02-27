@@ -1,4 +1,4 @@
-/**#define HIGHP*/
+
 #define ALPHA 0.18
 #define STEP 2.0
 #define NSCALE 200.0

@@ -19,17 +19,16 @@ import mindustry.type.*;
 import mindustry.world.*;
 import mindustry.world.blocks.storage.*;
 import wh.content.*;
-import wh.entities.event.PortableAutoEventTrigger.*;
 import wh.gen.*;
 
 import static wh.entities.event.PortableAutoEventTrigger.*;
 
 public class Trigger implements Entityc, Cloneable{
-    // identity/runtime seed
+    // 标识与运行时种子
     public String id = "portable-auto-trigger";
     private int runtimeIndex = 1;
 
-    // requirements
+    // 触发条件需求
     public Prov<Team> checkTeam = () -> Vars.state.rules.defaultTeam;
     public Boolf<Team> extraCondition = t -> true;
     public Seq<Requirement<Item>> requiredItems = new Seq<>();
@@ -37,7 +36,7 @@ public class Trigger implements Entityc, Cloneable{
     public Seq<Requirement<Block>> requiredBuildings = new Seq<>();
     public int minTriggerWave = 0;
 
-    // mode/map filters
+    // 模式与地图过滤
     public boolean allowCampaign = true;
     public boolean allowCustom = true;
     public boolean allowPvp = false;
@@ -46,33 +45,33 @@ public class Trigger implements Entityc, Cloneable{
     public Seq<String> allowedSectorPresets = new Seq<>();
     public Boolf<Rules> rulesFilter = r -> true;
 
-    // timing
+    // 计时参数
     public float spacingBase = 120f * Time.toSeconds;
     public float spacingRand = 120f * Time.toSeconds;
     public float checkSpacing = 120f;
     public boolean disposable = false;
     public boolean removeIfCaptured = true;
 
-    // optional built-in UI
+    // 可选内置 UI
     public boolean warnHudEnabled = true;
     public boolean useFleetWarnHudStyle = false;
     public float fleetWarnHudDuration = 2.5f;
     public Sound fleetWarnSound = WHSounds.alert2;
-    /** Per-trigger HUD style override. Null means use global default {@link PortableAutoEventTrigger#fleetWarnHudMode}. */
+    /** 单个触发器的 HUD 样式覆盖；为 null 时使用全局默认 {@link PortableAutoEventTrigger#fleetWarnHudMode}。 */
     public FleetWarnHudMode fleetWarnHudModeOverride = null;
     public String hudText = "";
     public float hudToastDuration = 2.5f;
     public String triggerToastText = "";
     public float triggerToastDuration = 2.5f;
     public String chatText = "";
-    /** NH cutscene text duration (ticks). */
+    /** NH 过场文本显示时长（tick）。 */
     public float chatDuration = 120f;
     public boolean markOnTrigger = false;
     public Color markColor = Color.valueOf("ff7b69");
     public float markRadius = 24f;
     public float markLifetime = 180f;
 
-    // optional spawn section (can be handled by custom spawnerInvoker)
+    // 可选刷怪配置（可由自定义 spawnerInvoker 接管）
     public Prov<Team> spawnTeam = () -> Vars.state.rules.waveTeam;
     public Func<Team, Vec2> spawnPosition = Trigger::resolveDefaultSpawnPosition;
     public ObjectIntMap<UnitType> spawnUnits = new ObjectIntMap<>();
@@ -86,20 +85,22 @@ public class Trigger implements Entityc, Cloneable{
     public boolean requireEnemySpawnPoint = true;
 
     /**
-     * If set, this is used for spawning instead of default UnitType.spawn fallback.
-     * You can bridge your own Spawner implementation here.
+     * 设置后将优先使用该回调刷怪，而不是默认 UnitType.spawn 兜底逻辑。
+     * 可在此桥接你自己的 Spawner 实现。
      */
     public Cons<SpawnContext> spawnerInvoker = null;
-    /** Per-unit spawner bridge. When set for a UnitType, this has higher priority than {@link #spawnerInvoker}. */
+    /** 单位级 spawner 桥接；对某 UnitType 设置后，优先级高于 {@link #spawnerInvoker}。 */
     public ObjectMap<UnitType, Cons<SpawnContext>> unitSpawnerInvokers = new ObjectMap<>();
+    /** 单位级覆盖参数（如护盾、状态）。 */
+    public ObjectMap<UnitType, SpawnUnitConfig> spawnUnitConfigs = new ObjectMap<>();
 
-    // callbacks
+    // 回调
     public Cons<TriggerContext> onTrigger = ctx -> {
     };
     public Cons<TriggerContext> onClientTrigger = ctx -> {
     };
 
-    // runtime
+    // 运行时状态
     public float reload = 0f;
     public float spacing = 0f;
     public float checkTimer = 0f;
@@ -107,6 +108,10 @@ public class Trigger implements Entityc, Cloneable{
     public boolean added;
     public transient int entityId = 0;
     private final Rand rand = new Rand();
+    /** 建筑需求检查复用的临时计数表，避免每次检查分配对象。 */
+    private transient final ObjectIntMap<Block> buildingCountScratch = new ObjectIntMap<>();
+    /** 聚合后的建筑需求数量（处理重复方块需求）。 */
+    private transient final ObjectIntMap<Block> buildingNeedScratch = new ObjectIntMap<>();
 
     public Trigger(){
         resetTransientHandlers();
@@ -178,6 +183,21 @@ public class Trigger implements Entityc, Cloneable{
         return this;
     }
 
+    /** 一次性触发器的简写。 */
+    public Trigger disposable(){
+        return disposable(true);
+    }
+
+    /** 条件满足触发一次后自移除。 */
+    public Trigger triggerOnce(){
+        return disposable(true);
+    }
+
+    /** 条件满足刷怪一次后自移除。 */
+    public Trigger spawnOnce(){
+        return disposable(true);
+    }
+
     public Trigger removeIfCaptured(boolean remove){
         this.removeIfCaptured = remove;
         return this;
@@ -188,23 +208,23 @@ public class Trigger implements Entityc, Cloneable{
         return this;
     }
 
-    /** Enable/disable fleet warning HUD for this trigger. */
+    /** 开启/关闭该触发器的舰队预警 HUD。 */
     public Trigger useFleetWarnHUD(boolean enabled){
         this.useFleetWarnHudStyle = enabled;
         return this;
     }
 
-    /** Enable fleet warning HUD and override display duration for this trigger. */
+    /** 开启舰队预警 HUD，并覆盖该触发器的显示时长。 */
     public Trigger useFleetWarnHUD(boolean enabled, float duration){
         return useFleetWarnHUD(enabled, fleetWarnHudModeOverride, duration);
     }
 
-    /** Enable fleet warning HUD and override HUD mode for this trigger. */
+    /** 开启舰队预警 HUD，并覆盖该触发器的 HUD 模式。 */
     public Trigger useFleetWarnHUD(boolean enabled, FleetWarnHudMode mode){
         return useFleetWarnHUD(enabled, mode, fleetWarnHudDuration);
     }
 
-    /** Enable fleet warning HUD and override both HUD mode and display duration for this trigger. */
+    /** 开启舰队预警 HUD，并同时覆盖 HUD 模式与显示时长。 */
     public Trigger useFleetWarnHUD(boolean enabled, FleetWarnHudMode mode, float duration){
         this.useFleetWarnHudStyle = enabled;
         this.fleetWarnHudModeOverride = mode;
@@ -294,6 +314,7 @@ public class Trigger implements Entityc, Cloneable{
         validatePairs(units);
         spawnUnits.clear();
         if(unitSpawnerInvokers != null) unitSpawnerInvokers.clear();
+        if(spawnUnitConfigs != null) spawnUnitConfigs.clear();
         for(int i = 0; i < units.length; i += 2){
             spawnUnits.put((UnitType)units[i], ((Number)units[i + 1]).intValue());
         }
@@ -314,6 +335,41 @@ public class Trigger implements Entityc, Cloneable{
             }else{
                 unitSpawnerInvokers.put(type, invoker);
             }
+        }
+        return this;
+    }
+
+    /**
+     * 新增/更新一个单位条目并指定固定护盾值。
+     * 护盾值小于 0 表示沿用单位默认护盾。
+     */
+    public Trigger spawn(UnitType type, int amount, float shield, Cons<SpawnContext> invoker){
+        spawn(type, amount, invoker);
+        SpawnUnitConfig config = ensureSpawnUnitConfig(type);
+        if(config != null){
+            config.shield = shield;
+        }
+        return this;
+    }
+
+    /**
+     * 新增/更新一个单位条目，并指定固定护盾和单位级状态覆盖。
+     * 状态时长默认使用 {@link #spawnStatusDuration}。
+     */
+    public Trigger spawn(UnitType type, int amount, float shield, StatusEffect status, Cons<SpawnContext> invoker){
+        return spawn(type, amount, shield, status, spawnStatusDuration, invoker);
+    }
+
+    /**
+     * 新增/更新一个单位条目，并指定固定护盾与单位级状态覆盖（显式时长）。
+     */
+    public Trigger spawn(UnitType type, int amount, float shield, StatusEffect status, float statusDuration, Cons<SpawnContext> invoker){
+        spawn(type, amount, invoker);
+        SpawnUnitConfig config = ensureSpawnUnitConfig(type);
+        if(config != null){
+            config.shield = shield;
+            config.status = status == null ? StatusEffects.none : status;
+            config.statusDuration = Math.max(0f, statusDuration);
         }
         return this;
     }
@@ -388,6 +444,9 @@ public class Trigger implements Entityc, Cloneable{
 
     @Override
     public void update(){
+        // 世界加载后的同步（清理/重装）会延迟一个 tick，避免此窗口期触发旧实例。
+        if(PortableAutoEventTrigger.isWorldLoadSyncPending()) return;
+
         reload += Time.delta * timeScale;
         checkTimer += Time.delta;
 
@@ -462,6 +521,7 @@ public class Trigger implements Entityc, Cloneable{
 
         CoreBlock.CoreBuild core = team.core();
         if(core == null) return false;
+        Teams.TeamData teamData = team.data();
 
         for(int i = 0; i < requiredItems.size; i++){
             Requirement<Item> req = requiredItems.get(i);
@@ -470,24 +530,48 @@ public class Trigger implements Entityc, Cloneable{
 
         for(int i = 0; i < requiredUnits.size; i++){
             Requirement<UnitType> req = requiredUnits.get(i);
-            if(team.data().countType(req.type) < req.amount) return false;
+            if(teamData.countType(req.type) < req.amount) return false;
         }
 
         if(!requiredBuildings.isEmpty()){
-            ObjectIntMap<Block> countByBlock = new ObjectIntMap<>();
-            Groups.build.each(b -> {
-                if(b.team == team){
-                    countByBlock.increment(b.block, 0, 1);
-                }
-            });
-
-            for(int i = 0; i < requiredBuildings.size; i++){
-                Requirement<Block> req = requiredBuildings.get(i);
-                if(countByBlock.get(req.type, 0) < req.amount) return false;
-            }
+            if(!meetBuildingRequirements(team)) return false;
         }
 
         return extraCondition.get(team);
+    }
+
+    private boolean meetBuildingRequirements(Team team){
+        buildingNeedScratch.clear();
+        for(int i = 0; i < requiredBuildings.size; i++){
+            Requirement<Block> req = requiredBuildings.get(i);
+            if(req == null || req.type == null || req.amount <= 0) continue;
+            buildingNeedScratch.increment(req.type, 0, req.amount);
+        }
+
+        if(buildingNeedScratch.isEmpty()) return true;
+
+        if(buildingNeedScratch.size == 1){
+            ObjectIntMap.Entry<Block> single = buildingNeedScratch.entries().next();
+            int count = Groups.build.count(b -> b.team == team && b.block == single.key);
+            return count >= single.value;
+        }
+
+        buildingCountScratch.clear();
+        Groups.build.each(b -> {
+            if(b.team != team) return;
+            int need = buildingNeedScratch.get(b.block, 0);
+            if(need <= 0) return;
+
+            int now = buildingCountScratch.get(b.block, 0);
+            if(now < need){
+                buildingCountScratch.put(b.block, now + 1);
+            }
+        });
+
+        for(ObjectIntMap.Entry<Block> entry : buildingNeedScratch.entries()){
+            if(buildingCountScratch.get(entry.key, 0) < entry.value) return false;
+        }
+        return true;
     }
 
     private boolean hasEnemySpawnPoint(){
@@ -537,7 +621,10 @@ public class Trigger implements Entityc, Cloneable{
 
         reload = 0f;
         spacing = nextSpacing();
-        if(disposable) remove();
+        if(disposable){
+            markOneShotTemplateFired(id);
+            remove();
+        }
     }
 
     boolean debugFireNow(){
@@ -556,6 +643,12 @@ public class Trigger implements Entityc, Cloneable{
             int realAmount = resolveSpawnAmount(ctx, type, entry.value);
             if(realAmount <= 0) continue;
 
+            SpawnUnitConfig config = spawnUnitConfigs == null ? null : spawnUnitConfigs.get(type);
+            float unitShield = config == null ? -1f : config.shield;
+            StatusEffect unitStatus = config == null || config.status == null ? spawnStatus : config.status;
+            float unitStatusDuration = config == null || config.statusDuration < 0f ? spawnStatusDuration : config.statusDuration;
+            if(unitStatus == null) unitStatus = StatusEffects.none;
+
             SpawnContext sctx = new SpawnContext(
             ctx,
             type,
@@ -564,12 +657,22 @@ public class Trigger implements Entityc, Cloneable{
             spawnWarmup,
             spawnEachDelay,
             spawnAngle,
-            spawnStatus,
-            spawnStatusDuration,
+            unitShield,
+            unitStatus,
+            unitStatusDuration,
             spawnFlag
             );
 
             Cons<SpawnContext> invoker = resolveSpawnInvoker(type);
+            if(debugForceAnyMode || debugBypassMeet){
+                Log.info(
+                "[WH][AutoTrigger][debug] spawn path=@ trigger=@ unit=@ amount=@",
+                invoker != null ? "custom" : "default",
+                id,
+                type == null ? "null" : type.name,
+                realAmount
+                );
+            }
 
             if(invoker != null){
                 invoker.get(sctx);
@@ -600,7 +703,7 @@ public class Trigger implements Entityc, Cloneable{
     }
 
     private String resolveCenteredHudText(FleetWarnHudMode mode){
-        if(mode != FleetWarnHudMode.centered && mode != FleetWarnHudMode.both) return "";
+        if(mode != FleetWarnHudMode.centered) return "";
         if(hasText(hudText)) return hudText;
         if(hasText(chatText)) return chatText;
         return "";
@@ -617,6 +720,9 @@ public class Trigger implements Entityc, Cloneable{
                 if(unit == null) return;
 
                 unit.rotation(sctx.angle);
+                if(sctx.shield >= 0f){
+                    unit.shield = sctx.shield;
+                }
                 if(sctx.status != null && sctx.status != StatusEffects.none){
                     unit.apply(sctx.status, sctx.statusDuration);
                 }
@@ -666,6 +772,7 @@ public class Trigger implements Entityc, Cloneable{
         out.spawnTeam = spawnTeam;
         out.spawnPosition = spawnPosition;
         out.spawnUnits = copySpawner(spawnUnits);
+        out.spawnUnitConfigs = copySpawnUnitConfigs(spawnUnitConfigs);
         out.spawnRange = spawnRange;
         out.spawnWarmup = spawnWarmup;
         out.spawnEachDelay = spawnEachDelay;
@@ -692,7 +799,7 @@ public class Trigger implements Entityc, Cloneable{
     void rebindTransientFromTemplate(Trigger template){
         if(template == null) return;
 
-        // Keep live trigger config aligned with latest template definition.
+        // 保持当前运行中的触发器配置与最新模板定义一致。
         requiredItems = copyReqs(template.requiredItems);
         requiredUnits = copyReqs(template.requiredUnits);
         requiredBuildings = copyReqs(template.requiredBuildings);
@@ -726,6 +833,7 @@ public class Trigger implements Entityc, Cloneable{
         markLifetime = template.markLifetime;
 
         spawnUnits = copySpawner(template.spawnUnits);
+        spawnUnitConfigs = copySpawnUnitConfigs(template.spawnUnitConfigs);
         spawnRange = template.spawnRange;
         spawnWarmup = template.spawnWarmup;
         spawnEachDelay = template.spawnEachDelay;
@@ -774,6 +882,7 @@ public class Trigger implements Entityc, Cloneable{
         if(markColor == null) markColor = Color.valueOf("ff7b69");
         if(fleetWarnSound == null) fleetWarnSound = WHSounds.alert2;
         if(unitSpawnerInvokers == null) unitSpawnerInvokers = new ObjectMap<>();
+        if(spawnUnitConfigs == null) spawnUnitConfigs = new ObjectMap<>();
         if(onTrigger == null) onTrigger = ctx -> {
         };
         if(onClientTrigger == null) onClientTrigger = ctx -> {
@@ -1067,9 +1176,49 @@ public class Trigger implements Entityc, Cloneable{
         return "PortableAutoEventTrigger{" + "entityId=" + entityId + ", id='" + id + '\'' + '}';
     }
 
+    private SpawnUnitConfig ensureSpawnUnitConfig(UnitType type){
+        if(type == null) return null;
+        if(spawnUnitConfigs == null) spawnUnitConfigs = new ObjectMap<>();
+
+        SpawnUnitConfig config = spawnUnitConfigs.get(type);
+        if(config == null){
+            config = new SpawnUnitConfig();
+            spawnUnitConfigs.put(type, config);
+        }
+        return config;
+    }
+
+    private static ObjectMap<UnitType, SpawnUnitConfig> copySpawnUnitConfigs(ObjectMap<UnitType, SpawnUnitConfig> source){
+        ObjectMap<UnitType, SpawnUnitConfig> out = new ObjectMap<>();
+        if(source == null || source.isEmpty()) return out;
+
+        for(ObjectMap.Entry<UnitType, SpawnUnitConfig> entry : source.entries()){
+            if(entry == null || entry.key == null || entry.value == null) continue;
+            out.put(entry.key, entry.value.copy());
+        }
+        return out;
+    }
+
     private static void validatePairs(Object... pairs){
         if(pairs == null || (pairs.length & 1) != 0){
             throw new IllegalArgumentException("Pairs length must be even.");
+        }
+    }
+
+    public static class SpawnUnitConfig{
+        /** 小于 0 表示沿用 UnitType 默认护盾值。 */
+        public float shield = -1f;
+        /** 为 null 表示使用触发器级 spawnStatus。 */
+        public StatusEffect status = null;
+        /** 小于 0 表示使用触发器级 spawnStatusDuration。 */
+        public float statusDuration = -1f;
+
+        public SpawnUnitConfig copy(){
+            SpawnUnitConfig out = new SpawnUnitConfig();
+            out.shield = shield;
+            out.status = status;
+            out.statusDuration = statusDuration;
+            return out;
         }
     }
 

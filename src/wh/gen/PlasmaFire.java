@@ -26,24 +26,37 @@ public class PlasmaFire extends Fire{
     protected transient float animation = (float)Mathf.random(44);
     public static final TextureRegion[] PlaRegion = new TextureRegion[frames];
 
+    private static TextureRegion frameRegion(int index){
+        if(PlaRegion[0] == null && Core.atlas != null){
+            for(int i = 0; i < frames; i++){
+                PlaRegion[i] = Core.atlas.find("wh-PlaFire-" + i);
+            }
+        }
+
+        int wrapped = index % frames;
+        if(wrapped < 0) wrapped += frames;
+        return PlaRegion[wrapped];
+    }
+
     public static final Effect remove = new Effect(70f, e -> {
         Draw.alpha(e.fout());
-        Draw.rect(PlaRegion[((int) (e.rotation + e.fin() * PlasmaFire.frames)) % PlasmaFire.frames], e.x + Mathf.randomSeedRange((int) e.y, 2), e.y + Mathf.randomSeedRange((int) e.x, 2));
+        TextureRegion region = frameRegion((int)(e.rotation + e.fin() * PlasmaFire.frames));
+        if(region != null){
+            Draw.rect(region, e.x + Mathf.randomSeedRange((int)e.y, 2), e.y + Mathf.randomSeedRange((int)e.x, 2));
+        }
         Drawf.light(e.x, e.y, 50f + Mathf.absin(5f, 5f), WHPal.SkyBlue, 0.6f * e.fout());
     });
 @Override
     public void draw() {
         {
-            if (PlaRegion[0] == null) {
-                for (int i = 0; i < frames; i++) {
-                    PlaRegion[i] = Core.atlas.find("wh-PlaFire-" + i);
-                }
-            }
             Draw.alpha(0.35f);
             Draw.alpha(Mathf.clamp(warmup / 20f));
             Draw.color(1.0F, 1.0F, 1.0F, Mathf.clamp(warmup / warmupDuration));
             Draw.z(Layer.effect);
-            Draw.rect(PlaRegion[Math.min((int)animation, PlaRegion.length - 1)], x + Mathf.randomSeedRange((int)y, 2), y + Mathf.randomSeedRange((int)x, 2));
+            TextureRegion region = frameRegion((int)animation);
+            if(region != null){
+                Draw.rect(region, x + Mathf.randomSeedRange((int)y, 2), y + Mathf.randomSeedRange((int)x, 2));
+            }
             Draw.reset();
             Drawf.light(x, y, 50.0F + Mathf.absin(5.0F, 5.0F), WHPal.SkyBlue, 0.6F * Mathf.clamp(warmup / warmupDuration));
         }

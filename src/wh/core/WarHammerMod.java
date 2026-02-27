@@ -20,6 +20,7 @@ public class WarHammerMod extends Mod {
 
     public WarHammerMod() {
         WHClassMap.load();
+        WHSettings.load();
         Events.on(EventType.FileTreeInitEvent.class, (e) -> {
             if (!Vars.headless) {
                 WHSounds.load();

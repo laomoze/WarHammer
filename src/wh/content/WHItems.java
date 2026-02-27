@@ -56,12 +56,12 @@ public final class WHItems{
         }};
 
         cobalt = new Item("cobalt", Color.valueOf("A9C0CDFF")){{
-            hardness = 3;
+            hardness = 4;
             cost = 0.9f;
         }};
 
         uranium = new Item("uranium", Color.valueOf("6A9A4DFF")){{
-            hardness = 4;
+            hardness = 5;
             explosiveness = 0.2f;
             radioactivity = 1.4f;
             cost = 1.1f;
@@ -69,7 +69,7 @@ public final class WHItems{
         }};
 
         molybdenum = new Item("molybdenum", Color.valueOf(" DF90CAFF")){{
-            hardness = 5;
+            hardness = 6;
             cost = 1.2f;
             healthScaling = 0.8f;
         }};

@@ -179,7 +179,7 @@ public class SpecialDrill extends Block {
                 drawPlaceText(Core.bundle.get("bar.drillnotallowed"), x, y, false);
                 return;
             }
-            float width = drawPlaceText(Core.bundle.formatFloat("bar.drillspeed",  mineSize*mineSize /( getDrillTime(returnItem)/60f), 2), x, y, valid);
+            float width = drawPlaceText(Core.bundle.formatFloat("bar.drillspeed", returnCount / (getDrillTime(returnItem) / 60f), 2), x, y, valid);
             float dx = x * tilesize + offset - width / 2f, dy = y * tilesize + offset + size * tilesize / 2f, s = iconSmall / 4f;
             Draw.mixcol(Color.darkGray, 1f);
             Draw.rect(returnItem.fullIcon, dx, dy - 1, s, s);

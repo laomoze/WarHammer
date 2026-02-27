@@ -1058,6 +1058,7 @@ public final class WHBullets{
             width = 20;
             laser = Fx.none;
             delayEffectLifeTime = 28f;
+            renderingDistortion = true;
             hitColor = WHPal.SkyBlue.cpy();
             hitEffect = despawnEffect = new ExplosionEffect(){{
                 waveColor = sparkColor = WHPal.SkyBlue;
@@ -1073,7 +1074,7 @@ public final class WHBullets{
         }};
 
         LcarusBulletEnhanced = new DelayedPointBulletType(){{
-            colors = new Color[]{WHPal.ShootOrangeLight.cpy().mul(1f, 1f, 1f, 0.4f), WHPal.ShootOrangeLight.cpy(), Pal.lancerLaser};
+            colors = new Color[]{WHPal.ShootOrangeLight.cpy().mul(1f, 1f, 1f, 0.4f), WHPal.ShootOrangeLight.cpy(), Color.white};
             damage = 120;
             rangeChange = 16f;
             reloadMultiplier = 0.5f;
@@ -1083,6 +1084,7 @@ public final class WHBullets{
             laser = Fx.none;
             width = 20;
             delayEffectLifeTime = 28f;
+            renderingDistortion = true;
             hitColor = WHPal.ShootOrangeLight;
             hitEffect = despawnEffect = new ExplosionEffect(){{
                 waveColor = sparkColor = WHPal.ShootOrangeLight;

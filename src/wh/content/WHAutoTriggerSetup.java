@@ -7,14 +7,16 @@ import mindustry.*;
 import mindustry.game.*;
 import wh.entities.*;
 import wh.entities.event.*;
+import wh.entities.event.PortableAutoEventTrigger.*;
 
 public class WHAutoTriggerSetup{
-    /** Set true for dev testing: bypass mode/filter checks and spawn fallback without enemy spawn points. */
-    public static boolean debugAnyMode = false;
+    /** Set true for dev testing: bypass mode/filter checks and allow fallback spawn without enemy spawn points. */
+    public static boolean debugAnyMode = true;
 
     public static void load(){
         PortableAutoEventTrigger.init();
-        WHAutoTriggerLogicBridge.init();
+        // Prevent stale templates from previous hot-reloads (e.g. old id "global-chaos") from stacking.
+        PortableAutoEventTrigger.clearTemplates();
         applyDebugMode(debugAnyMode);
         registerTemplates();
     }
@@ -25,7 +27,7 @@ public class WHAutoTriggerSetup{
 
     private static void registerGlobalChaosTrigger(){
         Trigger globalChaos = new Trigger()
-        .id("global-chaos")
+        .id("test1")
         .allowModes(true, true, false, false)
         .allowNonSectorMaps(true)
         .rulesFilter(r -> r != null && !r.infiniteResources && r.mode() != Gamemode.sandbox && r.mode() != Gamemode.pvp)
@@ -37,11 +39,44 @@ public class WHAutoTriggerSetup{
         .spawn(WHUnitTypes.air4, 2, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
         .spawn(WHUnitTypes.air3, 5, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
         .spawn(WHUnitTypes.air2, 10, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        .spawn(WHUnitTypes.tank1, 2, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        .spawn(WHUnitTypes.tank1s, 2, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        // Fallback: even if per-unit invoker mappings are lost after load, keep custom spawn path.
+        .spawnerInvoker(WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
         .spawnShape(200, 180, 90, 180f)
         .useFleetWarnHUD(true, PortableAutoEventTrigger.FleetWarnHudMode.centered, 3)
         .chatText("[scarlet]Enemy fleet incoming[]", 120f);
 
         PortableAutoEventTrigger.registerTemplate(globalChaos);
+
+        Trigger globalChaos2 = new Trigger()
+        .id("test2")
+        .allowModes(true, true, false, false)
+        .allowNonSectorMaps(true)
+        .rulesFilter(r -> r != null && !r.infiniteResources && r.mode() != Gamemode.sandbox && r.mode() != Gamemode.pvp)
+        .checkSpacing(300f)
+        .spacing(60 * 60f, 100)
+        .teamToSpawn(() -> Vars.state.rules.waveTeam)
+        .minWave(0)
+        .spawn(WHUnitTypes.mechaS6, 1, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        .spawn(WHUnitTypes.Mecha6, 1, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        .spawn(WHUnitTypes.tank2, 3, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        .spawn(WHUnitTypes.tank1, 3, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        .spawn(WHUnitTypes.tank1s, 3, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        // Fallback: even if per-unit invoker mappings are lost after load, keep custom spawn path.
+        .spawnerInvoker(WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        .spawnShape(200, 180, 90, 180f)
+        .useFleetWarnHUD(true, FleetWarnHudMode.legacy, 3)
+        .chatText("[scarlet]Enemy fleet incoming[]", 120f);
+
+        /* PortableAutoEventTrigger.registerTemplate(globalChaos2);*/
+    }
+
+    /** One-click cleanup for persisted Trigger entities from old saves. */
+    public static int purgeLegacyTriggerEntities(){
+        int removed = PortableAutoEventTrigger.purgeLegacyTriggerEntities();
+        Log.info("[WH][AutoTrigger] purged @ persisted trigger entity(ies)", removed);
+        return removed;
     }
 
     public static void applyDebugMode(boolean enabled){
@@ -59,6 +94,7 @@ public class WHAutoTriggerSetup{
     }
 
     public static void spawnByWHSpawnerAtEnemySpawn(PortableAutoEventTrigger.SpawnContext sctx){
+        if(sctx == null || sctx.type == null) return;
         if(Vars.spawner == null || !Vars.state.hasSpawns()){
             if(debugAnyMode || PortableAutoEventTrigger.debugBypassMeet){
                 spawnAroundCenter(sctx);
@@ -73,7 +109,11 @@ public class WHAutoTriggerSetup{
             }
             return;
         }
+        spawnAtEnemySpawns(sctx);
+    }
 
+    private static void spawnAtEnemySpawns(PortableAutoEventTrigger.SpawnContext sctx){
+        var spawns = Vars.spawner.getSpawns();
         Team enemy = Vars.state.rules.waveTeam;
         float cx = Vars.world.width() * Vars.tilesize * 0.5f;
         float cy = Vars.world.height() * Vars.tilesize * 0.5f;
@@ -93,6 +133,7 @@ public class WHAutoTriggerSetup{
 
                 Spawner sp = new Spawner()
                 .init(sctx.type, enemy, new Vec2(px, py), rot, sctx.warmup, false)
+                .setShieldToApply(sctx.shield)
                 .setStatus(sctx.status, sctx.statusDuration)
                 .setFlagToApply(sctx.flag);
 
@@ -117,6 +158,7 @@ public class WHAutoTriggerSetup{
 
                 Spawner sp = new Spawner()
                 .init(sctx.type, enemy, new Vec2(px, py), rot, 12f, true)
+                .setShieldToApply(sctx.shield)
                 .setStatus(sctx.status, sctx.statusDuration)
                 .setFlagToApply(sctx.flag);
 

@@ -292,9 +292,9 @@ public class Quarry extends Block {
 
                 itemsArray = getDropList(tiles);
 
-                empty = itemsArray.isEmpty();
-
                 itemList = WorldDef.listItem(itemsArray);
+                empty = itemList.isEmpty();
+                lastChange = Vars.world.tileChanges;
             }
 
             fullColor = Tmp.c1.set(areaColor).lerp(boostColor, boostWarmup);
@@ -309,7 +309,7 @@ public class Quarry extends Block {
                     for (int iy = 0; iy < areaSize; iy++) {
                         float dx = ix * tilesize + mx - fulls + tilesize / 2f;
                         float dy = iy * tilesize + my - fulls + tilesize / 2f;
-                        tileItem = itemsArray.get(ix * areaSize + iy);
+                        tileItem = tileAt(ix, iy);
                         if (tileItem != null) {
                             if (items.total() < itemCapacity) {
                                 Fx.itemTransfer.at(dx + Mathf.range(1f), dy + Mathf.range(1f), 0, tileItem.color, new Vec2(drillX + mx, drillY + my));
@@ -463,6 +463,9 @@ public class Quarry extends Block {
             Draw.rect(rotation >= 2 ? sideRegion2 : sideRegion1, x, y, rotdeg());
 
             if (!drawDrill) return;
+            if(inp == null){
+                inp = deployInterp != null ? deployInterp : Interp.linear;
+            }
             //(0-1), (1-2), (2-3), (3-4)
             if (deployProgress >= 0 && deployProgress <= 1) deployProgress1 = inp.apply(clamp(deployProgress - 0));
             else if (deployProgress >= 1 && deployProgress <= 2) deployProgress2 = inp.apply(clamp(deployProgress - 1));
@@ -496,7 +499,7 @@ public class Quarry extends Block {
                 for (int iy = 0; iy < areaSize; iy++) {
                     float dx = ix * 8 + mx - fulls + 4;
                     float dy = iy * 8 + my - fulls + 4;
-                    tileItem = itemsArray.get(ix * areaSize + iy);
+                    tileItem = tileAt(ix, iy);
                     if (tileItem != null) {
                         for (int i = 0; i <= 1; i++) {
 
@@ -510,6 +513,12 @@ public class Quarry extends Block {
                     }
                 }
             }
+        }
+
+        private Item tileAt(int ix, int iy){
+            int index = ix * areaSize + iy;
+            if(index < 0 || index >= itemsArray.size) return null;
+            return itemsArray.get(index);
         }
 
         @Override

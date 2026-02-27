@@ -3554,6 +3554,10 @@ public final class WHUnitTypes{
 
                             triCap = true;
                             drawPositionLighting = true;
+                            renderingDistortion = true;
+                            pathDistortionRectStrength = 1f;
+                            pathDistortionRectWidthScale = 2.5f;
+                            pathDistortionRectLife = 60f;
 
                             rotate = true;
                             rotateAngle = 5;
@@ -8452,6 +8456,7 @@ public final class WHUnitTypes{
 
                         pierceCap = 3;
 
+                        renderingDistortion = true;
                         rotate = true;
                         rotateAngle = 3;
                         moveSpeed = 0.05f;

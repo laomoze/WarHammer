@@ -37,6 +37,8 @@ public class Spawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
     public float rotation;
 
     public double flagToApply = Double.NaN;
+    /** Negative value means keep UnitType default shield. */
+    public float shieldToApply = -1f;
 
     public StatusEntry statusEntry = new StatusEntry().set(StatusEffects.none, 0);
 
@@ -91,6 +93,11 @@ public class Spawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
 
     public Spawner setFlagToApply(long flagToApply){
         this.flagToApply = Double.longBitsToDouble(flagToApply);
+        return this;
+    }
+
+    public Spawner setShieldToApply(float shieldToApply){
+        this.shieldToApply = shieldToApply;
         return this;
     }
 
@@ -196,6 +203,9 @@ public class Spawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
         toSpawn = type.create(team);
         toSpawn.set(x, y);
         toSpawn.rotation = rotation();
+        if(shieldToApply >= 0f){
+            toSpawn.shield = shieldToApply;
+        }
         if(!Double.isNaN(flagToApply)){
             toSpawn.flag(flagToApply);
         }

@@ -9,6 +9,7 @@ uniform vec2 u_resolution;
 
 uniform int u_blackholecount;
 uniform vec4 u_blackholes[MAX_COUNT];
+uniform vec4 u_blackholeStrengths[MAX_COUNT];
 
 varying vec2 v_texCoords;
 
@@ -44,6 +45,9 @@ void main() {
     vec2 offset = vec2(0.0);
     for(int i = 0; i < u_blackholecount; ++i){
         vec4 blackhole = u_blackholes[i];
+        float strength = u_blackholeStrengths[i].x;
+        if (strength <= 0.0001) continue;
+
         float cX = blackhole.r;
         float cY = blackhole.g;
         float iR = blackhole.b;
@@ -51,22 +55,19 @@ void main() {
 
         float dst = distance(blackhole.xy, coords);
 
-//        if(dst < iR * 1.5){
-//            //Inside black hole, set to black
-//            //up 1.5 times, make black area bigger
-//            gl_FragColor = vec4(0.0);
-//            return;
-//        }else
         if(dst > oR){
             //Outside black hole, skip
             continue;
         }else{
+            //No tearing inside the core itself.
+            if (dst <= iR) continue;
+
             //Influence target position
-            float p = (dst - iR) / (oR - iR);
+            float p = clamp((dst - iR) / max(oR - iR, 0.0001), 0.0, 1.0);
             p = interp(p);
             float a = atan(coords.x - cX, coords.y - cY) + HALFPI;
             vec2 pos = vec2(cX - oR * cos(a) * p, cY + oR * sin(a) * p);
-            offset += pos - coords;
+            offset += (pos - coords) * strength;
         }
     }
 

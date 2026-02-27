@@ -69,12 +69,11 @@ public final class WHBlocks{
     manganeseSteelFurnace, T2ManganeseSteelFurnace,
     arcKiln, multiPress, siliconMixFurnace,
 
-    plastaniumCompressor, atmosphericSeparator, electrolyzer, T2SporePress,
-    T2CarbideCrucible, cobaltNitrideChamber,
+    plastaniumCompressor, atmosphericSeparator,
+    electrolyzer, sporePress, cultivator,
+    carbideCrucible,
 
-    T2Cultivator,
-
-    T2CryofluidMixer, T2PhaseSynthesizer, largeSurgeSmelter,
+    cobaltNitrideChamber, largeSurgeSmelter, T2PhaseSynthesizer, T2CryofluidMixer,
 
     ceramiteSteelFoundry, T2ceramiteSteelFoundry, crystalEngraver, laserEngraver,
     moSurgeSmelter, ceramiteRefinery, ADMill,
@@ -85,7 +84,8 @@ public final class WHBlocks{
     combustionHeater, decayHeater, slagHeatMaker, promethiumHeater, smallHeatRouter, heatBelt, heatBridge, T2heatBridge,
     tungstenConverter, molybdenumConverter, vibraniumConverter;
     //drill
-    public static Block electronicPneumaticDrill, MechanicalQuarry, heavyCuttingDrill, highEnergyDrill, SpecialCuttingDrill,
+    public static Block electronicPneumaticDrill, MechanicalQuarry, lavaDrill,
+    heavyCuttingDrill, highEnergyDrill, SpecialCuttingDrill,
     strengthenOilExtractor, integratedCompressor, slagExtractor, promethiumExtractor, heavyExtractor;
     //liquid
     public static Block gravityPump, tiSteelPump, T2LiquidTank, armorLiquidTank, armorFluidJunction,
@@ -99,6 +99,7 @@ public final class WHBlocks{
     armorUnderflowGate, armorRouter, steelDust,
     steelBridge, T2steelBridge,
     ceramiteConveyor, armorCoverStackBelt, stackBridge, steelUnloader, trackDriver;
+
     //power
     public static Block ventDistiller, turboGenerator, crackingGenerator, T2thermalGenerator,
     T2impactReactor, plaRector, promethiunmRector,
@@ -448,8 +449,8 @@ public final class WHBlocks{
                 itemCapacity = 30;
                 consumePower(10f);
                 consumeLiquid(Liquids.oil, 1);
-                consumeItems(with(Items.titanium, 8));
-                outputItem = new ItemStack(Items.plastanium, 4);
+                consumeItems(with(WHItems.chromium, 8));
+                outputItem = new ItemStack(Items.plastanium, 5);
                 drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawDefault(), new T2PlastaniumCompresserDrawer(WHPal.ShootOrange), new DrawFade());
                 craftEffect = Fx.formsmoke;
                 updateEffect = Fx.plasticburn;
@@ -489,19 +490,6 @@ public final class WHBlocks{
             }
         };
 
-       /* cobaltNitrideChamber= new GenericCrafter("cobalt-nitride-chamber"){
-            {
-                requirements(Category.crafting, with(WHItems.cobalt, 40, Items.metaglass, 40, Items.graphite, 40, WHItems.manganeseSteel, 20));
-                size = 3;
-                health = 750;
-                hasPower = hasLiquids = true;
-                craftTime = 60;
-                liquidCapacity = 60;
-                itemCapacity = 20;
-                consumePower(4f);
-
-            }
-        };*/
 
         electrolyzer = new GenericCrafter("t2-electrolyzer"){
             {
@@ -516,12 +504,12 @@ public final class WHBlocks{
 
                 rotate = true;
                 invertFlip = true;
-                consumePower(4f);
+                consumePower(2f);
                 consumeLiquid(WHLiquids.swageWater, 1f);
                 outputLiquids = LiquidStack.with(Liquids.ozone, 30f / 60, Liquids.hydrogen, 45f / 60);
                 drawer = new DrawMulti(
                 new DrawRegion("-bottom"),
-                new DrawLiquidTile(Liquids.water, 0.9f),
+                new DrawLiquidTile(Liquids.water, 0.8f),
                 new DrawBubbles(Color.valueOf("7693e3")){{
                     sides = 10;
                     recurrence = 3f;
@@ -542,6 +530,109 @@ public final class WHBlocks{
                 liquidOutputDirections = new int[]{2, 4};
             }
         };
+
+        sporePress = new GenericCrafter("spore-press"){{
+
+            requirements(Category.crafting, with(Items.silicon, 90, Items.plastanium, 40, WHItems.manganeseSteel, 30));
+            health = 700;
+            hasItems = hasPower = hasLiquids = true;
+            craftTime = 60;
+            itemCapacity = 40;
+            liquidCapacity = 120;
+            size = 3;
+            consumePower(4);
+            consumeItems(with(Items.sporePod, 9));
+            outputLiquid = new LiquidStack(Liquids.oil, 1);
+            drawer = new DrawMulti(
+            new DrawRegion("-bottom"),
+            new DrawRegion("-rotator", 4){{
+                spinSprite = true;
+            }},
+            new DrawDefault());
+            new DrawLiquidRegion(Liquids.oil);
+
+            researchCostMultiplier = 0.45f;
+        }};
+
+        cultivator = new AttributeCrafter("cultivator"){{
+            requirements(Category.crafting, with(WHItems.cobaltNitride, 40, Items.metaglass, 100, WHItems.manganeseSteel, 50));
+            health = 400;
+            hasItems = hasPower = hasLiquids = true;
+            craftTime = 120;
+            itemCapacity = 20;
+            liquidCapacity = 120;
+            size = 3;
+            consumePower(5);
+            consumeLiquid(Liquids.water, 30f / 60f);
+            outputItem = new ItemStack(Items.sporePod, 6);
+
+            craftEffect = Fx.none;
+            envRequired |= Env.spores;
+            attribute = Attribute.spores;
+            legacyReadWarmup = true;
+            drawer = new DrawMulti(
+            new DrawDefault(),
+            new DrawCultivator(){{
+                radius = 4f;
+            }},
+            new DrawRegion("-top")
+            );
+            maxBoost = 2f;
+            researchCostMultiplier = 0.45f;
+        }};
+
+        carbideCrucible = new HeatCrafter("carbide-crucible"){{
+
+            requirements(Category.crafting, with(WHItems.chromium, 100, Items.graphite, 80, WHItems.manganeseSteel, 50));
+            size = 3;
+            health = 1200;
+            itemCapacity = 30;
+            craftTime = 120;
+            heatRequirement = 8;
+            maxEfficiency = 3f;
+            hasItems = hasPower = true;
+            consumePower(300 / 60f);
+            consumeItems(with(Items.graphite, 4, Items.tungsten, 2));
+            outputItem = new ItemStack(Items.carbide, 2);
+            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawCrucibleFlame(), new DrawDefault(), new DrawHeatInput());
+            researchCostMultiplier = 0.45f;
+        }};
+
+        cobaltNitrideChamber = new GenericCrafter("cobalt-nitride-chamber"){
+            {
+                requirements(Category.crafting, with(Items.tungsten, 50, Items.metaglass, 40, Items.plastanium, 40, WHItems.manganeseSteel, 20));
+                size = 3;
+                health = 750;
+                hasPower = hasLiquids = true;
+                craftTime = 90;
+                liquidCapacity = 60;
+                itemCapacity = 30;
+                consumePower(4);
+                consumeLiquid(Liquids.nitrogen, 20f / 4f / 60f);
+                consumeItems(with(WHItems.cobalt, 4, WHItems.manganeseSteel, 1));
+                outputItems = with(WHItems.cobaltNitride, 1);
+                drawer = new DrawMulti(
+                new DrawRegion("-bottom"),
+                new DrawLiquidTile(Liquids.nitrogen, 0.8f),
+                new DrawArcSmelt(){{
+                    flameColor = midColor = Liquids.nitrogen.color.cpy().lerp(Pal.techBlue, 0.3f);
+                    flameRad = 2.5f;
+                    circleSpace = 3;
+                }},
+                new DrawParticles(){{
+                    color = Color.valueOf("d4f0ff");
+                    alpha = 0.6f;
+                    particleSize = 4f;
+                    particles = 6;
+                    particleRad = 12f;
+                    particleLife = 140f;
+                }},
+                new DrawDefault()
+                );
+            }
+        };
+
+
 
         heatSiliconSmelter = new HeatCrafter("heat-silicon-smelter"){{
             requirements(Category.crafting, with(WHItems.molybdenumAlloy, 50, Items.carbide, 120, Items.pyratite, 30, Items.silicon, 200, WHItems.manganeseSteel, 100));
@@ -578,25 +669,6 @@ public final class WHBlocks{
             new DrawHeatInput());
             researchCostMultiplier = 0.45f;
         }};
-
-        T2CarbideCrucible = new HeatCrafter("t2-carbide-crucible"){{
-
-            requirements(Category.crafting, with(Items.tungsten, 100, Items.graphite, 80, WHItems.manganeseSteel, 40));
-            size = 3;
-            health = 1200;
-            itemCapacity = 45;
-            outputItem = new ItemStack(Items.carbide, 2);
-            craftTime = 180;
-            heatRequirement = 8;
-            maxEfficiency = 3f;
-            hasItems = hasPower = true;
-            consumePower(300 / 60f);
-            consumeItems(with(Items.graphite, 5, Items.tungsten, 3));
-            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawCrucibleFlame(), new DrawDefault(), new DrawHeatInput());
-            researchCostMultiplier = 0.45f;
-        }};
-
-
 
 
         slagfurnace = new Separator("slag-furnace"){{
@@ -772,55 +844,7 @@ public final class WHBlocks{
         };
 
 
-        T2SporePress = new GenericCrafter("t2-spore-press"){{
 
-            requirements(Category.crafting, with(Items.graphite, 30, Items.silicon, 60, Items.plastanium, 30, WHItems.manganeseSteel, 70));
-            health = 700;
-            hasItems = hasPower = hasLiquids = true;
-            craftTime = 60;
-            itemCapacity = 40;
-            liquidCapacity = 120;
-            size = 3;
-            consumePower(2);
-            consumeItems(with(Items.sporePod, 9));
-            outputLiquid = new LiquidStack(Liquids.oil, 1);
-            drawer = new DrawMulti(
-            new DrawRegion("-bottom"),
-            new DrawRegion("-rotator", 4){{
-                spinSprite = true;
-            }},
-            new DrawDefault());
-            new DrawLiquidRegion(Liquids.oil);
-
-            researchCostMultiplier = 0.45f;
-        }};
-
-        T2Cultivator = new AttributeCrafter("t2-cultivator"){{
-            requirements(Category.crafting, with(WHItems.manganese, 90, Items.silicon, 60, WHItems.manganeseSteel, 50));
-            health = 400;
-            hasItems = hasPower = hasLiquids = true;
-            craftTime = 120;
-            itemCapacity = 20;
-            liquidCapacity = 120;
-            size = 3;
-            consumePower(5);
-            consumeLiquid(Liquids.water, 30f / 60f);
-            outputItem = new ItemStack(Items.sporePod, 6);
-
-            craftEffect = Fx.none;
-            envRequired |= Env.spores;
-            attribute = Attribute.spores;
-            legacyReadWarmup = true;
-            drawer = new DrawMulti(
-            new DrawDefault(),
-            new DrawCultivator(){{
-                radius = 4f;
-            }},
-            new DrawRegion("-top")
-            );
-            maxBoost = 2f;
-            researchCostMultiplier = 0.45f;
-        }};
 
         T2CryofluidMixer = new GenericCrafter("t2-cryofluid-mixer"){
             {
@@ -1384,14 +1408,14 @@ public final class WHBlocks{
             }
         };
         //Drill
-        electronicPneumaticDrill = new Drill("t2-pneumatic-drill"){{
-            requirements(Category.production, with(WHItems.manganese, 30, Items.silicon, 15, Items.graphite, 20));
+        electronicPneumaticDrill = new Drill("electric-drill"){{
+            requirements(Category.production, with(WHItems.manganese, 30));
             tier = 3;
-            drillTime = 250;
+            drillTime = 200;
             size = 2;
-            consumePower(1);
+            consumePower(0.5f);
 
-            consumeLiquid(Liquids.water, 0.06f).boost();
+            consumeLiquid(WHLiquids.swageWater, 5 / 60f).boost();
         }};
         MechanicalQuarry = new Quarry("mechanical-quarry"){{
 
@@ -1404,75 +1428,72 @@ public final class WHBlocks{
             acceptsItems = true;
 
             areaSize = 11;
-            liquidBoostIntensity = 1.5f;
+            liquidBoostIntensity = 2;
             mineTime = 400f;
 
-            tier = 3;
+            tier = 5;
 
             drawDrill = true;
             deploySpeed = 0.015f;
             deployInterp = new Interp.PowOut(4);
             deployInterpInverse = new Interp.PowIn(4);
             drillMoveSpeed = 0.07f;
-            consumePower(3f);
-            consumeLiquid(Liquids.water, 7.5f / 60f).boost();
+            consumePower(1);
+            consumeLiquid(WHLiquids.swageWater, 10 / 60f).boost();
 
         }};
+
+        lavaDrill = new Drill("lava-drill"){{
+            requirements(Category.production, with(WHItems.manganese, 100, Items.silicon, 60, Items.plastanium, 50, WHItems.uranium, 70));
+            drillTime = 300;
+            size = 4;
+            drawRim = true;
+            hasPower = true;
+            squareSprite = false;
+            tier = 5;
+            updateEffect = Fx.pulverizeRed;
+            updateEffectChance = 0.03f;
+            drillEffect = Fx.mineHuge;
+            rotateSpeed = 6f;
+            warmupSpeed = 0.01f;
+            itemCapacity = 50;
+
+            //more than the laser drill
+            liquidBoostIntensity = 1.8f;
+
+            consumePower(3f);
+            consumeLiquid(Liquids.slag, 0.1f).boost();
+        }};
+
         heavyCuttingDrill = new BurstDrill("heavy-cutting-drill"){
             {
-                requirements(Category.production, with(WHItems.manganese, 100, WHItems.manganese, 100, Items.graphite, 100, Items.silicon, 200, WHItems.manganeseSteel, 100));
+                requirements(Category.production, with(WHItems.cobaltNitride, 70, Items.plastanium, 50, Items.silicon, 120, WHItems.manganeseSteel, 100));
 
                 health = 2900;
                 size = 4;
-                tier = 3;
+                tier = 5;
                 arrowOffset = 0;
-                arrowSpacing = 0;
-                arrows = 1;
+                arrowSpacing = 13 / 4f;
+                arrows = 2;
                 itemCapacity = 100;
                 liquidCapacity = 50;
                 glowColor = Color.valueOf("FEE984FF");
                 fogRadius = 1;
+                squareSprite = false;
                 drawRim = true;
                 hasItems = hasPower = hasLiquids = true;
-                consumePower(7);
+                consumePower(4);
                 consumeLiquid(Liquids.water, 15f / 60f);
-                drillTime = 45;
+                drillTime = 120;
                 drillEffect = new MultiEffect(Fx.mineImpact, Fx.drillSteam, Fx.mineImpactWave.wrap(Pal.redLight, 40f));
                 researchCostMultiplier = 0.6f;
-
             }
         };
 
-        highEnergyDrill = new BurstDrill("high-energy-drill"){
-            {
-                requirements(Category.production, with(WHItems.protocolChip, 90, WHItems.resonantCrystal, 200, Items.silicon, 500, WHItems.ceramite, 150, WHItems.refineCeramite, 90));
-
-                health = 4000;
-                size = 5;
-                tier = 15;
-                arrowOffset = 2;
-                arrowSpacing = 5;
-                arrows = 2;
-                itemCapacity = 120;
-                liquidCapacity = 80;
-                glowColor = Items.surgeAlloy.color;
-                fogRadius = 2;
-                drawRim = true;
-                hasItems = hasPower = hasLiquids = true;
-                consumePower(15);
-                consumeLiquid(Liquids.cryofluid, 0.3f);
-                drillTime = 45;
-                drillEffect = new MultiEffect(Fx.mineImpact, Fx.drillSteam,
-                new WrapEffect(Fx.dynamicSpikes, Items.surgeAlloy.color, 30f),
-                new WrapEffect(Fx.mineImpactWave, Items.surgeAlloy.color, 45f));
-                researchCostMultiplier = 0.6f;
-
-            }
-        };
 
         SpecialCuttingDrill = new SpecialDrill("heavy-steel-laser-drill"){
             {
-                requirements(Category.production, with(WHItems.manganeseSteel, 80, Items.silicon, 200, Items.plastanium, 100, WHItems.ceramite, 80));
+                requirements(Category.production, with(WHItems.manganeseSteel, 80, Items.silicon, 200, Items.carbide, 100, WHItems.ceramite, 80));
 
                 health = 3200;
                 drillTime = 500;
@@ -1485,10 +1506,11 @@ public final class WHBlocks{
                 fogRadius = 2;
                 drawRim = true;
                 hasItems = hasPower = hasLiquids = true;
+                liquidBoostIntensity = 2.5f;
                 consumePower(6);
                 consumeLiquid(Liquids.cryofluid, 0.5f);
                 allowedItems = Seq.with(
-                Items.thorium, Items.tungsten, WHItems.molybdenum);
+                WHItems.uranium, Items.tungsten, WHItems.molybdenum);
 
                 drillTime = 80f;
                 drillEffect = new MultiEffect(Fx.drillSteam);
@@ -1506,6 +1528,36 @@ public final class WHBlocks{
 
             }
         };
+
+        highEnergyDrill = new BurstDrill("high-energy-drill"){
+            {
+                requirements(Category.production, with(WHItems.protocolChip, 90, WHItems.resonantCrystal, 200, Items.silicon, 500, WHItems.ceramite, 150, WHItems.refineCeramite, 90));
+
+                health = 4000;
+                size = 5;
+                tier = 20;
+                arrowOffset = 2;
+                arrowSpacing = 13 / 4f;
+                arrows = 2;
+                itemCapacity = 120;
+                liquidCapacity = 80;
+                glowColor = Items.surgeAlloy.color;
+                fogRadius = 2;
+                drawRim = true;
+                squareSprite = false;
+                hasItems = hasPower = hasLiquids = true;
+                consumePower(15);
+                consumeLiquid(Liquids.cryofluid, 0.3f);
+                drillTime = 40;
+                drillEffect = new MultiEffect(Fx.mineImpact, Fx.drillSteam,
+                new WrapEffect(Fx.dynamicSpikes, Items.surgeAlloy.color, 30f),
+                new WrapEffect(Fx.mineImpactWave, Items.surgeAlloy.color, 45f));
+                researchCostMultiplier = 0.6f;
+
+            }
+        };
+
+
         strengthenOilExtractor = new Fracker("strengthen-oil-extractor"){
             {
                 requirements(Category.production, with(Items.graphite, 60, Items.silicon, 120, Items.tungsten, 80, WHItems.manganeseSteel, 50));

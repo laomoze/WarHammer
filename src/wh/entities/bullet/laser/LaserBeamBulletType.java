@@ -34,6 +34,9 @@ public class LaserBeamBulletType extends ContinuousBulletType{
     public float sideAngle = 90f;
     public boolean drawPositionLighting = false;
     public boolean renderingDistortion = false;
+    public float pathDistortionRectWidthScale = 2f;
+    public float pathDistortionRectStrength = 0.8f;
+    public float pathDistortionRectLife = 40;
     public boolean rotate = false;
     public float rotateAngle = 20;
     public float damageMult = 0;
@@ -247,9 +250,7 @@ public class LaserBeamBulletType extends ContinuousBulletType{
         float effectX = b.x + Tmp.v1.x;
         float effectY = b.y + Tmp.v1.y;
 
-        if(renderingDistortion && b.timer(4, 3f)){
-            MainRenderer.addShockCircle(effectX, effectY, width * 6f, 36f, 12f);
-        }
+        addRectPathDistortion(b, data, rot);
 
         if(b.timer(0, 3 * b.fin() + 2)){
             LasergroundEffect.at(effectX, effectY, 0, hitColor, data.currentLength);
@@ -268,6 +269,20 @@ public class LaserBeamBulletType extends ContinuousBulletType{
     ){
         LaserDataBullet bullet = LaserDataBullet.create();
         return WHUtils.anyOtherCreate(bullet, this, shooter, owner, team, x, y, angle, damage, velocityScl, lifetimeScl, data, mover, aimX, aimY, target);
+    }
+
+    private void addRectPathDistortion(Bullet b, LaserDataBullet data, float rot){
+        if(renderingDistortion && b.timer(4, pathDistortionRectLife / 2)){
+
+            float rectLength = Math.max(data.currentLength, 1f);
+            float rectWidth = Math.max(width * pathDistortionRectWidthScale, 1f);
+
+            Tmp.v2.trns(rot, -width);
+            Tmp.v3.trns(rot, rectLength * 0.5f + width / 2);
+            MainRenderer.addShockRect(
+            b.x + Tmp.v2.x + Tmp.v3.x, b.y + Tmp.v2.y + Tmp.v3.y,
+            rectLength, rectWidth, rot, pathDistortionRectLife, pathDistortionRectStrength);
+        }
     }
 
     public static class LaserDataBullet extends Bullet{
