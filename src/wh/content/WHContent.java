@@ -15,8 +15,9 @@ import static wh.core.WarHammerMod.name;
 
 public class WHContent extends Content{
     public static TextureRegion arrowRegion,
-     pointerRegion,
-    strafeRegion, missileRegion, bombRegion, annihilateArrow, fleet;
+    pointerRegion,
+    strafeRegion, missileRegion, bombRegion, annihilateArrow,
+    fleet, objective;
 
     public static final float HEXAGONAL_SHIELD = Layer.shields + 12f;
     public static final float VOID_SHIELD = Layer.shields + 9f;
@@ -24,20 +25,22 @@ public class WHContent extends Content{
     public static final float POWER_DYNAMIC = Layer.power + 4f;
 
     @Override
-    public ContentType getContentType() {
+    public ContentType getContentType(){
         return ContentType.error;
     }
-    public static void loadPriority() {
+
+    public static void loadPriority(){
         new WHContent().load();
     }
 
-    public void load() {
+    public void load(){
         arrowRegion = Core.atlas.find(WarHammerMod.name("jump-gate-arrow"));
         pointerRegion = Core.atlas.find(WarHammerMod.name("jump-gate-pointer"));
         strafeRegion = Core.atlas.find(name("strafe-mode"));
         missileRegion = Core.atlas.find(name("missile-mode"));
         bombRegion = Core.atlas.find(name("bomb-mode"));
-        annihilateArrow= Core.atlas.find(WarHammerMod.name("Annihilate-arrow"));
+        annihilateArrow = Core.atlas.find(name("Annihilate-arrow"));
         fleet = Core.atlas.find(name("fleet"));
+        objective = Core.atlas.find(name("objective"));
     }
 }

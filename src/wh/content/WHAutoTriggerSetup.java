@@ -10,10 +10,11 @@ import wh.entities.event.*;
 import wh.entities.event.PortableAutoEventTrigger.*;
 
 public class WHAutoTriggerSetup{
-    /** Set true for dev testing: bypass mode/filter checks and allow fallback spawn without enemy spawn points. */
+    /** 调试开关：开启后放宽触发条件，便于本地测试。 */
     public static boolean debugAnyMode = false;
 
     public static void load(){
+        // 初始化触发器管理器，并重新装载模板。
         PortableAutoEventTrigger.init();
 
         PortableAutoEventTrigger.clearTemplates();
@@ -31,6 +32,7 @@ public class WHAutoTriggerSetup{
         .allowModes(true, true, false, false)
         .allowNonSectorMaps(true)
         .rulesFilter(r -> false)
+        .requireEnemySpawnPoint(false)
         .checkSpacing(300f)
         .spacing(60 * 60f, 100)
         .teamToSpawn(() -> Vars.state.rules.waveTeam)
@@ -96,17 +98,13 @@ public class WHAutoTriggerSetup{
     public static void spawnByWHSpawnerAtEnemySpawn(PortableAutoEventTrigger.SpawnContext sctx){
         if(sctx == null || sctx.type == null) return;
         if(Vars.spawner == null || !Vars.state.hasSpawns()){
-            if(debugAnyMode || PortableAutoEventTrigger.debugBypassMeet){
-                spawnAroundCenter(sctx);
-            }
+            spawnAroundCenter(sctx);
             return;
         }
 
         var spawns = Vars.spawner.getSpawns();
         if(spawns == null || spawns.isEmpty()){
-            if(debugAnyMode || PortableAutoEventTrigger.debugBypassMeet){
-                spawnAroundCenter(sctx);
-            }
+            spawnAroundCenter(sctx);
             return;
         }
         spawnAtEnemySpawns(sctx);

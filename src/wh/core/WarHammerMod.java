@@ -12,6 +12,8 @@ import mindustry.mod.*;
 import wh.content.*;
 import wh.entities.*;
 import wh.entities.event.logic.*;
+import wh.entities.event.objective.*;
+import wh.entities.event.ui.*;
 import wh.gen.*;
 import wh.graphics.*;
 
@@ -28,6 +30,28 @@ public class WarHammerMod extends Mod {
                     WHShaders.init();
                     MainRenderer.init();
                 });
+            }
+        });
+        Events.on(EventType.ClientLoadEvent.class, e -> {
+            if(!Vars.headless){
+                Core.app.post(() -> {
+                    WHObjectiveUI.init();
+                });
+            }
+        });
+
+        // HUD tree is rebuilt after world load; remount objective panel with a short delay.
+        Events.on(EventType.WorldLoadEvent.class, e -> {
+            if(!Vars.headless){
+                Core.app.post(() -> arc.util.Time.runTask(10f, WHObjectiveUI::init));
+            }
+        });
+
+        // Keep objective panel alive if another UI rebuild removes it.
+        Events.run(EventType.Trigger.update, () -> {
+            if(!Vars.headless){
+                ActionContext.cutsceneUI.update();
+                WHObjectiveUI.ensureMounted();
             }
         });
     }
@@ -59,6 +83,7 @@ public class WarHammerMod extends Mod {
         WHEvents.load();
         WHAutoTriggerSetup.load();
         WHLogicStatements.load();
+        WHObjectiveRegistry.load();
 
     }
 }

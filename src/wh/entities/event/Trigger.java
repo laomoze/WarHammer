@@ -23,6 +23,14 @@ import wh.gen.*;
 
 import static wh.entities.event.PortableAutoEventTrigger.*;
 
+/**
+ * 自动事件触发器实体。
+ * <p>
+ * 直白理解：
+ * - 每隔一段时间检查一次条件（波次/物资/单位/建筑/地图模式等）
+ * - 条件满足就触发回调，并可执行刷怪与 HUD 提示
+ * - 可配置为一次性触发（disposable）
+ */
 public class Trigger implements Entityc, Cloneable{
     // 标识与运行时种子
     public String id = "portable-auto-trigger";

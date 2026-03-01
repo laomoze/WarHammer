@@ -30,6 +30,15 @@ import wh.ui.*;
  * <p>注意：本类依赖 EntityRegister 的实体映射表。
  * 若复制到其他模组，请在该模组的实体映射中注册 {@link Trigger}。
  */
+
+/**
+ * Trigger 模板调度器（管理器）。
+ * <p>
+ * 主要负责：
+ * - 注册触发器模板
+ * - 地图加载后安装/同步运行时触发器
+ * - 处理旧存档残留触发器与调试开关
+ */
 public final class PortableAutoEventTrigger{
     private PortableAutoEventTrigger(){
     }

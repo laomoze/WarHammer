@@ -1,0 +1,397 @@
+package wh.entities.event.objective;
+
+import arc.*;
+import arc.func.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.scene.*;
+import arc.scene.event.*;
+import arc.scene.style.*;
+import arc.scene.ui.*;
+import arc.scene.ui.layout.*;
+import arc.util.*;
+import mindustry.core.*;
+import mindustry.game.*;
+import mindustry.gen.*;
+import mindustry.graphics.*;
+import mindustry.ui.*;
+
+import java.util.concurrent.atomic.*;
+
+import static mindustry.Vars.*;
+
+/**
+ * 独立 objective 面板，挂载在原版 waves HUD 下方。
+ */
+public final class WHObjectiveUI{
+    public static final float maxWidth = 65f * 5f + 4f;
+    private static final String panelName = "wh-objective-panel";
+
+    private static Table hudOverlay, hudWaves, hudStatusTable;
+    private static Element infoTable;
+
+    private WHObjectiveUI(){
+    }
+
+    /**
+     * 是否已经挂载到当前 HUD。
+     */
+    public static boolean mounted(){
+        if(headless || ui == null || ui.hudGroup == null) return false;
+        return ui.hudGroup.find(panelName) != null;
+    }
+
+    /**
+     * HUD 被重建后自动补挂。
+     */
+    public static void ensureMounted(){
+        if(headless) return;
+        if(state == null || !state.isGame()) return;
+        if(!mounted()){
+            init();
+        }
+    }
+
+    public static void init(){
+        if(headless) return;
+        if(state == null || !state.isGame()) return;
+
+        try{
+            getReferences();
+            if(hudWaves == null || hudStatusTable == null) return;
+
+            removeOldPanel();
+            preProcess();
+            buildObjectiveTable();
+            postProcess();
+        }catch(Throwable t){
+            Log.err(t);
+        }
+    }
+
+    /**
+     * 安全获取 HUD 节点，避免 ClassCastException。
+     */
+    private static void getReferences(){
+        hudOverlay = null;
+        hudWaves = null;
+        hudStatusTable = null;
+        infoTable = null;
+
+        if(ui == null || ui.hudGroup == null) return;
+
+        Element overlay = ui.hudGroup.find("overlaymarker");
+        if(!(overlay instanceof Table overlayTable)) return;
+        hudOverlay = overlayTable;
+
+        Element wavesEditorElement = hudOverlay.find("waves/editor");
+        if(!(wavesEditorElement instanceof Group wavesEditor)) return;
+
+        Element waves = wavesEditor.find("waves");
+        if(!(waves instanceof Table wavesTable)) return;
+        hudWaves = wavesTable;
+
+        Element status = hudWaves.find("statustable");
+        if(status instanceof Table statusTable){
+            hudStatusTable = statusTable;
+        }
+    }
+
+    private static void removeOldPanel(){
+        if(hudWaves == null) return;
+        Table old = hudWaves.find(panelName);
+        if(old != null){
+            old.remove();
+        }
+    }
+
+    private static void preProcess(){
+        if(hudWaves == null) return;
+        infoTable = hudWaves.find("infotable");
+        if(infoTable != null){
+            infoTable.remove();
+        }
+    }
+
+    private static void postProcess(){
+        if(hudWaves == null) return;
+        if(infoTable != null){
+            hudWaves.add(infoTable).width(maxWidth).left();
+        }
+    }
+
+    public static void buildObjectiveTable(){
+        if(hudWaves == null) return;
+
+        Table panel = new Table(Tex.buttonEdge4, t -> {
+            Table infoT = new Table();
+            infoT.touchable = Touchable.childrenOnly;
+
+            ImageButton button = new ImageButton(Icon.downOpen, Styles.clearNonei);
+            button.clicked(() -> {
+                if(button.isChecked()){
+                    infoT.clear();
+                    infoT.table().padTop(4f);
+
+                    ScrollPane pane = infoT.pane(Styles.smallPane, i -> {
+                        i.align(Align.topLeft).defaults().growX().fillY().row();
+                        state.rules.objectives.each(mapObjective -> {
+                            Table objective = getObjectiveTable(mapObjective);
+                            objective.visible(() -> mapObjective.qualified() && !mapObjective.hidden && !mapObjective.isCompleted());
+                            i.add(objective).row();
+                        });
+                    }).grow().maxHeight(getHeight() / 2f).get();
+
+                    pane.name = "pane";
+                    pane.setFadeScrollBars(true);
+                    pane.setForceScroll(false, true);
+                    infoT.exited(() -> Core.scene.unfocus(infoT));
+                }else{
+                    Core.scene.unfocus(infoT);
+                }
+            });
+
+            button.update(() -> {
+                if(state.isMenu()){
+                    button.setChecked(false);
+                }
+            });
+
+            t.table(bl -> {
+                bl.table(table -> table.label(() -> {
+                    AtomicInteger activeCount = new AtomicInteger();
+                    state.rules.objectives.each(obj -> {
+                        if(obj.qualified() && !obj.hidden && !obj.isCompleted()){
+                            activeCount.getAndIncrement();
+                        }
+                    });
+                    return activeCount.get() == 0 ? "[lightgray]No Objective[]" : activeCount.get() + " Objective(s)";
+                }).maxWidth(maxWidth - 40f).pad(8f, 16f, 8f, 0f).row()).growX().height(50f).marginLeft(10f);
+                bl.add(button).size(50f).padLeft(10f);
+            }).growX().fillY().margin(4f).padBottom(4f);
+
+            t.row().collapser(infoT, true, button::isChecked).growX().get().setDuration(0.1f);
+        });
+
+        panel.name = panelName;
+        hudWaves.row().add(panel).left().margin(10f).growX().row();
+    }
+
+    public static Table getObjectiveTable(MapObjectives.MapObjective e){
+        return new Table(t -> {
+            t.defaults().growX().fillY().padBottom(6f).pad(6f);
+
+            if(e instanceof MapObjectives.ResearchObjective){
+                MapObjectives.ResearchObjective obj = (MapObjectives.ResearchObjective)e;
+                t.add(objectiveTable(
+                obj.content.fullIcon,
+                () -> Mathf.num(obj.isCompleted()),
+                () -> 1,
+                () -> "Research:",
+                obj::isCompleted
+                ));
+            }
+
+            if(e instanceof MapObjectives.ItemObjective){
+                MapObjectives.ItemObjective obj = (MapObjectives.ItemObjective)e;
+                t.add(objectiveTable(
+                obj.item.fullIcon,
+                () -> state.rules.defaultTeam.items().get(obj.item),
+                () -> obj.amount,
+                () -> "Obtain:",
+                obj::isCompleted
+                ));
+            }
+
+            if(e instanceof MapObjectives.CoreItemObjective){
+                MapObjectives.CoreItemObjective obj = (MapObjectives.CoreItemObjective)e;
+                t.add(objectiveTable(
+                obj.item.fullIcon,
+                () -> state.stats.coreItemCount.get(obj.item),
+                () -> obj.amount,
+                () -> "Collect:",
+                obj::isCompleted
+                ));
+            }
+
+            if(e instanceof MapObjectives.BuildCountObjective){
+                MapObjectives.BuildCountObjective obj = (MapObjectives.BuildCountObjective)e;
+                t.add(objectiveTable(
+                obj.block.fullIcon,
+                () -> state.stats.placedBlockCount.get(obj.block, 0),
+                () -> obj.count,
+                () -> "Build:",
+                obj::isCompleted
+                ));
+            }
+
+            if(e instanceof MapObjectives.UnitCountObjective){
+                MapObjectives.UnitCountObjective obj = (MapObjectives.UnitCountObjective)e;
+                t.add(objectiveTable(
+                obj.unit.fullIcon,
+                () -> state.rules.defaultTeam.data().countType(obj.unit),
+                () -> obj.count,
+                () -> "Build:",
+                obj::isCompleted
+                ));
+            }
+
+            if(e instanceof MapObjectives.DestroyUnitsObjective){
+                MapObjectives.DestroyUnitsObjective obj = (MapObjectives.DestroyUnitsObjective)e;
+                t.add(objectiveTable(
+                Icon.units.getRegion(),
+                () -> state.stats.enemyUnitsDestroyed,
+                () -> obj.count,
+                () -> "Destroy:",
+                obj::isCompleted
+                ));
+            }
+
+            if(e instanceof MapObjectives.TimerObjective){
+                MapObjectives.TimerObjective obj = (MapObjectives.TimerObjective)e;
+                Floatp countup = () -> Reflect.get(obj, "countup");
+                Floatp realTime = () -> obj.duration * state.rules.objectiveTimerMultiplier;
+                t.add(objectiveTable(
+                Icon.refresh.getRegion(),
+                () -> (int)countup.get(),
+                () -> (int)realTime.get(),
+                () -> UI.formatTime(countup.get()) + "/" + UI.formatTime(realTime.get()),
+                obj::isCompleted,
+                false
+                ));
+            }
+
+            if(e instanceof ReuseObjective){
+                ReuseObjective obj = (ReuseObjective)e;
+                Floatp countup = obj::getCountup;
+                Floatp realTime = () -> obj.duration * state.rules.objectiveTimerMultiplier;
+                t.add(objectiveTable(
+                Icon.refresh.getRegion(),
+                () -> (int)countup.get(),
+                () -> (int)realTime.get(),
+                () -> UI.formatTime(countup.get()) + "/" + UI.formatTime(realTime.get()),
+                () -> countup.get() >= realTime.get(),
+                false
+                ));
+            }
+
+            if(e instanceof TriggerObjective){
+                TriggerObjective obj = (TriggerObjective)e;
+                Floatp countup = obj::getCountup;
+                Floatp realTime = () -> obj.duration;
+                t.add(objectiveTable(
+                Icon.refresh.getRegion(),
+                () -> (int)countup.get(),
+                () -> (int)realTime.get(),
+                () -> UI.formatTime(countup.get()) + "/" + UI.formatTime(realTime.get()),
+                () -> countup.get() >= realTime.get(),
+                false
+                ));
+            }
+
+            if(e instanceof RaidEventObjective){
+                RaidEventObjective obj = (RaidEventObjective)e;
+                Floatp countup = obj::getCountup;
+                Floatp realTime = () -> obj.duration * state.rules.objectiveTimerMultiplier;
+                t.add(objectiveTable(
+                Icon.effect.getRegion(),
+                () -> (int)countup.get(),
+                () -> (int)realTime.get(),
+                () -> UI.formatTime(countup.get()) + "/" + UI.formatTime(realTime.get()),
+                () -> countup.get() >= realTime.get(),
+                false
+                ));
+            }
+
+            if(e instanceof MapObjectives.DestroyBlockObjective){
+                MapObjectives.DestroyBlockObjective obj = (MapObjectives.DestroyBlockObjective)e;
+                t.add(objectiveTable(
+                obj.block.fullIcon,
+                () -> Mathf.num(obj.isCompleted()),
+                () -> 1,
+                () -> "Destroy:" + obj.block.localizedName,
+                obj::isCompleted
+                ));
+            }
+
+            if(e instanceof MapObjectives.DestroyBlocksObjective){
+                MapObjectives.DestroyBlocksObjective obj = (MapObjectives.DestroyBlocksObjective)e;
+                t.add(objectiveTable(
+                obj.block.fullIcon,
+                obj::progress,
+                () -> obj.positions.length,
+                () -> "Destroy:" + obj.block.localizedName,
+                obj::isCompleted
+                ));
+            }
+
+            if(e instanceof MapObjectives.CommandModeObjective){
+                MapObjectives.CommandModeObjective obj = (MapObjectives.CommandModeObjective)e;
+                t.add(objectiveTable(
+                Icon.units.getRegion(),
+                () -> Mathf.num(obj.isCompleted()),
+                () -> 1,
+                obj::text,
+                obj::isCompleted
+                ));
+            }
+
+            if(e instanceof MapObjectives.FlagObjective){
+                MapObjectives.FlagObjective obj = (MapObjectives.FlagObjective)e;
+                t.add(objectiveTable(
+                Icon.info.getRegion(),
+                () -> Mathf.num(obj.isCompleted()),
+                () -> 1,
+                obj::text,
+                obj::isCompleted
+                ));
+            }
+
+            if(e instanceof MapObjectives.DestroyCoreObjective){
+                MapObjectives.DestroyCoreObjective obj = (MapObjectives.DestroyCoreObjective)e;
+                t.add(objectiveTable(
+                Icon.effect.getRegion(),
+                () -> Mathf.num(obj.isCompleted()),
+                () -> 1,
+                obj::text,
+                obj::isCompleted
+                ));
+            }
+        });
+    }
+
+    public static Stack objectiveTable(TextureRegion region, Intp value, Intp target, Prov<CharSequence> info, Boolp checked, boolean appendProgress){
+        return new Stack(
+        new Table(table -> table.add(new Bar(
+        () -> buildText(info, value, target, appendProgress),
+        () -> checked.get() ? Pal.heal : Pal.accent,
+        () -> {
+            int tar = Math.max(1, target.get());
+            return Mathf.clamp((float)value.get() / (float)tar);
+        }
+        )).padLeft(20f).height(40f).expandX().fillX()),
+        new Table(image -> image.image(region).size(32f).padTop(4f).padBottom(4f).padLeft(56f).padRight(8f)).left(),
+        new Table(sign -> sign.image(new TextureRegionDrawable(Icon.ok.getRegion()))
+        .size(16f)
+        .expandX()
+        .left()
+        .padLeft(10f)
+        .color(checked.get() ? Pal.heal : Pal.gray))
+        );
+    }
+
+    public static Stack objectiveTable(TextureRegion region, Intp value, Intp target, Prov<CharSequence> info, Boolp checked){
+        return objectiveTable(region, value, target, info, checked, true);
+    }
+
+    private static CharSequence buildText(Prov<CharSequence> info, Intp value, Intp target, boolean appendProgress){
+        if(!appendProgress){
+            return "        " + info.get();
+        }
+        return "        " + info.get() + value.get() + "/" + target.get();
+    }
+
+    public static float getHeight(){
+        return Core.graphics.getHeight();
+    }
+}
