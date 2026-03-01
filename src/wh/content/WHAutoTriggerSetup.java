@@ -11,11 +11,11 @@ import wh.entities.event.PortableAutoEventTrigger.*;
 
 public class WHAutoTriggerSetup{
     /** Set true for dev testing: bypass mode/filter checks and allow fallback spawn without enemy spawn points. */
-    public static boolean debugAnyMode = true;
+    public static boolean debugAnyMode = false;
 
     public static void load(){
         PortableAutoEventTrigger.init();
-        // Prevent stale templates from previous hot-reloads (e.g. old id "global-chaos") from stacking.
+
         PortableAutoEventTrigger.clearTemplates();
         applyDebugMode(debugAnyMode);
         registerTemplates();
@@ -30,7 +30,7 @@ public class WHAutoTriggerSetup{
         .id("test1")
         .allowModes(true, true, false, false)
         .allowNonSectorMaps(true)
-        .rulesFilter(r -> r != null && !r.infiniteResources && r.mode() != Gamemode.sandbox && r.mode() != Gamemode.pvp)
+        .rulesFilter(r -> false)
         .checkSpacing(300f)
         .spacing(60 * 60f, 100)
         .teamToSpawn(() -> Vars.state.rules.waveTeam)

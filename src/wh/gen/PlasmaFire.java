@@ -161,9 +161,8 @@ public class PlasmaFire extends Fire{
                     entity.damage(tileDamage);
                 }
                 Damage.damageUnits(null, tile.worldx(), tile.worldy(), 8f,
-                15f, (unit) -> !unit.isFlying() && !unit.isImmune(WHStatusEffects.plasmaFireBurn), (unit) -> {
+                10, (unit) -> !unit.isFlying() && !unit.isImmune(WHStatusEffects.plasmaFireBurn), (unit) -> {
                     unit.apply(WHStatusEffects.plasmaFireBurn, 300f);
-
                 });
             }
         }

@@ -55,10 +55,10 @@ public class WarHammerMod extends Mod {
         WHPlanets.load();
         WHTechTree.load();
 
+        WHOverride.load();
         WHEvents.load();
         WHAutoTriggerSetup.load();
         WHLogicStatements.load();
-        WHOverride.load();
 
     }
 }

@@ -747,13 +747,17 @@ public final class PortableAutoEventTrigger{
     }
 
     private static void showFleetWarnHudLegacy(Color color, float duration, String text){
+        float width = Core.graphics.getWidth();
+        float bannerWidth = Math.min(width * 0.78f, 620f);
+
         Table warning = new Table(Tex.paneSolid);
         warning.margin(4f);
         warning.table(t2 -> {
-            t2.image().growX().height(UIUtils.OFFSET / 2f).pad(UIUtils.OFFSET / 3f).padRight(-9f).color(color);
+            t2.defaults().growY();
+            t2.image().growX().height(Math.max(4f, UIUtils.OFFSET / 2f)).pad(UIUtils.OFFSET / 3f).padRight(-9f).color(color);
             t2.image(WHContent.fleet).size(UIUtils.LEN - UIUtils.OFFSET).color(color);
-            t2.image().growX().height(UIUtils.OFFSET / 2f).pad(UIUtils.OFFSET / 3f).padLeft(-9f).color(color);
-        }).growX().pad(UIUtils.OFFSET / 2f).fillY().row();
+            t2.image().growX().height(Math.max(4f, UIUtils.OFFSET / 2f)).pad(UIUtils.OFFSET / 3f).padLeft(-9f).color(color);
+        }).width(bannerWidth).growX().pad(UIUtils.OFFSET / 2f).fillY().row();
 
         if(hasText(text)){
             String legacyText = text.trim();
@@ -813,10 +817,25 @@ public final class PortableAutoEventTrigger{
             }).growX().center().row();
         }
 
+        Label skipHint = new Label("Left click to skip");
+        skipHint.setAlignment(Align.center);
+        skipHint.setFontScale(0.9f);
+        skipHint.setColor(color);
+        warning.add(skipHint).growX().padTop(4f).padBottom(2f).center().row();
+
         Table container = Core.scene.table();
-        container.touchable = Touchable.disabled;
+        container.touchable = Touchable.enabled;
         container.setFillParent(true);
         container.center().add(warning).width(width).height(height);
+
+        Runnable dismiss = () -> {
+            container.clearActions();
+            container.actions(
+            Actions.fadeOut(0.22f, Interp.pow2Out),
+            Actions.remove()
+            );
+        };
+        warning.clicked(dismiss);
 
         container.actions(
         Actions.alpha(0f),

@@ -68,6 +68,42 @@ public final class UIUtils{
         }
     }
 
+    /**
+     * 将搜索框与内容列表绑定。
+     * 当搜索文本变化时自动重建列表；匹配内容的内部名与本地化名。
+     */
+    public static <T extends UnlockableContent> Runnable bindContentSearch(TextField search, Table list, Seq<T> contents, Cons<T> rowBuilder){
+        Runnable rebuild = () -> {
+            if(list == null) return;
+            list.clearChildren();
+            if(contents == null || rowBuilder == null) return;
+
+            String query = "";
+            if(search != null && search.getText() != null){
+                query = search.getText().trim().toLowerCase();
+            }
+
+            for(T content : contents){
+                if(content == null) continue;
+                if(!query.isEmpty() && !matchesContentQuery(content, query)) continue;
+                rowBuilder.get(content);
+            }
+        };
+
+        rebuild.run();
+        if(search != null){
+            search.changed(rebuild);
+        }
+        return rebuild;
+    }
+
+    private static boolean matchesContentQuery(UnlockableContent content, String query){
+        String n1 = content.name == null ? "" : content.name.toLowerCase();
+        String localized = content.localizedName == null ? "" : Strings.stripColors(content.localizedName);
+        String n2 = localized.toLowerCase();
+        return n1.contains(query) || n2.contains(query);
+    }
+
     public static void statTurnTable(Stats stats, Table table){
         for(StatCat cat : stats.toMap().keys()){
             var map = stats.toMap().get(cat);
