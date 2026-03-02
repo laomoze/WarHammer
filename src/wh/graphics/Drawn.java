@@ -21,8 +21,8 @@ import mindustry.graphics.*;
 import mindustry.ui.*;
 import wh.content.*;
 import wh.math.*;
-import wh.struct.*;
 import wh.util.*;
+import wh.util.struct.*;
 
 import static arc.graphics.g2d.Lines.polyline;
 import static mindustry.Vars.tilesize;

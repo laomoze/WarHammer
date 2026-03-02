@@ -19,7 +19,7 @@ import mindustry.game.*;
 import mindustry.gen.*;
 import wh.content.*;
 import wh.entities.bullet.*;
-import wh.struct.*;
+import wh.util.struct.*;
 
 import static mindustry.Vars.*;
 

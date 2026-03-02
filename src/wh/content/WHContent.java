@@ -17,7 +17,7 @@ public class WHContent extends Content{
     public static TextureRegion arrowRegion,
     pointerRegion,
     strafeRegion, missileRegion, bombRegion, annihilateArrow,
-    fleet, objective;
+    raid, fleet, objective;
 
     public static final float HEXAGONAL_SHIELD = Layer.shields + 12f;
     public static final float VOID_SHIELD = Layer.shields + 9f;
@@ -40,7 +40,10 @@ public class WHContent extends Content{
         missileRegion = Core.atlas.find(name("missile-mode"));
         bombRegion = Core.atlas.find(name("bomb-mode"));
         annihilateArrow = Core.atlas.find(name("Annihilate-arrow"));
+        raid = Core.atlas.find(name("raid"));
         fleet = Core.atlas.find(name("fleet"));
         objective = Core.atlas.find(name("objective"));
+
+
     }
 }

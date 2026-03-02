@@ -55,6 +55,7 @@ public final class WHBullets{
     //空袭
     public static BulletType airRaiderMissile;
     public static BulletType airRaiderBomb;
+    public static BulletType raidBulletType;
 
     //建筑破坏
     public static BulletType sealedPromethiumMillBreak;
@@ -897,6 +898,51 @@ public final class WHBullets{
                 }
             }
         };
+
+        raidBulletType = new TrailFadeBulletType(){{
+            speed = 7f;
+            damage = 500;
+            lifetime = 200f;
+
+            lightColor = lightningColor = hitColor = trailColor = frontColor = backColor = Team.crux.color.cpy().lerp(WHPal.ShootOrange, 0.3f);
+
+            trailEffect = Fx.vapor;
+            trailParam = 6f;
+            trailChance = 0.2f;
+            trailInterval = 3;
+            trailWidth = 5f;
+            trailLength = 55;
+            trailInterp = Interp.slope;
+
+            splashDamage = damage;
+            splashDamageRadius = 120;
+            splashDamagePierce = false;
+            scaledSplashDamage = true;
+
+            despawnHit = true;
+            collides = false;
+
+            shrinkY = shrinkX = 0.33f;
+            width = 17f;
+            height = 55f;
+
+            despawnShake = hitShake = 12f;
+            hitEffect = new MultiEffect(
+            WHFx.square(hitColor, 200, 20, splashDamageRadius + 80, 10),
+            WHFx.lightningHitLarge,
+            WHFx.hitSpark(hitColor, 130, 85, splashDamageRadius * 1.5f, 2.2f, 10f),
+            WHFx.subEffect(140, splashDamageRadius + 12, 33, 34f, Interp.pow2Out, ((i, x, y, rot, fin) -> {
+                float fout = Interp.pow2Out.apply(1 - fin);
+                for(int s : Mathf.signs){
+                    Drawf.tri(x, y, 12 * fout, 45 * Mathf.curve(fin, 0, 0.1f) * WHFx.fout(fin, 0.25f), rot + s * 90);
+                }
+            })));
+            despawnEffect = WHFx.circleOut(145f, splashDamageRadius + 15f, 3f);
+            shootEffect = instShoot(hitColor, hitColor);
+            smokeEffect = WHFx.instShoot(hitColor, frontColor);
+
+            despawnSound = hitSound = Sounds.explosion;
+        }};
 
         CrushBulletLead = new FlakBulletType(6.5f, 10){{
             ammoMultiplier = 2;

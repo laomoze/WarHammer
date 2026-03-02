@@ -16,15 +16,11 @@ public class WHLogicStatements{
     public static void load(){
         autoTriggerCategory = new LCategory("wh-autotrigger", Pal.surge.cpy().lerp(Pal.gray, 0.25f));
 
-        registerStatement("linetarget", LineTarget::new, LineTarget::new);
-        registerStatement("randspawn", RandomSpawn::new, RandomSpawn::new);
-        registerStatement("randtarget", RandomTarget::new, RandomTarget::new);
-        registerStatement("teamthreat", TeamThreat::new, TeamThreat::new);
         registerStatement("raidcontrol", RaidControl::new, RaidControl::new);
         registerStatement("defaultraid", DefaultRaid::new, DefaultRaid::new);
 
         registerStatement("wh-raid-unit", WHRaidUnitStatement::new, WHRaidUnitStatement::new);
-        registerStatement("wh-spawner-unit", WHSpawnerStatement::new, WHSpawnerStatement::new);
+        /* registerStatement("wh-spawner-unit", WHSpawnerStatement::new, WHSpawnerStatement::new);*/
         ActionStatements.load();
     }
 

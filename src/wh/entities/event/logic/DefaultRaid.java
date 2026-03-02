@@ -14,8 +14,14 @@ import mindustry.logic.*;
 import mindustry.world.*;
 import mindustry.world.meta.*;
 import wh.content.*;
+import wh.entities.event.mapmarker.*;
 import wh.entities.event.objective.*;
 import wh.entities.event.ui.*;
+import wh.net.*;
+import wh.util.*;
+import wh.util.struct.*;
+
+import java.util.concurrent.atomic.*;
 
 import static mindustry.Vars.*;
 
@@ -24,14 +30,14 @@ import static mindustry.Vars.*;
  * defaultraid <flag> <timer> <alertTime> <raidTime> <bulletDamage> <bulletSpeed> <bulletCount> <inaccuracy>
  */
 public class DefaultRaid extends LStatement{
-    public String flag = "raid-flag";
-    public String timer = "raid-timer";
-    public String alertTime = "12";
-    public String raidTime = "6";
-    public String bulletDamage = "300";
+    public String flag = "turret";
+    public String timer = "event-timer";
+    public String alertTime = "30";
+    public String raidTime = "5";
+    public String bulletDamage = "200";
     public String bulletSpeed = "1";
-    public String bulletCount = "8";
-    public String inaccuracy = "8";
+    public String bulletCount = "5";
+    public String inaccuracy = "10";
 
     public DefaultRaid(String[] tokens){
         if(tokens.length > 1) flag = tokens[1];
@@ -126,7 +132,11 @@ public class DefaultRaid extends LStatement{
 
         public int raidCounter = 0;
         public float curTime = 0f;
-        public boolean alertShown = false;
+        public boolean iconShown = false;
+        public boolean labelShown = false;
+        public int threatLevel = 1;
+        /** prevent ungated raids from auto-looping forever after first completion */
+        public boolean oneShotFinished = false;
 
         private final Vec2 source = new Vec2();
         private final Vec2 target = new Vec2();
@@ -149,7 +159,11 @@ public class DefaultRaid extends LStatement{
             }
 
             String flagKey = key(flag);
-            if(flagKey.isEmpty() || !state.rules.objectiveFlags.contains(flagKey)){
+            boolean gated = !flagKey.isEmpty() && !flagKey.equalsIgnoreCase("null");
+            if(!gated && oneShotFinished){
+                return;
+            }
+            if(gated && !state.rules.objectiveFlags.contains(flagKey)){
                 exec.counter.numval--;
                 exec.yield = true;
                 return;
@@ -160,7 +174,7 @@ public class DefaultRaid extends LStatement{
             float total = alert + raid;
 
             if(curTime >= total){
-                reset(flagKey);
+                reset(flagKey, gated);
                 return;
             }
 
@@ -168,11 +182,15 @@ public class DefaultRaid extends LStatement{
             exec.yield = true;
             curTime += Time.delta / 60f;
 
-            if(!alertShown){
+            if(!iconShown){
                 showAlert(alert);
             }
 
             if(curTime > alert){
+                if(!labelShown){
+                    showLabel();
+                }
+
                 float raidTimer = curTime - alert;
                 int totalShots = Mathf.round((raidTimer / raid) * Math.max(0, count.numi()) * threatScl());
                 int delta = totalShots - raidCounter;
@@ -185,37 +203,20 @@ public class DefaultRaid extends LStatement{
 
         private void showAlert(float alertSeconds){
             updatePosition();
-            alertShown = true;
+            iconShown = true;
             raidCounter = 0;
 
-            String timerKey = key(timer);
-            if(!timerKey.isEmpty()){
-                TriggerObjective.obtain(timerKey).trigger(alertSeconds * Time.toSeconds);
-            }
-
-            if(Vars.headless) return;
-
-            ActionContext.cutsceneUI.ensureSetup();
-            String txt = "<< Raid: <" + (int)(target.x / tilesize) + ", " + (int)(target.y / tilesize) + "> >>";
-            ActionContext.cutsceneUI.textLabel = new FLabel(txt);
-            ActionContext.cutsceneUI.textArea.clear();
-            ActionContext.cutsceneUI.textArea.add(ActionContext.cutsceneUI.textLabel).pad(4f, 32f, 4f, 32f);
-            ActionContext.cutsceneUI.textTable.actions(
-            Actions.fadeIn(0.15f),
-            Actions.delay(2.4f),
-            Actions.fadeOut(0.35f)
-            );
-            Sounds.uiChat.play();
+            WHCall.warnHudPacket(key(timer), alertSeconds, inaccuracy.numf(), source.x, source.y, target.x, target.y);
+            Log.info("Raid Alert: @ in @ seconds", key(timer), alertSeconds);
         }
 
-        private void reset(String flagKey){
+        private void reset(String flagKey, boolean gated){
             curTime = 0f;
             raidCounter = 0;
-            alertShown = false;
-            if(!flagKey.isEmpty()){
-                state.rules.objectiveFlags.remove(flagKey);
-            }
-            TriggerObjective objective = TriggerObjective.find(key(timer));
+            iconShown = false;
+            labelShown = false;
+            state.rules.objectiveFlags.remove(flag.name);
+            RaidEventObjective objective = RaidEventObjective.find(key(timer));
             if(objective != null){
                 objective.finish();
             }
@@ -236,8 +237,21 @@ public class DefaultRaid extends LStatement{
 
             float wx = Mathf.random(0f, Vars.world.unitWidth());
             float wy = Mathf.random(0f, Vars.world.unitHeight());
-            BlockFlag flag = chooseFlag();
-            Building building = Geometry.findClosest(wx, wy, Vars.indexer.getEnemy(state.rules.waveTeam, flag));
+
+            AtomicReference<BlockFlag> targetFlag = new AtomicReference<>(BlockFlag.core);
+            WeightedRandom.random(
+            new WeightedOption(3f, () -> targetFlag.set(BlockFlag.turret)),
+            new WeightedOption(3f, () -> targetFlag.set(BlockFlag.generator)),
+            new WeightedOption(3f, () -> targetFlag.set(BlockFlag.factory)),
+            new WeightedOption(2f, () -> targetFlag.set(BlockFlag.storage)),
+            new WeightedOption(1f, () -> targetFlag.set(BlockFlag.repair)),
+            new WeightedOption(1f, () -> targetFlag.set(BlockFlag.battery)),
+            new WeightedOption(1f, () -> targetFlag.set(BlockFlag.reactor)),
+            new WeightedOption(2f, () -> targetFlag.set(BlockFlag.drill)),
+            new WeightedOption(1f, () -> targetFlag.set(BlockFlag.core))
+            );
+
+            Building building = Geometry.findClosest(wx, wy, Vars.indexer.getEnemy(state.rules.waveTeam, targetFlag.get()));
             if(building == null){
                 Team def = state.rules.defaultTeam;
                 building = def == null ? null : def.core();
@@ -247,27 +261,21 @@ public class DefaultRaid extends LStatement{
             }else{
                 target.set(Vars.world.unitWidth() * 0.5f, Vars.world.unitHeight() * 0.5f);
             }
-        }
 
-        private BlockFlag chooseFlag(){
-            float v = Mathf.random(10f);
-            if(v < 3f) return BlockFlag.turret;
-            if(v < 6f) return BlockFlag.generator;
-            if(v < 9f) return BlockFlag.factory;
-            return BlockFlag.core;
+            threatLevel = Math.max(ThreatLevel.getTeamThreat(state.rules.defaultTeam), 1);
         }
 
         private float threatScl(){
-            Team team = state.rules.defaultTeam;
-            if(team == null) return 1f;
-            float unitCount = team.data() == null ? 0f : team.data().units.size;
-            float coreCount = team.cores() == null ? 0f : team.cores().size;
-            float score = Math.max(1f, unitCount + coreCount * 5f);
-            return Mathf.sqrt(score);
+            return Mathf.sqrt(threatLevel);
+        }
+
+        private void showLabel(){
+            WHCall.alertToastTable(1, -1, "[#ff7b69]Raid: []<" + (int)(target.x / tilesize) + ", " + (int)(target.y / tilesize) + ">");
+            labelShown = true;
         }
 
         private void createBullet(){
-            BulletType bullet = WHBullets.airRaiderMissile;
+            BulletType bullet = WHBullets.raidBulletType;
             if(bullet == null) return;
 
             float spread = Math.max(0f, inaccuracy.numf()) * tilesize;
@@ -282,7 +290,7 @@ public class DefaultRaid extends LStatement{
 
             float speedScl = Math.max(0.1f, speed.numf());
             float lifetimeScl = dst / Math.max(0.0001f, bullet.speed * bullet.lifetime * speedScl);
-            float dmg = Math.max(0f, damage.numf()) * threatScl();
+            float dmg = Math.max(0f, damage.numf()) * threatLevel;
 
             Team shootTeam = state.rules.waveTeam;
             if(shootTeam == null) shootTeam = state.rules.defaultTeam;
@@ -301,5 +309,42 @@ public class DefaultRaid extends LStatement{
             if(value.name == null) return "";
             return value.name.trim();
         }
+    }
+
+    public static void clientAlertHud(String timerName, float time, float range, float sx, float sy, float tx, float ty){
+        if(state == null || state.rules == null){
+            return;
+        }
+
+        Team markerTeam = state.rules.waveTeam != null ? state.rules.waveTeam : Team.crux;
+        float markerTicks = Math.max(1f, Math.max(0f, time) * Time.toSeconds);
+        float markerRadius = Mathf.clamp(Math.max(26f, Math.max(0f, range) * tilesize * 0.45f), 22f, 80f);
+
+        String timerKey = timerName == null ? "" : timerName.trim();
+        if(!timerKey.isEmpty()){
+            RaidEventObjective objective = RaidEventObjective.obtain(timerKey);
+            objective.trigger(markerTicks);
+
+            RaidIndicator indicator = objective.raidIndicator();
+            if(indicator != null){
+                indicator
+                .init(markerTeam.id, 1, markerRadius, timerKey)
+                .setPosition(Tmp.v2.set(sx, sy), Tmp.v3.set(tx, ty));
+            }
+        }
+
+        if(Vars.headless) return;
+
+        ActionContext.cutsceneUI.ensureSetup();
+        String txt = "<< Raid: <" + (int)(tx / tilesize) + ", " + (int)(ty / tilesize) + "> >>";
+        ActionContext.cutsceneUI.textLabel = new FLabel(txt);
+        ActionContext.cutsceneUI.textArea.clear();
+        ActionContext.cutsceneUI.textArea.add(ActionContext.cutsceneUI.textLabel).pad(4f, 32f, 4f, 32f);
+        ActionContext.cutsceneUI.textTable.actions(
+        Actions.fadeIn(0.15f),
+        Actions.delay(2.4f),
+        Actions.fadeOut(0.35f)
+        );
+        Sounds.uiChat.play();
     }
 }

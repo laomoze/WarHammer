@@ -1,15 +1,18 @@
 package wh.entities.event.logic.actionLogic;
 
 import arc.audio.*;
+import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.content.*;
+import mindustry.core.*;
 import mindustry.ctype.*;
 import mindustry.entities.bullet.*;
 import mindustry.game.*;
 import mindustry.gen.*;
+import mindustry.graphics.*;
 import mindustry.logic.*;
 import mindustry.type.*;
 import mindustry.world.blocks.logic.*;
@@ -91,6 +94,134 @@ public final class ActionLogicSupport{
         }
     }
 
+    /** Parse tile coordinate and convert to world coordinate via World.unconv(). */
+    public static float parseWorldCoord(String raw, float fallbackTile, LExecutor exec){
+        return World.unconv(parseFloat(raw, fallbackTile, exec));
+    }
+
+    /** Parse color token. Supports #RRGGBB / RRGGBB and common color names. */
+    public static Color parseColor(String raw, Color fallback){
+        Color fb = fallback == null ? Color.white : fallback;
+        if(raw == null) return fb;
+
+        String token = raw.trim();
+        if(token.isEmpty()) return fb;
+
+        if(token.startsWith("[#") && token.endsWith("]") && token.length() > 3){
+            token = token.substring(2, token.length() - 1);
+        }
+        if(token.startsWith("#")){
+            token = token.substring(1);
+        }
+
+        Color palColor = parsePalColor(token);
+        if(palColor != null){
+            return palColor;
+        }
+
+        String lower = token.toLowerCase(Locale.ROOT);
+        switch(lower){
+            case "white":
+                return Color.white;
+            case "black":
+                return Color.black;
+            case "red":
+                return Color.red;
+            case "green":
+                return Color.green;
+            case "blue":
+                return Color.blue;
+            case "yellow":
+                return Color.yellow;
+            case "orange":
+                return Color.orange;
+            case "pink":
+                return Color.pink;
+            case "gray":
+            case "grey":
+                return Color.gray;
+            case "lightgray":
+            case "lightgrey":
+                return Color.lightGray;
+            case "darkgray":
+            case "darkgrey":
+                return Color.darkGray;
+            case "cyan":
+                return Color.cyan;
+            case "magenta":
+                return Color.magenta;
+            case "coral":
+                return Color.coral;
+            case "salmon":
+                return Color.salmon;
+            case "royal":
+                return Color.royal;
+            case "scarlet":
+                return Color.scarlet;
+            case "gold":
+                return Color.gold;
+            case "lime":
+                return Color.lime;
+            case "purple":
+                return Color.purple;
+            case "violet":
+                return Color.violet;
+            case "maroon":
+                return Color.maroon;
+            case "teal":
+                return Color.teal;
+            case "navy":
+                return Color.navy;
+            case "clear":
+                return Color.clear;
+            default:
+                try{
+                    return Color.valueOf(token);
+                }catch(Exception ignored){
+                    return fb;
+                }
+        }
+    }
+
+    /** Parse color by Mindustry Pal static field name. */
+    private static Color parsePalColor(String token){
+        if(token == null) return null;
+        String key = token.trim();
+        if(key.isEmpty()) return null;
+
+        if(key.startsWith("pal.") || key.startsWith("Pal.")){
+            key = key.substring(4);
+        }else if(key.startsWith("pal_") || key.startsWith("Pal_")){
+            key = key.substring(4);
+        }
+        key = key.replace('-', '_').replace(' ', '_');
+
+        // Fast path: exact field name.
+        try{
+            java.lang.reflect.Field field = Pal.class.getField(key);
+            Object value = field.get(null);
+            if(value instanceof Color color){
+                return new Color(color);
+            }
+        }catch(Exception ignored){
+        }
+
+        // Fallback: case-insensitive match.
+        for(java.lang.reflect.Field field : Pal.class.getFields()){
+            if(!Color.class.isAssignableFrom(field.getType())) continue;
+            if(!field.getName().equalsIgnoreCase(key)) continue;
+            try{
+                Object value = field.get(null);
+                if(value instanceof Color color){
+                    return new Color(color);
+                }
+            }catch(Exception ignored){
+            }
+            break;
+        }
+        return null;
+    }
+
     /** 安全解析 int。 */
     public static int parseInt(String raw, int fallback){
         if(raw == null) return fallback;
@@ -168,8 +299,7 @@ public final class ActionLogicSupport{
     public static TextureRegion warningIcon(int icon){
         return switch(icon){
             case 0 -> WHContent.fleet;
-            case 1 -> WHContent.objective;
-            case 2 -> WHContent.fleet;
+            case 1 -> WHContent.raid;
             default -> WHContent.objective;
         };
     }
@@ -178,9 +308,8 @@ public final class ActionLogicSupport{
     public static Sound warningSound(int soundID){
         return switch(soundID){
             case 0 -> WHSounds.alert2;
-            case 1 -> WHSounds.alert2;
-            case 2 -> Sounds.uiUnlock;
-            case 3 -> Sounds.wind3;
+            case 1 -> Sounds.uiUnlock;
+            case 2 -> Sounds.wind3;
             default -> Sounds.none;
         };
     }
@@ -228,20 +357,6 @@ public final class ActionLogicSupport{
                 ActionContext.cutsceneUI.targetOverlayAlpha = prev;
             }
         });
-    }
-
-    /**
-     * UI 提示类语句的一次性门控：
-     * 同一地图内，同一处理器同一行（可带额外内容哈希）只执行一次。
-     * 返回 true 表示本次允许执行；false 表示已执行过，应跳过。
-     */
-    public static boolean allowUiShowOnce(LExecutor exec, String actionTag, String extra){
-        // 兼容保留：一次性门控已移除，统一放行。
-        return true;
-    }
-
-    /** 兼容保留：一次性门控已移除，无需重置。 */
-    public static void resetUiShowOnceCache(){
     }
 
     /** token 安全化：为空时回落默认值，并将空白替换为下划线。 */

@@ -20,8 +20,8 @@ import mindustry.type.*;
 import mindustry.type.UnitType.*;
 import wh.entities.abilities.*;
 import wh.graphics.*;
-import wh.struct.*;
 import wh.util.*;
+import wh.util.struct.*;
 
 import static arc.graphics.g2d.Draw.*;
 import static arc.graphics.g2d.Lines.*;

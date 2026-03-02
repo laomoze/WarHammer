@@ -2,6 +2,7 @@ package wh.entities.event.objective;
 
 import arc.*;
 import arc.func.*;
+import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.scene.*;
@@ -15,6 +16,7 @@ import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.ui.*;
+import wh.content.*;
 
 import java.util.concurrent.atomic.*;
 
@@ -122,6 +124,7 @@ public final class WHObjectiveUI{
 
     public static void buildObjectiveTable(){
         if(hudWaves == null) return;
+        hudWaves.top().left();
 
         Table panel = new Table(Tex.buttonEdge4, t -> {
             Table infoT = new Table();
@@ -134,11 +137,15 @@ public final class WHObjectiveUI{
                     infoT.table().padTop(4f);
 
                     ScrollPane pane = infoT.pane(Styles.smallPane, i -> {
-                        i.align(Align.topLeft).defaults().growX().fillY().row();
+                        i.top().left();
+                        i.defaults().growX().fillX().row();
                         state.rules.objectives.each(mapObjective -> {
                             Table objective = getObjectiveTable(mapObjective);
-                            objective.visible(() -> mapObjective.qualified() && !mapObjective.hidden && !mapObjective.isCompleted());
-                            i.add(objective).row();
+                            i.row().collapser(objective, true, () -> isObjectiveActive(mapObjective))
+                            .growX()
+                            .fillX()
+                            .get()
+                            .setDuration(0.22f);
                         });
                     }).grow().maxHeight(getHeight() / 2f).get();
 
@@ -161,7 +168,7 @@ public final class WHObjectiveUI{
                 bl.table(table -> table.label(() -> {
                     AtomicInteger activeCount = new AtomicInteger();
                     state.rules.objectives.each(obj -> {
-                        if(obj.qualified() && !obj.hidden && !obj.isCompleted()){
+                        if(isObjectiveActive(obj)){
                             activeCount.getAndIncrement();
                         }
                     });
@@ -170,16 +177,18 @@ public final class WHObjectiveUI{
                 bl.add(button).size(50f).padLeft(10f);
             }).growX().fillY().margin(4f).padBottom(4f);
 
-            t.row().collapser(infoT, true, button::isChecked).growX().get().setDuration(0.1f);
+            t.row().collapser(infoT, true, button::isChecked).growX().get().setDuration(0.22f);
         });
 
         panel.name = panelName;
-        hudWaves.row().add(panel).left().margin(10f).growX().row();
+        panel.top().left();
+        hudWaves.row().add(panel).left().top().margin(10f).growX().row();
     }
 
     public static Table getObjectiveTable(MapObjectives.MapObjective e){
         return new Table(t -> {
-            t.defaults().growX().fillY().padBottom(6f).pad(6f);
+            t.top().left();
+            t.defaults().growX().fillX().pad(6f).padBottom(6f);
 
             if(e instanceof MapObjectives.ResearchObjective){
                 MapObjectives.ResearchObjective obj = (MapObjectives.ResearchObjective)e;
@@ -261,20 +270,6 @@ public final class WHObjectiveUI{
                 ));
             }
 
-            if(e instanceof ReuseObjective){
-                ReuseObjective obj = (ReuseObjective)e;
-                Floatp countup = obj::getCountup;
-                Floatp realTime = () -> obj.duration * state.rules.objectiveTimerMultiplier;
-                t.add(objectiveTable(
-                Icon.refresh.getRegion(),
-                () -> (int)countup.get(),
-                () -> (int)realTime.get(),
-                () -> UI.formatTime(countup.get()) + "/" + UI.formatTime(realTime.get()),
-                () -> countup.get() >= realTime.get(),
-                false
-                ));
-            }
-
             if(e instanceof TriggerObjective){
                 TriggerObjective obj = (TriggerObjective)e;
                 Floatp countup = obj::getCountup;
@@ -289,12 +284,26 @@ public final class WHObjectiveUI{
                 ));
             }
 
+            if(e instanceof JumpInTriggerObjective){
+                JumpInTriggerObjective obj = (JumpInTriggerObjective)e;
+                Floatp countup = obj::getCountup;
+                Floatp realTime = () -> obj.duration;
+                t.add(objectiveTable(
+                WHContent.fleet,
+                () -> (int)countup.get(),
+                () -> (int)realTime.get(),
+                () -> UI.formatTime(countup.get()) + "/" + UI.formatTime(realTime.get()),
+                () -> countup.get() >= realTime.get(),
+                false
+                ));
+            }
+
             if(e instanceof RaidEventObjective){
                 RaidEventObjective obj = (RaidEventObjective)e;
                 Floatp countup = obj::getCountup;
-                Floatp realTime = () -> obj.duration * state.rules.objectiveTimerMultiplier;
+                Floatp realTime = () -> obj.duration;
                 t.add(objectiveTable(
-                Icon.effect.getRegion(),
+                WHContent.raid,
                 () -> (int)countup.get(),
                 () -> (int)realTime.get(),
                 () -> UI.formatTime(countup.get()) + "/" + UI.formatTime(realTime.get()),
@@ -376,7 +385,7 @@ public final class WHObjectiveUI{
         .expandX()
         .left()
         .padLeft(10f)
-        .color(checked.get() ? Pal.heal : Pal.gray))
+        .color(Color.white))
         );
     }
 
@@ -393,5 +402,9 @@ public final class WHObjectiveUI{
 
     public static float getHeight(){
         return Core.graphics.getHeight();
+    }
+
+    private static boolean isObjectiveActive(MapObjectives.MapObjective objective){
+        return objective != null && objective.qualified() && !objective.hidden && !objective.isCompleted();
     }
 }

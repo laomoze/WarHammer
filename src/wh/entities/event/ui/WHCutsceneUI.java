@@ -8,9 +8,13 @@ import arc.math.*;
 import arc.scene.actions.*;
 import arc.scene.event.*;
 import arc.scene.ui.layout.*;
+import arc.struct.*;
+import arc.util.*;
 import mindustry.*;
 import mindustry.gen.*;
+import mindustry.graphics.*;
 import mindustry.ui.*;
+import wh.content.*;
 
 /**
  * 过场 UI 桥接层。
@@ -18,6 +22,8 @@ import mindustry.ui.*;
  */
 public class WHCutsceneUI{
     private static final float OVERLAY_SPEED = 0.0065f;
+    private static final float markStroke = 2.2f;
+    private static final float markStrokeProgress = 3.2f;
 
     public WidgetGroup root;
     public WidgetGroup curtain;
@@ -35,6 +41,8 @@ public class WHCutsceneUI{
     public float overlayAlphaShiftSpeed = OVERLAY_SPEED;
 
     private boolean built = false;
+    private final Seq<WorldMark> worldMarks = new Seq<>();
+    private final ObjectMap<MarkStyle, MarkDrawer> markDrawers = new ObjectMap<>();
 
     /** 确保 UI 节点已创建并挂载。 */
     public void ensureSetup(){
@@ -146,8 +154,11 @@ public class WHCutsceneUI{
 
     /** 每帧更新遮罩 alpha。 */
     public void update(){
-        if(Vars.headless || !built) return;
-        curtain.color.a = Mathf.approachDelta(curtain.color.a, targetOverlayAlpha, overlayAlphaShiftSpeed);
+        if(Vars.headless) return;
+        if(built){
+            curtain.color.a = Mathf.approachDelta(curtain.color.a, targetOverlayAlpha, overlayAlphaShiftSpeed);
+        }
+        updateWorldMarks();
     }
 
     /** 重置过场 UI 状态。 */
@@ -169,6 +180,7 @@ public class WHCutsceneUI{
         textArea.clear();
         textArea.add(textLabel).pad(4f, 32f, 4f, 32f);
         textTable.actions(Actions.alpha(0f));
+        worldMarks.clear();
     }
 
     /**
@@ -176,5 +188,99 @@ public class WHCutsceneUI{
      * 当前仅保留调用点，具体渲染可后续补充。
      */
     public void mark(float x, float y, float radius, float lifetime, Color color, MarkStyle style){
+        mark(x, y, radius, lifetime, color, style, null);
+    }
+
+    /** Spawn a world mark with an optional one-off drawer override. */
+    public void mark(float x, float y, float radius, float lifetime, Color color, MarkStyle style, MarkDrawer drawer){
+        if(Vars.headless) return;
+
+        WorldMark mark = new WorldMark();
+        mark.x = x;
+        mark.y = y;
+        mark.radius = Math.max(8f, radius);
+        mark.lifeTicks = Math.max(1f, lifetime);
+        mark.maxLifeTicks = mark.lifeTicks;
+        mark.color = color == null ? new Color(Pal.accent) : new Color(color);
+        mark.style = style == null ? MarkStyle.defaultStyle : style;
+        mark.drawer = drawer;
+        worldMarks.add(mark);
+    }
+
+    /** 注册指定样式的自定义绘制器；传 null 可移除样式覆盖。 */
+    public void setMarkDrawer(MarkStyle style, MarkDrawer drawer){
+        if(style == null) return;
+        if(drawer == null){
+            markDrawers.remove(style);
+        }else{
+            markDrawers.put(style, drawer);
+        }
+    }
+
+
+    /** 在 world 层绘制所有标记（由 Trigger.draw 调用）。 */
+    public void drawMarks(){
+        if(Vars.headless || worldMarks.isEmpty()) return;
+        if(Vars.state == null || !Vars.state.isGame()) return;
+
+        Draw.z(Layer.flyingUnit + 1f);
+        for(WorldMark mark : worldMarks){
+            float progress = mark.maxLifeTicks <= 0.0001f ? 0f : Mathf.clamp(mark.lifeTicks / mark.maxLifeTicks);
+            float pulse = 1f + Mathf.absin(Time.time, 8f, 0.2f);
+            Color tint = mark.color == null ? Pal.accent : mark.color;
+
+            TextureRegion icon = markIcon(mark.style);
+
+            MarkDrawer drawer = mark.drawer != null ? mark.drawer : markDrawers.get(mark.style);
+            if(drawer != null){
+                drawer.draw(
+                mark.x, mark.y, mark.radius,
+                progress, pulse,
+                mark.lifeTicks, mark.maxLifeTicks,
+                tint, mark.style, icon
+                );
+            }
+            Draw.reset();
+        }
+        Draw.reset();
+    }
+
+
+    private void updateWorldMarks(){
+        for(int i = worldMarks.size - 1; i >= 0; i--){
+            WorldMark mark = worldMarks.get(i);
+            mark.lifeTicks -= Time.delta;
+            if(mark.lifeTicks <= 0f){
+                worldMarks.remove(i);
+            }
+        }
+    }
+
+    private TextureRegion markIcon(MarkStyle style){
+        if(style == MarkStyle.iconRaid){
+            return WHContent.fleet;
+        }
+        return WHContent.objective;
+    }
+
+    @FunctionalInterface
+    public interface MarkDrawer{
+        void draw(
+        float x, float y, float radius,
+        float progress, float pulse,
+        float lifeTicks, float maxLifeTicks,
+        Color color, MarkStyle style, TextureRegion icon
+        );
+    }
+
+    private static class WorldMark{
+        float x;
+        float y;
+        float radius;
+        float lifeTicks;
+        float maxLifeTicks;
+        Color color;
+        MarkStyle style = MarkStyle.defaultStyle;
+        MarkDrawer drawer;
     }
 }

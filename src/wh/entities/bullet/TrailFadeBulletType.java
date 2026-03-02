@@ -14,7 +14,7 @@ import mindustry.entities.bullet.*;
 import mindustry.gen.*;
 import wh.content.*;
 import wh.graphics.*;
-import wh.struct.*;
+import wh.util.struct.*;
 
 public class TrailFadeBulletType extends BasicBulletType{
     protected static final Vec2 v1 = new Vec2();

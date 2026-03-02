@@ -9,6 +9,7 @@ import arc.*;
 import mindustry.*;
 import mindustry.game.*;
 import mindustry.mod.*;
+import mindustry.net.*;
 import wh.content.*;
 import wh.entities.*;
 import wh.entities.event.logic.*;
@@ -16,11 +17,14 @@ import wh.entities.event.objective.*;
 import wh.entities.event.ui.*;
 import wh.gen.*;
 import wh.graphics.*;
+import wh.net.packet.*;
 
 public class WarHammerMod extends Mod {
     public static String ModName = "wh";
 
     public WarHammerMod() {
+        Net.registerPacket(WarnHUDPacket::new);
+        Net.registerPacket(AlertToastPacket::new);
         WHClassMap.load();
         WHSettings.load();
         Events.on(EventType.FileTreeInitEvent.class, (e) -> {
@@ -29,13 +33,6 @@ public class WarHammerMod extends Mod {
                 Core.app.post(() -> {
                     WHShaders.init();
                     MainRenderer.init();
-                });
-            }
-        });
-        Events.on(EventType.ClientLoadEvent.class, e -> {
-            if(!Vars.headless){
-                Core.app.post(() -> {
-                    WHObjectiveUI.init();
                 });
             }
         });
@@ -52,6 +49,13 @@ public class WarHammerMod extends Mod {
             if(!Vars.headless){
                 ActionContext.cutsceneUI.update();
                 WHObjectiveUI.ensureMounted();
+            }
+        });
+
+        // Draw world-space cutscene markers (e.g. raid target icon + ring progress).
+        Events.run(EventType.Trigger.draw, () -> {
+            if(!Vars.headless){
+                ActionContext.cutsceneUI.drawMarks();
             }
         });
     }

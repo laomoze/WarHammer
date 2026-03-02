@@ -1,4 +1,4 @@
-package wh.struct;
+package wh.util.struct;
 
 import arc.func.*;
 import arc.math.geom.*;

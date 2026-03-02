@@ -1,6 +1,8 @@
-package wh.entities.event.objective;
+package wh.content;
 
 import mindustry.game.*;
+import wh.entities.event.mapmarker.*;
+import wh.entities.event.objective.*;
 
 /**
  * Registers custom objective types used by WARHAMMER event logic.
@@ -15,8 +17,9 @@ public final class WHObjectiveRegistry{
         if(loaded) return;
         loaded = true;
 
-        MapObjectives.registerObjective(ReuseObjective::new);
+        MapObjectives.registerMarker(RaidIndicator::new);
         MapObjectives.registerObjective(TriggerObjective::new);
+        MapObjectives.registerObjective(JumpInTriggerObjective::new);
         MapObjectives.registerObjective(RaidEventObjective::new);
     }
 }

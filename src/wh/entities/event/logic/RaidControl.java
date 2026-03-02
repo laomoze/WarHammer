@@ -1,8 +1,6 @@
 package wh.entities.event.logic;
 
-import arc.flabel.*;
 import arc.math.*;
-import arc.scene.actions.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.*;
@@ -12,7 +10,7 @@ import mindustry.gen.*;
 import mindustry.logic.*;
 import wh.content.*;
 import wh.entities.event.objective.*;
-import wh.entities.event.ui.*;
+import wh.net.*;
 
 import static mindustry.Vars.*;
 
@@ -21,18 +19,18 @@ import static mindustry.Vars.*;
  * raidcontrol <flag> <timer> <alertTime> <raidTime> <team> <type> <count> <sourceX> <sourceY> <targetX> <targetY> <inaccuracy>
  */
 public class RaidControl extends LStatement{
-    public String flag = "raid-flag";
-    public String timer = "raid-timer";
-    public String alertTime = "8";
-    public String raidTime = "6";
-    public String team = "@crux";
-    public String type = "2";
-    public String count = "8";
-    public String sourceX = "40";
-    public String sourceY = "40";
-    public String targetX = "60";
-    public String targetY = "60";
-    public String inaccuracy = "8";
+    public String flag = "flag";
+    public String timer = "event-timer";
+    public String alertTime = "10";
+    public String raidTime = "5";
+    public String team = "@sharded";
+    public String type = "0";
+    public String count = "10";
+    public String sourceX = "sx";
+    public String sourceY = "sy";
+    public String targetX = "tx";
+    public String targetY = "ty";
+    public String inaccuracy = "0";
 
     public RaidControl(String[] tokens){
         if(tokens.length > 1) flag = tokens[1];
@@ -182,7 +180,8 @@ public class RaidControl extends LStatement{
             }
 
             String flagKey = key(flag);
-            if(flagKey.isEmpty() || !state.rules.objectiveFlags.contains(flagKey)){
+            boolean gated = !flagKey.isEmpty() && !flagKey.equalsIgnoreCase("null");
+            if(gated && !state.rules.objectiveFlags.contains(flagKey)){
                 exec.counter.numval--;
                 exec.yield = true;
                 return;
@@ -192,7 +191,7 @@ public class RaidControl extends LStatement{
             float raid = Math.max(0.001f, raidTime.numf());
             float total = alert + raid;
             if(curTime >= total){
-                reset(flagKey);
+                reset(flagKey, gated);
                 return;
             }
 
@@ -216,14 +215,14 @@ public class RaidControl extends LStatement{
             }
         }
 
-        private void reset(String flagKey){
+        private void reset(String flagKey, boolean gated){
             curTime = 0f;
             raidCounter = 0;
             alertShown = false;
-            if(!flagKey.isEmpty()){
+            if(gated && !flagKey.isEmpty()){
                 state.rules.objectiveFlags.remove(flagKey);
             }
-            TriggerObjective objective = TriggerObjective.find(key(timer));
+            RaidEventObjective objective = RaidEventObjective.find(key(timer));
             if(objective != null){
                 objective.finish();
             }
@@ -234,22 +233,11 @@ public class RaidControl extends LStatement{
             raidCounter = 0;
 
             String timerKey = key(timer);
-            if(!timerKey.isEmpty()){
-                TriggerObjective.obtain(timerKey).trigger(alertSeconds * Time.toSeconds);
-            }
-
-            if(Vars.headless) return;
-
-            ActionContext.cutsceneUI.ensureSetup();
-            ActionContext.cutsceneUI.textLabel = new FLabel("<< Raid Alert >>");
-            ActionContext.cutsceneUI.textArea.clear();
-            ActionContext.cutsceneUI.textArea.add(ActionContext.cutsceneUI.textLabel).pad(4f, 32f, 4f, 32f);
-            ActionContext.cutsceneUI.textTable.actions(
-            Actions.fadeIn(0.15f),
-            Actions.delay(2.4f),
-            Actions.fadeOut(0.35f)
-            );
-            Sounds.uiChat.play();
+            float sx = sourceX.numf() * tilesize;
+            float sy = sourceY.numf() * tilesize;
+            float tx = targetX.numf() * tilesize;
+            float ty = targetY.numf() * tilesize;
+            WHCall.warnHudPacket(timerKey, alertSeconds, inaccuracy.numf(), sx, sy, tx, ty);
         }
 
         private void createBullet(){

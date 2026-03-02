@@ -8,11 +8,11 @@ import java.util.*;
 import static mindustry.Vars.state;
 
 /**
- * One-shot timer objective that can be triggered by logic code.
+ * Timer objective for jump-in events. No world/minimap marker is attached.
  */
-public class TriggerObjective extends MapObjectives.MapObjective{
+public class JumpInTriggerObjective extends MapObjectives.MapObjective{
     public @MapObjectives.Second float duration = 60f * 10f;
-    public String timer = "event-timer";
+    public String timer = "jumpin-timer";
     /** optional start delay (seconds) before the timer actually begins. */
     public @MapObjectives.Second float delay = 0f;
 
@@ -20,11 +20,11 @@ public class TriggerObjective extends MapObjectives.MapObjective{
     protected float countup;
     protected float delayTicks;
 
-    public TriggerObjective(String timer){
+    public JumpInTriggerObjective(String timer){
         this.timer = timer;
     }
 
-    public TriggerObjective(){
+    public JumpInTriggerObjective(){
     }
 
     @Override
@@ -70,11 +70,11 @@ public class TriggerObjective extends MapObjectives.MapObjective{
         return triggered;
     }
 
-    public static TriggerObjective obtain(String timer){
-        final TriggerObjective[] objective = {find(timer)};
+    public static JumpInTriggerObjective obtain(String timer){
+        final JumpInTriggerObjective[] objective = {find(timer)};
 
         if(objective[0] == null){
-            objective[0] = new TriggerObjective(timer);
+            objective[0] = new JumpInTriggerObjective(timer);
             state.rules.objectives.all.add(objective[0]);
         }else{
             objective[0].timer = timer;
@@ -82,14 +82,13 @@ public class TriggerObjective extends MapObjectives.MapObjective{
         return objective[0];
     }
 
-    public static TriggerObjective find(String timer){
-        final TriggerObjective[] objective = {null};
+    public static JumpInTriggerObjective find(String timer){
+        final JumpInTriggerObjective[] objective = {null};
         state.rules.objectives.each(mapObjective -> {
-            if(mapObjective instanceof TriggerObjective triggerObjective && Objects.equals(triggerObjective.timer, timer)){
-                objective[0] = triggerObjective;
+            if(mapObjective instanceof JumpInTriggerObjective jumpObjective && Objects.equals(jumpObjective.timer, timer)){
+                objective[0] = jumpObjective;
             }
         });
         return objective[0];
     }
-
 }

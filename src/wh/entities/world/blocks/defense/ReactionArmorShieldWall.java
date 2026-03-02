@@ -72,6 +72,11 @@ public class ReactionArmorShieldWall extends ReactionArmorWall{
         public float breakTimer;
 
         @Override
+        public boolean canConsume(){
+            return power != null && power.status > 0.99f && super.canConsume();
+        }
+
+        @Override
         public void draw(){
             Draw.rect(block.region, x, y);
 

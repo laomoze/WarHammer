@@ -1,4 +1,4 @@
-package wh.entities.event.logic;
+package wh.entities.event.logic.actionLogic;
 
 import arc.func.*;
 import arc.math.*;
@@ -22,11 +22,13 @@ import mindustry.world.blocks.storage.*;
 import wh.content.*;
 import wh.entities.*;
 import wh.entities.event.*;
+import wh.entities.event.logic.*;
+import wh.entities.event.objective.*;
 import wh.ui.*;
 
 public class WHRaidUnitStatement extends LStatement{
     public String team = "@crux";
-    public String unit = "@air1";
+    public String unit = "@flare";
     public String count = "2";
     public String spread = "8";
     public String shield = "-1";
@@ -43,6 +45,14 @@ public class WHRaidUnitStatement extends LStatement{
     public String warnMode = "centered";
     public String warnText = "";
     public String spawnerCfg = "180|0";
+    public String timer = "180";
+    public String timerDuration = "3";
+
+    private static final float fullFieldWidth = 240f;
+    private static final float pairFieldWidth = 110f;
+    private static final float pickButtonWidth = 70f;
+    private static final float detailButtonWidth = 84f;
+    private static final float rowButtonHeight = 32f;
 
     public WHRaidUnitStatement(){
     }
@@ -61,21 +71,25 @@ public class WHRaidUnitStatement extends LStatement{
             parseStatusPacked(tokens[10]);
             parseWarnPacked(tokens[11]);
             spawnerCfg = tokens[12];
+            if(tokens.length > 13) timer = tokens[13];
+            if(tokens.length > 14) timerDuration = tokens[14];
         }catch(ArrayIndexOutOfBoundsException e){
             Log.err(e);
         }
     }
 
     private void parseItemPacked(String packed){
-        String[] pair = packed.split("\\|", 2);
-        if(pair.length > 0 && !pair[0].isEmpty()) needItem = pair[0];
-        if(pair.length > 1 && !pair[1].isEmpty()) needItemAmount = pair[1];
+        parsePairPacked(packed, value -> needItem = value, value -> needItemAmount = value);
     }
 
     private void parseBlockPacked(String packed){
+        parsePairPacked(packed, value -> needBlock = value, value -> needBlockAmount = value);
+    }
+
+    private void parsePairPacked(String packed, Cons<String> leftSetter, Cons<String> rightSetter){
         String[] pair = packed.split("\\|", 2);
-        if(pair.length > 0 && !pair[0].isEmpty()) needBlock = pair[0];
-        if(pair.length > 1 && !pair[1].isEmpty()) needBlockAmount = pair[1];
+        if(pair.length > 0 && !pair[0].isEmpty()) leftSetter.get(pair[0]);
+        if(pair.length > 1 && !pair[1].isEmpty()) rightSetter.get(pair[1]);
     }
 
     private void parseStatusPacked(String packed){
@@ -105,139 +119,120 @@ public class WHRaidUnitStatement extends LStatement{
         rebuild(table);
     }
 
+    /** 重建配置 UI，所有输入控件都从当前字段值重新绘制。 */
     private void rebuild(Table table){
         table.clearChildren();
-        float width = 240f;
 
+        addSingleFieldRowWithPick(table, "Spawn Team: ", team, value -> team = value, fullFieldWidth, pick ->
+        showTeamPicker(pick, selected -> {
+            team = "@" + selected.name;
+            rebuild(table);
+        }));
+
+        addSingleFieldRowWithPick(table, "Unit Name: ", unit, value -> unit = value, fullFieldWidth, pick ->
+        showUnitPicker(pick, selected -> {
+            unit = "@" + selected.name;
+            rebuild(table);
+        }));
+
+        addSingleFieldRow(table, "Raid Count: ", count, value -> count = value, fullFieldWidth);
+        addSingleFieldRow(table, "Spread(tiles): ", spread, value -> spread = value, fullFieldWidth);
+        addSingleFieldRow(table, "Unit Shield: ", shield, value -> shield = value, fullFieldWidth);
+
+        addDualFieldRow(table,
+        "Unit Buff: ", status, value -> status = value,
+        " Duration(tick): ", statusDuration, value -> statusDuration = value,
+        pick -> showContentPicker(pick, Vars.content.statusEffects(), selected -> {
+            status = "@" + selected.name;
+            rebuild(table);
+        }),
+        null);
+
+        addSingleFieldRowWithPick(table, "Check Team: ", checkTeam, value -> checkTeam = value, fullFieldWidth, pick ->
+        showTeamPicker(pick, selected -> {
+            checkTeam = "@" + selected.name;
+            rebuild(table);
+        }));
+
+        addSingleFieldRow(table, "Min Wave: ", minWave, value -> minWave = value, fullFieldWidth);
+
+        addDualFieldRow(table,
+        "Need Item(csv): ", needItem, value -> needItem = value,
+        " Amount(csv): ", needItemAmount, value -> needItemAmount = value,
+        pick -> showContentPicker(pick, Vars.content.items(), selected -> {
+            needItem = appendCsvToken(needItem, "@" + selected.name);
+            rebuild(table);
+        }),
+        () -> showItemDetailDialog(() -> rebuild(table)));
+
+        addDualFieldRow(table,
+        "Need Block(csv): ", needBlock, value -> needBlock = value,
+        " Amount(csv): ", needBlockAmount, value -> needBlockAmount = value,
+        pick -> showBlockPicker(pick, selected -> {
+            needBlock = appendCsvToken(needBlock, "@" + selected.name);
+            rebuild(table);
+        }),
+        () -> showBlockDetailDialog(() -> rebuild(table)));
+
+        addDualFieldRow(table,
+        "Warn HUD: ", warnMode, value -> warnMode = value,
+        " Text: ", warnText, value -> warnText = value,
+        pick -> showWarnModePicker(pick, selected -> {
+            warnMode = selected;
+            rebuild(table);
+        }),
+        null);
+
+        addSingleFieldRow(table, "SpawnerCfg: ", spawnerCfg, value -> spawnerCfg = value, fullFieldWidth);
+        addDualFieldRow(table,
+        "Trigger Timer: ", timer, value -> timer = value,
+        " Duration(sec): ", timerDuration, value -> timerDuration = value,
+        null,
+        null);
+    }
+
+    private void addSingleFieldRow(Table table, String label, String value, Cons<String> setter, float width){
         table.table(t -> {
-            t.add("Spawn Team: ");
-            fields(t, team, value -> team = value).width(width);
-            TextButton pick = new TextButton("pick", Styles.logict);
-            pick.clicked(() -> {
-                showTeamPicker(pick, selected -> {
-                    team = "@" + selected.name;
-                    rebuild(table);
-                });
-            });
-            t.add(pick).size(70f, 32f).padLeft(4f);
+            t.add(label);
+            fields(t, value, setter).width(width);
         }).left().row();
+    }
 
+    private void addSingleFieldRowWithPick(Table table, String label, String value, Cons<String> setter, float width, Cons<Button> onPick){
         table.table(t -> {
-            t.add("Unit Name: ");
-            fields(t, unit, value -> unit = value).width(width);
-            TextButton pick = new TextButton("pick", Styles.logict);
-            pick.clicked(() -> {
-                showUnitPicker(pick, selected -> {
-                    unit = "@" + selected.name;
-                    rebuild(table);
-                });
-            });
-            t.add(pick).size(70f, 32f).padLeft(4f);
+            t.add(label);
+            fields(t, value, setter).width(width);
+            t.add(createActionButton("pick", onPick)).size(pickButtonWidth, rowButtonHeight).padLeft(4f);
         }).left().row();
+    }
 
+    private void addDualFieldRow(
+    Table table,
+    String leftLabel, String leftValue, Cons<String> leftSetter,
+    String rightLabel, String rightValue, Cons<String> rightSetter,
+    Cons<Button> onPick, Runnable onDetail
+    ){
         table.table(t -> {
-            t.add("Raid Count: ");
-            fields(t, count, value -> count = value).width(width);
+            t.add(leftLabel);
+            fields(t, leftValue, leftSetter).width(pairFieldWidth);
+            t.add(rightLabel);
+            fields(t, rightValue, rightSetter).width(pairFieldWidth);
+
+            if(onPick != null){
+                t.add(createActionButton("pick", onPick)).size(pickButtonWidth, rowButtonHeight).padLeft(4f);
+            }
+            if(onDetail != null){
+                TextButton detail = new TextButton("detail", Styles.logict);
+                detail.clicked(onDetail);
+                t.add(detail).size(detailButtonWidth, rowButtonHeight).padLeft(4f);
+            }
         }).left().row();
+    }
 
-        table.table(t -> {
-            t.add("Spread(tiles): ");
-            fields(t, spread, value -> spread = value).width(width);
-        }).left().row();
-
-        table.table(t -> {
-            t.add("Unit Shield: ");
-            fields(t, shield, value -> shield = value).width(width);
-        }).left().row();
-
-        table.table(t -> {
-            t.add("Unit Buff: ");
-            fields(t, status, value -> status = value).width(110f);
-            t.add(" Duration(tick): ");
-            fields(t, statusDuration, value -> statusDuration = value).width(110f);
-            TextButton pick = new TextButton("pick", Styles.logict);
-            pick.clicked(() -> {
-                showContentPicker(pick, Vars.content.statusEffects(), selected -> {
-                    status = "@" + selected.name;
-                    rebuild(table);
-                });
-            });
-            t.add(pick).size(70f, 32f).padLeft(4f);
-        }).left().row();
-
-        table.table(t -> {
-            t.add("Check Team: ");
-            fields(t, checkTeam, value -> checkTeam = value).width(width);
-            TextButton pick = new TextButton("pick", Styles.logict);
-            pick.clicked(() -> {
-                showTeamPicker(pick, selected -> {
-                    checkTeam = "@" + selected.name;
-                    rebuild(table);
-                });
-            });
-            t.add(pick).size(70f, 32f).padLeft(4f);
-        }).left().row();
-
-        table.table(t -> {
-            t.add("Min Wave: ");
-            fields(t, minWave, value -> minWave = value).width(width);
-        }).left().row();
-
-        table.table(t -> {
-            t.add("Need Item(csv): ");
-            fields(t, needItem, value -> needItem = value).width(110f);
-            t.add(" Amount(csv): ");
-            fields(t, needItemAmount, value -> needItemAmount = value).width(110f);
-            TextButton pick = new TextButton("pick", Styles.logict);
-            pick.clicked(() -> {
-                showContentPicker(pick, Vars.content.items(), selected -> {
-                    needItem = appendCsvToken(needItem, "@" + selected.name);
-                    rebuild(table);
-                });
-            });
-            t.add(pick).size(70f, 32f).padLeft(4f);
-            TextButton detail = new TextButton("detail", Styles.logict);
-            detail.clicked(() -> showItemDetailDialog(() -> rebuild(table)));
-            t.add(detail).size(84f, 32f).padLeft(4f);
-        }).left().row();
-
-        table.table(t -> {
-            t.add("Need Block(csv): ");
-            fields(t, needBlock, value -> needBlock = value).width(110f);
-            t.add(" Amount(csv): ");
-            fields(t, needBlockAmount, value -> needBlockAmount = value).width(110f);
-            TextButton pick = new TextButton("pick", Styles.logict);
-            pick.clicked(() -> {
-                showBlockPicker(pick, selected -> {
-                    needBlock = appendCsvToken(needBlock, "@" + selected.name);
-                    rebuild(table);
-                });
-            });
-            t.add(pick).size(70f, 32f).padLeft(4f);
-            TextButton detail = new TextButton("detail", Styles.logict);
-            detail.clicked(() -> showBlockDetailDialog(() -> rebuild(table)));
-            t.add(detail).size(84f, 32f).padLeft(4f);
-        }).left().row();
-
-        table.table(t -> {
-            t.add("Warn HUD: ");
-            fields(t, warnMode, value -> warnMode = value).width(110f);
-            t.add(" Text: ");
-            fields(t, warnText, value -> warnText = value).width(110f);
-            TextButton pick = new TextButton("pick", Styles.logict);
-            pick.clicked(() -> {
-                showWarnModePicker(pick, selected -> {
-                    warnMode = selected;
-                    rebuild(table);
-                });
-            });
-            t.add(pick).size(70f, 32f).padLeft(4f);
-        }).left().row();
-
-        table.table(t -> {
-            t.add("SpawnerCfg: ");
-            fields(t, spawnerCfg, value -> spawnerCfg = value).width(width);
-        }).left();
+    private TextButton createActionButton(String text, Cons<Button> onClick){
+        TextButton button = new TextButton(text, Styles.logict);
+        button.clicked(() -> onClick.get(button));
+        return button;
     }
 
     private void showWarnModePicker(Button button, Cons<String> setter){
@@ -274,71 +269,36 @@ public class WHRaidUnitStatement extends LStatement{
         showCompactSelectTable(button, (table, hide) -> {
             for(T candidate : contents){
                 if(candidate == null) continue;
-                table.button(b -> {
-                    b.left();
-                    b.image(candidate.fullIcon == null ? candidate.uiIcon : candidate.fullIcon).size(18f).padRight(6f);
-                    String name = candidate.localizedName == null ? candidate.name : candidate.localizedName;
-                    Label label = new Label(compactText(name));
-                    label.setFontScale(1.05f);
-                    b.add(label).left().growX();
-                }, Styles.logicTogglet, () -> {
+                addContentOptionRow(table, candidate, () -> {
                     setter.get(candidate);
                     hide.run();
-                }).growX().height(34f);
-                table.row();
+                });
             }
         });
     }
 
+    private <T extends UnlockableContent> void addContentOptionRow(Table table, T candidate, Runnable onSelect){
+        table.button(b -> {
+            b.left();
+            b.image(candidate.fullIcon == null ? candidate.uiIcon : candidate.fullIcon).size(18f).padRight(6f);
+            String name = candidate.localizedName == null ? candidate.name : candidate.localizedName;
+            Label label = new Label(compactText(name));
+            label.setFontScale(1.05f);
+            b.add(label).left().growX();
+        }, Styles.logicTogglet, onSelect).growX().height(34f);
+        table.row();
+    }
+
     private void showUnitPicker(Button button, Cons<UnitType> setter){
-        Seq<UnitType> units = Vars.content.units();
-        if(units == null || units.isEmpty()) return;
-
-        showSelectTable(button, (table, hide) -> {
-            table.clearChildren();
-            table.margin(2f);
-
-            Table root = new Table();
-            root.left().top();
-
-            TextField search = new TextField("");
-            search.setMessageText("search unit...");
-            root.add(search).growX().height(34f).padBottom(4f).row();
-
-            Table list = new Table();
-            list.left().top();
-            list.defaults().growX().pad(1f);
-
-            UIUtils.bindContentSearch(search, list, units, candidate -> {
-                list.button(b -> {
-                    b.left();
-                    b.image(candidate.fullIcon == null ? candidate.uiIcon : candidate.fullIcon).size(18f).padRight(6f);
-                    String name = candidate.localizedName == null ? candidate.name : candidate.localizedName;
-                    Label label = new Label(compactText(name));
-                    label.setFontScale(1.05f);
-                    b.add(label).left().growX();
-                }, Styles.logicTogglet, () -> {
-                    setter.get(candidate);
-                    hide.run();
-                }).growX().height(34f);
-                list.row();
-            });
-
-            ScrollPane pane = new ScrollPane(list, Styles.smallPane);
-            pane.setScrollingDisabled(true, false);
-            pane.setFadeScrollBars(false);
-
-            float paneWidth = Vars.mobile ? 300f : 270f;
-            float paneHeight = Vars.mobile ? 330f : 250f;
-            root.add(pane).width(paneWidth).maxHeight(paneHeight).left().row();
-
-            table.add(root).left();
-        });
+        showSearchContentPicker(button, Vars.content.units(), "search unit...", setter);
     }
 
     private void showBlockPicker(Button button, Cons<Block> setter){
-        Seq<Block> blocks = Vars.content.blocks();
-        if(blocks == null || blocks.isEmpty()) return;
+        showSearchContentPicker(button, Vars.content.blocks(), "search block...", setter);
+    }
+
+    private <T extends UnlockableContent> void showSearchContentPicker(Button button, Seq<T> contents, String searchHint, Cons<T> setter){
+        if(contents == null || contents.isEmpty()) return;
 
         showSelectTable(button, (table, hide) -> {
             table.clearChildren();
@@ -348,27 +308,17 @@ public class WHRaidUnitStatement extends LStatement{
             root.left().top();
 
             TextField search = new TextField("");
-            search.setMessageText("search block...");
+            search.setMessageText(searchHint);
             root.add(search).growX().height(34f).padBottom(4f).row();
 
             Table list = new Table();
             list.left().top();
             list.defaults().growX().pad(1f);
 
-            UIUtils.bindContentSearch(search, list, blocks, candidate -> {
-                list.button(b -> {
-                    b.left();
-                    b.image(candidate.fullIcon == null ? candidate.uiIcon : candidate.fullIcon).size(18f).padRight(6f);
-                    String name = candidate.localizedName == null ? candidate.name : candidate.localizedName;
-                    Label label = new Label(compactText(name));
-                    label.setFontScale(1.05f);
-                    b.add(label).left().growX();
-                }, Styles.logicTogglet, () -> {
-                    setter.get(candidate);
-                    hide.run();
-                }).growX().height(34f);
-                list.row();
-            });
+            UIUtils.bindContentSearch(search, list, contents, candidate -> addContentOptionRow(list, candidate, () -> {
+                setter.get(candidate);
+                hide.run();
+            }));
 
             ScrollPane pane = new ScrollPane(list, Styles.smallPane);
             pane.setScrollingDisabled(true, false);
@@ -383,90 +333,84 @@ public class WHRaidUnitStatement extends LStatement{
     }
 
     private void showItemDetailDialog(Runnable onApply){
-        BaseDialog dialog = new BaseDialog("Item Requirements");
-        final TextArea[] itemAreaRef = {null};
-        final TextArea[] amountAreaRef = {null};
-        dialog.cont.pane(root -> {
-            root.defaults().left().growX().pad(4f);
-            root.add("Need Item(csv):").row();
-
-            TextArea itemArea = new TextArea(safeCsvText(needItem));
-            itemArea.setMessageText("@copper,@lead");
-            itemAreaRef[0] = itemArea;
-            root.add(itemArea).height(72f).row();
-
-            root.add("Amount(csv):").padTop(2f).row();
-            TextArea amountArea = new TextArea(safeCsvText(needItemAmount));
-            amountArea.setMessageText("1000,200");
-            amountAreaRef[0] = amountArea;
-            root.add(amountArea).height(72f).row();
-
-            Table actions = new Table();
-            actions.left();
-            TextButton pick = new TextButton("add item", Styles.logict);
-            pick.clicked(() -> showContentPicker(pick, Vars.content.items(), selected -> {
-                itemArea.setText(appendCsvToken(itemArea.getText(), "@" + selected.name));
-            }));
-            TextButton clear = new TextButton("clear", Styles.logict);
-            clear.clicked(() -> {
-                itemArea.setText("");
-                amountArea.setText("");
-            });
-            actions.add(pick).size(96f, 34f).padRight(4f);
-            actions.add(clear).size(80f, 34f);
-            root.add(actions).padTop(4f).row();
-
-            root.add("Preview:").padTop(4f).row();
-            Table preview = new Table();
-            preview.left().defaults().left().pad(1f);
-            root.add(preview).row();
-
-            Runnable rebuild = () -> rebuildCsvPreview(preview, itemArea.getText(), amountArea.getText());
-            rebuild.run();
-            itemArea.changed(rebuild);
-            amountArea.changed(rebuild);
-        }).width(Vars.mobile ? 620f : 700f).maxHeight(Vars.mobile ? 520f : 560f);
-
-        dialog.buttons.defaults().size(130f, 54f);
-        dialog.buttons.button("@cancel", dialog::hide);
-        dialog.buttons.button("@ok", () -> {
-            needItem = normalizeCsvText(itemAreaRef[0] == null ? "" : itemAreaRef[0].getText());
-            needItemAmount = normalizeCsvText(amountAreaRef[0] == null ? "" : amountAreaRef[0].getText());
-            dialog.hide();
-            onApply.run();
-        });
-        dialog.show();
+        showCsvDetailDialog(
+        "Item Requirements",
+        "Need Item(csv):",
+        safeCsvText(needItem),
+        "@copper,@lead",
+        safeCsvText(needItemAmount),
+        "1000,200",
+        "add item",
+        (pick, namesArea) -> showContentPicker(pick, Vars.content.items(), selected ->
+        namesArea.setText(appendCsvToken(namesArea.getText(), "@" + selected.name))),
+        (names, amounts) -> {
+            needItem = names;
+            needItemAmount = amounts;
+        },
+        onApply
+        );
     }
 
     private void showBlockDetailDialog(Runnable onApply){
-        BaseDialog dialog = new BaseDialog("Block Requirements");
-        final TextArea[] blockAreaRef = {null};
-        final TextArea[] amountAreaRef = {null};
+        showCsvDetailDialog(
+        "Block Requirements",
+        "Need Block(csv):",
+        safeCsvText(needBlock),
+        "@duo,@scatter",
+        safeCsvText(needBlockAmount),
+        "5,2",
+        "add block",
+        (pick, namesArea) -> showBlockPicker(pick, selected ->
+        namesArea.setText(appendCsvToken(namesArea.getText(), "@" + selected.name))),
+        (names, amounts) -> {
+            needBlock = names;
+            needBlockAmount = amounts;
+        },
+        onApply
+        );
+    }
+
+    /** 通用 CSV 明细弹窗：编辑名称与数量两列，支持预览并回写。 */
+    private void showCsvDetailDialog(
+    String title,
+    String namesLabel,
+    String namesValue,
+    String namesHint,
+    String amountsValue,
+    String amountsHint,
+    String addButtonText,
+    Cons2<Button, TextArea> onAddClick,
+    Cons2<String, String> onSave,
+    Runnable onApply
+    ){
+        BaseDialog dialog = new BaseDialog(title);
+        final TextArea[] namesAreaRef = {null};
+        final TextArea[] amountsAreaRef = {null};
+
         dialog.cont.pane(root -> {
             root.defaults().left().growX().pad(4f);
-            root.add("Need Block(csv):").row();
+            root.add(namesLabel).row();
 
-            TextArea blockArea = new TextArea(safeCsvText(needBlock));
-            blockArea.setMessageText("@duo,@scatter");
-            blockAreaRef[0] = blockArea;
-            root.add(blockArea).height(72f).row();
+            TextArea namesArea = new TextArea(namesValue);
+            namesArea.setMessageText(namesHint);
+            namesAreaRef[0] = namesArea;
+            root.add(namesArea).height(72f).row();
 
             root.add("Amount(csv):").padTop(2f).row();
-            TextArea amountArea = new TextArea(safeCsvText(needBlockAmount));
-            amountArea.setMessageText("5,2");
-            amountAreaRef[0] = amountArea;
-            root.add(amountArea).height(72f).row();
+            TextArea amountsArea = new TextArea(amountsValue);
+            amountsArea.setMessageText(amountsHint);
+            amountsAreaRef[0] = amountsArea;
+            root.add(amountsArea).height(72f).row();
 
             Table actions = new Table();
             actions.left();
-            TextButton pick = new TextButton("add block", Styles.logict);
-            pick.clicked(() -> showBlockPicker(pick, selected -> {
-                blockArea.setText(appendCsvToken(blockArea.getText(), "@" + selected.name));
-            }));
+            TextButton pick = new TextButton(addButtonText, Styles.logict);
+            pick.clicked(() -> onAddClick.get(pick, namesArea));
+
             TextButton clear = new TextButton("clear", Styles.logict);
             clear.clicked(() -> {
-                blockArea.setText("");
-                amountArea.setText("");
+                namesArea.setText("");
+                amountsArea.setText("");
             });
             actions.add(pick).size(96f, 34f).padRight(4f);
             actions.add(clear).size(80f, 34f);
@@ -477,17 +421,18 @@ public class WHRaidUnitStatement extends LStatement{
             preview.left().defaults().left().pad(1f);
             root.add(preview).row();
 
-            Runnable rebuild = () -> rebuildCsvPreview(preview, blockArea.getText(), amountArea.getText());
+            Runnable rebuild = () -> rebuildCsvPreview(preview, namesArea.getText(), amountsArea.getText());
             rebuild.run();
-            blockArea.changed(rebuild);
-            amountArea.changed(rebuild);
+            namesArea.changed(rebuild);
+            amountsArea.changed(rebuild);
         }).width(Vars.mobile ? 620f : 700f).maxHeight(Vars.mobile ? 520f : 560f);
 
         dialog.buttons.defaults().size(130f, 54f);
         dialog.buttons.button("@cancel", dialog::hide);
         dialog.buttons.button("@ok", () -> {
-            needBlock = normalizeCsvText(blockAreaRef[0] == null ? "" : blockAreaRef[0].getText());
-            needBlockAmount = normalizeCsvText(amountAreaRef[0] == null ? "" : amountAreaRef[0].getText());
+            String names = normalizeCsvText(namesAreaRef[0] == null ? "" : namesAreaRef[0].getText());
+            String amounts = normalizeCsvText(amountsAreaRef[0] == null ? "" : amountsAreaRef[0].getText());
+            onSave.get(names, amounts);
             dialog.hide();
             onApply.run();
         });
@@ -496,8 +441,8 @@ public class WHRaidUnitStatement extends LStatement{
 
     private void rebuildCsvPreview(Table preview, String namesCsv, String amountsCsv){
         preview.clearChildren();
-        String[] names = splitCsvEditor(namesCsv);
-        int[] amounts = splitCsvIntEditor(amountsCsv, names.length);
+        String[] names = splitCsvTokens(namesCsv);
+        int[] amounts = splitCsvInts(amountsCsv, names.length);
         if(names.length == 0){
             preview.add("(empty)");
             return;
@@ -509,20 +454,31 @@ public class WHRaidUnitStatement extends LStatement{
         }
     }
 
-    private String[] splitCsvEditor(String raw){
+    private String normalizeCsvText(String raw){
+        if(raw == null) return "";
+        return raw.trim().replace('\uFF0C', ',');
+    }
+
+    private String safeCsvText(String raw){
+        return raw == null ? "" : raw;
+    }
+
+    /** 按逗号切分 CSV 文本并去掉空白 token。 */
+    private static String[] splitCsvTokens(String raw){
         if(raw == null) return new String[0];
-        String text = normalizeCsvText(raw);
+        String text = raw.trim().replace('\uFF0C', ',');
         if(text.isEmpty()) return new String[0];
+
         Seq<String> out = new Seq<>();
         for(String part : text.split(",")){
-            String p = part == null ? "" : part.trim();
-            if(!p.isEmpty()) out.add(p);
+            String token = part == null ? "" : part.trim();
+            if(!token.isEmpty()) out.add(token);
         }
         return out.toArray(String.class);
     }
 
-    private int[] splitCsvIntEditor(String raw, int minSize){
-        String[] parts = splitCsvEditor(raw);
+    private static int[] splitCsvInts(String raw, int minSize){
+        String[] parts = splitCsvTokens(raw);
         int size = Math.max(parts.length, minSize);
         int[] out = new int[size];
         for(int i = 0; i < parts.length; i++){
@@ -533,15 +489,6 @@ public class WHRaidUnitStatement extends LStatement{
             }
         }
         return out;
-    }
-
-    private String normalizeCsvText(String raw){
-        if(raw == null) return "";
-        return raw.trim().replace('\uFF0C', ',');
-    }
-
-    private String safeCsvText(String raw){
-        return raw == null ? "" : raw;
     }
 
     private void showCompactSelectTable(Button button, Cons2<Table, Runnable> builder){
@@ -596,7 +543,9 @@ public class WHRaidUnitStatement extends LStatement{
         builder.append(safeToken(status, "@none")).append("|").append(safeToken(statusDuration, "10")).append(" ");
         // Keep total tokens below parser hard limit by packing warn mode + text.
         builder.append(safeToken(warnMode, "centered")).append("|").append(safeToken(warnText, "")).append(" ");
-        builder.append(safeToken(spawnerCfg, "12|0"));
+        builder.append(safeToken(spawnerCfg, "12|0")).append(" ");
+        builder.append(safeToken(timer, "_")).append(" ");
+        builder.append(safeToken(timerDuration, "3"));
     }
 
     private String safeToken(String value, String fallback){
@@ -641,7 +590,9 @@ public class WHRaidUnitStatement extends LStatement{
         builder.var(statusDuration),
         builder.var(warnMode),
         builder.var(warnText),
-        builder.var(spawnerCfg)
+        builder.var(spawnerCfg),
+        builder.var(timer),
+        builder.var(timerDuration)
         );
     }
 
@@ -662,6 +613,8 @@ public class WHRaidUnitStatement extends LStatement{
         public LVar warnMode;
         public LVar warnText;
         public LVar spawnerCfg;
+        public LVar timer;
+        public LVar timerDuration;
 
         private boolean cyclePrepared = false;
         private boolean executed = false;
@@ -689,11 +642,13 @@ public class WHRaidUnitStatement extends LStatement{
         private final Vec2 pos = new Vec2();
         private final Vec2 target = new Vec2();
         private final Vec2 targetBase = new Vec2();
+        private static final String onceTriggerKeyPrefix = "wh.raid.once.";
 
         public WHRaidUnitInstruction(
         LVar team, LVar unit, LVar count, LVar spread,
         LVar checkTeam, LVar minWave, LVar needItem, LVar needItemAmount, LVar needBlock, LVar needBlockAmount,
-        LVar shield, LVar status, LVar statusDuration, LVar warnMode, LVar warnText, LVar spawnerCfg
+        LVar shield, LVar status, LVar statusDuration, LVar warnMode, LVar warnText, LVar spawnerCfg,
+        LVar timer, LVar timerDuration
         ){
             this.team = team;
             this.unit = unit;
@@ -711,15 +666,18 @@ public class WHRaidUnitStatement extends LStatement{
             this.warnMode = warnMode;
             this.warnText = warnText;
             this.spawnerCfg = spawnerCfg;
+            this.timer = timer;
+            this.timerDuration = timerDuration;
         }
 
         @Override
+        /* 执行主流程：条件检查 -> 缓存准备 -> 预警 -> 刷怪 -> 触发计时目标。 */
         public void run(LExecutor exec){
             if(shouldSkipRun()) return;
             if(isAlreadyTriggered(exec)) return;
 
             ConditionSnapshot snapshot = inspectConditions();
-            if(snapshot != null && !snapshot.ok){
+            if(!snapshot.ok){
                 resetRoundState();
                 holdForRetry(exec);
                 return;
@@ -735,24 +693,31 @@ public class WHRaidUnitStatement extends LStatement{
                 return;
             }
 
+            triggerTimerObjectiveIfNeeded();
             executed = true;
             cyclePrepared = false;
             markTriggered(exec);
         }
 
+        /** 判断当前帧是否应跳过执行（无效状态或客户端非编辑模式）。 */
         private boolean shouldSkipRun(){
+            if(Vars.state == null || Vars.state.rules == null || Vars.world == null) return true;
+
             int winWave = Vars.state.rules.winWave;
             if(winWave <= 0) return false;
+
             boolean editorMode = Vars.state.isEditor();
-            if(Vars.net.client() && !editorMode) return true;
-            return Vars.state == null || Vars.state.rules == null || Vars.world == null;
+            boolean multiplayerClient = Vars.net.client();
+            return multiplayerClient && !editorMode;
         }
 
+        /** 回退指令计数并让处理器 yield，一帧后重试。 */
         private void holdForRetry(LExecutor exec){
             exec.counter.numval--;
             exec.yield = true;
         }
 
+        /** 条件不满足时重置本轮执行状态。 */
         private void resetRoundState(){
             executed = false;
             cyclePrepared = false;
@@ -770,54 +735,83 @@ public class WHRaidUnitStatement extends LStatement{
             Vars.state.rules.objectiveFlags.add(key);
         }
 
-        // 持久化一次触发键：同一地图同一逻辑语句只会触发一次。
-        // 键由“处理器位置 + 指令索引 + 当前语句配置哈希”组成；
-        // 当你修改逻辑内容时，哈希变化，会重新触发一次。
+        /** 生成并缓存一次性触发键，保证同位置同指令同配置只触发一次。 */
         private String resolvePersistentOnceKey(LExecutor exec){
             if(persistentOnceKey != null) return persistentOnceKey;
             if(Vars.state == null || Vars.state.rules == null) return null;
 
             int instructionIndex = Math.max(0, exec.counter.numi() - 1);
-            String buildPart;
-            if(exec.build != null && exec.build.tile != null){
-                buildPart = exec.build.tileX() + "_" + exec.build.tileY();
-            }else{
-                buildPart = "nobuild";
-            }
+            String buildPart = (exec.build != null && exec.build.tile != null)
+            ? exec.build.tileX() + "_" + exec.build.tileY()
+            : "nobuild";
 
-            String cfgRaw = buildConfigFingerprintRaw();
-            String cfgHash = Integer.toHexString(cfgRaw.hashCode());
-            persistentOnceKey = "wh.raid.once." + buildPart + "." + instructionIndex + "." + cfgHash;
+            String cfgHash = Integer.toHexString(buildConfigFingerprintRaw().hashCode());
+            persistentOnceKey = onceTriggerKeyPrefix + buildPart + "." + instructionIndex + "." + cfgHash;
             return persistentOnceKey;
         }
 
+        /** 按固定顺序拼接关键配置，用于计算稳定指纹。 */
         private String buildConfigFingerprintRaw(){
-            StringBuilder out = new StringBuilder(256);
-            out.append(valueText(team)).append('|');
-            out.append(valueText(unit)).append('|');
-            out.append(valueText(count)).append('|');
-            out.append(valueText(spread)).append('|');
-            out.append(valueText(checkTeam)).append('|');
-            out.append(valueText(minWave)).append('|');
-            out.append(valueText(needItem)).append('|');
-            out.append(valueText(needItemAmount)).append('|');
-            out.append(valueText(needBlock)).append('|');
-            out.append(valueText(needBlockAmount)).append('|');
-            out.append(valueText(shield)).append('|');
-            out.append(valueText(status)).append('|');
-            out.append(valueText(statusDuration)).append('|');
-            out.append(valueText(warnMode)).append('|');
-            out.append(valueText(warnText)).append('|');
-            out.append(valueText(spawnerCfg));
+            return buildFingerprint(
+            team, unit, count, spread, checkTeam, minWave,
+            needItem, needItemAmount, needBlock, needBlockAmount,
+            shield, status, statusDuration, warnMode, warnText,
+            spawnerCfg, timer, timerDuration
+            );
+        }
+
+        /** 把多个 LVar 转为文本并拼成统一指纹串。 */
+        private String buildFingerprint(LVar... vars){
+            StringBuilder out = new StringBuilder(vars.length * 12);
+            for(int i = 0; i < vars.length; i++){
+                if(i > 0) out.append('|');
+                out.append(valueText(vars[i]));
+            }
             return out.toString();
         }
 
+        /** 满足触发后按 timer/timerDuration 触发计时目标。 */
+        private void triggerTimerObjectiveIfNeeded(){
+            if(Vars.state == null || Vars.state.rules == null) return;
+
+            String key = normalizeTimerKey(valueText(timer));
+            if(key.isEmpty()) return;
+
+            float sec = parseDurationSeconds(timerDuration);
+            if(sec <= 0f) return;
+
+            TriggerObjective.obtain(key).trigger(sec * Time.toSeconds);
+        }
+
+        private String normalizeTimerKey(String raw){
+            if(raw == null) return "";
+            String out = raw.trim();
+            if(out.isEmpty()) return "";
+            if(out.equals("_") || out.equalsIgnoreCase("none")) return "";
+            if(out.startsWith("___")) return "";
+            if(out.startsWith("@")) out = out.substring(1);
+            return out;
+        }
+
+        private float parseDurationSeconds(LVar value){
+            if(value == null) return 0f;
+            String text = valueText(value);
+            if(text.isEmpty()) return 0f;
+            try{
+                return Math.max(0f, Float.parseFloat(text));
+            }catch(Exception ignored){
+                return Math.max(0f, value.numf());
+            }
+        }
+
+        /** 仅在未准备时执行一次缓存预处理。 */
         private void prepareCycleIfNeeded(){
             if(!cyclePrepared){
                 prepareCycle();
             }
         }
 
+        /** 按数量循环调用 spawnOne，至少成功一次才算成功。 */
         private boolean spawnBatch(){
             int totalCount = Math.max(0, count.numi());
             int spawned = 0;
@@ -829,6 +823,7 @@ public class WHRaidUnitStatement extends LStatement{
             return spawned > 0;
         }
 
+        /** 尝试生成单个单位；选点或创建失败时返回 false。 */
         private boolean spawnOne(){
             if(!pickSpawnPosition(cachedSpreadWorld, cachedSpawnTeam, pos)){
                 return false;
@@ -858,6 +853,7 @@ public class WHRaidUnitStatement extends LStatement{
             return Units.canCreate(spawnTeam, unitType) || spawnTeam == Vars.state.rules.waveTeam;
         }
 
+        /** 解析本轮所需配置并缓存，避免循环内重复读取 LVar。 */
         private void prepareCycle(){
             cachedUnitType = resolveUnitType(unit);
             cachedSpawnTeam = resolveTeam();
@@ -879,9 +875,10 @@ public class WHRaidUnitStatement extends LStatement{
             spawnTeam, 3f, cachedWarnMode, cachedWarnText);
         }
 
+        /** 解析 HUD 预警模式。 */
         private PortableAutoEventTrigger.FleetWarnHudMode parseWarnMode(LVar value){
             if(value == null) return PortableAutoEventTrigger.FleetWarnHudMode.centered;
-            String raw = value.obj() == null ? value.name : String.valueOf(value.obj());
+            String raw = rawText(value);
             if(raw == null) return PortableAutoEventTrigger.FleetWarnHudMode.centered;
             String normalized = raw.trim().toLowerCase();
             if(normalized.equals("legacy")) return PortableAutoEventTrigger.FleetWarnHudMode.legacy;
@@ -890,13 +887,14 @@ public class WHRaidUnitStatement extends LStatement{
 
         private String decodeWarnText(LVar value){
             if(value == null) return "";
-            String raw = value.obj() == null ? value.name : String.valueOf(value.obj());
+            String raw = rawText(value);
             if(raw == null) return "";
             String text = raw.trim();
             if(text.isEmpty()) return "";
             return text.replace('_', ' ');
         }
 
+        /** 解析 spawnerCfg 的生命周期，默认 12 秒。 */
         private float parseSpawnerLifetime(LVar value){
             String[] cfg = splitCfg(value);
             String life = cfg[0];
@@ -908,6 +906,7 @@ public class WHRaidUnitStatement extends LStatement{
             }
         }
 
+        /** 解析 spawnerCfg 的空投开关。 */
         private boolean parseSpawnerAirdrop(LVar value){
             String[] cfg = splitCfg(value);
             String flag = cfg[1];
@@ -918,27 +917,30 @@ public class WHRaidUnitStatement extends LStatement{
 
         private String[] splitCfg(LVar value){
             if(value == null) return new String[]{"12", "0"};
-            String raw = value.obj() == null ? value.name : String.valueOf(value.obj());
+            String raw = rawText(value);
             if(raw == null || raw.trim().isEmpty()) return new String[]{"12", "0"};
             String[] out = raw.trim().split("\\|", 2);
             if(out.length == 1) return new String[]{out[0], "0"};
             return out;
         }
 
+        private String rawText(LVar value){
+            Object raw = value.obj();
+            return raw == null ? value.name : String.valueOf(raw);
+        }
+
+        /** 解析单位类型，失败时回退到默认单位。 */
         private UnitType resolveUnitType(LVar value){
-            // 优先走对象：这是最标准、最稳定的输入（例如 @air1）。
             if(value.obj() instanceof UnitType type){
                 return type;
             }
 
-            // 兼容字符串名称输入：允许通过名字解析单位。
             String byName = extractContentName(value);
             if(byName != null){
                 UnitType mappedByName = Vars.content.unit(byName);
                 if(mappedByName != null) return mappedByName;
             }
 
-            // 不再支持数字ID兜底，避免把普通数字误判为单位ID。
             return WHUnitTypes.air1;
         }
 
@@ -954,13 +956,12 @@ public class WHRaidUnitStatement extends LStatement{
             return Vars.state.rules.defaultTeam;
         }
 
+        /** 解析状态效果，失败时回退为 none。 */
         private StatusEffect resolveStatus(LVar value){
-            // 优先走对象：这是最标准、最稳定的输入（例如 @burning 对应的对象）。
             if(value.obj() instanceof StatusEffect effect){
                 return effect;
             }
 
-            // 兼容字符串名称输入：允许通过名字解析状态效果。
             String byName = extractContentName(value);
             if(byName != null){
                 if(byName.equals("none")) return StatusEffects.none;
@@ -968,7 +969,6 @@ public class WHRaidUnitStatement extends LStatement{
                 if(mappedByName != null) return mappedByName;
             }
 
-            // 不再支持数字ID（包括 10000 偏移）兜底，避免脏数据触发错误映射。
             return StatusEffects.none;
         }
 
@@ -999,6 +999,7 @@ public class WHRaidUnitStatement extends LStatement{
             return out;
         }
 
+        /** 从出生点附近随机一个位置作为刷怪坐标。 */
         private boolean pickSpawnPosition(float spreadWorld, Team spawnTeam, Vec2 out){
             if(Vars.spawner != null && Vars.state.hasSpawns()){
                 Seq<Tile> spawns = Vars.spawner.getSpawns();
@@ -1013,6 +1014,7 @@ public class WHRaidUnitStatement extends LStatement{
             return false;
         }
 
+        /** 解析单位朝向目标：优先敌方核心，否则地图中心。 */
         private void resolveTarget(Vec2 out, Team spawnTeam){
             Team enemy = spawnTeam == Vars.state.rules.defaultTeam ? Vars.state.rules.waveTeam : Vars.state.rules.defaultTeam;
             Building core = enemy.core();
@@ -1026,23 +1028,22 @@ public class WHRaidUnitStatement extends LStatement{
         private void debugLogState(String phase, String text, Object... args){
         }
 
+        /** 汇总并计算当前触发条件快照。 */
         private ConditionSnapshot inspectConditions(){
-            if(blockScanTimer.get(0, blockScanInterval)){
-                ConditionSnapshot out = new ConditionSnapshot();
-                fillBaseSnapshot(out);
-                evaluateItemRequirements(out);
-                evaluateBlockRequirements(out);
+            boolean allowBlockRescan = blockScanTimer.get(0, blockScanInterval);
+            ConditionSnapshot out = new ConditionSnapshot();
+            fillBaseSnapshot(out);
+            evaluateItemRequirements(out);
+            evaluateBlockRequirements(out, allowBlockRescan);
 
-                boolean itemOk = isItemConditionMet(out);
-                boolean blockOk = isBlockConditionMet(out);
-                boolean waveOk = isWaveConditionMet(out);
-                out.itemOk = itemOk;
-                out.blockOk = blockOk;
-                out.waveOk = waveOk;
-                out.ok = itemOk && blockOk && waveOk;
-                return out;
-            }
-            return null;
+            boolean itemOk = isItemConditionMet(out);
+            boolean blockOk = isBlockConditionMet(out);
+            boolean waveOk = isWaveConditionMet(out);
+            out.itemOk = itemOk;
+            out.blockOk = blockOk;
+            out.waveOk = waveOk;
+            out.ok = itemOk && blockOk && waveOk;
+            return out;
         }
 
         private void fillBaseSnapshot(ConditionSnapshot out){
@@ -1051,16 +1052,17 @@ public class WHRaidUnitStatement extends LStatement{
             out.minWaveRequired = Math.max(0, minWave.numi());
         }
 
+        /** 统计物品条件达成情况并生成明细。 */
         private void evaluateItemRequirements(ConditionSnapshot out){
-            String[] itemNames = splitCsv(valueText(needItem));
-            int[] itemAmounts = splitCsvInt(valueText(needItemAmount), itemNames.length);
+            String[] itemNames = splitCsvTokens(valueText(needItem));
+            int[] itemAmounts = splitCsvInts(valueText(needItemAmount), itemNames.length);
             int itemRequiredCount = 0;
             int itemMetCount = 0;
             StringBuilder detail = new StringBuilder();
 
             for(int i = 0; i < itemNames.length; i++){
-                int required = i < itemAmounts.length ? Math.max(0, itemAmounts[i]) : 0;
-                if(required <= 0) continue;
+                int required = requiredAmount(itemAmounts, i);
+                if(required == 0) continue;
                 itemRequiredCount++;
 
                 Item itemType = resolveItemByText(itemNames[i]);
@@ -1072,7 +1074,7 @@ public class WHRaidUnitStatement extends LStatement{
                     );
                 }
                 int owned = countTeamCoreItemTotal(out.team, itemType);
-                if(detail.length() > 0) detail.append(";");
+                if(detail.length() != 0) detail.append(";");
                 detail.append(itemType == null ? itemNames[i] : itemType.name).append(":").append(owned).append("/").append(required);
                 if(owned >= required){
                     itemMetCount++;
@@ -1084,6 +1086,7 @@ public class WHRaidUnitStatement extends LStatement{
             out.itemDetail = detail.length() == 0 ? "off" : detail.toString();
         }
 
+        /** 统计指定队伍所有核心中的某物品总量。 */
         private int countTeamCoreItemTotal(Team teamValue, Item item){
             if(teamValue == null || item == null) return -1;
             Seq<CoreBlock.CoreBuild> cores = teamValue.cores();
@@ -1098,9 +1101,10 @@ public class WHRaidUnitStatement extends LStatement{
             return total;
         }
 
-        private void evaluateBlockRequirements(ConditionSnapshot out){
-            String[] blockNames = splitCsv(valueText(needBlock));
-            int[] blockAmounts = splitCsvInt(valueText(needBlockAmount), blockNames.length);
+        /** 统计建筑条件，使用缓存避免每帧全图扫描。 */
+        private void evaluateBlockRequirements(ConditionSnapshot out, boolean allowBlockRescan){
+            String[] blockNames = splitCsvTokens(valueText(needBlock));
+            int[] blockAmounts = splitCsvInts(valueText(needBlockAmount), blockNames.length);
             rebuildBlockNeedMap(blockNames, blockAmounts);
             debugLogState(
             "block-need-map",
@@ -1112,48 +1116,60 @@ public class WHRaidUnitStatement extends LStatement{
             );
 
             int blockRequiredCount = blockNeedScratch.size;
-            int blockMetCount = 0;
-            if(blockRequiredCount > 0){
-                if(!blockScanPrimed){
-                    BlockScanResult scanned = scanBlockRequirements(out.team);
-                    cachedBlockMetCount = scanned.met;
-                    cachedBlockDetail = scanned.detail;
-                    blockScanPrimed = true;
-                    debugLogState(
-                    "block-scan",
-                    "[WH][RaidLogic][trace] block scan team=@ required=@ met=@ detail=@",
-                    out.team == null ? "null" : out.team.name,
-                    blockRequiredCount,
-                    cachedBlockMetCount,
-                    cachedBlockDetail
-                    );
-                }else{
-                    debugLogState(
-                    "block-cache",
-                    "[WH][RaidLogic][trace] block scan cached interval=@t, use cached met=@/@ detail=@",
-                    (int)blockScanInterval,
-                    cachedBlockMetCount,
-                    blockRequiredCount,
-                    cachedBlockDetail
-                    );
-                }
-                blockMetCount = cachedBlockMetCount;
+            if(blockRequiredCount <= 0){
+                clearBlockScanCache();
+            }else if(shouldRefreshBlockScan(allowBlockRescan)){
+                refreshBlockScanCache(out.team, blockRequiredCount);
             }else{
-                cachedBlockMetCount = 0;
-                cachedBlockDetail = "off";
-                blockScanPrimed = false;
+                debugLogState(
+                "block-cache",
+                "[WH][RaidLogic][trace] block scan cached interval=@t, use cached met=@/@ detail=@",
+                (int)blockScanInterval,
+                cachedBlockMetCount,
+                blockRequiredCount,
+                cachedBlockDetail
+                );
             }
 
             out.blockRequired = blockRequiredCount;
-            out.blockOwned = blockMetCount;
+            out.blockOwned = cachedBlockMetCount;
             out.blockDetail = cachedBlockDetail;
+        }
+
+        /** 判断是否需要刷新建筑扫描缓存。 */
+        private boolean shouldRefreshBlockScan(boolean allowBlockRescan){
+            return !blockScanPrimed || allowBlockRescan;
+        }
+
+        /** 执行一次建筑扫描并刷新缓存结果。 */
+        private void refreshBlockScanCache(Team teamValue, int blockRequiredCount){
+            BlockScanResult scanned = scanBlockRequirements(teamValue);
+            cachedBlockMetCount = scanned.met;
+            cachedBlockDetail = scanned.detail;
+            blockScanPrimed = true;
+
+            debugLogState(
+            "block-scan",
+            "[WH][RaidLogic][trace] block scan team=@ required=@ met=@ detail=@",
+            teamValue == null ? "null" : teamValue.name,
+            blockRequiredCount,
+            cachedBlockMetCount,
+            cachedBlockDetail
+            );
+        }
+
+        /** 清空建筑扫描缓存。 */
+        private void clearBlockScanCache(){
+            cachedBlockMetCount = 0;
+            cachedBlockDetail = "off";
+            blockScanPrimed = false;
         }
 
         private void rebuildBlockNeedMap(String[] blockNames, int[] blockAmounts){
             blockNeedScratch.clear();
             for(int i = 0; i < blockNames.length; i++){
-                int required = i < blockAmounts.length ? Math.max(0, blockAmounts[i]) : 0;
-                if(required <= 0) continue;
+                int required = requiredAmount(blockAmounts, i);
+                if(required == 0) continue;
                 Block blockType = resolveBlockByText(blockNames[i]);
                 if(blockType == null){
                     debugLogState(
@@ -1167,11 +1183,15 @@ public class WHRaidUnitStatement extends LStatement{
             }
         }
 
+        private int requiredAmount(int[] amounts, int index){
+            return index < amounts.length ? Math.max(0, amounts[index]) : 0;
+        }
+
         private String formatBlockNeedMap(){
             if(blockNeedScratch.isEmpty()) return "off";
             StringBuilder out = new StringBuilder();
             for(ObjectIntMap.Entry<Block> req : blockNeedScratch.entries()){
-                if(out.length() > 0) out.append(";");
+                if(out.length() != 0) out.append(";");
                 out.append(req.key == null ? "null" : req.key.name).append(":").append(req.value);
             }
             return out.toString();
@@ -1199,6 +1219,7 @@ public class WHRaidUnitStatement extends LStatement{
             return waveOk;
         }
 
+        /** 扫描队伍建筑并统计各目标方块达成数。 */
         private BlockScanResult scanBlockRequirements(Team teamValue){
             BlockScanResult out = new BlockScanResult();
             if(teamValue == null || blockNeedScratch.isEmpty()) return out;
@@ -1227,17 +1248,19 @@ public class WHRaidUnitStatement extends LStatement{
             StringBuilder detail = new StringBuilder();
             for(ObjectIntMap.Entry<Block> req : blockNeedScratch.entries()){
                 int owned = blockCountScratch.get(req.key, 0);
-                if(detail.length() > 0) detail.append(";");
+                if(detail.length() != 0) detail.append(";");
                 detail.append(req.key == null ? "null" : req.key.name).append(":").append(owned).append("/").append(req.value);
                 if(owned >= req.value){
                     met++;
                 }
             }
             out.met = met;
-            out.detail = detail.length() == 0 ? "off" : detail.toString();
+            out.detail =
+            detail.length() == 0 ? "off" : detail.toString();
             return out;
         }
 
+        /** 将 LVar 转为稳定文本，兼容内容对象与数值常量。 */
         private String valueText(LVar value){
             if(value == null) return "";
             Object raw = value.obj();
@@ -1269,76 +1292,51 @@ public class WHRaidUnitStatement extends LStatement{
             return name;
         }
 
-        private String[] splitCsv(String raw){
-            if(raw == null) return new String[0];
-            String text = raw.trim().replace('\uFF0C', ',');
-            if(text.isEmpty()) return new String[0];
-
-            Seq<String> out = new Seq<>();
-            String[] parts = text.split(",");
-            for(String part : parts){
-                String p = part == null ? "" : part.trim();
-                if(!p.isEmpty()){
-                    out.add(p);
-                }
-            }
-            return out.toArray(String.class);
-        }
-
-        private int[] splitCsvInt(String raw, int minSize){
-            String[] parts = splitCsv(raw);
-            int size = Math.max(parts.length, minSize);
-            int[] out = new int[size];
-            for(int i = 0; i < parts.length; i++){
-                try{
-                    out[i] = Integer.parseInt(parts[i].trim());
-                }catch(Exception ignored){
-                    out[i] = 0;
-                }
-            }
-            return out;
-        }
-
         private Item resolveItemByText(String raw){
-            String name = normalizeContentName(raw);
-            if(name == null) return null;
-            Item byName = Vars.content.item(name);
-            if(byName != null) return byName;
-            Seq<Item> items = Vars.content.items();
-            if(items != null){
-                for(Item item : items){
-                    if(item == null) continue;
-                    String localized = normalizeContentName(item.localizedName);
-                    if(localized != null && localized.equalsIgnoreCase(name)) return item;
-                }
-            }
-            try{
-                int rawId = Integer.parseInt(name);
-                return Vars.content.item(rawId);
-            }catch(Exception ignored){
-                return null;
-            }
+            return resolveContentByText(raw,
+            name -> Vars.content.item(name),
+            Vars.content.items(),
+            id -> Vars.content.item(id));
         }
 
         private Block resolveBlockByText(String raw){
+            return resolveContentByText(raw,
+            name -> Vars.content.block(name),
+            Vars.content.blocks(),
+            id -> Vars.content.block(id));
+        }
+
+        /** 按名称、本地名、ID 顺序解析内容对象。 */
+        private <T extends UnlockableContent> T resolveContentByText(
+        String raw,
+        Func<String, T> byNameResolver,
+        Seq<T> contents,
+        ContentByIdResolver<T> byIdResolver
+        ){
             String name = normalizeContentName(raw);
             if(name == null) return null;
-            Block byName = Vars.content.block(name);
+
+            T byName = byNameResolver.get(name);
             if(byName != null) return byName;
-            Seq<Block> blocks = Vars.content.blocks();
-            if(blocks != null){
-                for(Block block : blocks){
-                    if(block == null) continue;
-                    String localized = normalizeContentName(block.localizedName);
-                    if(localized != null && localized.equalsIgnoreCase(name)) return block;
+
+            if(contents != null){
+                for(T content : contents){
+                    if(content == null) continue;
+                    String localized = normalizeContentName(content.localizedName);
+                    if(localized != null && localized.equalsIgnoreCase(name)) return content;
                 }
             }
+
             try{
-                int rawId = Integer.parseInt(name);
-                return Vars.content.block(rawId);
+                return byIdResolver.get(Integer.parseInt(name));
             }catch(Exception ignored){
                 return null;
             }
+        }
+
+        @FunctionalInterface
+        private interface ContentByIdResolver<T>{
+            T get(int id);
         }
 
         private static class ConditionSnapshot{

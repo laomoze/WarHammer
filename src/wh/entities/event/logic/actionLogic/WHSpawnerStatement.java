@@ -1,4 +1,4 @@
-package wh.entities.event.logic;
+package wh.entities.event.logic.actionLogic;
 
 import arc.func.*;
 import arc.math.*;
@@ -16,9 +16,13 @@ import mindustry.ui.*;
 import mindustry.world.*;
 import wh.content.*;
 import wh.entities.*;
+import wh.entities.event.logic.*;
+import wh.entities.event.objective.*;
 import wh.ui.*;
 
 public class WHSpawnerStatement extends LStatement{
+    private static final float DEFAULT_TIMER_DURATION_SEC = 3f;
+
     public String run = "1";
     public String result = "result";
     public String team = "@crux";
@@ -29,24 +33,34 @@ public class WHSpawnerStatement extends LStatement{
     public String rotation = "90";
     public String spread = "8";
     public String spawnerCfg = "120|0";
+    public String timer = "";
+    public String timerDelaySec = "0";
 
     public WHSpawnerStatement(){
     }
 
     public WHSpawnerStatement(String[] tokens){
-        try{
-            run = tokens[1];
-            team = tokens[2];
-            unit = tokens[3];
-            amount = tokens[4];
-            x = tokens[5];
-            y = tokens[6];
-            rotation = tokens[7];
-            spread = tokens[8];
-            spawnerCfg = tokens[9];
-            result = tokens[10];
-        }catch(ArrayIndexOutOfBoundsException e){
-            Log.err(e);
+        if(tokens == null) return;
+
+        run = readToken(tokens, 1, run);
+        team = readToken(tokens, 2, team);
+        unit = readToken(tokens, 3, unit);
+        amount = readToken(tokens, 4, amount);
+        x = readToken(tokens, 5, x);
+        y = readToken(tokens, 6, y);
+        rotation = readToken(tokens, 7, rotation);
+        spread = readToken(tokens, 8, spread);
+        spawnerCfg = readToken(tokens, 9, spawnerCfg);
+        timer = readToken(tokens, 10, timer);
+
+        // Backward compatible:
+        // old format: ... timer result
+        // new format: ... timer delaySec result
+        if(tokens.length > 12){
+            timerDelaySec = readToken(tokens, 11, timerDelaySec);
+            result = readToken(tokens, 12, result);
+        }else{
+            result = readToken(tokens, 11, result);
         }
     }
 
@@ -71,7 +85,7 @@ public class WHSpawnerStatement extends LStatement{
 
         table.row();
 
-        table.add("at ");
+        table.add("at(tile) ");
         fields(table, x, str -> x = str).width(64f);
         table.add(",");
         fields(table, y, str -> y = str).width(64f);
@@ -103,6 +117,13 @@ public class WHSpawnerStatement extends LStatement{
 
         table.add("cfg ");
         fields(table, spawnerCfg, str -> spawnerCfg = str).width(120f);
+
+        table.row();
+
+        table.add("timer ");
+        fields(table, timer, str -> timer = str).width(140f);
+        table.add(" delay ");
+        fields(table, timerDelaySec, str -> timerDelaySec = str).width(70f);
     }
 
     private void showTeamPicker(Button button, Cons<Team> setter){
@@ -229,7 +250,17 @@ public class WHSpawnerStatement extends LStatement{
         builder.append(safe(rotation, "90")).append(" ");
         builder.append(safe(spread, "8")).append(" ");
         builder.append(safe(spawnerCfg, "120|0")).append(" ");
+        builder.append(safe(timer, "_")).append(" ");
+        builder.append(safe(timerDelaySec, "0")).append(" ");
         builder.append(safe(result, "result"));
+    }
+
+    private String readToken(String[] tokens, int index, String fallback){
+        if(tokens == null || index < 0 || index >= tokens.length) return fallback;
+        String out = tokens[index];
+        if(out == null) return fallback;
+        String trimmed = out.trim();
+        return trimmed.isEmpty() ? fallback : trimmed;
     }
 
     private String safe(String value, String fallback){
@@ -251,6 +282,8 @@ public class WHSpawnerStatement extends LStatement{
         builder.var(rotation),
         builder.var(spread),
         builder.var(spawnerCfg),
+        builder.var(timer),
+        builder.var(timerDelaySec),
         builder.var(result)
         );
     }
@@ -275,13 +308,15 @@ public class WHSpawnerStatement extends LStatement{
         public LVar rotation;
         public LVar spread;
         public LVar spawnerCfg;
+        public LVar timer;
+        public LVar timerDelaySec;
         public LVar result;
 
         private final Vec2 pos = new Vec2();
 
         public WHSpawnerInstruction(
         LVar run, LVar team, LVar unit, LVar amount, LVar x, LVar y, LVar rotation, LVar spread,
-        LVar spawnerCfg, LVar result
+        LVar spawnerCfg, LVar timer, LVar timerDelaySec, LVar result
         ){
             this.run = run;
             this.team = team;
@@ -292,6 +327,8 @@ public class WHSpawnerStatement extends LStatement{
             this.rotation = rotation;
             this.spread = spread;
             this.spawnerCfg = spawnerCfg;
+            this.timer = timer;
+            this.timerDelaySec = timerDelaySec;
             this.result = result;
         }
 
@@ -304,6 +341,7 @@ public class WHSpawnerStatement extends LStatement{
             SpawnRequest request = buildRequest();
             SpawnBatchResult batch = spawnBatch(request);
             result.setnum(batch.spawned);
+            triggerTimerObjective(batch.spawned);
         }
 
         private SpawnRequest buildRequest(){
@@ -447,6 +485,28 @@ public class WHSpawnerStatement extends LStatement{
                 }
             }
             return false;
+        }
+
+        private void triggerTimerObjective(int spawned){
+            if(spawned <= 0) return;
+            if(Vars.state == null || Vars.state.rules == null) return;
+
+            String key = normalizeTimerKey(timer);
+            if(key.isEmpty()) return;
+
+            float delaySec = timerDelaySec == null ? 0f : Math.max(0f, timerDelaySec.numf());
+            TriggerObjective.obtain(key).trigger(DEFAULT_TIMER_DURATION_SEC * Time.toSeconds, delaySec);
+        }
+
+        private String normalizeTimerKey(LVar value){
+            if(value == null) return "";
+            String raw = value.obj() == null ? value.name : String.valueOf(value.obj());
+            if(raw == null) return "";
+            String out = raw.trim();
+            if(out.isEmpty() || out.equals("_") || out.equalsIgnoreCase("none")) return "";
+            if(out.startsWith("@")) out = out.substring(1);
+            if(out.startsWith("___")) return "";
+            return out;
         }
 
         private static class SpawnRequest{

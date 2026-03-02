@@ -2,23 +2,28 @@ package wh.entities.event.logic.actionLogic;
 
 import arc.*;
 import arc.flabel.*;
+import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.scene.actions.*;
 import arc.scene.style.*;
+import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.entities.bullet.*;
 import mindustry.game.*;
 import mindustry.gen.*;
+import mindustry.graphics.*;
 import mindustry.logic.*;
 import mindustry.type.*;
 import mindustry.ui.*;
 import wh.entities.*;
 import wh.entities.event.logic.*;
+import wh.entities.event.objective.*;
 import wh.entities.event.ui.*;
+import wh.graphics.*;
 import wh.math.*;
 import wh.ui.*;
 
@@ -61,6 +66,95 @@ public final class ActionStatements{
             fields(table, value, setter).width(width);
         }
 
+        protected void showTeamPickerCommon(Button button, arc.func.Cons<Team> setter){
+            Team[] teams = Team.baseTeams;
+            if(teams == null || teams.length == 0) return;
+
+            showSelectTable(button, (table, hide) -> {
+                table.clearChildren();
+                table.margin(2f);
+
+                Table root = new Table();
+                root.left().top();
+                root.defaults().growX().pad(1f);
+
+                for(Team candidate : teams){
+                    if(candidate == null) continue;
+                    root.button(b -> {
+                        b.left();
+                        b.image().size(14f).color(candidate.color).padRight(6f);
+                        Label name = new Label(candidate.name);
+                        name.setFontScale(1.05f);
+                        b.add(name).left().growX();
+                    }, Styles.logicTogglet, () -> {
+                        setter.get(candidate);
+                        hide.run();
+                    }).growX().height(34f);
+                    root.row();
+                }
+
+                ScrollPane pane = new ScrollPane(root, Styles.smallPane);
+                pane.setScrollingDisabled(true, false);
+                pane.setFadeScrollBars(false);
+                table.add(pane).width(Vars.mobile ? 300f : 270f).maxHeight(Vars.mobile ? 330f : 250f).left();
+            });
+        }
+
+        protected void showUnitPickerCommon(Button button, arc.func.Cons<UnitType> setter){
+            arc.struct.Seq<UnitType> units = Vars.content.units();
+            if(units == null || units.isEmpty()) return;
+
+            arc.struct.Seq<UnitType> visible = units.select(u -> u != null && !u.internal && !u.isHidden());
+
+            showSelectTable(button, (popup, hide) -> {
+                popup.clearChildren();
+                popup.margin(2f);
+
+                Table root = new Table();
+                root.left().top();
+
+                TextField search = new TextField("");
+                search.setMessageText("search unit...");
+                root.add(search).growX().height(34f).padBottom(4f).row();
+
+                Table list = new Table();
+                list.left().top();
+                list.defaults().growX().pad(1f);
+
+                UIUtils.bindContentSearch(search, list, visible, candidate -> {
+                    list.button(b -> {
+                        b.left();
+                        b.image(candidate.fullIcon == null ? candidate.uiIcon : candidate.fullIcon).size(18f).padRight(6f);
+                        String name = candidate.localizedName == null ? candidate.name : candidate.localizedName;
+                        Label label = new Label(compactLabelText(name));
+                        label.setFontScale(1.05f);
+                        b.add(label).left().growX();
+                    }, Styles.logicTogglet, () -> {
+                        setter.get(candidate);
+                        hide.run();
+                    }).growX().height(34f);
+                    list.row();
+                });
+
+                ScrollPane pane = new ScrollPane(list, Styles.smallPane);
+                pane.setScrollingDisabled(true, false);
+                pane.setFadeScrollBars(false);
+
+                float paneWidth = Vars.mobile ? 300f : 270f;
+                float paneHeight = Vars.mobile ? 330f : 250f;
+                root.add(pane).width(paneWidth).maxHeight(paneHeight).left().row();
+
+                popup.add(root).left();
+            });
+        }
+
+        protected String compactLabelText(String text){
+            if(text == null) return "";
+            String out = text.trim();
+            if(out.length() <= 20) return out;
+            return out.substring(0, 19) + "...";
+        }
+
         /** 通用写回格式：opcode run arg... out。 */
         protected void writeCommon(StringBuilder builder, String opcode, String... args){
             builder.append(opcode).append(" ");
@@ -86,8 +180,6 @@ public final class ActionStatements{
     /** 相机平滑移动到目标世界坐标。 */
     public static class CameraControlStatement extends BaseActionStatement{
         public String seconds = "1";
-        public String fadeInSec = "0";
-        public String fadeOutSec = "0";
         public String x = "0";
         public String y = "0";
 
@@ -96,19 +188,21 @@ public final class ActionStatements{
 
         public CameraControlStatement(String[] tokens){
             run = tok(tokens, 1, run);
-            if(tokens != null && tokens.length >= 8){
-                seconds = tok(tokens, 2, seconds);
-                fadeInSec = tok(tokens, 3, fadeInSec);
-                fadeOutSec = tok(tokens, 4, fadeOutSec);
-                x = tok(tokens, 5, x);
-                y = tok(tokens, 6, y);
-                out = tok(tokens, 7, out);
-            }else{
-                // 兼容旧格式：run sec x y out
-                seconds = tok(tokens, 2, seconds);
-                x = tok(tokens, 3, x);
-                y = tok(tokens, 4, y);
-                out = tok(tokens, 5, out);
+            seconds = tok(tokens, 2, seconds);
+            x = tok(tokens, 3, x);
+            y = tok(tokens, 4, y);
+            out = outToken(tok(tokens, 5, out), out);
+        }
+
+        private String outToken(String value, String fallback){
+            if(value == null) return fallback;
+            String token = value.trim();
+            if(token.isEmpty()) return fallback;
+            try{
+                Float.parseFloat(token);
+                return fallback;
+            }catch(Exception ignored){
+                return value;
             }
         }
 
@@ -116,9 +210,6 @@ public final class ActionStatements{
         public void build(Table table){
             fieldLabeled(table, "run ", run, v -> run = v, 72f);
             fieldLabeled(table, " sec ", seconds, v -> seconds = v, 72f);
-            table.row();
-            fieldLabeled(table, "fadeIn ", fadeInSec, v -> fadeInSec = v, 72f);
-            fieldLabeled(table, " fadeOut ", fadeOutSec, v -> fadeOutSec = v, 72f);
             table.row();
             fieldLabeled(table, "x ", x, v -> x = v, 110f);
             fieldLabeled(table, " y ", y, v -> y = v, 110f);
@@ -130,52 +221,32 @@ public final class ActionStatements{
         public LExecutor.LInstruction build(LAssembler builder){
             final LVar vr = builder.var(run);
             final LVar vSec = builder.var(seconds);
-            final LVar vIn = builder.var(fadeInSec);
-            final LVar vOut = builder.var(fadeOutSec);
             final LVar vx = builder.var(x);
             final LVar vy = builder.var(y);
             final LVar vo = builder.var(out);
             return new ActionInstruction(vr, vo){
                 private final Vec2 start = new Vec2();
                 private final Vec2 target = new Vec2();
-                private boolean forcedCutscene = false;
-                private float fadeInRatio = 0f;
-                private float fadeOutRatio = 0f;
-
+                private final Vec2 Tmp = new Vec2();
                 @Override
                 protected boolean begin(LExecutor exec){
                     float sec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vSec), 0f, exec));
-                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vIn), 0f, exec));
-                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOut), 0f, exec));
                     target.set(
-                    ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vx), 0f, exec),
-                    ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vy), 0f, exec)
+                    ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vx), 0f, exec),
+                    ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vy), 0f, exec)
                     );
                     if(sec <= 0f){
                         if(!Vars.headless){
-                            forcedCutscene = !Vars.control.input.logicCutscene;
                             Vars.control.input.logicCutscene = true;
                             Vars.control.input.logicCamSpeed = 10f;
                             Vars.control.input.logicCamPan = target;
-                            if(forcedCutscene){
-                                Vars.control.input.logicCutscene = false;
-                            }
                         }
                         return true;
                     }
                     if(!Vars.headless){
-                        forcedCutscene = !Vars.control.input.logicCutscene;
                         Vars.control.input.logicCutscene = true;
                         start.set(Core.camera.position);
                     }
-
-                    if(inSec + outSec > sec && sec > 0f){
-                        float scale = sec / (inSec + outSec);
-                        inSec *= scale;
-                        outSec *= scale;
-                    }
-                    fadeInRatio = sec <= 0f ? 0f : Mathf.clamp(inSec / sec);
-                    fadeOutRatio = sec <= 0f ? 0f : Mathf.clamp(outSec / sec);
 
                     startTimed(sec * Time.toSeconds);
                     return true;
@@ -185,38 +256,16 @@ public final class ActionStatements{
                 protected void update(LExecutor exec, float progress){
                     if(Vars.headless) return;
 
-                    float eased = progress;
-                    float tailStart = 1f - fadeOutRatio;
-                    if(fadeInRatio > 0f && progress < fadeInRatio){
-                        float local = progress / fadeInRatio;
-                        eased = Interp.pow2In.apply(local) * fadeInRatio;
-                    }else if(fadeOutRatio > 0f && progress > tailStart){
-                        float local = (progress - tailStart) / fadeOutRatio;
-                        eased = tailStart + Interp.pow2Out.apply(local) * fadeOutRatio;
-                    }
-
-                    Tmp.v1.set(start).lerp(target, Mathf.clamp(eased));
+                    Tmp.set(start).lerp(target, Mathf.clamp(progress));
                     Vars.control.input.logicCamSpeed = 10f;
-                    Vars.control.input.logicCamPan = Tmp.v1;
-                }
-
-                @Override
-                protected void end(LExecutor exec){
-                    if(!Vars.headless && forcedCutscene){
-                        Vars.control.input.logicCutscene = false;
-                    }
-                }
-
-                @Override
-                protected void cancel(LExecutor exec){
-                    end(exec);
+                    Vars.control.input.logicCamPan = Tmp;
                 }
             };
         }
 
         @Override
         public void write(StringBuilder builder){
-            writeCommon(builder, "wh-camera-control", seconds, fadeInSec, fadeOutSec, x, y);
+            writeCommon(builder, "wh-camera-control", seconds, x, y);
         }
     }
 
@@ -247,26 +296,19 @@ public final class ActionStatements{
             final LVar vSec = builder.var(seconds);
             final LVar vo = builder.var(out);
             return new ActionInstruction(vr, vo){
-                private boolean forcedCutscene = false;
-
                 @Override
                 protected boolean begin(LExecutor exec){
                     float sec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vSec), 0f, exec));
                     if(sec <= 0f){
                         if(!Vars.headless){
-                            forcedCutscene = !Vars.control.input.logicCutscene;
                             Vars.control.input.logicCutscene = true;
                             Vars.control.input.logicCamSpeed = 1000f;
                             Tmp.v1.set(Vars.player);
                             Vars.control.input.logicCamPan = Tmp.v1;
-                            if(forcedCutscene){
-                                Vars.control.input.logicCutscene = false;
-                            }
                         }
                         return true;
                     }
                     if(!Vars.headless){
-                        forcedCutscene = !Vars.control.input.logicCutscene;
                         Vars.control.input.logicCutscene = true;
                     }
                     startTimed(sec * Time.toSeconds);
@@ -279,18 +321,6 @@ public final class ActionStatements{
                     Tmp.v1.set(Core.camera.position).lerpDelta(Vars.player, progress);
                     Vars.control.input.logicCamSpeed = 1000f;
                     Vars.control.input.logicCamPan = Tmp.v1;
-                }
-
-                @Override
-                protected void end(LExecutor exec){
-                    if(!Vars.headless && forcedCutscene){
-                        Vars.control.input.logicCutscene = false;
-                    }
-                }
-
-                @Override
-                protected void cancel(LExecutor exec){
-                    end(exec);
                 }
             };
         }
@@ -344,40 +374,94 @@ public final class ActionStatements{
         }
     }
 
-    /** 幕布动画（0->1->0）。 */
+
+    /** 幕布动画：淡入 -> 停留 -> 淡出（黑边开合）。 */
     public static class CurtainDrawStatement extends BaseActionStatement{
+        public String fadeInSec = "1";
+        public String holdSec = "1";
+        public String fadeOutSec = "1";
+
         public CurtainDrawStatement(){
         }
 
         public CurtainDrawStatement(String[] tokens){
             run = tok(tokens, 1, run);
-            out = tok(tokens, 2, out);
+            if(tokens != null && tokens.length >= 6){
+                fadeInSec = tokNum(tokens, 2, fadeInSec);
+                holdSec = tokNum(tokens, 3, holdSec);
+                fadeOutSec = tokNum(tokens, 4, fadeOutSec);
+                out = tok(tokens, 5, out);
+            }else{
+                // 兼容旧格式：run out
+                out = tok(tokens, 2, out);
+            }
         }
 
         @Override
         public void build(Table table){
             fieldLabeled(table, "run ", run, v -> run = v, 72f);
-            fieldLabeled(table, "result ", out, v -> out = v, 120f);
+            fieldLabeled(table, " fadeIn ", fadeInSec, v -> fadeInSec = v, 72f);
+            fieldLabeled(table, " hold ", holdSec, v -> holdSec = v, 72f);
+            table.row();
+            fieldLabeled(table, " fadeOut ", fadeOutSec, v -> fadeOutSec = v, 72f);
+            fieldLabeled(table, " result ", out, v -> out = v, 120f);
         }
 
         @Override
         public LExecutor.LInstruction build(LAssembler builder){
             final LVar vr = builder.var(run);
+            final LVar vIn = builder.var(fadeInSec);
+            final LVar vHold = builder.var(holdSec);
+            final LVar vOut = builder.var(fadeOutSec);
             final LVar vo = builder.var(out);
             return new ActionInstruction(vr, vo){
+                private float inTicks = 0f;
+                private float holdTicks = 0f;
+                private float outTicks = 0f;
+                private float totalTicks = 0f;
+
                 @Override
                 protected boolean begin(LExecutor exec){
-                    ActionLogicSupport.ensureCutsceneUI();
-                    // 单条语句内完成 0->1->0 的一体化曲线。
-                    startTimed(180f);
+                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vIn), 1f, exec));
+                    float hold = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vHold), 1f, exec));
+                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOut), 1f, exec));
+
+                    inTicks = inSec * Time.toSeconds;
+                    holdTicks = hold * Time.toSeconds;
+                    outTicks = outSec * Time.toSeconds;
+                    totalTicks = inTicks + holdTicks + outTicks;
+
+                    if(!Vars.headless){
+                        ActionLogicSupport.ensureCutsceneUI();
+                        ActionContext.cutsceneUI.curtainProgress = 0f;
+                    }
+
+                    if(totalTicks <= 0f){
+                        return true;
+                    }
+
+                    startTimed(totalTicks);
                     return true;
                 }
 
                 @Override
                 protected void update(LExecutor exec, float progress){
                     if(Vars.headless) return;
-                    float p = progress <= 0.5f ? progress * 2f : (1f - progress) * 2f;
-                    ActionContext.cutsceneUI.curtainProgress = Interp.linear.apply(Mathf.clamp(p));
+
+                    float elapsed = progress * totalTicks;
+                    float p;
+
+                    if(inTicks > 0f && elapsed < inTicks){
+                        p = elapsed / inTicks;
+                    }else if(elapsed < inTicks + holdTicks){
+                        p = 1f;
+                    }else if(outTicks > 0f){
+                        p = 1f - (elapsed - inTicks - holdTicks) / outTicks;
+                    }else{
+                        p = 0f;
+                    }
+
+                    ActionContext.cutsceneUI.curtainProgress = Mathf.clamp(p);
                 }
 
                 @Override
@@ -389,16 +473,14 @@ public final class ActionStatements{
 
                 @Override
                 protected void cancel(LExecutor exec){
-                    if(!Vars.headless){
-                        ActionContext.cutsceneUI.curtainProgress = 0f;
-                    }
+                    end(exec);
                 }
             };
         }
 
         @Override
         public void write(StringBuilder builder){
-            writeCommon(builder, "wh-curtain");
+            writeCommon(builder, "wh-curtain", fadeInSec, holdSec, fadeOutSec);
         }
     }
 
@@ -499,6 +581,11 @@ public final class ActionStatements{
                 protected void cancel(LExecutor exec){
                     end(exec);
                 }
+
+                @Override
+                protected boolean enableGlobalFade(){
+                    return true;
+                }
             };
         }
 
@@ -508,112 +595,31 @@ public final class ActionStatements{
         }
     }
 
-    /** 信息面板：淡入 -> 停留 -> 淡出。 */
-    public static class InfoFadeInStatement extends BaseActionStatement{
-        public String fadeInSec = "1";
-        public String holdSec = "1";
-        public String fadeOutSec = "1";
-
-        public InfoFadeInStatement(){
-        }
-
-        public InfoFadeInStatement(String[] tokens){
-            run = tok(tokens, 1, run);
-            if(tokens != null && tokens.length >= 6){
-                fadeInSec = tok(tokens, 2, fadeInSec);
-                holdSec = tok(tokens, 3, holdSec);
-                fadeOutSec = tok(tokens, 4, fadeOutSec);
-                out = tok(tokens, 5, out);
-            }
-        }
-
-        @Override
-        public void build(Table table){
-            fieldLabeled(table, "run ", run, v -> run = v, 72f);
-            fieldLabeled(table, " fadeIn ", fadeInSec, v -> fadeInSec = v, 72f);
-            fieldLabeled(table, " hold ", holdSec, v -> holdSec = v, 72f);
-            table.row();
-            fieldLabeled(table, " fadeOut ", fadeOutSec, v -> fadeOutSec = v, 72f);
-            fieldLabeled(table, " result ", out, v -> out = v, 120f);
-        }
-
-        @Override
-        public LExecutor.LInstruction build(LAssembler builder){
-            final LVar vr = builder.var(run);
-            final LVar vIn = builder.var(fadeInSec);
-            final LVar vHold = builder.var(holdSec);
-            final LVar vOut = builder.var(fadeOutSec);
-            final LVar vo = builder.var(out);
-            return new ActionInstruction(vr, vo){
-                @Override
-                protected boolean begin(LExecutor exec){
-                    if(!ActionLogicSupport.allowUiShowOnce(exec, "wh-info-fade", "")){
-                        return true;
-                    }
-
-                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vIn), 1f, exec));
-                    float hold = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vHold), 1f, exec));
-                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOut), 1f, exec));
-                    float totalSec = inSec + hold + outSec;
-
-                    if(!Vars.headless){
-                        ActionLogicSupport.ensureCutsceneUI();
-                        ActionContext.cutsceneUI.infoTable.clearActions();
-                        ActionContext.cutsceneUI.infoTable.color.a = 0f;
-                        ActionContext.cutsceneUI.infoTable.actions(
-                        Actions.sequence(
-                        Actions.alpha(0f),
-                        Actions.fadeIn(inSec, WHInterp.bounce5Out),
-                        Actions.delay(hold),
-                        Actions.fadeOut(outSec, Interp.pow2In)
-                        )
-                        );
-                    }
-
-                    if(totalSec <= 0f){
-                        return true;
-                    }
-                    // 总时长：淡入 + 停留 + 淡出
-                    startTimed(totalSec * Time.toSeconds);
-                    return true;
-                }
-
-                @Override
-                protected void end(LExecutor exec){
-                    if(Vars.headless) return;
-                    ActionContext.cutsceneUI.infoLabel = new FLabel("");
-                    ActionContext.cutsceneUI.infoTable.clear();
-                    ActionContext.cutsceneUI.infoTable.add(ActionContext.cutsceneUI.infoLabel);
-                    ActionContext.cutsceneUI.infoTable.actions(Actions.alpha(0f));
-                }
-
-                @Override
-                protected void cancel(LExecutor exec){
-                    end(exec);
-                }
-            };
-        }
-
-        @Override
-        public void write(StringBuilder builder){
-            writeCommon(builder, "wh-info-fade", fadeInSec, holdSec, fadeOutSec);
-        }
-    }
-
     /** 设置信息面板文本。 */
     public static class InfoTextStatement extends BaseActionStatement{
-        public String text = "";
+        public String text = "helloWorld";
         public String fadeInSec = "0.25";
         public String holdSec = "0.5";
         public String fadeOutSec = "0.25";
         public String overlayAlpha = "0";
+        public String color = "ffffff";
+        public String fontScale = "1";
 
         public InfoTextStatement(){
         }
 
         public InfoTextStatement(String[] tokens){
             run = tok(tokens, 1, run);
-            if(tokens != null && tokens.length >= 8){
+            if(tokens != null && tokens.length >= 10){
+                text = tok(tokens, 2, text);
+                fadeInSec = tokNum(tokens, 3, fadeInSec);
+                holdSec = tokNum(tokens, 4, holdSec);
+                fadeOutSec = tokNum(tokens, 5, fadeOutSec);
+                overlayAlpha = tokNum(tokens, 6, overlayAlpha);
+                color = tok(tokens, 7, color);
+                fontScale = tokNum(tokens, 8, fontScale);
+                out = tok(tokens, 9, out);
+            }else if(tokens != null && tokens.length >= 8){
                 text = tok(tokens, 2, text);
                 fadeInSec = tokNum(tokens, 3, fadeInSec);
                 holdSec = tokNum(tokens, 4, holdSec);
@@ -636,41 +642,45 @@ public final class ActionStatements{
             fieldLabeled(table, " fadeOut ", fadeOutSec, v -> fadeOutSec = v, 72f);
             table.row();
             fieldLabeled(table, " overlay ", overlayAlpha, v -> overlayAlpha = v, 72f);
+            fieldLabeled(table, " color ", color, v -> color = v, 96f);
+            fieldLabeled(table, " size ", fontScale, v -> fontScale = v, 72f);
+            table.row();
             fieldLabeled(table, " result ", out, v -> out = v, 120f);
         }
 
         @Override
         public LExecutor.LInstruction build(LAssembler builder){
             final LVar vr = builder.var(run);
-            final LVar vt = builder.var(text);
+            final String textToken = text;
+            final LVar vTextVar = textToken != null && textToken.startsWith("$") && textToken.length() > 1 ? builder.var(textToken.substring(1)) : null;
             final LVar vIn = builder.var(fadeInSec);
             final LVar vHold = builder.var(holdSec);
             final LVar vOut = builder.var(fadeOutSec);
             final LVar vOverlay = builder.var(overlayAlpha);
+            final LVar vColor = builder.var(color);
+            final LVar vScale = builder.var(fontScale);
             final LVar vo = builder.var(out);
             return new ActionInstruction(vr, vo){
-                @Override
-                protected boolean enableGlobalFade(){
-                    return false;
-                }
 
                 @Override
                 protected boolean begin(LExecutor exec){
                     if(Vars.headless) return true;
                     ActionLogicSupport.ensureCutsceneUI();
-                    String val = ActionLogicSupport.parseText(ActionLogicSupport.valueText(vt));
-                    if(!ActionLogicSupport.allowUiShowOnce(exec, "wh-info-text", val)){
-                        return true;
-                    }
+                    String val = ActionLogicSupport.parseText(
+                    vTextVar == null ? textToken : ActionLogicSupport.valueText(vTextVar));
                     float inSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vIn), 0.25f, exec));
                     float hold = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vHold), 0.5f, exec));
                     float outSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOut), 0.25f, exec));
                     float totalSec = inSec + hold + outSec;
                     float overlay = Mathf.clamp(ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOverlay), 0f, exec));
+                    Color fontColor = ActionLogicSupport.parseColor(ActionLogicSupport.valueText(vColor), Color.white);
+                    float scale = Mathf.clamp(ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vScale), 1f, exec), 0.25f, 4f);
 
                     // 单条语句流程：淡入 -> 停留 -> 淡出。
                     ActionContext.cutsceneUI.infoLabel = new FLabel(val);
                     ActionContext.cutsceneUI.infoLabel.setStyle(Styles.outlineLabel);
+                    ActionContext.cutsceneUI.infoLabel.setColor(fontColor);
+                    ActionContext.cutsceneUI.infoLabel.setFontScale(scale);
                     ActionContext.cutsceneUI.infoTable.clear();
                     ActionContext.cutsceneUI.infoTable.add(ActionContext.cutsceneUI.infoLabel);
 
@@ -713,7 +723,7 @@ public final class ActionStatements{
 
         @Override
         public void write(StringBuilder builder){
-            writeCommon(builder, "wh-info-text", text, fadeInSec, holdSec, fadeOutSec, overlayAlpha);
+            writeCommon(builder, "wh-info-text", text, fadeInSec, holdSec, fadeOutSec, overlayAlpha, color, fontScale);
         }
     }
 
@@ -797,6 +807,8 @@ public final class ActionStatements{
 
     /** 生成一批跳入单位。 */
     public static class JumpInStatement extends BaseActionStatement{
+        private static final float DEFAULT_TIMER_DURATION_SEC = 3f;
+
         public String unit = "@alpha";
         public String team = "@crux";
         public String x = "0";
@@ -804,6 +816,7 @@ public final class ActionStatements{
         public String angle = "90";
         public String delaySec = "0";
         public String inaccuracy = "0";
+        public String timerDelaySec = "0";
 
         public JumpInStatement(){
         }
@@ -817,14 +830,22 @@ public final class ActionStatements{
             angle = tok(tokens, 6, angle);
             delaySec = tok(tokens, 7, delaySec);
             inaccuracy = tok(tokens, 8, inaccuracy);
-            out = tok(tokens, 9, out);
+            timerDelaySec = tokNum(tokens, 9, timerDelaySec);
+            out = tok(tokens, 10, out);
         }
 
         @Override
         public void build(Table table){
             fieldLabeled(table, "run ", run, v -> run = v, 64f);
-            fieldLabeled(table, " unit ", unit, v -> unit = v, 110f);
-            fieldLabeled(table, " team ", team, v -> team = v, 90f);
+            fieldLabeled(table, " unit ", unit, v -> unit = v, 100f);
+            TextButton unitPick = new TextButton("pick", Styles.logict);
+            unitPick.clicked(() -> showUnitPickerCommon(unitPick, selected -> unit = "@" + selected.name));
+            table.add(unitPick).size(64f, 32f).padLeft(2f);
+            table.row();
+            fieldLabeled(table, "team ", team, v -> team = v, 100f);
+            TextButton teamPick = new TextButton("pick", Styles.logict);
+            teamPick.clicked(() -> showTeamPickerCommon(teamPick, selected -> team = "@" + selected.name));
+            table.add(teamPick).size(64f, 32f).padLeft(2f);
             table.row();
             fieldLabeled(table, "x ", x, v -> x = v, 82f);
             fieldLabeled(table, " y ", y, v -> y = v, 82f);
@@ -832,6 +853,8 @@ public final class ActionStatements{
             table.row();
             fieldLabeled(table, "delay ", delaySec, v -> delaySec = v, 90f);
             fieldLabeled(table, " spread ", inaccuracy, v -> inaccuracy = v, 90f);
+            table.row();
+            fieldLabeled(table, " tDelay ", timerDelaySec, v -> timerDelaySec = v, 84f);
             fieldLabeled(table, " result ", out, v -> out = v, 90f);
         }
 
@@ -845,14 +868,16 @@ public final class ActionStatements{
             final LVar va = builder.var(angle);
             final LVar vd = builder.var(delaySec);
             final LVar vi = builder.var(inaccuracy);
+            final LVar vTimerDelay = builder.var(timerDelaySec);
             final LVar vo = builder.var(out);
+            final String autoTimerKeyBase = "jumpin-" + Math.abs((unit + "|" + team + "|" + x + "|" + y + "|" + angle).hashCode());
             return new ActionInstruction(vr, vo){
                 @Override
                 protected boolean begin(LExecutor exec){
                     UnitType unitType = ActionLogicSupport.parseUnitType(ActionLogicSupport.valueText(vu));
                     Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vt), Team.derelict);
-                    float worldX = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vx), 0f, exec);
-                    float worldY = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vy), 0f, exec);
+                    float worldX = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vx), 0f, exec);
+                    float worldY = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vy), 0f, exec);
                     float angleVal = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(va), 0f, exec);
                     float delay = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vd), 0f, exec) * Time.toSeconds;
                     float spread = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vi), 0f, exec);
@@ -861,6 +886,13 @@ public final class ActionStatements{
                     Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread));
                     spawner.init(unitType, teamVal, new Vec2(worldX + Tmp.v1.x, worldY + Tmp.v1.y), angleVal, delay, false);
                     spawner.add();
+
+                    float objectiveDelaySec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vTimerDelay), 0f, exec));
+                    String timerKey = autoTimerKeyBase;
+                    if(exec != null && exec.build != null){
+                        timerKey += "-" + exec.build.id;
+                    }
+                    JumpInTriggerObjective.obtain(timerKey).trigger(DEFAULT_TIMER_DURATION_SEC * Time.toSeconds, objectiveDelaySec);
                     return true;
                 }
             };
@@ -868,7 +900,7 @@ public final class ActionStatements{
 
         @Override
         public void write(StringBuilder builder){
-            writeCommon(builder, "wh-jump-in", unit, team, x, y, angle, delaySec, inaccuracy);
+            writeCommon(builder, "wh-jump-in", unit, team, x, y, angle, delaySec, inaccuracy, timerDelaySec);
         }
     }
 
@@ -906,6 +938,11 @@ public final class ActionStatements{
             fieldLabeled(table, " style ", style, v -> style = v, 72f);
             table.row();
             fieldLabeled(table, "team ", team, v -> team = v, 96f);
+            TextButton teamPick = new TextButton("pick", Styles.logict);
+            teamPick.clicked(() -> showTeamPickerCommon(teamPick, selected -> {
+                team = "@" + selected.name;
+            }));
+            table.add(teamPick).size(70f, 32f).padLeft(4f);
             fieldLabeled(table, " result ", out, v -> out = v, 96f);
         }
 
@@ -925,14 +962,35 @@ public final class ActionStatements{
                     if(Vars.headless) return true;
                     ActionLogicSupport.ensureCutsceneUI();
 
-                    float worldX = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vx), 0f, exec);
-                    float worldY = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vy), 0f, exec);
+                    float worldX = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vx), 0f, exec);
+                    float worldY = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vy), 0f, exec);
                     float r = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vrad), 80f, exec);
                     float t = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vsec), 3f, exec);
                     int styleId = ActionLogicSupport.parseInt(ActionLogicSupport.valueText(vst), 0);
                     Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vteam), Team.derelict);
 
-                    ActionContext.cutsceneUI.mark(worldX, worldY, r, t * Time.toSeconds, teamVal.color, ActionLogicSupport.markStyle(styleId));
+                    ActionContext.cutsceneUI.mark(
+                    worldX, worldY, r, t * Time.toSeconds,
+                    teamVal.color, ActionLogicSupport.markStyle(styleId),
+                    (mx, my, mradius, progress, pulse, lifeTicks, maxLifeTicks, tint, markStyle, icon) -> {
+                        Draw.z(Layer.flyingUnit + 1);
+                        Draw.color(tint);
+                        Draw.alpha(0.22f + progress * 0.14f);
+                        Lines.stroke(2.2f);
+                        Lines.circle(mx, my, mradius * pulse);
+
+                        Draw.alpha(0.95f);
+                        Lines.stroke(3.2f);
+                        Drawn.circlePercent(mx, my, mradius + 1.5f, progress, 90f);
+
+                        if(icon != null){
+                            Draw.color(tint);
+                            Draw.alpha(0.98f);
+                            float size = Math.max(16f, mradius * 0.9f);
+                            Draw.rect(icon, mx, my, size, size);
+                        }
+                    }
+                    );
                     return true;
                 }
             };
@@ -972,7 +1030,10 @@ public final class ActionStatements{
         @Override
         public void build(Table table){
             fieldLabeled(table, "run ", run, v -> run = v, 64f);
-            fieldLabeled(table, " team ", team, v -> team = v, 86f);
+            fieldLabeled(table, " team ", team, v -> team = v, 78f);
+            TextButton teamPick = new TextButton("pick", Styles.logict);
+            teamPick.clicked(() -> showTeamPickerCommon(teamPick, selected -> team = "@" + selected.name));
+            table.add(teamPick).size(64f, 32f).padLeft(4f);
             fieldLabeled(table, " type ", bulletType, v -> bulletType = v, 72f);
             table.row();
             fieldLabeled(table, "sx ", srcX, v -> srcX = v, 74f);
@@ -1000,10 +1061,10 @@ public final class ActionStatements{
                 protected boolean begin(LExecutor exec){
                     Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vt), Team.derelict);
                     int bulletID = ActionLogicSupport.parseInt(ActionLogicSupport.valueText(vb), 0);
-                    float sourceX = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vsx), 0f, exec);
-                    float sourceY = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vsy), 0f, exec);
-                    float targetX = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vdx), 0f, exec);
-                    float targetY = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vdy), 0f, exec);
+                    float sourceX = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vsx), 0f, exec);
+                    float sourceY = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vsy), 0f, exec);
+                    float targetX = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vdx), 0f, exec);
+                    float targetY = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vdy), 0f, exec);
                     float spread = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vspread), 80f, exec);
 
                     Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread));
@@ -1063,9 +1124,6 @@ public final class ActionStatements{
             return new ActionInstruction(vr, vo){
                 @Override
                 protected boolean begin(LExecutor exec){
-                    if(!ActionLogicSupport.allowUiShowOnce(exec, "wh-signal-fade", "")){
-                        return true;
-                    }
 
                     float inSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vIn), 1f, exec));
                     float hold = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vHold), 1f, exec));
@@ -1123,13 +1181,24 @@ public final class ActionStatements{
         public String holdSec = "0.5";
         public String fadeOutSec = "0.5";
         public String overlayAlpha = "0";
+        public String color = "white";
+        public String fontScale = "1";
 
         public SignalTextStatement(){
         }
 
         public SignalTextStatement(String[] tokens){
             run = tok(tokens, 1, run);
-            if(tokens != null && tokens.length >= 8){
+            if(tokens != null && tokens.length >= 10){
+                text = tok(tokens, 2, text);
+                fadeInSec = tokNum(tokens, 3, fadeInSec);
+                holdSec = tokNum(tokens, 4, holdSec);
+                fadeOutSec = tokNum(tokens, 5, fadeOutSec);
+                overlayAlpha = tokNum(tokens, 6, overlayAlpha);
+                color = tok(tokens, 7, color);
+                fontScale = tokNum(tokens, 8, fontScale);
+                out = tok(tokens, 9, out);
+            }else if(tokens != null && tokens.length >= 8){
                 text = tok(tokens, 2, text);
                 fadeInSec = tokNum(tokens, 3, fadeInSec);
                 holdSec = tokNum(tokens, 4, holdSec);
@@ -1152,42 +1221,50 @@ public final class ActionStatements{
             fieldLabeled(table, " fadeOut ", fadeOutSec, v -> fadeOutSec = v, 72f);
             table.row();
             fieldLabeled(table, " overlay ", overlayAlpha, v -> overlayAlpha = v, 72f);
+            fieldLabeled(table, " color ", color, v -> color = v, 96f);
+            fieldLabeled(table, " size ", fontScale, v -> fontScale = v, 72f);
+            table.row();
             fieldLabeled(table, " result ", out, v -> out = v, 120f);
         }
 
         @Override
         public LExecutor.LInstruction build(LAssembler builder){
             final LVar vr = builder.var(run);
-            final LVar vt = builder.var(text);
+            final String textToken = text;
+            final LVar vTextVar = textToken != null && textToken.startsWith("$") && textToken.length() > 1
+            ? builder.var(textToken.substring(1))
+            : null;
             final LVar vIn = builder.var(fadeInSec);
             final LVar vHold = builder.var(holdSec);
             final LVar vOut = builder.var(fadeOutSec);
             final LVar vOverlay = builder.var(overlayAlpha);
+            final LVar vColor = builder.var(color);
+            final LVar vScale = builder.var(fontScale);
             final LVar vo = builder.var(out);
             return new ActionInstruction(vr, vo){
-                @Override
-                protected boolean enableGlobalFade(){
-                    return false;
-                }
 
                 @Override
                 protected boolean begin(LExecutor exec){
                     if(Vars.headless) return true;
                     ActionLogicSupport.ensureCutsceneUI();
-                    String val = ActionLogicSupport.parseText(ActionLogicSupport.valueText(vt));
-                    if(!ActionLogicSupport.allowUiShowOnce(exec, "wh-signal-text", val)){
-                        return true;
-                    }
+                    String val = ActionLogicSupport.parseText(
+                    vTextVar == null ? textToken : ActionLogicSupport.valueText(vTextVar)
+                    );
                     float inSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vIn), 0.5f, exec));
                     float hold = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vHold), 0.5f, exec));
                     float outSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOut), 0.5f, exec));
                     float totalSec = inSec + hold + outSec;
                     float overlay = Mathf.clamp(ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOverlay), 0f, exec));
+                    Color fontColor = ActionLogicSupport.parseColor(ActionLogicSupport.valueText(vColor), Color.white);
+                    float scale = Mathf.clamp(ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vScale), 1f, exec), 0.25f, 4f);
 
                     // 单条语句流程：淡入 -> 停留 -> 淡出。
                     Sounds.uiChat.play();
                     ActionContext.cutsceneUI.textLabel = new FLabel(val);
-                    ActionContext.cutsceneUI.textLabel.setStyle(Styles.outlineLabel);
+                    // Use default UI font for better CJK coverage.
+                    ActionContext.cutsceneUI.textLabel.setStyle(Styles.defaultLabel);
+                    ActionContext.cutsceneUI.textLabel.setColor(fontColor);
+                    ActionContext.cutsceneUI.textLabel.setFontScale(scale);
                     ActionContext.cutsceneUI.textArea.clear();
                     ActionContext.cutsceneUI.textArea.add(ActionContext.cutsceneUI.textLabel).pad(4f, 32f, 4f, 32f);
 
@@ -1225,12 +1302,17 @@ public final class ActionStatements{
                 protected void cancel(LExecutor exec){
                     end(exec);
                 }
+
+                @Override
+                protected boolean enableGlobalFade(){
+                    return true;
+                }
             };
         }
 
         @Override
         public void write(StringBuilder builder){
-            writeCommon(builder, "wh-signal-text", text, fadeInSec, holdSec, fadeOutSec, overlayAlpha);
+            writeCommon(builder, "wh-signal-text", text, fadeInSec, holdSec, fadeOutSec, overlayAlpha, color, fontScale);
         }
     }
 
@@ -1375,12 +1457,16 @@ public final class ActionStatements{
 
         @Override
         public void build(Table table){
-            fieldLabeled(table, "run ", run, v -> run = v, 64f);
-            fieldLabeled(table, " icon ", icon, v -> icon = v, 64f);
-            fieldLabeled(table, " team ", team, v -> team = v, 90f);
+            fieldLabeled(table, "run ", run, v -> run = v, 56f);
+            fieldLabeled(table, " icon ", icon, v -> icon = v, 56f);
             table.row();
-            fieldLabeled(table, "text ", text, v -> text = v, 160f);
-            fieldLabeled(table, " result ", out, v -> out = v, 90f);
+            fieldLabeled(table, "team ", team, v -> team = v, 78f);
+            TextButton teamPick = new TextButton("pick", Styles.logict);
+            teamPick.clicked(() -> showTeamPickerCommon(teamPick, selected -> team = "@" + selected.name));
+            table.add(teamPick).size(64f, 32f).padLeft(4f);
+            fieldLabeled(table, " text ", text, v -> text = v, 120f);
+            table.row();
+            fieldLabeled(table, "result ", out, v -> out = v, 84f);
         }
 
         @Override
@@ -1390,14 +1476,12 @@ public final class ActionStatements{
             final LVar vm = builder.var(text);
             final LVar vo = builder.var(out);
             return new ActionInstruction(vr, vo){
+
                 @Override
                 protected boolean begin(LExecutor exec){
                     if(Vars.headless) return true;
                     int iconId = ActionLogicSupport.parseInt(ActionLogicSupport.valueText(vi), 0);
                     String message = ActionLogicSupport.parseText(ActionLogicSupport.valueText(vm));
-                    if(!ActionLogicSupport.allowUiShowOnce(exec, "wh-warning-icon", iconId + "|" + message)){
-                        return true;
-                    }
                     TextureRegion region = ActionLogicSupport.warningIcon(iconId);
                     if(region != null){
                         UIUtils.showToast(new TextureRegionDrawable(region), "<< " + message + " >>", Sounds.none);
@@ -1437,6 +1521,9 @@ public final class ActionStatements{
             fieldLabeled(table, " enemy ", enemy, v -> enemy = v, 64f);
             table.row();
             fieldLabeled(table, "team ", team, v -> team = v, 90f);
+            TextButton teamPick = new TextButton("pick", Styles.logict);
+            teamPick.clicked(() -> showTeamPickerCommon(teamPick, selected -> team = "@" + selected.name));
+            table.add(teamPick).size(64f, 32f).padLeft(4f);
             fieldLabeled(table, " result ", out, v -> out = v, 90f);
         }
 
@@ -1448,15 +1535,13 @@ public final class ActionStatements{
             final LVar vt = builder.var(team);
             final LVar vo = builder.var(out);
             return new ActionInstruction(vr, vo){
+
                 @Override
                 protected boolean begin(LExecutor exec){
                     if(Vars.headless) return true;
                     int allyID = ActionLogicSupport.parseInt(ActionLogicSupport.valueText(va), 0);
                     int enemyID = ActionLogicSupport.parseInt(ActionLogicSupport.valueText(ve), 0);
                     Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vt), Team.derelict);
-                    if(!ActionLogicSupport.allowUiShowOnce(exec, "wh-warning-sound", allyID + "|" + enemyID + "|" + teamVal.id)){
-                        return true;
-                    }
                     if(Vars.player.team() == teamVal){
                         ActionLogicSupport.warningSound(allyID).play();
                     }else{
@@ -1478,15 +1563,14 @@ public final class ActionStatements{
         registerStatement("wh-camera-reset", ActionStatements.CameraResetStatement::new, ActionStatements.CameraResetStatement::new);
         registerStatement("wh-camera-zoom", ActionStatements.CameraZoomStatement::new, ActionStatements.CameraZoomStatement::new);
         registerStatement("wh-curtain", ActionStatements.CurtainDrawStatement::new, ActionStatements.CurtainDrawStatement::new);
-        registerStatement("wh-curtain-fade", ActionStatements.CurtainFadeInStatement::new, ActionStatements.CurtainFadeInStatement::new);
-        registerStatement("wh-info-fade", ActionStatements.InfoFadeInStatement::new, ActionStatements.InfoFadeInStatement::new);
+        /*   registerStatement("wh-curtain-fade", ActionStatements.CurtainFadeInStatement::new, ActionStatements.CurtainFadeInStatement::new);*/
         registerStatement("wh-info-text", ActionStatements.InfoTextStatement::new, ActionStatements.InfoTextStatement::new);
         registerStatement("wh-input-lock", ActionStatements.InputLockStatement::new, ActionStatements.InputLockStatement::new);
         registerStatement("wh-input-unlock", ActionStatements.InputUnlockStatement::new, ActionStatements.InputUnlockStatement::new);
         registerStatement("wh-jump-in", ActionStatements.JumpInStatement::new, ActionStatements.JumpInStatement::new);
         registerStatement("wh-mark-world", ActionStatements.MarkWorldStatement::new, ActionStatements.MarkWorldStatement::new);
         registerStatement("wh-raid", ActionStatements.RaidStatement::new, ActionStatements.RaidStatement::new);
-        registerStatement("wh-signal-fade", ActionStatements.SignalCutInStatement::new, ActionStatements.SignalCutInStatement::new);
+        /*   registerStatement("wh-signal-fade", ActionStatements.SignalCutInStatement::new, ActionStatements.SignalCutInStatement::new);*/
         registerStatement("wh-signal-text", ActionStatements.SignalTextStatement::new, ActionStatements.SignalTextStatement::new);
         registerStatement("wh-ui-hide", ActionStatements.UIHideStatement::new, ActionStatements.UIHideStatement::new);
         registerStatement("wh-ui-show", ActionStatements.UIShowStatement::new, ActionStatements.UIShowStatement::new);
@@ -1495,4 +1579,5 @@ public final class ActionStatements{
         registerStatement("wh-warning-sound", ActionStatements.WarningSoundStatement::new, ActionStatements.WarningSoundStatement::new);
     }
 }
+
 
