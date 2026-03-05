@@ -222,9 +222,9 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
         Draw.reset();
         Draw.z(Layer.flyingUnit + 0.1f);
         Draw.alpha(0.7f);
-        Draw.color(team.color);
         int curveCount = Mathf.clamp((int)(type.hitSize / 12f), 3, 6);
         for(int i = 0; i < curveCount; i++){
+            Draw.color(team.color);
             drawJumpOutCurve(progress, i * 1145, lx1, ly1, lx2, ly2, drawX, drawY);
         }
         Draw.reset();
@@ -280,6 +280,7 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
         float ringRadius = Mathf.clamp(type.hitSize * 0.12f, 2.5f, 4)
         * (0.8f + 0.2f * Mathf.sinDeg(waveTime * 8f + index));
         Fill.circle(endX, endY, ringRadius * Mathf.curve(1f - progress, 0, 0.1f));
+        Draw.reset();
     }
 
     private float preRiftProgress(){
@@ -312,7 +313,7 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
             Fill.polyPoint(x + Angles.trnsx(ang, radius), y + Angles.trnsy(ang, radius));
         }
         Fill.polyEnd();
-        Draw.color();
+        Draw.reset();
     }
 
     public void drawRiftLine(float scl, Color color, float z, float alpha, int index, float progress){
@@ -340,7 +341,7 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
         }
         Draw.blend(Blending.normal);
         Lines.endLine(true);
-        Draw.color();
+        Draw.reset();
     }
 
     public void effect(){

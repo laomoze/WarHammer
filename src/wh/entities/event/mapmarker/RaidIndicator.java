@@ -93,8 +93,8 @@ public class RaidIndicator extends MapObjectives.PosMarker{
         Lines.circle(target.x, target.y, radius * (1f + Mathf.absin(4f, 0.055f)));
         Drawn.circlePercent(target.x, target.y, radius * 0.875f, fin, 0f);
 
-        Draw.reset();
         Draw.blend();
+        Draw.reset();
     }
 
     public void drawArrow(){
@@ -116,6 +116,7 @@ public class RaidIndicator extends MapObjectives.PosMarker{
         }
 
         Draw.blend();
+        Draw.reset();
     }
 
     public float progress(){
@@ -124,8 +125,6 @@ public class RaidIndicator extends MapObjectives.PosMarker{
         AtomicReference<Float> progress = new AtomicReference<>(0f);
         state.rules.objectives.each(mapObjective -> {
             if(mapObjective instanceof RaidEventObjective obj && Objects.equals(obj.key, timerName)){
-                progress.set(Mathf.clamp(obj.getCountup() / Math.max(1f, obj.duration)));
-            }else if(mapObjective instanceof AirborneRaidEventObjective obj && Objects.equals(obj.key, timerName)){
                 progress.set(Mathf.clamp(obj.getCountup() / Math.max(1f, obj.duration)));
             }
         });

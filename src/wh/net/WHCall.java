@@ -17,7 +17,7 @@ public class WHCall{
 
     public static void warnHudPacket(String timerName, String text, float time, float range, float sx, float sy, float tx, float ty){
         if(Vars.net.server() || !Vars.net.active()){
-            DefaultRaid.clientAlertHud(timerName, text, time, range, sx, sy, tx, ty);
+            DefaultRaids.clientAlertHud(timerName, text, time, range, sx, sy, tx, ty);
         }
 
         if(Vars.net.server()){
@@ -53,13 +53,13 @@ public class WHCall{
 
     public static Drawable getDrawable(int id){
         return switch(id){
-            case 1 -> new TextureRegionDrawable(WHContent.bombard);
-            case 2 -> new TextureRegionDrawable(WHContent.fleet);
-            case 3 -> new TextureRegionDrawable(WHContent.airborne);
-            case 4 -> new TextureRegionDrawable(WHContent.strafeRegion);
-            case 5 -> new TextureRegionDrawable(WHContent.missileRegion);
-            case 6 -> new TextureRegionDrawable(WHContent.bombRegion);
-            default -> new TextureRegionDrawable(WHContent.objective);
+            case 0 -> new TextureRegionDrawable(WHContent.objective);
+            case 1 -> new TextureRegionDrawable(WHContent.fleet);
+            case 2 -> new TextureRegionDrawable(WHContent.airborne);
+            case 3 -> new TextureRegionDrawable(WHContent.strafeRegion);
+            case 4 -> new TextureRegionDrawable(WHContent.missileRegion);
+            case 5 -> new TextureRegionDrawable(WHContent.bombRegion);
+            default -> new TextureRegionDrawable(WHContent.bombard);
         };
     }
 

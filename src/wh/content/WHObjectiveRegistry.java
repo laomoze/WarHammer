@@ -21,6 +21,5 @@ public final class WHObjectiveRegistry{
         MapObjectives.registerObjective(TriggerObjective::new);
         MapObjectives.registerObjective(JumpInTriggerObjective::new);
         MapObjectives.registerObjective(RaidEventObjective::new);
-        MapObjectives.registerObjective(AirborneRaidEventObjective::new);
     }
 }

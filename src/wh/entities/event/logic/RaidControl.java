@@ -15,8 +15,8 @@ import wh.net.*;
 import static mindustry.Vars.*;
 
 /**
- * NH-compat parser:
- * raidcontrol <flag> <timer> <alertTime> <raidTime> <team> <type> <count> <sourceX> <sourceY> <targetX> <targetY> <inaccuracy>
+ * WH parser (prefixed to avoid mod conflicts):
+ * wh-raidcontrol <flag> <timer> <alertTime> <raidTime> <team> <type> <count> <sourceX> <sourceY> <targetX> <targetY> <inaccuracy>
  */
 public class RaidControl extends LStatement{
     public String flag = "flag";
@@ -130,7 +130,7 @@ public class RaidControl extends LStatement{
 
     @Override
     public void write(StringBuilder builder){
-        builder.append("raidcontrol").append(" ").append(flag).append(" ").append(timer).append(" ")
+        builder.append("wh-raidcontrol").append(" ").append(flag).append(" ").append(timer).append(" ")
         .append(alertTime).append(" ").append(raidTime).append(" ")
         .append(team).append(" ").append(type).append(" ").append(count).append(" ")
         .append(sourceX).append(" ").append(sourceY).append(" ").append(targetX).append(" ").append(targetY).append(" ")

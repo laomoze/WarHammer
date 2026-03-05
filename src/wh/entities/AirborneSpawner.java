@@ -299,8 +299,6 @@ public class AirborneSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc
 
         flame.y = podY;
         flame.draw(this);
-        Draw.reset();
-
     }
 
     public void drawThrusters(float frame, float alpha, float podY, float rot){

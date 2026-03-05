@@ -36,19 +36,19 @@ import static mindustry.Vars.*;
  * spawnUnits 格式：
  * - 单个空降器编组： "@alpha,@beta"
  * - 多个空降器编组： "@alpha,@beta;@gamma;@delta,@epsilon"
- * 每个 ';' 分段对应一次 AirborneSpawner 投放；当投放次数超过分组数量时会循环使用分组。
+ * 每个 ';' 分段对应一次 AirborneSpawner 投放；当投放次数超过分组数量时用第一组填充。
  */
 public class DefaultAirborneRaid extends LStatement{
     private static final int maxUnitsPerGroup = 4;
 
     public String flag = "turret";
-    public String timer = "event-timer";
+    public String timer = "air-born-timer";
     public String alertTime = "30";
     public String raidTime = "5";
     public String spawnerCount = "2";
     public String spawnerInterval = "0.8";
     public String spawnUnits = "@alpha";
-    public String inaccuracy = "10";
+    public String inaccuracy = "30";
 
     public DefaultAirborneRaid(String[] tokens){
         if(tokens.length > 1) flag = tokens[1];
@@ -102,13 +102,13 @@ public class DefaultAirborneRaid extends LStatement{
         table.table(t -> {
             t.add("Spawner Units(groups): ");
             fields(t, spawnUnits, str -> spawnUnits = str).width(250f);
-            TextButton pick = new TextButton("pick");
+            TextButton pick = new TextButton("pick", Styles.logict);
             pick.clicked(() -> showUnitPicker(unit -> {
                 appendSpawnUnit("@" + unit.name);
                 rebuild(table);
             }));
             t.add(pick).size(64f, 32f).padLeft(2f);
-            TextButton detail = new TextButton("detail");
+            TextButton detail = new TextButton("detail", Styles.logict);
             detail.clicked(() -> showSpawnUnitsDetailDialog(table));
             t.add(detail).size(74f, 32f).padLeft(2f);
         }).left().row();
@@ -116,7 +116,8 @@ public class DefaultAirborneRaid extends LStatement{
         table.table(t -> {
             t.add("Drop Inaccuracy Radius(tiles): ");
             fields(t, inaccuracy, str -> inaccuracy = str);
-        }).left();
+        }).left().row();
+
     }
 
     private void showUnitPicker(arc.func.Cons<UnitType> onSelect){
@@ -150,7 +151,7 @@ public class DefaultAirborneRaid extends LStatement{
 
             UIUtils.bindContentSearch(search, list, visible, unit -> {
                 String display = unit.localizedName == null ? unit.name : unit.localizedName;
-                list.button(display, () -> {
+                list.button(display, Styles.logicTogglet, () -> {
                     onSelect.get(unit);
                     dialog.hide();
                 }).left();
@@ -207,15 +208,15 @@ public class DefaultAirborneRaid extends LStatement{
             root.table(btns -> {
                 btns.left();
                 btns.defaults().size(118f, 32f).padRight(4f);
-                btns.button("append pick", () -> showUnitPicker(unit -> {
+                btns.button("append pick", Styles.logict, () -> showUnitPicker(unit -> {
                     appendSpawnUnit("@" + unit.name);
                     reopen.run();
                 }));
-                btns.button("new group", () -> showUnitPicker(unit -> {
+                btns.button("new group", Styles.logict, () -> showUnitPicker(unit -> {
                     appendSpawnUnitAsNewGroup("@" + unit.name);
                     reopen.run();
                 }));
-                btns.button("clear", () -> {
+                btns.button("clear", Styles.logict, () -> {
                     spawnUnits = "";
                     reopen.run();
                 });
@@ -251,7 +252,7 @@ public class DefaultAirborneRaid extends LStatement{
                     line.left();
                     line.add((groupIndex + 1) + ". " + names + " (" + parsed.size + "/" + maxUnitsPerGroup + ")")
                     .wrap().width(Vars.mobile ? 370f : 290f).left();
-                    TextButton addToGroup = new TextButton("+");
+                    TextButton addToGroup = new TextButton("+", Styles.logict);
                     addToGroup.clicked(() -> showUnitPicker(unit -> {
                         appendSpawnUnitToGroup(groupIndex, "@" + unit.name);
                         reopen.run();
@@ -418,8 +419,6 @@ public class DefaultAirborneRaid extends LStatement{
         public boolean iconShown = false;
         public boolean labelShown = false;
         public int threatLevel = 1;
-        public boolean oneShotFinished = false;
-
         private final Vec2 source = new Vec2();
         private final Vec2 target = new Vec2();
 
@@ -442,9 +441,6 @@ public class DefaultAirborneRaid extends LStatement{
 
             String flagKey = key(flag);
             boolean gated = !flagKey.isEmpty() && !flagKey.equalsIgnoreCase("null");
-            if(!gated && oneShotFinished){
-                return;
-            }
             if(gated && !state.rules.objectiveFlags.contains(flagKey)){
                 exec.counter.numval--;
                 exec.yield = true;
@@ -456,7 +452,7 @@ public class DefaultAirborneRaid extends LStatement{
             float total = alert + raid;
 
             if(curTime >= total){
-                reset(gated);
+                reset(flagKey, gated);
                 return;
             }
 
@@ -499,18 +495,17 @@ public class DefaultAirborneRaid extends LStatement{
             WHCall.warnHudPacket(key(timer), "Airborne", alertSeconds, inaccuracy.numf(), source.x, source.y, target.x, target.y);
         }
 
-        private void reset(boolean gated){
+        private void reset(String flagKey, boolean gated){
             curTime = 0f;
             raidCounter = 0;
             iconShown = false;
             labelShown = false;
-            state.rules.objectiveFlags.remove(flag.name);
+            if(gated && !flagKey.isEmpty()){
+                state.rules.objectiveFlags.remove(flagKey);
+            }
             RaidEventObjective objective = RaidEventObjective.find(key(timer));
             if(objective != null){
                 objective.finish();
-            }
-            if(!gated){
-                oneShotFinished = true;
             }
         }
 
@@ -530,11 +525,11 @@ public class DefaultAirborneRaid extends LStatement{
             float wx = Mathf.random(0f, Vars.world.unitWidth());
             float wy = Mathf.random(0f, Vars.world.unitHeight());
 
-            AtomicReference<BlockFlag> targetFlag = new AtomicReference<>(BlockFlag.core);
+            AtomicReference<BlockFlag> targetFlag = new AtomicReference<>(BlockFlag.factory);
             WeightedRandom.random(
             new WeightedOption(3f, () -> targetFlag.set(BlockFlag.turret)),
-            new WeightedOption(2f, () -> targetFlag.set(BlockFlag.factory)),
-            new WeightedOption(2f, () -> targetFlag.set(BlockFlag.drill))
+            new WeightedOption(2f, () -> targetFlag.set(BlockFlag.drill)),
+            new WeightedOption(1f, () -> targetFlag.set(BlockFlag.core))
             );
 
             Building building = Geometry.findClosest(wx, wy, Vars.indexer.getEnemy(state.rules.waveTeam, targetFlag.get()));
@@ -552,11 +547,11 @@ public class DefaultAirborneRaid extends LStatement{
         }
 
         private float threatScl(){
-            return Mathf.sqrt(threatLevel);
+            return Mathf.sqrt(threatLevel) / 3;
         }
 
         private void showLabel(){
-            WHCall.alertToastTable(3, -1, "[#ff7b69]Airborne: []<" + (int)(target.x / tilesize) + ", " + (int)(target.y / tilesize) + ">");
+            WHCall.alertToastTable(2, -1, "[#ff7b69]Airborne: []<" + (int)(target.x / tilesize) + ", " + (int)(target.y / tilesize) + ">");
             labelShown = true;
         }
 
@@ -583,7 +578,7 @@ public class DefaultAirborneRaid extends LStatement{
             float rot = Angles.angle(source.x, source.y, target.x, target.y);
 
             AirborneSpawner spawner = new AirborneSpawner();
-            spawner.init(spawnTeam, new Vec2(sx, sy), rot, 80f, loadout);
+            spawner.init(spawnTeam, new Vec2(sx, sy), rot, 90f, loadout);
             spawner.add();
         }
 

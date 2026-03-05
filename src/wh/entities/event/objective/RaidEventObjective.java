@@ -13,13 +13,10 @@ import static mindustry.Vars.state;
  */
 public class RaidEventObjective extends MapObjectives.MapObjective{
     public @MapObjectives.Second float duration = 60f * 10f;
-    /** optional start delay (seconds) before the timer actually begins. */
-    public @MapObjectives.Second float delay = 0f;
     public String key = "raid-event";
 
     protected boolean triggered = false;
     protected float countup;
-    protected float delayTicks;
 
     public RaidEventObjective(String key){
         this.key = key;
@@ -34,11 +31,6 @@ public class RaidEventObjective extends MapObjectives.MapObjective{
     public boolean update(){
         if(!triggered) return false;
 
-        if(delayTicks > 0f){
-            delayTicks -= Time.delta;
-            return false;
-        }
-
         if(countup <= duration){
             countup += Time.delta;
         }else{
@@ -48,17 +40,15 @@ public class RaidEventObjective extends MapObjectives.MapObjective{
     }
 
     public void trigger(float duration){
-        trigger(duration, 0f);
+        ensureRaidIndicator();
+        this.duration = Math.max(1f, duration);
+        countup = 0f;
+        triggered = true;
+        resetMarker();
     }
 
     public void trigger(float duration, float delaySec){
-        ensureRaidIndicator();
-        this.duration = Math.max(1f, duration);
-        this.delay = Math.max(0f, delaySec);
-        countup = 0f;
-        triggered = true;
-        delayTicks = this.delay * Time.toSeconds;
-        resetMarker();
+        trigger(duration);
     }
 
     public void finish(){
@@ -118,23 +108,14 @@ public class RaidEventObjective extends MapObjectives.MapObjective{
 
     private void ensureRaidIndicator(){
         RaidIndicator existing = raidIndicator();
-        if(existing != null){
-            existing.timerName = key;
-            existing.minimap = true;
-            existing.world = true;
-            return;
+        if(existing == null){
+            existing = new RaidIndicator(key);
         }
+        existing.timerName = key;
+        existing.minimap = true;
+        existing.world = true;
 
-        RaidIndicator raidIndicator = new RaidIndicator(key);
-        raidIndicator.minimap = true;
-        raidIndicator.world = true;
-
-        if(markers == null || markers.length == 0){
-            markers = new MapObjectives.ObjectiveMarker[]{raidIndicator};
-        }else{
-            MapObjectives.ObjectiveMarker[] out = Arrays.copyOf(markers, markers.length + 1);
-            out[out.length - 1] = raidIndicator;
-            markers = out;
-        }
+        // Keep only the raid indicator to avoid duplicate icons.
+        markers = new MapObjectives.ObjectiveMarker[]{existing};
     }
 }

@@ -19,8 +19,7 @@ import wh.content.*;
 import static mindustry.Vars.state;
 
 /**
- * 过场 UI 桥接层。
- * 用于显示 signal/info/curtain 等逻辑动作效果。
+ * Cutscene UI bridge layer for signal/info/curtain effects.
  */
 public class WHCutsceneUI{
     private static final float OVERLAY_SPEED = 0.0065f;
@@ -44,7 +43,9 @@ public class WHCutsceneUI{
     private final Seq<WorldMark> worldMarks = new Seq<>();
     private final ObjectMap<MarkStyle, MarkDrawer> markDrawers = new ObjectMap<>();
 
-    /** 确保 UI 节点已创建并挂载。 */
+    /**
+     * Cutscene UI bridge layer for signal/info/curtain effects.
+     */
     public void ensureSetup(){
         if(Vars.headless || built) return;
         if(Core.scene == null || Core.scene.root == null) return;
@@ -82,14 +83,14 @@ public class WHCutsceneUI{
                 float curtainScale = Core.graphics.isPortrait() ? 0.22f : 0.1185f;
                 float heightC = height * curtainScale * Interp.pow2Out.apply(curtainProgress);
 
-                // 上下黑边。
+                // Top/bottom bars.
                 Draw.color(Color.black);
                 Draw.alpha(Interp.pow3Out.apply(Mathf.curve(curtainProgress, 0f, 0.75f)));
                 Fill.quad(0f, 0f, 0f, heightC, width, heightC, width, 0f);
                 Fill.quad(0f, height, 0f, height - heightC, width, height - heightC, width, height);
                 Draw.reset();
 
-                // 全屏遮罩淡入淡出。
+                // Fullscreen overlay fade.
                 Draw.color(0f, 0f, 0f, color.a);
                 Fill.quad(0f, 0f, 0f, height, width, height, width, 0f);
                 Draw.reset();
@@ -152,7 +153,9 @@ public class WHCutsceneUI{
         root.addChild(infoTable);
     }
 
-    /** 每帧更新遮罩 alpha。 */
+    /**
+     * Cutscene UI bridge layer for signal/info/curtain effects.
+ */
     public void update(){
         if(Vars.headless) return;
         if(built){
@@ -161,7 +164,9 @@ public class WHCutsceneUI{
         if(!state.isPaused()) updateWorldMarks();
     }
 
-    /** 重置过场 UI 状态。 */
+    /**
+     * Cutscene UI bridge layer for signal/info/curtain effects.
+ */
     public void reset(){
         if(Vars.headless || !built) return;
 
@@ -184,14 +189,15 @@ public class WHCutsceneUI{
     }
 
     /**
-     * 预留接口：在世界中显示标记。
-     * 当前仅保留调用点，具体渲染可后续补充。
-     */
+     * Cutscene UI bridge layer for signal/info/curtain effects.
+ */
     public void mark(float x, float y, float radius, float lifetime, Color color, MarkStyle style){
         mark(x, y, radius, lifetime, color, style, null);
     }
 
-    /** Spawn a world mark with an optional one-off drawer override. */
+    /**
+     * Cutscene UI bridge layer for signal/info/curtain effects.
+ */
     public void mark(float x, float y, float radius, float lifetime, Color color, MarkStyle style, MarkDrawer drawer){
         if(Vars.headless) return;
 
@@ -207,7 +213,9 @@ public class WHCutsceneUI{
         worldMarks.add(mark);
     }
 
-    /** 注册指定样式的自定义绘制器；传 null 可移除样式覆盖。 */
+    /**
+     * Cutscene UI bridge layer for signal/info/curtain effects.
+ */
     public void setMarkDrawer(MarkStyle style, MarkDrawer drawer){
         if(style == null) return;
         if(drawer == null){
@@ -218,7 +226,9 @@ public class WHCutsceneUI{
     }
 
 
-    /** 在 world 层绘制所有标记（由 Trigger 调用）。 */
+    /**
+     * Cutscene UI bridge layer for signal/info/curtain effects.
+ */
     public void drawMarks(){
         if(Vars.headless || worldMarks.isEmpty()) return;
         if(state == null || !state.isGame()) return;
@@ -284,3 +294,5 @@ public class WHCutsceneUI{
         MarkDrawer drawer;
     }
 }
+
+

@@ -917,7 +917,7 @@ public final class ActionStatements{
         public String x = "0";
         public String y = "0";
         public String angle = "90";
-        public String delaySec = "0";
+        public String delaySec = "5";
         public String inaccuracy = "0";
         public String shield = "-1";
         public String status = "@none";
@@ -1028,7 +1028,7 @@ public final class ActionStatements{
 
                     Runnable spawnOne = () -> {
                         Spawner spawner = new Spawner();
-                        Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread));
+                        Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread) * tilesize);
                         spawner.init(unitType, teamVal, new Vec2(worldX + Tmp.v1.x, worldY + Tmp.v1.y), angleVal, delay, false);
                         spawner.setShieldToApply(shieldVal);
                         spawner.setStatus(statusVal, statusDurVal);
@@ -1073,13 +1073,13 @@ public final class ActionStatements{
         public String x = "0";
         public String y = "0";
         public String angle = "90";
-        public String delaySec = "0";
-        public String inaccuracy = "0";
+        public String delaySec = "10";
+        public String inaccuracy = "10";
         public String shield = "-1";
         public String status = "@none";
         public String statusDuration = "0";
         public String spawnerCount = "1";
-        public String spawnerIntervalSec = "0";
+        public String spawnerIntervalSec = "2";
 
         public RiftSpawnerStatement(){
         }
@@ -1184,7 +1184,7 @@ public final class ActionStatements{
 
                     Runnable spawnOne = () -> {
                         RiftSpawner spawner = new RiftSpawner();
-                        Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread));
+                        Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread) * tilesize);
                         spawner.init(unitType, teamVal, new Vec2(worldX + Tmp.v1.x, worldY + Tmp.v1.y), angleVal, delay);
                         spawner.setShieldToApply(shieldVal);
                         spawner.setStatus(statusVal, statusDurVal);
@@ -1607,7 +1607,7 @@ public final class ActionStatements{
                     float targetY = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vdy), 0f, exec);
                     float spread = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vspread), 80f, exec);
 
-                    Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread));
+                    Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread) * tilesize);
                     float dst = Mathf.dst(sourceX, sourceY, targetX, targetY);
                     float ang = Angles.angle(sourceX, sourceY, targetX, targetY);
                     BulletType type = ActionLogicSupport.raidBullet(bulletID);

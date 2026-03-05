@@ -26,10 +26,10 @@ import java.util.concurrent.atomic.*;
 import static mindustry.Vars.*;
 
 /**
- * NH-compat parser:
- * defaultraid <flag> <timer> <alertTime> <raidTime> <bulletDamage> <bulletSpeed> <bulletCount> <inaccuracy>
+ * WH parser (prefixed to avoid mod conflicts):
+ * wh-defaultraids <flag> <timer> <alertTime> <raidTime> <bulletDamage> <bulletSpeed> <bulletCount> <inaccuracy>
  */
-public class DefaultRaid extends LStatement{
+public class DefaultRaids extends LStatement{
     public String flag = "turret";
     public String timer = "event-timer";
     public String alertTime = "30";
@@ -39,7 +39,7 @@ public class DefaultRaid extends LStatement{
     public String bulletCount = "2";
     public String inaccuracy = "10";
 
-    public DefaultRaid(String[] tokens){
+    public DefaultRaids(String[] tokens){
         if(tokens.length > 1) flag = tokens[1];
         if(tokens.length > 2) timer = tokens[2];
         if(tokens.length > 3) alertTime = tokens[3];
@@ -50,7 +50,7 @@ public class DefaultRaid extends LStatement{
         if(tokens.length > 8) inaccuracy = tokens[8];
     }
 
-    public DefaultRaid(){
+    public DefaultRaids(){
     }
 
     @Override
@@ -105,7 +105,7 @@ public class DefaultRaid extends LStatement{
 
     @Override
     public void write(StringBuilder builder){
-        builder.append("defaultraid").append(" ")
+        builder.append("wh-defaultraids").append(" ")
         .append(flag).append(" ").append(timer).append(" ")
         .append(alertTime).append(" ").append(raidTime).append(" ")
         .append(bulletDamage).append(" ").append(bulletSpeed).append(" ")
@@ -214,7 +214,9 @@ public class DefaultRaid extends LStatement{
             raidCounter = 0;
             iconShown = false;
             labelShown = false;
-            state.rules.objectiveFlags.remove(flag.name);
+            if(gated && !flagKey.isEmpty()){
+                state.rules.objectiveFlags.remove(flagKey);
+            }
             RaidEventObjective objective = RaidEventObjective.find(key(timer));
             if(objective != null){
                 objective.finish();
@@ -269,7 +271,7 @@ public class DefaultRaid extends LStatement{
         }
 
         private void showLabel(){
-            WHCall.alertToastTable(1, -1, "[#ff7b69]Raid: []<" + (int)(target.x / tilesize) + ", " + (int)(target.y / tilesize) + ">");
+            WHCall.alertToastTable(-1, -1, "[#ff7b69]Raid: []<" + (int)(target.x / tilesize) + ", " + (int)(target.y / tilesize) + ">");
             labelShown = true;
         }
 
@@ -315,6 +317,9 @@ public class DefaultRaid extends LStatement{
         if(state == null || state.rules == null){
             return;
         }
+        if(!(Float.isFinite(time) && Float.isFinite(range) && Float.isFinite(sx) && Float.isFinite(sy) && Float.isFinite(tx) && Float.isFinite(ty))){
+            return;
+        }
 
         Team markerTeam = state.rules.waveTeam != null ? state.rules.waveTeam : Team.crux;
         float markerTicks = Math.max(1f, Math.max(0f, time) * Time.toSeconds);
@@ -328,7 +333,7 @@ public class DefaultRaid extends LStatement{
             RaidIndicator indicator = objective.raidIndicator();
             if(indicator != null){
                 indicator
-                .init(markerTeam.id, 5, markerRadius, timerKey)
+                .init(markerTeam.id, resolveHudIcon(text), markerRadius, timerKey)
                 .setPosition(Tmp.v2.set(sx, sy), Tmp.v3.set(tx, ty));
             }
         }
@@ -346,5 +351,13 @@ public class DefaultRaid extends LStatement{
         Actions.fadeOut(0.35f)
         );
         Sounds.uiChat.play();
+    }
+
+    private static int resolveHudIcon(String text){
+        if(text == null) return -1;
+        String t = text.trim();
+        if(t.equalsIgnoreCase("Airborne")) return 2;
+        if(t.equalsIgnoreCase("Raid")) return -1;
+        return -1;
     }
 }

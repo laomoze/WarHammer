@@ -38,6 +38,7 @@ public class WarnHUDPacket extends Packet{
     public void handled(){
         BAIS.setBytes(data);
         name = READ.str();
+        text = READ.str();
         time = READ.f();
         range = READ.f();
         sourceX = READ.f();
@@ -48,7 +49,7 @@ public class WarnHUDPacket extends Packet{
 
     @Override
     public void handleClient(){
-        DefaultRaid.clientAlertHud(name, text, time, range, sourceX, sourceY, targetX, targetY);
+        DefaultRaids.clientAlertHud(name, text, time, range, sourceX, sourceY, targetX, targetY);
     }
 
     @Override

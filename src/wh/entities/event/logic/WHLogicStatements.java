@@ -16,12 +16,14 @@ public class WHLogicStatements{
     public static void load(){
         autoTriggerCategory = new LCategory("wh-autotrigger", Pal.surge.cpy().lerp(Pal.gray, 0.25f));
 
-        registerStatement("raidcontrol", RaidControl::new, RaidControl::new);
-        registerStatement("defaultraid", DefaultRaid::new, DefaultRaid::new);
+        registerStatement("wh-raidcontrol", RaidControl::new, RaidControl::new);
+        registerStatement("wh-defaultraids", DefaultRaids::new, DefaultRaids::new);
         registerStatement("defaultairraid", DefaultAirborneRaid::new, DefaultAirborneRaid::new);
 
         registerStatement("wh-raid-unit", WHRaidUnitStatement::new, WHRaidUnitStatement::new);
-        /* registerStatement("wh-spawner-unit", WHSpawnerStatement::new, WHSpawnerStatement::new);*/
+
+        // Backward-compat parser for old typo opcode (write() used to emit this).
+        LAssembler.customParsers.put("wh-default-airborn", DefaultAirborneRaid::new);
         ActionStatements.load();
     }
 
