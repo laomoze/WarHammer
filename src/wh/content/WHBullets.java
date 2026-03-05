@@ -911,13 +911,15 @@ public final class WHBullets{
             trailChance = 0.2f;
             trailInterval = 3;
             trailWidth = 5f;
-            trailLength = 55;
+            trailLength = 30;
             trailInterp = Interp.slope;
 
             splashDamage = damage;
             splashDamageRadius = 120;
             splashDamagePierce = false;
             scaledSplashDamage = true;
+
+            hitBlinkTrail = despawnBlinkTrail = false;
 
             despawnHit = true;
             collides = false;

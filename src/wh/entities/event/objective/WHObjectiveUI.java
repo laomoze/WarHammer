@@ -18,8 +18,6 @@ import mindustry.graphics.*;
 import mindustry.ui.*;
 import wh.content.*;
 
-import java.util.concurrent.atomic.*;
-
 import static mindustry.Vars.*;
 
 /**
@@ -64,7 +62,9 @@ public final class WHObjectiveUI{
 
             removeOldPanel();
             preProcess();
+
             buildObjectiveTable();
+
             postProcess();
         }catch(Throwable t){
             Log.err(t);
@@ -98,7 +98,6 @@ public final class WHObjectiveUI{
             hudStatusTable = statusTable;
         }
     }
-
     private static void removeOldPanel(){
         if(hudWaves == null) return;
         Table old = hudWaves.find(panelName);
@@ -129,29 +128,16 @@ public final class WHObjectiveUI{
         Table panel = new Table(Tex.buttonEdge4, t -> {
             Table infoT = new Table();
             infoT.touchable = Touchable.childrenOnly;
+            final Object[] lastObjectiveSource = {null};
+            final int[] lastObjectiveCount = {-1};
 
             ImageButton button = new ImageButton(Icon.downOpen, Styles.clearNonei);
             button.clicked(() -> {
                 if(button.isChecked()){
-                    infoT.clear();
-                    infoT.table().padTop(4f);
-
-                    ScrollPane pane = infoT.pane(Styles.smallPane, i -> {
-                        i.top().left();
-                        i.defaults().growX().fillX().row();
-                        state.rules.objectives.each(mapObjective -> {
-                            Table objective = getObjectiveTable(mapObjective);
-                            i.row().collapser(objective, true, () -> isObjectiveActive(mapObjective))
-                            .growX()
-                            .fillX()
-                            .get()
-                            .setDuration(0.22f);
-                        });
-                    }).grow().maxHeight(getHeight() / 2f).get();
-
-                    pane.name = "pane";
-                    pane.setFadeScrollBars(true);
-                    pane.setForceScroll(false, true);
+                    rebuildObjectiveList(infoT);
+                    Object source = state == null || state.rules == null || state.rules.objectives == null ? null : state.rules.objectives.all;
+                    lastObjectiveSource[0] = source;
+                    lastObjectiveCount[0] = source == null ? 0 : state.rules.objectives.all.size;
                     infoT.exited(() -> Core.scene.unfocus(infoT));
                 }else{
                     Core.scene.unfocus(infoT);
@@ -163,16 +149,23 @@ public final class WHObjectiveUI{
                     button.setChecked(false);
                 }
             });
+            infoT.update(() -> {
+                if(!button.isChecked()) return;
+                if(state == null || state.rules == null || state.rules.objectives == null) return;
+
+                Object source = state.rules.objectives.all;
+                int size = state.rules.objectives.all.size;
+                if(source != lastObjectiveSource[0] || size != lastObjectiveCount[0]){
+                    rebuildObjectiveList(infoT);
+                    lastObjectiveSource[0] = source;
+                    lastObjectiveCount[0] = size;
+                }
+            });
 
             t.table(bl -> {
                 bl.table(table -> table.label(() -> {
-                    AtomicInteger activeCount = new AtomicInteger();
-                    state.rules.objectives.each(obj -> {
-                        if(isObjectiveActive(obj)){
-                            activeCount.getAndIncrement();
-                        }
-                    });
-                    return activeCount.get() == 0 ? "[lightgray]No Objective[]" : activeCount.get() + " Objective(s)";
+                    int activeCount = activeObjectiveCount();
+                    return activeCount == 0 ? "[lightgray]No Objective[]" : activeCount + " Objective(s)";
                 }).maxWidth(maxWidth - 40f).pad(8f, 16f, 8f, 0f).row()).growX().height(50f).marginLeft(10f);
                 bl.add(button).size(50f).padLeft(10f);
             }).growX().fillY().margin(4f).padBottom(4f);
@@ -183,6 +176,28 @@ public final class WHObjectiveUI{
         panel.name = panelName;
         panel.top().left();
         hudWaves.row().add(panel).left().top().margin(10f).growX().row();
+    }
+
+    private static void rebuildObjectiveList(Table infoT){
+        infoT.clear();
+        infoT.table().padTop(4f);
+
+        ScrollPane pane = infoT.pane(Styles.smallPane, i -> {
+            i.top().left();
+            i.defaults().growX().fillX().row();
+            for(MapObjectives.MapObjective mapObjective : state.rules.objectives.all){
+                Table objective = getObjectiveTable(mapObjective);
+                i.row().collapser(objective, true, () -> isObjectiveActive(mapObjective))
+                .growX()
+                .fillX()
+                .get()
+                .setDuration(0.22f);
+            }
+        }).grow().maxHeight(getHeight() / 2f).get();
+
+        pane.name = "pane";
+        pane.setFadeScrollBars(true);
+        pane.setForceScroll(false, true);
     }
 
     public static Table getObjectiveTable(MapObjectives.MapObjective e){
@@ -303,7 +318,7 @@ public final class WHObjectiveUI{
                 Floatp countup = obj::getCountup;
                 Floatp realTime = () -> obj.duration;
                 t.add(objectiveTable(
-                WHContent.raid,
+                WHContent.bombard,
                 () -> (int)countup.get(),
                 () -> (int)realTime.get(),
                 () -> UI.formatTime(countup.get()) + "/" + UI.formatTime(realTime.get()),
@@ -402,6 +417,17 @@ public final class WHObjectiveUI{
 
     public static float getHeight(){
         return Core.graphics.getHeight();
+    }
+
+    private static int activeObjectiveCount(){
+        if(state == null || state.rules == null || state.rules.objectives == null) return 0;
+        int active = 0;
+        for(MapObjectives.MapObjective objective : state.rules.objectives.all){
+            if(isObjectiveActive(objective)){
+                active++;
+            }
+        }
+        return active;
     }
 
     private static boolean isObjectiveActive(MapObjectives.MapObjective objective){

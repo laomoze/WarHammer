@@ -52,9 +52,12 @@ public class WHCall{
 
     public static Drawable getDrawable(int id){
         return switch(id){
-            case 1 -> new TextureRegionDrawable(WHContent.raid);
+            case 1 -> new TextureRegionDrawable(WHContent.bombard);
             case 2 -> new TextureRegionDrawable(WHContent.fleet);
-            case 3 -> new TextureRegionDrawable(WHContent.objective);
+            case 3 -> new TextureRegionDrawable(WHContent.airborne);
+            case 4 -> new TextureRegionDrawable(WHContent.strafeRegion);
+            case 5 -> new TextureRegionDrawable(WHContent.missileRegion);
+            case 6 -> new TextureRegionDrawable(WHContent.bombRegion);
             default -> new TextureRegionDrawable(WHContent.objective);
         };
     }

@@ -10,6 +10,7 @@ import arc.scene.actions.*;
 import arc.scene.style.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
+import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.entities.bullet.*;
@@ -31,7 +32,7 @@ import static wh.entities.event.logic.WHLogicStatements.registerStatement;
 
 /**
  * 将事件动作拆分为独立逻辑语句。
- * 所有语句复用 ActionInstruction 生命周期，统一处理计时与 yield。
+ * 所有语句复用 ActionInstruction 生命周期。
  */
 public final class ActionStatements{
     private ActionStatements(){
@@ -105,6 +106,12 @@ public final class ActionStatements{
             if(units == null || units.isEmpty()) return;
 
             arc.struct.Seq<UnitType> visible = units.select(u -> u != null && !u.internal && !u.isHidden());
+            if(visible.isEmpty()){
+                // 某些模式下 isHidden 可能把全部单位都过滤掉，回退到非 internal 列表。
+                visible = units.select(u -> u != null && !u.internal);
+            }
+            if(visible.isEmpty()) return;
+            final arc.struct.Seq<UnitType> pickUnits = visible;
 
             showSelectTable(button, (popup, hide) -> {
                 popup.clearChildren();
@@ -121,10 +128,67 @@ public final class ActionStatements{
                 list.left().top();
                 list.defaults().growX().pad(1f);
 
-                UIUtils.bindContentSearch(search, list, visible, candidate -> {
+                UIUtils.bindContentSearch(search, list, pickUnits, candidate -> {
                     list.button(b -> {
                         b.left();
-                        b.image(candidate.fullIcon == null ? candidate.uiIcon : candidate.fullIcon).size(18f).padRight(6f);
+                        TextureRegion iconRegion = candidate.fullIcon == null ? candidate.uiIcon : candidate.fullIcon;
+                        Drawable icon = iconRegion != null && iconRegion.found() ? new TextureRegionDrawable(iconRegion) : Icon.units;
+                        b.image(icon).size(18f).padRight(6f);
+                        String name = candidate.localizedName == null ? candidate.name : candidate.localizedName;
+                        Label label = new Label(compactLabelText(name));
+                        label.setFontScale(1.05f);
+                        b.add(label).left().growX();
+                    }, Styles.logicTogglet, () -> {
+                        setter.get(candidate);
+                        hide.run();
+                    }).growX().height(34f);
+                    list.row();
+                });
+
+                ScrollPane pane = new ScrollPane(list, Styles.smallPane);
+                pane.setScrollingDisabled(true, false);
+                pane.setFadeScrollBars(false);
+
+                float paneWidth = Vars.mobile ? 300f : 270f;
+                float paneHeight = Vars.mobile ? 330f : 250f;
+                root.add(pane).width(paneWidth).maxHeight(paneHeight).left().row();
+
+                popup.add(root).left();
+            });
+        }
+
+        protected void showStatusPickerCommon(Button button, arc.func.Cons<StatusEffect> setter){
+            arc.struct.Seq<StatusEffect> statuses = Vars.content.statusEffects();
+            if(statuses == null || statuses.isEmpty()) return;
+
+            arc.struct.Seq<StatusEffect> visible = statuses.select(s -> s != null && !s.isHidden());
+            if(visible.isEmpty()){
+                visible = statuses.select(s -> s != null);
+            }
+            if(visible.isEmpty()) return;
+            final arc.struct.Seq<StatusEffect> pickStatuses = visible;
+
+            showSelectTable(button, (popup, hide) -> {
+                popup.clearChildren();
+                popup.margin(2f);
+
+                Table root = new Table();
+                root.left().top();
+
+                TextField search = new TextField("");
+                search.setMessageText("search status...");
+                root.add(search).growX().height(34f).padBottom(4f).row();
+
+                Table list = new Table();
+                list.left().top();
+                list.defaults().growX().pad(1f);
+
+                UIUtils.bindContentSearch(search, list, pickStatuses, candidate -> {
+                    list.button(b -> {
+                        b.left();
+                        TextureRegion iconRegion = candidate.fullIcon == null ? candidate.uiIcon : candidate.fullIcon;
+                        Drawable icon = iconRegion != null && iconRegion.found() ? new TextureRegionDrawable(iconRegion) : Icon.units;
+                        b.image(icon).size(18f).padRight(6f);
                         String name = candidate.localizedName == null ? candidate.name : candidate.localizedName;
                         Label label = new Label(compactLabelText(name));
                         label.setFontScale(1.05f);
@@ -227,7 +291,9 @@ public final class ActionStatements{
             return new ActionInstruction(vr, vo){
                 private final Vec2 start = new Vec2();
                 private final Vec2 target = new Vec2();
-                private final Vec2 Tmp = new Vec2();
+                private final Vec2 tmp = new Vec2();
+                private boolean forcedCutscene = false;
+
                 @Override
                 protected boolean begin(LExecutor exec){
                     float sec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vSec), 0f, exec));
@@ -237,13 +303,18 @@ public final class ActionStatements{
                     );
                     if(sec <= 0f){
                         if(!Vars.headless){
+                            forcedCutscene = !Vars.control.input.logicCutscene;
                             Vars.control.input.logicCutscene = true;
                             Vars.control.input.logicCamSpeed = 10f;
                             Vars.control.input.logicCamPan = target;
+                            if(forcedCutscene){
+                                Vars.control.input.logicCutscene = false;
+                            }
                         }
                         return true;
                     }
                     if(!Vars.headless){
+                        forcedCutscene = !Vars.control.input.logicCutscene;
                         Vars.control.input.logicCutscene = true;
                         start.set(Core.camera.position);
                     }
@@ -256,9 +327,21 @@ public final class ActionStatements{
                 protected void update(LExecutor exec, float progress){
                     if(Vars.headless) return;
 
-                    Tmp.set(start).lerp(target, Mathf.clamp(progress));
+                    tmp.set(start).lerp(target, Mathf.clamp(progress));
                     Vars.control.input.logicCamSpeed = 10f;
-                    Vars.control.input.logicCamPan = Tmp;
+                    Vars.control.input.logicCamPan = tmp;
+                }
+
+                @Override
+                protected void end(LExecutor exec){
+                    if(!Vars.headless && forcedCutscene){
+                        Vars.control.input.logicCutscene = false;
+                    }
+                }
+
+                @Override
+                protected void cancel(LExecutor exec){
+                    end(exec);
                 }
             };
         }
@@ -296,19 +379,26 @@ public final class ActionStatements{
             final LVar vSec = builder.var(seconds);
             final LVar vo = builder.var(out);
             return new ActionInstruction(vr, vo){
+                private boolean forcedCutscene = false;
+
                 @Override
                 protected boolean begin(LExecutor exec){
                     float sec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vSec), 0f, exec));
                     if(sec <= 0f){
                         if(!Vars.headless){
+                            forcedCutscene = !Vars.control.input.logicCutscene;
                             Vars.control.input.logicCutscene = true;
                             Vars.control.input.logicCamSpeed = 1000f;
                             Tmp.v1.set(Vars.player);
                             Vars.control.input.logicCamPan = Tmp.v1;
+                            if(forcedCutscene){
+                                Vars.control.input.logicCutscene = false;
+                            }
                         }
                         return true;
                     }
                     if(!Vars.headless){
+                        forcedCutscene = !Vars.control.input.logicCutscene;
                         Vars.control.input.logicCutscene = true;
                     }
                     startTimed(sec * Time.toSeconds);
@@ -321,6 +411,18 @@ public final class ActionStatements{
                     Tmp.v1.set(Core.camera.position).lerpDelta(Vars.player, progress);
                     Vars.control.input.logicCamSpeed = 1000f;
                     Vars.control.input.logicCamPan = Tmp.v1;
+                }
+
+                @Override
+                protected void end(LExecutor exec){
+                    if(!Vars.headless && forcedCutscene){
+                        Vars.control.input.logicCutscene = false;
+                    }
+                }
+
+                @Override
+                protected void cancel(LExecutor exec){
+                    end(exec);
                 }
             };
         }
@@ -545,7 +647,7 @@ public final class ActionStatements{
                     if(totalTicks <= 0f){
                         return true;
                     }
-                    // 单条语句完成：淡入 -> 停留 -> 淡出。
+                    // 单条语句流程：淡入 -> 停留 -> 淡出。
                     startTimed(totalTicks);
                     return true;
                 }
@@ -816,7 +918,9 @@ public final class ActionStatements{
         public String angle = "90";
         public String delaySec = "0";
         public String inaccuracy = "0";
-        public String timerDelaySec = "0";
+        public String shield = "-1";
+        public String status = "@none";
+        public String statusDuration = "0";
 
         public JumpInStatement(){
         }
@@ -830,21 +934,34 @@ public final class ActionStatements{
             angle = tok(tokens, 6, angle);
             delaySec = tok(tokens, 7, delaySec);
             inaccuracy = tok(tokens, 8, inaccuracy);
-            timerDelaySec = tokNum(tokens, 9, timerDelaySec);
-            out = tok(tokens, 10, out);
+            shield = tokNum(tokens, 9, shield);
+            status = tok(tokens, 10, status);
+            statusDuration = tokNum(tokens, 11, statusDuration);
+            out = tok(tokens, 12, out);
         }
 
         @Override
         public void build(Table table){
+            rebuild(table);
+        }
+
+        private void rebuild(Table table){
+            table.clearChildren();
             fieldLabeled(table, "run ", run, v -> run = v, 64f);
             fieldLabeled(table, " unit ", unit, v -> unit = v, 100f);
             TextButton unitPick = new TextButton("pick", Styles.logict);
-            unitPick.clicked(() -> showUnitPickerCommon(unitPick, selected -> unit = "@" + selected.name));
+            unitPick.clicked(() -> showUnitPickerCommon(unitPick, selected -> {
+                unit = "@" + selected.name;
+                rebuild(table);
+            }));
             table.add(unitPick).size(64f, 32f).padLeft(2f);
             table.row();
             fieldLabeled(table, "team ", team, v -> team = v, 100f);
             TextButton teamPick = new TextButton("pick", Styles.logict);
-            teamPick.clicked(() -> showTeamPickerCommon(teamPick, selected -> team = "@" + selected.name));
+            teamPick.clicked(() -> showTeamPickerCommon(teamPick, selected -> {
+                team = "@" + selected.name;
+                rebuild(table);
+            }));
             table.add(teamPick).size(64f, 32f).padLeft(2f);
             table.row();
             fieldLabeled(table, "x ", x, v -> x = v, 82f);
@@ -854,7 +971,16 @@ public final class ActionStatements{
             fieldLabeled(table, "delay ", delaySec, v -> delaySec = v, 90f);
             fieldLabeled(table, " spread ", inaccuracy, v -> inaccuracy = v, 90f);
             table.row();
-            fieldLabeled(table, " tDelay ", timerDelaySec, v -> timerDelaySec = v, 84f);
+            fieldLabeled(table, " shield ", shield, v -> shield = v, 84f);
+            fieldLabeled(table, " status ", status, v -> status = v, 110f);
+            TextButton statusPick = new TextButton("pick", Styles.logict);
+            statusPick.clicked(() -> showStatusPickerCommon(statusPick, selected -> {
+                status = "@" + selected.name;
+                rebuild(table);
+            }));
+            table.add(statusPick).size(64f, 32f).padLeft(2f);
+            table.row();
+            fieldLabeled(table, " statusDuration ", statusDuration, v -> statusDuration = v, 84f);
             fieldLabeled(table, " result ", out, v -> out = v, 90f);
         }
 
@@ -868,9 +994,11 @@ public final class ActionStatements{
             final LVar va = builder.var(angle);
             final LVar vd = builder.var(delaySec);
             final LVar vi = builder.var(inaccuracy);
-            final LVar vTimerDelay = builder.var(timerDelaySec);
+            final LVar vShield = builder.var(shield);
+            final LVar vStatus = builder.var(status);
+            final LVar vStatusDur = builder.var(statusDuration);
             final LVar vo = builder.var(out);
-            final String autoTimerKeyBase = "jumpin-" + Math.abs((unit + "|" + team + "|" + x + "|" + y + "|" + angle).hashCode());
+            final String autoTimerKeyBase = "jumpin-" + Math.abs((unit + "|" + team + "|" + x + "|" + y + "|" + angle + "|" + shield + "|" + status + "|" + statusDuration).hashCode());
             return new ActionInstruction(vr, vo){
                 @Override
                 protected boolean begin(LExecutor exec){
@@ -881,18 +1009,22 @@ public final class ActionStatements{
                     float angleVal = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(va), 0f, exec);
                     float delay = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vd), 0f, exec) * Time.toSeconds;
                     float spread = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vi), 0f, exec);
+                    float shieldVal = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vShield), -1f, exec);
+                    StatusEffect statusVal = ActionLogicSupport.parseStatusEffect(ActionLogicSupport.valueText(vStatus), null);
+                    float statusDurVal = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vStatusDur), 0f, exec));
 
                     Spawner spawner = new Spawner();
                     Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread));
                     spawner.init(unitType, teamVal, new Vec2(worldX + Tmp.v1.x, worldY + Tmp.v1.y), angleVal, delay, false);
+                    spawner.setShieldToApply(shieldVal);
+                    spawner.setStatus(statusVal, statusDurVal);
                     spawner.add();
 
-                    float objectiveDelaySec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vTimerDelay), 0f, exec));
                     String timerKey = autoTimerKeyBase;
                     if(exec != null && exec.build != null){
                         timerKey += "-" + exec.build.id;
                     }
-                    JumpInTriggerObjective.obtain(timerKey).trigger(DEFAULT_TIMER_DURATION_SEC * Time.toSeconds, objectiveDelaySec);
+                    JumpInTriggerObjective.obtain(timerKey).trigger(DEFAULT_TIMER_DURATION_SEC * Time.toSeconds, 0f);
                     return true;
                 }
             };
@@ -900,7 +1032,364 @@ public final class ActionStatements{
 
         @Override
         public void write(StringBuilder builder){
-            writeCommon(builder, "wh-jump-in", unit, team, x, y, angle, delaySec, inaccuracy, timerDelaySec);
+            writeCommon(builder, "wh-jump-in", unit, team, x, y, angle, delaySec, inaccuracy, shield, status, statusDuration);
+        }
+    }
+
+    /** 使用 AirborneSpawner 生成多单位跳入。 */
+
+    /** `units` 支持逗号/分号/竖线/空白分隔。 */
+    /** Spawn one unit using RiftSpawner. */
+    public static class RiftSpawnerStatement extends BaseActionStatement{
+        private static final float DEFAULT_TIMER_DURATION_SEC = 3f;
+
+        public String unit = "@alpha";
+        public String team = "@crux";
+        public String x = "0";
+        public String y = "0";
+        public String angle = "90";
+        public String delaySec = "0";
+        public String inaccuracy = "0";
+        public String shield = "-1";
+        public String status = "@none";
+        public String statusDuration = "0";
+
+        public RiftSpawnerStatement(){
+        }
+
+        public RiftSpawnerStatement(String[] tokens){
+            run = tok(tokens, 1, run);
+            unit = tok(tokens, 2, unit);
+            team = tok(tokens, 3, team);
+            x = tok(tokens, 4, x);
+            y = tok(tokens, 5, y);
+            angle = tok(tokens, 6, angle);
+            delaySec = tok(tokens, 7, delaySec);
+            inaccuracy = tok(tokens, 8, inaccuracy);
+            shield = tokNum(tokens, 9, shield);
+            status = tok(tokens, 10, status);
+            statusDuration = tokNum(tokens, 11, statusDuration);
+            out = tok(tokens, 12, out);
+        }
+
+        @Override
+        public void build(Table table){
+            rebuild(table);
+        }
+
+        private void rebuild(Table table){
+            table.clearChildren();
+            fieldLabeled(table, "run ", run, v -> run = v, 64f);
+            fieldLabeled(table, " unit ", unit, v -> unit = v, 100f);
+            TextButton unitPick = new TextButton("pick", Styles.logict);
+            unitPick.clicked(() -> showUnitPickerCommon(unitPick, selected -> {
+                unit = "@" + selected.name;
+                rebuild(table);
+            }));
+            table.add(unitPick).size(64f, 32f).padLeft(2f);
+            table.row();
+            fieldLabeled(table, "team ", team, v -> team = v, 100f);
+            TextButton teamPick = new TextButton("pick", Styles.logict);
+            teamPick.clicked(() -> showTeamPickerCommon(teamPick, selected -> {
+                team = "@" + selected.name;
+                rebuild(table);
+            }));
+            table.add(teamPick).size(64f, 32f).padLeft(2f);
+            table.row();
+            fieldLabeled(table, "x ", x, v -> x = v, 82f);
+            fieldLabeled(table, " y ", y, v -> y = v, 82f);
+            fieldLabeled(table, " ang ", angle, v -> angle = v, 82f);
+            table.row();
+            fieldLabeled(table, "delay ", delaySec, v -> delaySec = v, 90f);
+            fieldLabeled(table, " spread ", inaccuracy, v -> inaccuracy = v, 90f);
+            table.row();
+            fieldLabeled(table, " shield ", shield, v -> shield = v, 84f);
+            fieldLabeled(table, " status ", status, v -> status = v, 110f);
+            TextButton statusPick = new TextButton("pick", Styles.logict);
+            statusPick.clicked(() -> showStatusPickerCommon(statusPick, selected -> {
+                status = "@" + selected.name;
+                rebuild(table);
+            }));
+            table.add(statusPick).size(64f, 32f).padLeft(2f);
+            table.row();
+            fieldLabeled(table, " statusDuration ", statusDuration, v -> statusDuration = v, 84f);
+            fieldLabeled(table, " result ", out, v -> out = v, 90f);
+        }
+
+        @Override
+        public LExecutor.LInstruction build(LAssembler builder){
+            final LVar vr = builder.var(run);
+            final LVar vu = builder.var(unit);
+            final LVar vt = builder.var(team);
+            final LVar vx = builder.var(x);
+            final LVar vy = builder.var(y);
+            final LVar va = builder.var(angle);
+            final LVar vd = builder.var(delaySec);
+            final LVar vi = builder.var(inaccuracy);
+            final LVar vShield = builder.var(shield);
+            final LVar vStatus = builder.var(status);
+            final LVar vStatusDur = builder.var(statusDuration);
+            final LVar vo = builder.var(out);
+            final String autoTimerKeyBase = "riftspawner-" + Math.abs((unit + "|" + team + "|" + x + "|" + y + "|" + angle + "|" + shield + "|" + status + "|" + statusDuration).hashCode());
+            return new ActionInstruction(vr, vo){
+                @Override
+                protected boolean begin(LExecutor exec){
+                    UnitType unitType = ActionLogicSupport.parseUnitType(ActionLogicSupport.valueText(vu));
+                    Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vt), Team.derelict);
+                    float worldX = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vx), 0f, exec);
+                    float worldY = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vy), 0f, exec);
+                    float angleVal = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(va), 0f, exec);
+                    float delay = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vd), 0f, exec) * Time.toSeconds;
+                    float spread = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vi), 0f, exec);
+                    float shieldVal = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vShield), -1f, exec);
+                    StatusEffect statusVal = ActionLogicSupport.parseStatusEffect(ActionLogicSupport.valueText(vStatus), null);
+                    float statusDurVal = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vStatusDur), 0f, exec));
+
+                    RiftSpawner spawner = new RiftSpawner();
+                    Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread));
+                    spawner.init(unitType, teamVal, new Vec2(worldX + Tmp.v1.x, worldY + Tmp.v1.y), angleVal, delay, false);
+                    spawner.setShieldToApply(shieldVal);
+                    spawner.setStatus(statusVal, statusDurVal);
+                    spawner.add();
+
+                    String timerKey = autoTimerKeyBase;
+                    if(exec != null && exec.build != null){
+                        timerKey += "-" + exec.build.id;
+                    }
+                    JumpInTriggerObjective.obtain(timerKey).trigger(DEFAULT_TIMER_DURATION_SEC * Time.toSeconds, 0f);
+                    return true;
+                }
+            };
+        }
+
+        @Override
+        public void write(StringBuilder builder){
+            writeCommon(builder, "wh-rift-spawn", unit, team, x, y, angle, delaySec, inaccuracy, shield, status, statusDuration);
+        }
+    }
+
+    public static class AirborneJumpInStatement extends BaseActionStatement{
+        private static final float DEFAULT_TIMER_DURATION_SEC = 3f;
+        private static final int MAX_AIRBORNE_UNITS = 4;
+
+        public String units = "@alpha";
+        public String team = "@crux";
+        public String x = "0";
+        public String y = "0";
+        public String delaySec = "5";
+        public String inaccuracy = "10";
+        public String shield = "100";
+        public String status = "@none";
+        public String statusDuration = "120";
+        public String spawnerCount = "3";
+        public String spawnerIntervalSec = "3";
+
+        public AirborneJumpInStatement(){
+        }
+
+        public AirborneJumpInStatement(String[] tokens){
+            run = tok(tokens, 1, run);
+            units = tok(tokens, 2, units);
+            team = tok(tokens, 3, team);
+            x = tok(tokens, 4, x);
+            y = tok(tokens, 5, y);
+            delaySec = tok(tokens, 6, delaySec);
+            inaccuracy = tok(tokens, 7, inaccuracy);
+            shield = tokNum(tokens, 8, shield);
+            status = tok(tokens, 9, status);
+            statusDuration = tokNum(tokens, 10, statusDuration);
+            spawnerCount = tokNum(tokens, 11, spawnerCount);
+            spawnerIntervalSec = tokNum(tokens, 12, spawnerIntervalSec);
+            out = tok(tokens, 13, out);
+        }
+
+        @Override
+        public void build(Table table){
+            rebuild(table);
+        }
+
+        private void rebuild(Table table){
+            table.clearChildren();
+
+            int parsedCount = parseUnitList(units).size;
+            fieldLabeled(table, "run ", run, v -> run = v, 64f);
+            fieldLabeled(table, " units ", units, v -> units = v, 180f);
+            TextButton unitPick = new TextButton("pick", Styles.logict);
+            unitPick.clicked(() -> showUnitPickerCommon(unitPick, selected -> {
+                String token = "@" + selected.name;
+                String current = units == null ? "" : units.trim();
+                units = current.isEmpty() ? token : current + "," + token;
+                rebuild(table);
+            }));
+            table.add(unitPick).size(64f, 32f).padLeft(2f);
+            TextButton unitDetail = new TextButton("detail", Styles.logict);
+            unitDetail.clicked(this::showUnitDetailDialog);
+            table.add(unitDetail).size(74f, 32f).padLeft(2f);
+            TextButton unitCount = new TextButton("count " + parsedCount + "/" + MAX_AIRBORNE_UNITS, Styles.logict);
+            unitCount.clicked(() -> rebuild(table));
+            table.add(unitCount).size(106f, 32f).padLeft(2f);
+            table.row();
+            fieldLabeled(table, "team ", team, v -> team = v, 100f);
+            TextButton teamPick = new TextButton("pick", Styles.logict);
+            teamPick.clicked(() -> showTeamPickerCommon(teamPick, selected -> {
+                team = "@" + selected.name;
+                rebuild(table);
+            }));
+            table.add(teamPick).size(64f, 32f).padLeft(2f);
+            table.row();
+            fieldLabeled(table, "x ", x, v -> x = v, 82f);
+            fieldLabeled(table, " y ", y, v -> y = v, 82f);
+            fieldLabeled(table, "delay ", delaySec, v -> delaySec = v, 90f);
+            table.row();
+            fieldLabeled(table, " spread ", inaccuracy, v -> inaccuracy = v, 90f);
+            fieldLabeled(table, " shield ", shield, v -> shield = v, 70);
+            fieldLabeled(table, " status ", status, v -> status = v, 100);
+            TextButton statusPick = new TextButton("pick", Styles.logict);
+            statusPick.clicked(() -> showStatusPickerCommon(statusPick, selected -> {
+                status = "@" + selected.name;
+                rebuild(table);
+            }));
+            table.add(statusPick).size(64f, 32f).padLeft(2f);
+            table.row();
+            fieldLabeled(table, " statusDuration ", statusDuration, v -> statusDuration = v, 72f);
+            fieldLabeled(table, " count ", spawnerCount, v -> spawnerCount = v, 72f);
+            fieldLabeled(table, " IntervalSec ", spawnerIntervalSec, v -> spawnerIntervalSec = v, 72f);
+            table.row();
+            fieldLabeled(table, " result ", out, v -> out = v, 90f);
+        }
+
+        private arc.struct.Seq<UnitType> parseUnitList(String raw){
+            arc.struct.Seq<UnitType> parsed = new arc.struct.Seq<>();
+            String text = raw == null ? "" : raw.trim();
+            if(!text.isEmpty()){
+                String[] tokens = text.split("[,;|\\s]+");
+                for(String token : tokens){
+                    if(token == null) continue;
+                    String trimmed = token.trim();
+                    if(trimmed.isEmpty()) continue;
+                    parsed.add(ActionLogicSupport.parseUnitType(trimmed));
+                    if(parsed.size >= MAX_AIRBORNE_UNITS) break;
+                }
+            }
+            if(parsed.isEmpty()){
+                parsed.add(ActionLogicSupport.parseUnitType(text));
+            }
+            return parsed;
+        }
+
+        private int rawUnitCount(String raw){
+            String text = raw == null ? "" : raw.trim();
+            if(text.isEmpty()) return 0;
+            int count = 0;
+            String[] tokens = text.split("[,;|\\s]+");
+            for(String token : tokens){
+                if(token != null && !token.trim().isEmpty()) count++;
+            }
+            return count;
+        }
+
+        private void showUnitDetailDialog(){
+            arc.struct.Seq<UnitType> parsed = parseUnitList(units);
+            int rawCount = rawUnitCount(units);
+
+            mindustry.ui.dialogs.BaseDialog dialog = new mindustry.ui.dialogs.BaseDialog("airborne units");
+            dialog.cont.pane(root -> {
+                root.left().defaults().left().pad(2f);
+
+                String rawText = units == null || units.trim().isEmpty() ? "(empty)" : units.trim();
+                root.add("raw: " + rawText).wrap().width(Vars.mobile ? 420f : 340f).left().row();
+                root.add("parsed: " + parsed.size + "/" + MAX_AIRBORNE_UNITS).color(Color.lightGray).left().row();
+                if(rawCount > MAX_AIRBORNE_UNITS){
+                    root.add("truncated to first " + MAX_AIRBORNE_UNITS + " units").color(Pal.remove).left().row();
+                }
+
+                root.row();
+                for(int i = 0; i < parsed.size; i++){
+                    UnitType type = parsed.get(i);
+                    if(type == null){
+                        root.add((i + 1) + ". null").left().row();
+                        continue;
+                    }
+                    String display = type.localizedName == null ? type.name : type.localizedName;
+                    root.add((i + 1) + ". " + display + " (" + type.name + ")").wrap().width(Vars.mobile ? 420f : 340f).left().row();
+                }
+            }).width(Vars.mobile ? 460f : 380f).maxHeight(Vars.mobile ? 420f : 300f);
+
+            dialog.buttons.defaults().size(130f, 54f);
+            dialog.buttons.button("@ok", dialog::hide);
+            dialog.show();
+        }
+
+        @Override
+        public LExecutor.LInstruction build(LAssembler builder){
+            final LVar vr = builder.var(run);
+            final LVar vus = builder.var(units);
+            final LVar vt = builder.var(team);
+            final LVar vx = builder.var(x);
+            final LVar vy = builder.var(y);
+            final LVar vd = builder.var(delaySec);
+            final LVar vi = builder.var(inaccuracy);
+            final LVar vShield = builder.var(shield);
+            final LVar vStatus = builder.var(status);
+            final LVar vStatusDur = builder.var(statusDuration);
+            final LVar vSpawnerCount = builder.var(spawnerCount);
+            final LVar vSpawnerInterval = builder.var(spawnerIntervalSec);
+            final LVar vo = builder.var(out);
+            final String autoTimerKeyBase = "airborne-jumpin-" + Math.abs((units + "|" + team + "|" + x + "|" + y + "|" + shield + "|" + status + "|" + statusDuration + "|" + spawnerCount + "|" + spawnerIntervalSec).hashCode());
+
+            return new ActionInstruction(vr, vo){
+                @Override
+                protected boolean begin(LExecutor exec){
+                    Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vt), Team.derelict);
+                    float worldX = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vx), 0f, exec);
+                    float worldY = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vy), 0f, exec);
+                    float delay = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vd), 0f, exec) * Time.toSeconds;
+                    float spread = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vi), 0f, exec);
+                    float shieldVal = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vShield), -1f, exec);
+                    StatusEffect statusVal = ActionLogicSupport.parseStatusEffect(ActionLogicSupport.valueText(vStatus), null);
+                    float statusDurVal = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vStatusDur), 0f, exec));
+                    int waves = Math.max(1, ActionLogicSupport.parseInt(ActionLogicSupport.valueText(vSpawnerCount), 1));
+                    float intervalSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vSpawnerInterval), 0f, exec));
+                    float intervalTicks = intervalSec * Time.toSeconds;
+
+                    Seq<UnitType> types = parseUnitList(ActionLogicSupport.valueText(vus));
+                    UnitType[] typeArray = new UnitType[Math.min(types.size, MAX_AIRBORNE_UNITS)];
+                    for(int i = 0; i < typeArray.length; i++){
+                        typeArray[i] = types.get(i);
+                    }
+
+                    Runnable spawnOne = () -> {
+                        AirborneSpawner spawner = new AirborneSpawner();
+                        Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread));
+                        spawner.init(teamVal, new Vec2(worldX + Tmp.v1.x, worldY + Tmp.v1.y), 0f, delay, typeArray);
+                        spawner.setShieldToApply(shieldVal);
+                        spawner.setStatus(statusVal, statusDurVal);
+                        spawner.add();
+                    };
+
+                    for(int i = 0; i < waves; i++){
+                        float spawnDelayTicks = intervalTicks * i;
+                        if(spawnDelayTicks <= 0f){
+                            spawnOne.run();
+                        }else{
+                            Time.run(spawnDelayTicks, spawnOne);
+                        }
+                    }
+
+                    String timerKey = autoTimerKeyBase;
+                    if(exec != null && exec.build != null){
+                        timerKey += "-" + exec.build.id;
+                    }
+                    float totalDurationSec = DEFAULT_TIMER_DURATION_SEC + Math.max(0, waves - 1) * intervalSec;
+                    JumpInTriggerObjective.obtain(timerKey).trigger(totalDurationSec * Time.toSeconds, 0f);
+                    return true;
+                }
+            };
+        }
+
+        @Override
+        public void write(StringBuilder builder){
+            writeCommon(builder, "wh-airborne-in", units, team, x, y, delaySec, inaccuracy, shield, status, statusDuration, spawnerCount, spawnerIntervalSec);
         }
     }
 
@@ -908,7 +1397,7 @@ public final class ActionStatements{
     public static class MarkWorldStatement extends BaseActionStatement{
         public String x = "0";
         public String y = "0";
-        public String radius = "80";
+        public String radius = "40";
         public String timeSec = "3";
         public String style = "0";
         public String team = "@sharded";
@@ -974,21 +1463,23 @@ public final class ActionStatements{
                     teamVal.color, ActionLogicSupport.markStyle(styleId),
                     (mx, my, mradius, progress, pulse, lifeTicks, maxLifeTicks, tint, markStyle, icon) -> {
                         Draw.z(Layer.flyingUnit + 1);
+                        Draw.blend(Blending.additive);
                         Draw.color(tint);
                         Draw.alpha(0.22f + progress * 0.14f);
                         Lines.stroke(2.2f);
                         Lines.circle(mx, my, mradius * pulse);
-
-                        Draw.alpha(0.95f);
+                        float fout = 1 - Mathf.curve(progress, 0.9f, 1f);
+                        Draw.alpha(0.95f * fout);
                         Lines.stroke(3.2f);
                         Drawn.circlePercent(mx, my, mradius + 1.5f, progress, 90f);
 
                         if(icon != null){
                             Draw.color(tint);
-                            Draw.alpha(0.98f);
-                            float size = Math.max(16f, mradius * 0.9f);
+                            Draw.alpha(0.98f * fout);
+                            float size = Math.max(16f, mradius * 0.9f * fout);
                             Draw.rect(icon, mx, my, size, size);
                         }
+                        Draw.blend(Blending.normal);
                     }
                     );
                     return true;
@@ -1085,7 +1576,7 @@ public final class ActionStatements{
         }
     }
 
-    /** 通讯面板：淡入 -> 停留 -> 淡出。 */
+    /** 通讯面板动画：淡入 -> 停留 -> 淡出。 */
     public static class SignalCutInStatement extends BaseActionStatement{
         public String fadeInSec = "1";
         public String holdSec = "1";
@@ -1147,7 +1638,7 @@ public final class ActionStatements{
                     if(totalSec <= 0f){
                         return true;
                     }
-                    // 总时长：淡入 + 停留 + 淡出
+                    // 总时长：淡入 + 停留 + 淡出。
                     startTimed(totalSec * Time.toSeconds);
                     return true;
                 }
@@ -1261,7 +1752,7 @@ public final class ActionStatements{
                     // 单条语句流程：淡入 -> 停留 -> 淡出。
                     Sounds.uiChat.play();
                     ActionContext.cutsceneUI.textLabel = new FLabel(val);
-                    // Use default UI font for better CJK coverage.
+                    // 使用默认 UI 字体以获得更好的中日韩字符覆盖。
                     ActionContext.cutsceneUI.textLabel.setStyle(Styles.defaultLabel);
                     ActionContext.cutsceneUI.textLabel.setColor(fontColor);
                     ActionContext.cutsceneUI.textLabel.setFontScale(scale);
@@ -1336,16 +1827,15 @@ public final class ActionStatements{
         public LExecutor.LInstruction build(LAssembler builder){
             final LVar vr = builder.var(run);
             final LVar vo = builder.var(out);
-            return exec -> {
-                if(vr != null && vr.numi() == 0){
-                    if(vo != null) vo.setnum(0f);
-                    return;
+            return new ActionInstruction(vr, vo){
+                @Override
+                protected boolean begin(LExecutor exec){
+                    if(!Vars.headless && Vars.ui != null && Vars.ui.hudfrag != null){
+                        Vars.ui.hudfrag.shown = false;
+                        Vars.control.input.config.forceHide();
+                    }
+                    return true;
                 }
-                if(!Vars.headless && Vars.ui != null && Vars.ui.hudfrag != null){
-                    Vars.ui.hudfrag.shown = false;
-                    Vars.control.input.config.forceHide();
-                }
-                if(vo != null) vo.setnum(1f);
             };
         }
 
@@ -1375,15 +1865,14 @@ public final class ActionStatements{
         public LExecutor.LInstruction build(LAssembler builder){
             final LVar vr = builder.var(run);
             final LVar vo = builder.var(out);
-            return exec -> {
-                if(vr != null && vr.numi() == 0){
-                    if(vo != null) vo.setnum(0f);
-                    return;
+            return new ActionInstruction(vr, vo){
+                @Override
+                protected boolean begin(LExecutor exec){
+                    if(!Vars.headless && Vars.ui != null && Vars.ui.hudfrag != null){
+                        Vars.ui.hudfrag.shown = true;
+                    }
+                    return true;
                 }
-                if(!Vars.headless && Vars.ui != null && Vars.ui.hudfrag != null){
-                    Vars.ui.hudfrag.shown = true;
-                }
-                if(vo != null) vo.setnum(1f);
             };
         }
 
@@ -1473,7 +1962,11 @@ public final class ActionStatements{
         public LExecutor.LInstruction build(LAssembler builder){
             final LVar vr = builder.var(run);
             final LVar vi = builder.var(icon);
-            final LVar vm = builder.var(text);
+            final LVar vt = builder.var(team);
+            final String textToken = text;
+            final LVar vTextVar = textToken != null && textToken.startsWith("$") && textToken.length() > 1
+            ? builder.var(textToken.substring(1))
+            : null;
             final LVar vo = builder.var(out);
             return new ActionInstruction(vr, vo){
 
@@ -1481,10 +1974,18 @@ public final class ActionStatements{
                 protected boolean begin(LExecutor exec){
                     if(Vars.headless) return true;
                     int iconId = ActionLogicSupport.parseInt(ActionLogicSupport.valueText(vi), 0);
-                    String message = ActionLogicSupport.parseText(ActionLogicSupport.valueText(vm));
+                    Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vt), Team.derelict);
+                    String message = ActionLogicSupport.parseText(
+                    vTextVar == null ? textToken : ActionLogicSupport.valueText(vTextVar)
+                    );
                     TextureRegion region = ActionLogicSupport.warningIcon(iconId);
                     if(region != null){
-                        UIUtils.showToast(new TextureRegionDrawable(region), "<< " + message + " >>", Sounds.none);
+                        UIUtils.showToast(
+                        new TextureRegionDrawable(region),
+                        "<< " + message + " >>",
+                        Sounds.none,
+                        teamVal == null ? Color.white : teamVal.color
+                        );
                     }
                     return true;
                 }
@@ -1568,6 +2069,8 @@ public final class ActionStatements{
         registerStatement("wh-input-lock", ActionStatements.InputLockStatement::new, ActionStatements.InputLockStatement::new);
         registerStatement("wh-input-unlock", ActionStatements.InputUnlockStatement::new, ActionStatements.InputUnlockStatement::new);
         registerStatement("wh-jump-in", ActionStatements.JumpInStatement::new, ActionStatements.JumpInStatement::new);
+        registerStatement("wh-rift-spawn", ActionStatements.RiftSpawnerStatement::new, ActionStatements.RiftSpawnerStatement::new);
+        registerStatement("wh-airborne-in", ActionStatements.AirborneJumpInStatement::new, ActionStatements.AirborneJumpInStatement::new);
         registerStatement("wh-mark-world", ActionStatements.MarkWorldStatement::new, ActionStatements.MarkWorldStatement::new);
         registerStatement("wh-raid", ActionStatements.RaidStatement::new, ActionStatements.RaidStatement::new);
         /*   registerStatement("wh-signal-fade", ActionStatements.SignalCutInStatement::new, ActionStatements.SignalCutInStatement::new);*/
@@ -1576,8 +2079,10 @@ public final class ActionStatements{
         registerStatement("wh-ui-show", ActionStatements.UIShowStatement::new, ActionStatements.UIShowStatement::new);
         registerStatement("wh-wait", ActionStatements.WaitStatement::new, ActionStatements.WaitStatement::new);
         registerStatement("wh-warning-icon", ActionStatements.WarningIconStatement::new, ActionStatements.WarningIconStatement::new);
-        registerStatement("wh-warning-sound", ActionStatements.WarningSoundStatement::new, ActionStatements.WarningSoundStatement::new);
+        /*   registerStatement("wh-warning-sound", ActionStatements.WarningSoundStatement::new, ActionStatements.WarningSoundStatement::new);*/
     }
 }
+
+
 
 

@@ -22,8 +22,8 @@ import wh.entities.event.ui.*;
 import java.util.*;
 
 /**
- * action 逻辑语句的公共工具方法。
- * 负责参数解析、资源映射、以及 UI 初始化辅助。
+ * Action 逻辑公共工具类。
+ * 负责参数解析、资源映射与过场 UI 辅助。
  */
 public final class ActionLogicSupport{
     private static int overlayPulseToken = 0;
@@ -31,7 +31,7 @@ public final class ActionLogicSupport{
     private ActionLogicSupport(){
     }
 
-    /** 将 Logic 变量安全转换为字符串值。 */
+    /** 将 Logic 变量安全转换为字符串。 */
     public static String valueText(LVar value){
         if(value == null) return "";
 
@@ -62,13 +62,13 @@ public final class ActionLogicSupport{
         return name;
     }
 
-    /** 支持脚本中的 [n] 转换为换行。 */
+    /** 支持脚本中的 `[n]` 转换为换行符。 */
     public static String parseText(String raw){
         if(raw == null) return "";
         return raw.replace("[n]", "\n");
     }
 
-    /** 解析 float，支持 @N 读取逻辑处理器下方 memory 单元。 */
+    /** 解析浮点数；支持 `@N` 从逻辑内存块读取。 */
     public static float parseFloat(String raw, float fallback, LExecutor exec){
         if(raw == null) return fallback;
         String token = raw.trim();
@@ -222,7 +222,7 @@ public final class ActionLogicSupport{
         return null;
     }
 
-    /** 安全解析 int。 */
+    /** 安全解析 `int`，失败时返回默认值。 */
     public static int parseInt(String raw, int fallback){
         if(raw == null) return fallback;
         String token = raw.trim();
@@ -234,7 +234,7 @@ public final class ActionLogicSupport{
         }
     }
 
-    /** 解析队伍字符串（名称或数字 ID）。 */
+    /** 解析队伍标识（名称或数字 ID）。 */
     public static Team parseTeam(String raw, Team fallback){
         if(raw == null) return fallback;
         String token = raw.trim();
@@ -284,6 +284,32 @@ public final class ActionLogicSupport{
         }
     }
 
+    /** 解析状态效果（名称或数字 ID）。 */
+    public static StatusEffect parseStatusEffect(String raw, StatusEffect fallback){
+        StatusEffect fb = fallback == null ? StatusEffects.none : fallback;
+        if(raw == null) return fb;
+
+        String token = raw.trim();
+        if(token.isEmpty()) return fb;
+        if(token.startsWith("@")) token = token.substring(1);
+
+        String lower = token.toLowerCase(Locale.ROOT);
+        if(lower.equals("none")) return StatusEffects.none;
+
+        StatusEffect byName = Vars.content.statusEffect(token);
+        if(byName != null) return byName;
+
+        try{
+            int id = Integer.parseInt(token);
+            arc.struct.Seq<StatusEffect> all = Vars.content.statusEffects();
+            if(all == null || id < 0 || id >= all.size) return fb;
+            StatusEffect byId = all.get(id);
+            return byId == null ? fb : byId;
+        }catch(Exception ignored){
+            return fb;
+        }
+    }
+
     /** 标记样式映射。 */
     public static MarkStyle markStyle(int style){
         return switch(style){
@@ -299,7 +325,7 @@ public final class ActionLogicSupport{
     public static TextureRegion warningIcon(int icon){
         return switch(icon){
             case 0 -> WHContent.fleet;
-            case 1 -> WHContent.raid;
+            case 1 -> WHContent.bombard;
             default -> WHContent.objective;
         };
     }
@@ -329,7 +355,7 @@ public final class ActionLogicSupport{
         };
     }
 
-    /** 保证过场 UI 已完成初始化。 */
+    /** 确保过场 UI 已完成初始化。 */
     public static void ensureCutsceneUI(){
         if(!Vars.headless){
             ActionContext.cutsceneUI.ensureSetup();
@@ -337,8 +363,8 @@ public final class ActionLogicSupport{
     }
 
     /**
-     * 短暂压暗屏幕再恢复到原目标亮度。
-     * 适合文本/提示出现时做过场感，不会长期锁死黑屏。
+     * 短暂压暗屏幕后恢复到原目标亮度。
+     * 适合文本/提示出现时的过场，不会长期锁死黑屏。
      */
     public static void pulseOverlay(float alpha, float holdTicks){
         if(Vars.headless) return;
@@ -352,7 +378,7 @@ public final class ActionLogicSupport{
         Time.run(Math.max(1f, holdTicks), () -> {
             if(Vars.headless) return;
             if(token != overlayPulseToken) return;
-            // 仅在没有更高优先级遮罩目标接管时才恢复。
+            // 仅在没有更高优先级遮罩接管时才恢复。
             if(ActionContext.cutsceneUI.targetOverlayAlpha <= peak + 0.001f){
                 ActionContext.cutsceneUI.targetOverlayAlpha = prev;
             }

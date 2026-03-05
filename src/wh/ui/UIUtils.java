@@ -298,6 +298,10 @@ public final class UIUtils{
     }
 
     public static void showToast(Drawable icon, String text, Sound sound){
+        showToast(icon, text, sound, Color.white);
+    }
+
+    public static void showToast(Drawable icon, String text, Sound sound, Color iconColor){
         if(state.isMenu()) return;
 
         scheduleToast(() -> {
@@ -310,8 +314,8 @@ public final class UIUtils{
                 }
             });
             table.margin(12);
-            table.image(icon).pad(3);
-            table.add(text).wrap().width(280f).get().setAlignment(Align.center, Align.center);
+            table.image(icon).pad(3).color(iconColor == null ? Color.white : iconColor);
+            table.add(text).wrap().width(LEN * 2).get().setAlignment(Align.center, Align.center);
             table.pack();
 
             //create container table which will align and move

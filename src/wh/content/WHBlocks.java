@@ -400,7 +400,7 @@ public final class WHBlocks{
                 consumeLiquid(WHLiquids.swageWater, 15 / 60f);
                 outputItem = new ItemStack(Items.graphite, 8);
                 drawer = new DrawMulti(new DrawRegion("-bottom"),
-                new DrawLiquidTile(Liquids.water),
+                new DrawLiquidTile(WHLiquids.swageWater),
                 new DrawPistons(){{
                     angleOffset = 45f;
                     sinMag = 3f;

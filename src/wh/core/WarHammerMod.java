@@ -6,8 +6,10 @@
 package wh.core;
 
 import arc.*;
+import arc.util.*;
 import mindustry.*;
 import mindustry.game.*;
+import mindustry.game.EventType.*;
 import mindustry.mod.*;
 import mindustry.net.*;
 import wh.content.*;
@@ -33,14 +35,16 @@ public class WarHammerMod extends Mod {
                 Core.app.post(() -> {
                     WHShaders.init();
                     MainRenderer.init();
+                    // HUD tree is rebuilt after world load; remount objective panel with a short delay.
+                    Time.runTask(10f, WHObjectiveUI::init);
                 });
             }
         });
 
-        // HUD tree is rebuilt after world load; remount objective panel with a short delay.
+        // If a cutscene/UI action hid vanilla HUD and flow exited early, recover on map enter.
         Events.on(EventType.WorldLoadEvent.class, e -> {
             if(!Vars.headless){
-                Core.app.post(() -> arc.util.Time.runTask(10f, WHObjectiveUI::init));
+                restoreVanillaHud();
             }
         });
 
@@ -52,8 +56,7 @@ public class WarHammerMod extends Mod {
             }
         });
 
-        // Draw world-space cutscene markers (e.g. raid target icon + ring progress).
-        Events.run(EventType.Trigger.draw, () -> {
+        Events.run(Trigger.draw, () -> {
             if(!Vars.headless){
                 ActionContext.cutsceneUI.drawMarks();
             }
@@ -62,6 +65,12 @@ public class WarHammerMod extends Mod {
 
     public static String name(String add) {
         return ModName + "-" + add;
+    }
+
+    private static void restoreVanillaHud(){
+        if(Vars.ui != null && Vars.ui.hudfrag != null){
+            Vars.ui.hudfrag.shown = true;
+        }
     }
 
     @Override

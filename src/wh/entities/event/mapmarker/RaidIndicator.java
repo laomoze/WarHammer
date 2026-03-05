@@ -35,12 +35,14 @@ public class RaidIndicator extends MapObjectives.PosMarker{
     }
 
     public TextureRegion icon(){
-        TextureRegion raid = WHContent.raid == null ? WHContent.fleet : WHContent.raid;
         return switch(icon){
-            case 1 -> raid;
-            case 2 -> WHContent.fleet;
-            case 3 -> WHContent.objective;
-            default -> WHContent.objective;
+            case 0 -> WHContent.objective;
+            case 1 -> WHContent.fleet;
+            case 2 -> WHContent.airborne;
+            case 3 -> WHContent.strafeRegion;
+            case 4 -> WHContent.missileRegion;
+            case 5 -> WHContent.bombRegion;
+            default -> WHContent.bombard;
         };
     }
 

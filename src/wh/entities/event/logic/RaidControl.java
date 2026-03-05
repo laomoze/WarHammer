@@ -260,6 +260,7 @@ public class RaidControl extends LStatement{
             float lifetimeScl = dst / base;
 
             Call.createBullet(bullet, shootTeam, sx + Tmp.v1.x, sy + Tmp.v1.y, ang, -1f, 1f, lifetimeScl);
+            bullet.shootEffect.at(sx, sy, ang);
         }
 
         private BulletType bulletType(){

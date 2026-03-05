@@ -16,14 +16,14 @@ import mindustry.graphics.*;
 import mindustry.ui.*;
 import wh.content.*;
 
+import static mindustry.Vars.state;
+
 /**
  * 过场 UI 桥接层。
  * 用于显示 signal/info/curtain 等逻辑动作效果。
  */
 public class WHCutsceneUI{
     private static final float OVERLAY_SPEED = 0.0065f;
-    private static final float markStroke = 2.2f;
-    private static final float markStrokeProgress = 3.2f;
 
     public WidgetGroup root;
     public WidgetGroup curtain;
@@ -100,7 +100,7 @@ public class WHCutsceneUI{
     private void buildTextTable(){
         textTable = new Table(Tex.buttonEdge3);
         textTable.touchable(() -> Touchable.disabled);
-        textTable.visible(() -> Vars.state != null && Vars.state.isGame());
+        textTable.visible(() -> state != null && state.isGame());
         textTable.color.a = 0f;
 
         textTable.pane(Styles.smallPane, t -> {
@@ -127,7 +127,7 @@ public class WHCutsceneUI{
     private void buildInfoTable(){
         infoTable = new Table(Tex.clear);
         infoTable.touchable(() -> Touchable.disabled);
-        infoTable.visible(() -> Vars.state != null && Vars.state.isGame());
+        infoTable.visible(() -> state != null && state.isGame());
         infoTable.color.a = 0f;
 
         infoTable.update(() -> {
@@ -158,7 +158,7 @@ public class WHCutsceneUI{
         if(built){
             curtain.color.a = Mathf.approachDelta(curtain.color.a, targetOverlayAlpha, overlayAlphaShiftSpeed);
         }
-        updateWorldMarks();
+        if(!state.isPaused()) updateWorldMarks();
     }
 
     /** 重置过场 UI 状态。 */
@@ -199,8 +199,8 @@ public class WHCutsceneUI{
         mark.x = x;
         mark.y = y;
         mark.radius = Math.max(8f, radius);
-        mark.lifeTicks = Math.max(1f, lifetime);
-        mark.maxLifeTicks = mark.lifeTicks;
+        mark.lifeTicks = 0f;
+        mark.maxLifeTicks = Math.max(0, lifetime);
         mark.color = color == null ? new Color(Pal.accent) : new Color(color);
         mark.style = style == null ? MarkStyle.defaultStyle : style;
         mark.drawer = drawer;
@@ -218,15 +218,15 @@ public class WHCutsceneUI{
     }
 
 
-    /** 在 world 层绘制所有标记（由 Trigger.draw 调用）。 */
+    /** 在 world 层绘制所有标记（由 Trigger 调用）。 */
     public void drawMarks(){
         if(Vars.headless || worldMarks.isEmpty()) return;
-        if(Vars.state == null || !Vars.state.isGame()) return;
+        if(state == null || !state.isGame()) return;
 
         Draw.z(Layer.flyingUnit + 1f);
         for(WorldMark mark : worldMarks){
             float progress = mark.maxLifeTicks <= 0.0001f ? 0f : Mathf.clamp(mark.lifeTicks / mark.maxLifeTicks);
-            float pulse = 1f + Mathf.absin(Time.time, 8f, 0.2f);
+            float pulse = 1f + Mathf.absin(Time.time, 8f, 0.1f);
             Color tint = mark.color == null ? Pal.accent : mark.color;
 
             TextureRegion icon = markIcon(mark.style);
@@ -249,8 +249,8 @@ public class WHCutsceneUI{
     private void updateWorldMarks(){
         for(int i = worldMarks.size - 1; i >= 0; i--){
             WorldMark mark = worldMarks.get(i);
-            mark.lifeTicks -= Time.delta;
-            if(mark.lifeTicks <= 0f){
+            mark.lifeTicks += Time.delta;
+            if(mark.lifeTicks >= mark.maxLifeTicks){
                 worldMarks.remove(i);
             }
         }

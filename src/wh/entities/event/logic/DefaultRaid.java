@@ -36,7 +36,7 @@ public class DefaultRaid extends LStatement{
     public String raidTime = "5";
     public String bulletDamage = "200";
     public String bulletSpeed = "1";
-    public String bulletCount = "5";
+    public String bulletCount = "2";
     public String inaccuracy = "10";
 
     public DefaultRaid(String[] tokens){
@@ -207,7 +207,6 @@ public class DefaultRaid extends LStatement{
             raidCounter = 0;
 
             WHCall.warnHudPacket(key(timer), alertSeconds, inaccuracy.numf(), source.x, source.y, target.x, target.y);
-            Log.info("Raid Alert: @ in @ seconds", key(timer), alertSeconds);
         }
 
         private void reset(String flagKey, boolean gated){
@@ -244,10 +243,10 @@ public class DefaultRaid extends LStatement{
             new WeightedOption(3f, () -> targetFlag.set(BlockFlag.generator)),
             new WeightedOption(3f, () -> targetFlag.set(BlockFlag.factory)),
             new WeightedOption(2f, () -> targetFlag.set(BlockFlag.storage)),
+            new WeightedOption(2f, () -> targetFlag.set(BlockFlag.drill)),
             new WeightedOption(1f, () -> targetFlag.set(BlockFlag.repair)),
             new WeightedOption(1f, () -> targetFlag.set(BlockFlag.battery)),
             new WeightedOption(1f, () -> targetFlag.set(BlockFlag.reactor)),
-            new WeightedOption(2f, () -> targetFlag.set(BlockFlag.drill)),
             new WeightedOption(1f, () -> targetFlag.set(BlockFlag.core))
             );
 
@@ -297,6 +296,7 @@ public class DefaultRaid extends LStatement{
             if(shootTeam == null) return;
 
             Call.createBullet(bullet, shootTeam, sx + Tmp.v1.x, sy + Tmp.v1.y, ang, dmg, speedScl, lifetimeScl);
+            bullet.shootEffect.at(sx + Tmp.v1.x, sy + Tmp.v1.y, ang);
         }
 
         private String key(LVar value){
@@ -328,7 +328,7 @@ public class DefaultRaid extends LStatement{
             RaidIndicator indicator = objective.raidIndicator();
             if(indicator != null){
                 indicator
-                .init(markerTeam.id, 1, markerRadius, timerKey)
+                .init(markerTeam.id, 5, markerRadius, timerKey)
                 .setPosition(Tmp.v2.set(sx, sy), Tmp.v3.set(tx, ty));
             }
         }
