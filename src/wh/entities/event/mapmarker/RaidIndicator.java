@@ -125,6 +125,8 @@ public class RaidIndicator extends MapObjectives.PosMarker{
         state.rules.objectives.each(mapObjective -> {
             if(mapObjective instanceof RaidEventObjective obj && Objects.equals(obj.key, timerName)){
                 progress.set(Mathf.clamp(obj.getCountup() / Math.max(1f, obj.duration)));
+            }else if(mapObjective instanceof AirborneRaidEventObjective obj && Objects.equals(obj.key, timerName)){
+                progress.set(Mathf.clamp(obj.getCountup() / Math.max(1f, obj.duration)));
             }
         });
         return progress.get();

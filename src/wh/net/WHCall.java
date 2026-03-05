@@ -15,14 +15,15 @@ public class WHCall{
     private WHCall(){
     }
 
-    public static void warnHudPacket(String timerName, float time, float range, float sx, float sy, float tx, float ty){
+    public static void warnHudPacket(String timerName, String text, float time, float range, float sx, float sy, float tx, float ty){
         if(Vars.net.server() || !Vars.net.active()){
-            DefaultRaid.clientAlertHud(timerName, time, range, sx, sy, tx, ty);
+            DefaultRaid.clientAlertHud(timerName, text, time, range, sx, sy, tx, ty);
         }
 
         if(Vars.net.server()){
             WarnHUDPacket packet = new WarnHUDPacket();
             packet.name = timerName == null ? "" : timerName;
+            packet.text = text == null ? "" : text;
             packet.time = time;
             packet.range = range;
             packet.sourceX = sx;

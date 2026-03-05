@@ -72,7 +72,7 @@ public class CoverdConveyor extends Block implements Autotiler{
         for (int i = 0; i < 5; i++) {
             coverdRegions[i] = Core.atlas.find(name + "-cover-" + i);
             for (int j = 0; j < 8; j++) {
-                CoRegions[i][j] = Core.atlas.find(name +"-"+ i + "-" + j);
+                CoRegions[i][j] = Core.atlas.find("dust-bottom" + "-" + i + "-" + j);
             }
             capRegion = Core.atlas.find(name + "-cap");
         }

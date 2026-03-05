@@ -327,6 +327,20 @@ public final class WHObjectiveUI{
                 ));
             }
 
+           /* if(e instanceof AirborneRaidEventObjective){
+                AirborneRaidEventObjective obj = (AirborneRaidEventObjective)e;
+                Floatp countup = obj::getCountup;
+                Floatp realTime = () -> obj.duration;
+                t.add(objectiveTable(
+                WHContent.airborne,
+                () -> (int)countup.get(),
+                () -> (int)realTime.get(),
+                () -> UI.formatTime(countup.get()) + "/" + UI.formatTime(realTime.get()),
+                () -> countup.get() >= realTime.get(),
+                false
+                ));
+            }*/
+
             if(e instanceof MapObjectives.DestroyBlockObjective){
                 MapObjectives.DestroyBlockObjective obj = (MapObjectives.DestroyBlockObjective)e;
                 t.add(objectiveTable(

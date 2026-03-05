@@ -237,7 +237,7 @@ public class RaidControl extends LStatement{
             float sy = sourceY.numf() * tilesize;
             float tx = targetX.numf() * tilesize;
             float ty = targetY.numf() * tilesize;
-            WHCall.warnHudPacket(timerKey, alertSeconds, inaccuracy.numf(), sx, sy, tx, ty);
+            WHCall.warnHudPacket(timerKey, "Raid", alertSeconds, inaccuracy.numf(), sx, sy, tx, ty);
         }
 
         private void createBullet(){

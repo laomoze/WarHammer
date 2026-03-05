@@ -73,7 +73,8 @@ public final class WHBlocks{
     electrolyzer, sporePress, cultivator,
     carbideCrucible,
 
-    cobaltNitrideChamber, largeSurgeSmelter, T2PhaseSynthesizer, T2CryofluidMixer,
+    cobaltNitrideChamber, armorCompressor,
+    largeSurgeSmelter, T2PhaseSynthesizer, T2CryofluidMixer,
 
     ceramiteSteelFoundry, T2ceramiteSteelFoundry, crystalEngraver, laserEngraver,
     moSurgeSmelter, ceramiteRefinery, ADMill,
@@ -166,14 +167,14 @@ public final class WHBlocks{
                 consumeItems(with(WHItems.oreSand, 8));
                 outputItem = new ItemStack(Items.sand, 6);
                 outputLiquid = new LiquidStack(Liquids.slag, 10 / 60f);
-                drawer = new DrawMulti(new DrawRegion("-bottom"),
+                drawer = new DrawMulti(new DrawDefault(),
                 new DrawRegion("-rotator", -4){{
                     spinSprite = true;
                 }},
                 new DrawGlowRegion("-glow"){{
                     color = Pal.slagOrange.cpy().lerp(Pal.turretHeat, 0.3f);
                 }},
-                new DrawDefault());
+                new DrawRegion("-top"));
                 craftEffect = Fx.smokeCloud;
                 updateEffect = new Effect(20, e -> {
                     color(Pal.gray, Color.lightGray, e.fin());
@@ -345,11 +346,13 @@ public final class WHBlocks{
                 consumeLiquid(Liquids.water, 6 / 60f);
                 outputItem = new ItemStack(WHItems.manganeseSteel, 4);
                 drawer = new DrawMulti(
+                new DrawRegion("-bottom"),
                 new DrawLiquidTile(Liquids.water){{
                     padding = 0.88f;
                 }},
                 new DrawDefault(),
                 new DrawCrucibleFlame(),
+                new DrawRegion("-mid"),
                 new DrawFlame(color){{
                     flameRadius = 6;
                 }});
@@ -632,6 +635,59 @@ public final class WHBlocks{
             }
         };
 
+        armorCompressor = new GenericCrafter("armor-compressor"){{
+            requirements(Category.crafting, with(WHItems.uranium, 50, WHItems.manganeseSteel, 50, Items.carbide, 30));
+
+            size = 3;
+            craftTime = 120f;
+            health = 1200;
+            hasItems = hasPower = true;
+            itemCapacity = 150;
+            consumePower(8f);
+            consumeItems(with(WHItems.chromium, 2, Items.metaglass, 2, Items.carbide, 1));
+            outputItem = new ItemStack(WHItems.armorAlloy, 1);
+            drawer = new DrawMulti(new DrawDefault(),
+            new DrawGlowRegion(){{
+                color = Color.valueOf("FFDEB5FF");
+                layer = Layer.effect;
+                glowIntensity = 0.7f;
+            }});
+            updateEffect = WHFx.hexagonSpread(Items.surgeAlloy.color, 5, 12f);
+            craftEffect = WHFx.hexagonSmoke(WHItems.armorAlloy.color, 30f, 1.2f, 10, 20f);
+            researchCostMultiplier = 0.6f;
+        }};
+
+
+        largeSurgeSmelter = new GenericCrafter("large-armor-smelter"){{
+            requirements(Category.crafting, with(WHItems.manganeseSteel, 120, WHItems.molybdenum, 180, Items.carbide, 120, WHItems.ceramite, 100));
+
+            size = 4;
+            craftTime = 120f;
+            health = 1200;
+            hasItems = hasPower = hasLiquids = true;
+            liquidCapacity = 50;
+            itemCapacity = 150;
+            consumePower(8f);
+            consumeItems(with(WHItems.manganese, 30, Items.silicon, 25, WHItems.manganeseSteel, 10));
+            consumeLiquid(WHLiquids.refinePromethium, 10 / 60f);
+            outputItem = new ItemStack(Items.surgeAlloy, 12);
+            drawer = new DrawMulti(new DrawDefault(),
+                   /* new DrawFlame() {{
+                        flameRadius = 0;
+                        flameRadiusIn = 0;
+                        flameRadiusMag = 0;
+                        flameRadiusInMag = 0;
+                        flameColor = Color.valueOf("F2E770");
+                    }},*/
+            new DrawGlowRegion(){{
+                color = Color.valueOf("FFDEB5FF");
+                layer = Layer.effect;
+                glowIntensity = 0.7f;
+            }});
+            updateEffect = WHFx.hexagonSpread(Items.surgeAlloy.color, 10f, 20f);
+            craftEffect = WHFx.hexagonSmoke(Items.surgeAlloy.color, 30f, 1.2f, 10, 20f);
+            researchCostMultiplier = 0.6f;
+        }};
 
 
         heatSiliconSmelter = new HeatCrafter("heat-silicon-smelter"){{
@@ -844,8 +900,6 @@ public final class WHBlocks{
         };
 
 
-
-
         T2CryofluidMixer = new GenericCrafter("t2-cryofluid-mixer"){
             {
                 requirements(Category.crafting, with(Items.silicon, 80, Items.tungsten, 50, WHItems.manganeseSteel, 50));
@@ -1021,39 +1075,6 @@ public final class WHBlocks{
                 WHFx.arcSmelt(Items.titanium.color, 13f, 6, 60f));
             }});
         }};*/
-
-
-
-        largeSurgeSmelter = new GenericCrafter("large-surge-smelter"){{
-            requirements(Category.crafting, with(WHItems.manganeseSteel, 120, WHItems.molybdenum, 180, Items.carbide, 120, WHItems.ceramite, 100));
-
-            size = 4;
-            craftTime = 120f;
-            health = 1200;
-            hasItems = hasPower = hasLiquids = true;
-            liquidCapacity = 50;
-            itemCapacity = 150;
-            consumePower(8f);
-            consumeItems(with(WHItems.manganese, 30, Items.silicon, 25, WHItems.manganeseSteel, 10));
-            consumeLiquid(WHLiquids.refinePromethium, 10 / 60f);
-            outputItem = new ItemStack(Items.surgeAlloy, 12);
-            drawer = new DrawMulti(new DrawDefault(),
-                   /* new DrawFlame() {{
-                        flameRadius = 0;
-                        flameRadiusIn = 0;
-                        flameRadiusMag = 0;
-                        flameRadiusInMag = 0;
-                        flameColor = Color.valueOf("F2E770");
-                    }},*/
-            new DrawGlowRegion(){{
-                color = Color.valueOf("FFDEB5FF");
-                layer = Layer.effect;
-                glowIntensity = 0.5f;
-            }});
-            updateEffect = WHFx.hexagonSpread(Items.surgeAlloy.color, 10f, 20f);
-            craftEffect = WHFx.hexagonSmoke(Items.surgeAlloy.color, 30f, 1.2f, 10, 20f);
-            researchCostMultiplier = 0.6f;
-        }};
 
         LiquidNitrogenPlant = new GenericCrafter("Liquid-nitrogen-plant"){{
 
@@ -1445,7 +1466,7 @@ public final class WHBlocks{
 
         lavaDrill = new Drill("lava-drill"){{
             requirements(Category.production, with(WHItems.manganese, 100, Items.silicon, 60, Items.plastanium, 50, WHItems.uranium, 70));
-            drillTime = 300;
+            drillTime = 360;
             size = 4;
             drawRim = true;
             hasPower = true;
@@ -1458,8 +1479,7 @@ public final class WHBlocks{
             warmupSpeed = 0.01f;
             itemCapacity = 50;
 
-            //more than the laser drill
-            liquidBoostIntensity = 1.8f;
+            liquidBoostIntensity = 2;
 
             consumePower(3f);
             consumeLiquid(Liquids.slag, 0.1f).boost();
@@ -1484,7 +1504,7 @@ public final class WHBlocks{
                 hasItems = hasPower = hasLiquids = true;
                 consumePower(4);
                 consumeLiquid(Liquids.water, 15f / 60f);
-                drillTime = 120;
+                drillTime = 110;
                 drillEffect = new MultiEffect(Fx.mineImpact, Fx.drillSteam, Fx.mineImpactWave.wrap(Pal.redLight, 40f));
                 researchCostMultiplier = 0.6f;
             }
@@ -2434,7 +2454,6 @@ public final class WHBlocks{
                 new DrawGlowRegion("-ventglow"){{
                     color = Color.valueOf("32603a");
                 }});
-
 
 
                 researchCostMultiplier = 0.6f;

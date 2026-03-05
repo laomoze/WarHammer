@@ -18,6 +18,7 @@ public class WHLogicStatements{
 
         registerStatement("raidcontrol", RaidControl::new, RaidControl::new);
         registerStatement("defaultraid", DefaultRaid::new, DefaultRaid::new);
+        registerStatement("defaultairraid", DefaultAirborneRaid::new, DefaultAirborneRaid::new);
 
         registerStatement("wh-raid-unit", WHRaidUnitStatement::new, WHRaidUnitStatement::new);
         /* registerStatement("wh-spawner-unit", WHSpawnerStatement::new, WHSpawnerStatement::new);*/

@@ -7,6 +7,7 @@ import wh.net.*;
 
 public class WarnHUDPacket extends Packet{
     public String name;
+    public String text;
     public float time;
     public float range;
     public float sourceX;
@@ -19,6 +20,7 @@ public class WarnHUDPacket extends Packet{
     @Override
     public void write(Writes write){
         write.str(name);
+        write.str(text);
         write.f(time);
         write.f(range);
         write.f(sourceX);
@@ -46,7 +48,7 @@ public class WarnHUDPacket extends Packet{
 
     @Override
     public void handleClient(){
-        DefaultRaid.clientAlertHud(name, time, range, sourceX, sourceY, targetX, targetY);
+        DefaultRaid.clientAlertHud(name, text, time, range, sourceX, sourceY, targetX, targetY);
     }
 
     @Override
@@ -54,6 +56,6 @@ public class WarnHUDPacket extends Packet{
         if(con.player == null || con.kicked){
             return;
         }
-        WHCall.warnHudPacket(name, time, range, sourceX, sourceY, targetX, targetY);
+        WHCall.warnHudPacket(name, text, time, range, sourceX, sourceY, targetX, targetY);
     }
 }

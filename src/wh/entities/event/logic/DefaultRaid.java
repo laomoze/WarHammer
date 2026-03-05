@@ -206,7 +206,7 @@ public class DefaultRaid extends LStatement{
             iconShown = true;
             raidCounter = 0;
 
-            WHCall.warnHudPacket(key(timer), alertSeconds, inaccuracy.numf(), source.x, source.y, target.x, target.y);
+            WHCall.warnHudPacket(key(timer), "Raid", alertSeconds, inaccuracy.numf(), source.x, source.y, target.x, target.y);
         }
 
         private void reset(String flagKey, boolean gated){
@@ -311,7 +311,7 @@ public class DefaultRaid extends LStatement{
         }
     }
 
-    public static void clientAlertHud(String timerName, float time, float range, float sx, float sy, float tx, float ty){
+    public static void clientAlertHud(String timerName, String text, float time, float range, float sx, float sy, float tx, float ty){
         if(state == null || state.rules == null){
             return;
         }
@@ -336,7 +336,7 @@ public class DefaultRaid extends LStatement{
         if(Vars.headless) return;
 
         ActionContext.cutsceneUI.ensureSetup();
-        String txt = "<< Raid: <" + (int)(tx / tilesize) + ", " + (int)(ty / tilesize) + "> >>";
+        String txt = "<<" + text + ": <" + (int)(tx / tilesize) + ", " + (int)(ty / tilesize) + "> >>";
         ActionContext.cutsceneUI.textLabel = new FLabel(txt);
         ActionContext.cutsceneUI.textArea.clear();
         ActionContext.cutsceneUI.textArea.add(ActionContext.cutsceneUI.textLabel).pad(4f, 32f, 4f, 32f);

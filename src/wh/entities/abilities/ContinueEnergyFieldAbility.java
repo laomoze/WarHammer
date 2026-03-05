@@ -17,6 +17,7 @@ import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
+import mindustry.world.meta.*;
 import wh.graphics.*;
 
 import static mindustry.Vars.*;
@@ -28,6 +29,7 @@ public class ContinueEnergyFieldAbility extends EnergyFieldAbility{
     public float shotsDelay, delay = 20;
     public float stroke = 1.3f;
     public float unitDamage;
+    public float healAmount = 50f;
     public Color color = Pal.heal;
 
     protected float timer, curStroke;
@@ -42,11 +44,36 @@ public class ContinueEnergyFieldAbility extends EnergyFieldAbility{
 
     @Override
     public void addStats(Table t){
-        super.addStats(t);
+        if(displayHeal){
+            t.add(Core.bundle.get(getBundle() + ".healdescription")).wrap().width(descriptionWidth);
+        }else{
+            t.add(Core.bundle.get(getBundle() + ".description")).wrap().width(descriptionWidth);
+        }
+        t.row();
+
+        t.add(Core.bundle.format("bullet.range", Strings.autoFixed(range / tilesize, 2)));
+        t.row();
+        t.add(abilityStat("firingrate", Strings.autoFixed(60f / reload, 2)));
+        t.row();
+        t.add(abilityStat("maxtargets", maxTargets));
         t.row();
         t.add(Core.bundle.format("stat.wh-shots", shots));
         t.row();
+        t.add(Core.bundle.format("bullet.damage", damage));
+        t.row();
         t.add(Core.bundle.format("stat.wh-unitDamage", unitDamage));
+        if(status != StatusEffects.none){
+            t.row();
+            t.add((status.hasEmoji() ? status.emoji() : "") + "[stat]" + status.localizedName).with(l -> StatValues.withTooltip(l, status));
+        }
+        if(displayHeal){
+            t.row();
+            t.add(Core.bundle.format("bullet.healpercent", Strings.autoFixed(healPercent, 2)));
+            t.row();
+            t.add(Core.bundle.format("bullet.healamount", Strings.autoFixed(healAmount, 2)));
+            t.row();
+            t.add(abilityStat("sametypehealmultiplier", (sameTypeHealMult < 1f ? "[negstat]" : "") + Strings.autoFixed(sameTypeHealMult * 100f, 2)));
+        }
     }
 
     @Override
@@ -164,7 +191,7 @@ public class ContinueEnergyFieldAbility extends EnergyFieldAbility{
                                     Tmp.v1.trns(unit.rotation - 90, x, y).add(unit.x, unit.y);
                                     anyNearby = true;
                                     float healMult = (other instanceof Unit u && u.type == unit.type) ? sameTypeHealMult : 1f;
-                                    other.heal(healPercent / 100f * other.maxHealth() * healMult);
+                                    other.heal(healPercent / 100f * other.maxHealth() * healMult + healAmount);
                                     healEffect.at(other);
                                     PositionLightning.createEffect(Tmp.v1, other, color, 2, Mathf.randomSeed(unit.id, 1.5f, 2.5f));
                                     hitEffect.at(rx, ry, unit.angleTo(other), color);
@@ -261,6 +288,11 @@ public class ContinueEnergyFieldAbility extends EnergyFieldAbility{
 
     @Override
     public String localized(){
-        return Core.bundle.format("ability." + name("ContinueEnergyFieldAbility"));
+        return Core.bundle.get(getBundle() + ".name");
+    }
+
+    @Override
+    public String getBundle(){
+        return "ability." + name("ContinueEnergyFieldAbility");
     }
 }

@@ -777,8 +777,8 @@ public final class WHFx{
     }
 
     public static Effect hexagonSpread(Color color, float sizeMin, float sizeMax){
-        return new Effect(20f, sizeMax * 2f, e -> {
-            color(Color.white, color, e.fin() + 0.15f);
+        return new Effect(30f, sizeMax * 2f, e -> {
+            color(color);
             if(e.id % 2 == 0){
                 stroke(1.5f * e.fout(Interp.pow3Out));
                 poly(e.x, e.y, 6, Mathf.randomSeed(e.id, sizeMin, sizeMax) * e.fin(Interp.pow2Out) + 3, 60);
@@ -795,7 +795,9 @@ public final class WHFx{
                 randLenVectors(e.id, 5, range + e.fin() * 18f, (x, y) -> {
                     color(color);
                     stroke(stroke);
+                    Fill.circle(e.x + x, e.y + y, size * 0.75f);
                     poly(e.x + x, e.y + y, 6, size * e.fout(Interp.pow2Out), 60);
+                    Drawf.light(e.x + x, e.y + y, size, color, 0.5f);
                     color();
                 });
             });

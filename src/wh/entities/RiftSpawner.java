@@ -73,7 +73,7 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
         return drawSize + 500f;
     }
 
-    public RiftSpawner init(UnitType type, Team team, Position pos, float rotation, float lifetime, boolean airdrop){
+    public RiftSpawner init(UnitType type, Team team, Position pos, float rotation, float lifetime){
         this.type = type;
         this.lifetime = lifetime;
         this.rotation = rotation;
@@ -198,23 +198,20 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
         if(alpha <= 0f || progress <= 0f) return;
         float drawRot = rotation() - 90f;
 
-        float topV = region.v;
-        float bottomV = region.v2;
+        float topV = region.v, bottomV = region.v2;
         float currentBottomV = Mathf.lerp(topV, bottomV, progress);
 
         Tmp.tr1.set(region);
         Tmp.tr1.set(region.u, topV, region.u2, currentBottomV);
         float offset = jumpOutForwardOffset(progress, region);
         Tmp.v2.trns(rotation(), offset);
-        float drawX = x + Tmp.v2.x;
-        float drawY = y + Tmp.v2.y;
+        float drawX = x + Tmp.v2.x, drawY = y + Tmp.v2.y;
+
         float lineLen = Mathf.clamp(type.hitSize * 1.6f, 12f, type.hitSize * 2.4f);
         Tmp.v3.trns(drawRot, -lineLen / 2f, 0f);
-        float lx1 = x + Tmp.v3.x;
-        float ly1 = y + Tmp.v3.y;
+        float lx1 = x + Tmp.v3.x, ly1 = y + Tmp.v3.y;
         Tmp.v3.trns(drawRot, lineLen / 2f, 0f);
-        float lx2 = x + Tmp.v3.x;
-        float ly2 = y + Tmp.v3.y;
+        float lx2 = x + Tmp.v3.x, ly2 = y + Tmp.v3.y;
 
         Draw.color(1f, 1f, 1f, alpha);
         Draw.rect(Tmp.tr1, drawX, drawY, drawRot);
@@ -433,7 +430,7 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
             Drawn.overlayText(
             Fonts.tech,
             String.valueOf(Mathf.ceil(Mathf.clamp((lifetime - riftTime) - time, 0, lifetime - riftTime) / 60f)),
-            x, y, 0f, 0f, Mathf.clamp(type.hitSize / 12, 0.3f, 0.7f), team.color, false, true
+            x, y, 0f, 0f, Mathf.clamp(type.hitSize / 12, 0.15f, 0.6f), team.color, false, true
             );
         }else{
             Draw.z(Layer.effect);
