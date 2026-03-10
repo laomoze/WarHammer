@@ -2,20 +2,15 @@ package wh.entities.bullet;
 
 
 import arc.graphics.*;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Fill;
-import arc.math.Angles;
-import arc.math.Interp;
-import arc.math.Mathf;
-import arc.util.Time;
-import mindustry.Vars;
-import mindustry.content.Fx;
-import mindustry.entities.Units;
-import mindustry.entities.bullet.BulletType;
-import mindustry.gen.Building;
-import mindustry.gen.Bullet;
-import mindustry.graphics.Layer;
-import mindustry.graphics.Pal;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.util.*;
+import mindustry.*;
+import mindustry.content.*;
+import mindustry.entities.*;
+import mindustry.entities.bullet.*;
+import mindustry.gen.*;
+import mindustry.graphics.*;
 import wh.entities.world.blocks.defense.turrets.*;
 
 
@@ -25,6 +20,7 @@ public class HealCone extends BulletType{
     public boolean percentHeal;
     public float healAmount = 20;
     public Color healColor = Pal.heal;
+    public boolean healUnit = true;
 
     public HealCone(float findAngle, float findRange){
         this(findAngle, findRange, true);
@@ -69,26 +65,22 @@ public class HealCone extends BulletType{
 
         float amountMt = b.owner instanceof MendTurret.MendTurretBuild mt ? mt.amountMti() : 1;
         float angleMt = (b.owner instanceof MendTurret.MendTurretBuild mt ? mt.angleMti() : 1) * in;
-        Units.nearby(b.team, b.x, b.y, findRange * in, unit -> {
+        if(healUnit) Units.nearby(b.team, b.x, b.y, findRange * in, unit -> {
             if(unit.damaged() && Angles.within(b.rotation(), b.angleTo(unit), (findAngle * angleMt) / 2) && unit != b.owner){
                 if(percentHeal) unit.heal((unit.maxHealth < 1000 ? 1000 : unit.maxHealth) * ((healPercent * amountMt) / ratio) * Time.delta);
                 unit.heal((healAmount * amountMt) / 60 * Time.delta);
             }
         });
+        boolean healFx = b.timer.get(30);
         Vars.indexer.eachBlock(b, findRange * in,
         other -> other.health < other.maxHealth - 0.001f && Angles.within(b.rotation(), b.angleTo(other), (findAngle * angleMt) / 2),
         other -> {
             if(percentHeal) other.heal((healPercent / ratio) * other.maxHealth * Time.delta);
             other.heal((healAmount * amountMt) / 60 * Time.delta);
+            if(healFx && other.block != null){
+                Fx.healBlockFull.at(other.x, other.y, 0, Pal.heal, other.block);
+            }
         });
-        //maybe can Mmm...Combine these two code and heal every second
-        if(b.timer.get(30)){
-            Vars.indexer.eachBlock(b, findRange * in,
-            other -> other.health < other.maxHealth - 0.001f && Angles.within(b.rotation(), b.angleTo(other), (findAngle * angleMt) / 2),
-            other -> {
-                if(other.block != null) Fx.healBlockFull.at(other.x, other.y, 0, Pal.heal, other.block);
-            });
-        }
     }
 
     @Override

@@ -7,6 +7,7 @@ import arc.util.io.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.world.blocks.defense.*;
+import mindustry.world.meta.*;
 import wh.content.*;
 
 import static mindustry.Vars.*;
@@ -14,12 +15,26 @@ import static mindustry.Vars.*;
 public class ReactionArmorWall extends Wall{
     public int frequency = 10;
     public int immunityAccount = 2;
-    public float damageReduction = 0f;
+    public float damageReduction = 0.03f;
     public float maxShareStep = 2f;
     public boolean shareDamage = false;
 
     public ReactionArmorWall(String name){
         super(name);
+    }
+
+    @Override
+    public void setStats(){
+        super.setStats();
+
+        // trigger condition in current logic is hitCount > frequency, i.e. frequency + 1 hits
+        stats.add(WHStats.reactionArmorTriggerHits, frequency);
+        stats.add(WHStats.reactionArmorLayers, immunityAccount);
+
+        if(shareDamage){
+            stats.add(WHStats.sharedDamageReduction, damageReduction * 100f, StatUnit.percent);
+            stats.add(Stat.range, maxShareStep, StatUnit.blocks);
+        }
     }
 
     public class ReactionArmorWallBuild extends WallBuild{
@@ -46,7 +61,7 @@ public class ReactionArmorWall extends Wall{
                 immunity++;
             }else hitCount++;
 
-            if(hitCount > frequency){
+            if(hitCount >= frequency){
                 hitCount = 0;
                 immunity = immunityAccount;
                 isImmune = true;

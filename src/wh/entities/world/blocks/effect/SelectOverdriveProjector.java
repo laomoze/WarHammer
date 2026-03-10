@@ -1,31 +1,29 @@
 package wh.entities.world.blocks.effect;
 
 import arc.*;
-import arc.func.Cons2;
+import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
-import arc.scene.style.TextureRegionDrawable;
-import arc.struct.IntSeq;
-import arc.struct.Seq;
+import arc.scene.style.*;
+import arc.struct.*;
 import arc.util.*;
 import arc.util.io.*;
-import mindustry.content.StatusEffects;
-import mindustry.entities.Effect;
-import mindustry.entities.Units;
-import mindustry.entities.effect.MultiEffect;
+import mindustry.content.*;
+import mindustry.entities.*;
+import mindustry.entities.effect.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.io.TypeIO;
+import mindustry.io.*;
 import mindustry.logic.*;
-import mindustry.type.StatusEffect;
+import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.consumers.*;
 import mindustry.world.meta.*;
-import wh.graphics.Drawn;
-import wh.ui.UIUtils;
+import wh.graphics.*;
+import wh.ui.*;
 
 import static arc.Core.atlas;
 import static mindustry.Vars.*;
@@ -38,13 +36,16 @@ public class SelectOverdriveProjector extends Block {
     public float speedBoostPhase = 0.75f;
     public float useTime = 400f;
     public float phaseRangeBoost = 140f;
+    public float phaseEffectOn = 0.55f;
+    public float phaseEffectOff = 0.4f;
+    public float phaseHeatLerp = 0.1f;
     public boolean hasBoost = true;
     public Color baseColor = Color.valueOf("feb380");
     public Color phaseColor = Color.valueOf("ffd59e");
     public Effect BoostEffect = smoothBoostEffect(240f);
     //unitBoost
-    public StatusEffect[] status;
-    public StatusEffect[] boostStatus;
+    public StatusEffect[] status = {};
+    public StatusEffect[] boostStatus = {};
     public boolean boostReplace = false;
     //SelectOverdrive
     public int maxLink = 6;
@@ -118,11 +119,6 @@ public class SelectOverdriveProjector extends Block {
         stats.add(Stat.range, range / tilesize, StatUnit.blocks);
         stats.add(Stat.productionTime, useTime / 60f, StatUnit.seconds);
 
-        if (hasBoost && findConsumer(f -> f instanceof ConsumeItems) instanceof ConsumeItems items) {
-            stats.remove(Stat.booster);
-            stats.add(Stat.booster, StatValues.itemBoosters("+{0}%", stats.timePeriod, speedBoostPhase * 100f, phaseRangeBoost, items.items));
-        }
-
         if (status.length > 0) stats.add(Stat.abilities, t -> {
             t.row();
             t.add(Core.bundle.get("statValue.showStatus")).left();
@@ -145,9 +141,9 @@ public class SelectOverdriveProjector extends Block {
                     boostStatus,
                     stats.timePeriod,
                     phaseRangeBoost,
-                    cons.items,
-                    boostReplace,
-                    this::consumesItem
+            speedBoostPhase * 100f,
+            Math.max(maxLink - 1, 0),
+            cons.items, boostReplace, this::consumesItem
             ));
         }
     }
@@ -179,16 +175,19 @@ public class SelectOverdriveProjector extends Block {
             heat = Mathf.lerpDelta(heat, efficiency > 0 ? 1f : 0f, 0.08f);
             charge += heat * Time.delta;
 
+            float phaseTarget = hasBoost ? optionalEfficiency : 0f;
+            phaseHeat = Mathf.lerpDelta(phaseHeat, phaseTarget, phaseHeatLerp);
+            phaseHeat = Mathf.clamp(phaseHeat, 0f, 1f);
+
             if (hasBoost) {
-                phaseHeat = Mathf.lerpDelta(phaseHeat, optionalEfficiency, 0.1f);
-                if (phaseHeat > 0.5f) {
-                    if (!boostEffect) {
-                        boostEffect = true;
-                        BoostEffect.at(x, y);
-                    }
-                } else {
+                if(!boostEffect && phaseHeat >= phaseEffectOn){
+                    boostEffect = true;
+                    BoostEffect.at(x, y);
+                }else if(boostEffect && phaseHeat <= phaseEffectOff){
                     boostEffect = false;
                 }
+            }else{
+                boostEffect = false;
             }
 
             if (charge >= reload) {
@@ -202,8 +201,8 @@ public class SelectOverdriveProjector extends Block {
 
             Units.nearby(Tmp.r1.setCentered(x, y, realBoost()), u -> {
                 if (u.team == team) {
-                    boolean phase = phaseHeat > 0.5f;
-                    if (phase && boostStatus.length > 0) {
+                    boolean phase = hasBoost && boostEffect;
+                    if(phase){
                         for (StatusEffect s : boostStatus) {
                             if (s == StatusEffects.none) continue;
                             u.apply(s, 10);

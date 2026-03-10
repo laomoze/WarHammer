@@ -27,7 +27,7 @@ public class BulletDefenseTurret extends Turret {
     public float checkRange = 15f;
     public float realDamage;
     public float shootLength = 13f;
-    public DrawTurret drawer;
+    public DrawTurret drawer = new DrawTurret();
 
     public BulletType interceptor = new InterceptorBulletType() {
         {
@@ -99,7 +99,6 @@ public class BulletDefenseTurret extends Turret {
     @Override
     public void load(){
         super.load();
-
         drawer.load(this);
     }
 

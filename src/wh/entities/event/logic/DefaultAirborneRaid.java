@@ -1,7 +1,9 @@
 package wh.entities.event.logic;
 
+import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
+import arc.scene.style.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
@@ -101,7 +103,10 @@ public class DefaultAirborneRaid extends LStatement{
 
         table.table(t -> {
             t.add("Spawner Units(groups): ");
-            fields(t, spawnUnits, str -> spawnUnits = str).width(250f);
+            TextField unitsField = new TextField(spawnUnits == null ? "" : spawnUnits);
+            unitsField.setMessageText("@alpha,@beta;@gamma");
+            unitsField.changed(() -> spawnUnits = unitsField.getText() == null ? "" : unitsField.getText().trim());
+            t.add(unitsField).width(250f).height(40f).pad(2f);
             TextButton pick = new TextButton("pick", Styles.logict);
             pick.clicked(() -> showUnitPicker(unit -> {
                 appendSpawnUnit("@" + unit.name);
@@ -121,21 +126,15 @@ public class DefaultAirborneRaid extends LStatement{
     }
 
     private void showUnitPicker(arc.func.Cons<UnitType> onSelect){
-        Seq<UnitType> visible = new Seq<>();
         Seq<UnitType> all = Vars.content.units();
-        if(all != null){
-            for(UnitType unit : all){
-                if(unit == null || unit.internal || unit.isHidden()) continue;
-                visible.add(unit);
-            }
-            if(visible.isEmpty()){
-                for(UnitType unit : all){
-                    if(unit == null || unit.internal) continue;
-                    visible.add(unit);
-                }
-            }
+        if(all == null || all.isEmpty()) return;
+
+        Seq<UnitType> visible = all.select(unit -> unit != null && !unit.internal && !unit.isHidden());
+        if(visible.isEmpty()){
+            visible = all.select(unit -> unit != null && !unit.internal);
         }
         if(visible.isEmpty()) return;
+        final Seq<UnitType> pickUnits = visible;
 
         BaseDialog dialog = new BaseDialog("pick unit");
         dialog.cont.table(root -> {
@@ -147,14 +146,22 @@ public class DefaultAirborneRaid extends LStatement{
 
             Table list = new Table();
             list.left().top();
-            list.defaults().growX().height(34f).pad(1f);
+            list.defaults().growX().pad(1f);
 
-            UIUtils.bindContentSearch(search, list, visible, unit -> {
-                String display = unit.localizedName == null ? unit.name : unit.localizedName;
-                list.button(display, Styles.logicTogglet, () -> {
+            UIUtils.bindContentSearch(search, list, pickUnits, unit -> {
+                list.button(b -> {
+                    b.left();
+                    TextureRegion iconRegion = unit.fullIcon == null ? unit.uiIcon : unit.fullIcon;
+                    Drawable icon = iconRegion != null && iconRegion.found() ? new TextureRegionDrawable(iconRegion) : Icon.units;
+                    b.image(icon).size(18f).padRight(6f);
+                    String display = unit.localizedName == null ? unit.name : unit.localizedName;
+                    Label label = new Label(compactLabelText(display));
+                    label.setFontScale(1.05f);
+                    b.add(label).left().growX();
+                }, Styles.logicTogglet, () -> {
                     onSelect.get(unit);
                     dialog.hide();
-                }).left();
+                }).growX().height(34f);
                 list.row();
             });
 
@@ -167,6 +174,13 @@ public class DefaultAirborneRaid extends LStatement{
         dialog.buttons.defaults().size(120f, 54f);
         dialog.buttons.button("@cancel", dialog::hide);
         dialog.show();
+    }
+
+    private String compactLabelText(String text){
+        if(text == null) return "";
+        String out = text.trim();
+        if(out.length() <= 20) return out;
+        return out.substring(0, 19) + "...";
     }
 
     private void appendSpawnUnit(String token){
@@ -193,77 +207,91 @@ public class DefaultAirborneRaid extends LStatement{
 
     private void showSpawnUnitsDetailDialog(Table owner){
         BaseDialog dialog = new BaseDialog("spawnUnits detail");
-        Runnable reopen = () -> {
-            dialog.hide();
-            if(owner != null) rebuild(owner);
-            showSpawnUnitsDetailDialog(owner);
-        };
+        final String[] lastRaw = {null};
+        final Runnable[] refresh = {null};
 
         dialog.cont.pane(root -> {
-            root.left().top();
-            root.defaults().left().pad(2f);
+            refresh[0] = () -> {
+                root.clearChildren();
+                root.left().top();
+                root.defaults().left().pad(2f);
 
-            String raw = spawnUnits == null ? "" : spawnUnits.trim();
-            root.add("raw: " + (raw.isEmpty() ? "(empty)" : raw)).wrap().width(Vars.mobile ? 420f : 340f).left().row();
-            root.table(btns -> {
-                btns.left();
-                btns.defaults().size(118f, 32f).padRight(4f);
-                btns.button("append pick", Styles.logict, () -> showUnitPicker(unit -> {
-                    appendSpawnUnit("@" + unit.name);
-                    reopen.run();
-                }));
-                btns.button("new group", Styles.logict, () -> showUnitPicker(unit -> {
-                    appendSpawnUnitAsNewGroup("@" + unit.name);
-                    reopen.run();
-                }));
-                btns.button("clear", Styles.logict, () -> {
-                    spawnUnits = "";
-                    reopen.run();
-                });
-            }).left().row();
-            root.row();
+                String raw = spawnUnits == null ? "" : spawnUnits.trim();
+                lastRaw[0] = raw;
 
-            if(raw.isEmpty()){
-                root.add("groups: 0").left().row();
-                return;
-            }
-
-            String[] groups = raw.split(";");
-            root.add("groups: " + groups.length + ", max " + maxUnitsPerGroup + " units/group").left().row();
-            root.row();
-
-            for(int i = 0; i < groups.length; i++){
-                String group = groups[i] == null ? "" : groups[i].trim();
-                Seq<UnitType> parsed = parseGroupUnits(group);
-                int rawCount = rawUnitCount(group);
-
-                StringBuilder names = new StringBuilder();
-                for(int j = 0; j < parsed.size; j++){
-                    UnitType unit = parsed.get(j);
-                    if(j > 0) names.append(", ");
-                    names.append(unit == null ? "null" : (unit.localizedName == null ? unit.name : unit.localizedName));
-                }
-                if(parsed.isEmpty()){
-                    names.append("(empty)");
-                }
-
-                int groupIndex = i;
-                root.table(line -> {
-                    line.left();
-                    line.add((groupIndex + 1) + ". " + names + " (" + parsed.size + "/" + maxUnitsPerGroup + ")")
-                    .wrap().width(Vars.mobile ? 370f : 290f).left();
-                    TextButton addToGroup = new TextButton("+", Styles.logict);
-                    addToGroup.clicked(() -> showUnitPicker(unit -> {
-                        appendSpawnUnitToGroup(groupIndex, "@" + unit.name);
-                        reopen.run();
+                root.add("raw: " + (raw.isEmpty() ? "(empty)" : raw)).wrap().width(Vars.mobile ? 420f : 340f).left().row();
+                root.table(btns -> {
+                    btns.left();
+                    btns.defaults().size(118f, 32f).padRight(4f);
+                    btns.button("append pick", Styles.logict, () -> showUnitPicker(unit -> {
+                        appendSpawnUnit("@" + unit.name);
+                        if(owner != null) rebuild(owner);
+                        if(refresh[0] != null) refresh[0].run();
                     }));
-                    addToGroup.setDisabled(parsed.size >= maxUnitsPerGroup);
-                    line.add(addToGroup).size(30f, 30f).padLeft(4f);
+                    btns.button("new group", Styles.logict, () -> showUnitPicker(unit -> {
+                        appendSpawnUnitAsNewGroup("@" + unit.name);
+                        if(owner != null) rebuild(owner);
+                        if(refresh[0] != null) refresh[0].run();
+                    }));
+                    btns.button("clear", Styles.logict, () -> {
+                        spawnUnits = "";
+                        if(owner != null) rebuild(owner);
+                        if(refresh[0] != null) refresh[0].run();
+                    });
                 }).left().row();
-                if(rawCount > maxUnitsPerGroup){
-                    root.add("   truncated to first " + maxUnitsPerGroup + " units").left().row();
+                root.row();
+
+                if(raw.isEmpty()){
+                    root.add("groups: 0").left().row();
+                    return;
                 }
-            }
+
+                String[] groups = raw.split(";");
+                root.add("groups: " + groups.length + ", max " + maxUnitsPerGroup + " units/group").left().row();
+                root.row();
+
+                for(int i = 0; i < groups.length; i++){
+                    String group = groups[i] == null ? "" : groups[i].trim();
+                    Seq<UnitType> parsed = parseGroupUnits(group);
+                    int rawCount = rawUnitCount(group);
+
+                    StringBuilder names = new StringBuilder();
+                    for(int j = 0; j < parsed.size; j++){
+                        UnitType unit = parsed.get(j);
+                        if(j > 0) names.append(", ");
+                        names.append(unit == null ? "null" : (unit.localizedName == null ? unit.name : unit.localizedName));
+                    }
+                    if(parsed.isEmpty()){
+                        names.append("(empty)");
+                    }
+
+                    int groupIndex = i;
+                    root.table(line -> {
+                        line.left();
+                        line.add((groupIndex + 1) + ". " + names + " (" + parsed.size + "/" + maxUnitsPerGroup + ")")
+                        .wrap().width(Vars.mobile ? 370f : 290f).left();
+                        TextButton addToGroup = new TextButton("+", Styles.logict);
+                        addToGroup.clicked(() -> showUnitPicker(unit -> {
+                            appendSpawnUnitToGroup(groupIndex, "@" + unit.name);
+                            if(owner != null) rebuild(owner);
+                            if(refresh[0] != null) refresh[0].run();
+                        }));
+                        addToGroup.setDisabled(parsed.size >= maxUnitsPerGroup);
+                        line.add(addToGroup).size(30f, 30f).padLeft(4f);
+                    }).left().row();
+                    if(rawCount > maxUnitsPerGroup){
+                        root.add("   truncated to first " + maxUnitsPerGroup + " units").left().row();
+                    }
+                }
+            };
+
+            refresh[0].run();
+            root.update(() -> {
+                String now = spawnUnits == null ? "" : spawnUnits.trim();
+                if(lastRaw[0] == null || !lastRaw[0].equals(now)){
+                    if(refresh[0] != null) refresh[0].run();
+                }
+            });
         }).width(Vars.mobile ? 460f : 380f).maxHeight(Vars.mobile ? 420f : 300f);
 
         dialog.buttons.defaults().size(120f, 54f);

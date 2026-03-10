@@ -85,7 +85,7 @@ public final class WHUnitTypes{
     tankEn2, tankEn1,
     airEn1, airEn2;
     //核心机
-
+    public static UnitType t6AssemblyDrone, reborn, recovery, restore;
     //原版
     public static UnitType airS6, airSGreen6, mechaS6, mechaSGreen6, meshSPurple6, navyS6, navySGreen6;
 
@@ -2112,7 +2112,6 @@ public final class WHUnitTypes{
         };
 
         tankEn1 = new WHTankUnitType("tankEn1"){
-
             {
                 constructor = TankUnit::create;
 
@@ -4639,7 +4638,7 @@ public final class WHUnitTypes{
                 drag = 0.1f;
                 hitSize = 21f;
                 rotateSpeed = 1.3f;
-                health = 3000;
+                health = 2600;
                 armor = 8f;
                 stepShake = 0f;
 
@@ -4675,14 +4674,14 @@ public final class WHUnitTypes{
                         rotate = false;
                         rotationLimit = 45;
                         shootSound = shootMissile;
-                        reload = 240;
+                        reload = 210;
                         cooldownTime = 180;
                         heatColor = WHPal.Heat;
                         shootCone = 10;
                         recoil = 5;
-                        bullet = new BasicBulletType(4, 200, name("large-missile")){{
+                        bullet = new BasicBulletType(4, 150, name("large-missile")){{
                             splashDamageRadius = 50;
-                            splashDamage = 150;
+                            splashDamage = 100;
                             lifetime = 62.1f;//300
                             status = blasted;
                             statusDuration = 60;
@@ -4709,7 +4708,7 @@ public final class WHUnitTypes{
                 });
                 weapons.add(new Weapon(name("mecha2-weapon2")){
                     {
-                        reload = 45;
+                        reload = 60;
                         recoil = 3;
                         shoot.shots = 3;
                         shoot.shotDelay = 4;
@@ -4722,7 +4721,7 @@ public final class WHUnitTypes{
                         shootSound = shootSpectre;
                         ejectEffect = casing4;
                         layerOffset = -0.0001f;
-                        bullet = new CritBulletType(8, 80){
+                        bullet = new CritBulletType(8, 70){
                             {
                                 hitShake = 1;
                                 lifetime = 220 / speed;
@@ -9612,6 +9611,273 @@ public final class WHUnitTypes{
             }
         };
 
+        t6AssemblyDrone = new UnitType("t6-assembly-drone"){{
+            constructor = BuildingTetherPayloadUnit::create;
+            controller = u -> new AssemblerAI();
+
+            flying = true;
+            drag = 0.06f;
+            accel = 0.11f;
+            speed = 1.3f;
+            health = 200;
+            engineSize = 2f;
+            engineOffset = 6.5f;
+            payloadCapacity = 0f;
+            targetable = false;
+            bounded = false;
+
+            outlineColor = WHPal.OutlineS;
+            isEnemy = false;
+            hidden = true;
+            useUnitCap = false;
+            logicControllable = false;
+            playerControllable = false;
+            allowedInPayloads = false;
+            createWreck = false;
+            envEnabled = Env.any;
+            envDisabled = Env.none;
+        }};
+
+        float coreFleeRange = 500f;
+
+        reborn = new WHUnitType("reborn"){{
+            constructor = PayloadUnit::create;
+            coreUnitDock = true;
+            controller = u -> new BuilderAI(true, coreFleeRange);
+            isEnemy = false;
+            envDisabled = 0;
+
+            range = 60f;
+            faceTarget = true;
+            targetPriority = -2;
+            lowAltitude = false;
+            mineWalls = true;
+            mineFloor = false;
+            mineHardnessScaling = false;
+            flying = true;
+            mineSpeed = 6f;
+            buildBeamOffset = mineBeamOffset = 31 / 4f;
+            mineTier = 3;
+            buildSpeed = 1.7f;
+            drag = 0.08f;
+            speed = 5.6f;
+            rotateSpeed = 7f;
+            accel = 0.09f;
+            itemCapacity = 60;
+            health = 300f;
+            armor = 5f;
+            hitSize = 9f;
+            engineOffset = 36 / 4f;
+            engineSize = 3;
+            payloadCapacity = 2f * 2f * tilesize * tilesize;
+            pickupUnits = false;
+            vulnerableWithPayloads = true;
+
+            fogRadius = 0f;
+            targetable = false;
+            hittable = false;
+
+            setEnginesMirror(
+            new UnitEngine(33 / 4f, -23 / 4f, 2.2f, 45f)
+            );
+
+            weapons.add(new RepairBeamWeapon(){{
+                widthSinMag = 0.11f;
+                reload = 20f;
+                x = 0f;
+                y = 31 / 4f;
+                rotate = false;
+                shootY = 0f;
+                beamWidth = 0.7f;
+                repairSpeed = 3.1f;
+                fractionRepairSpeed = 0.06f;
+                aimDst = 0f;
+                shootCone = 15f;
+                mirror = false;
+
+                targetUnits = false;
+                targetBuildings = true;
+                autoTarget = false;
+                controllable = true;
+                laserColor = Pal.accent;
+                healColor = Pal.accent;
+
+                bullet = new BulletType(){{
+                    maxRange = 60f;
+                }};
+            }});
+        }};
+
+        recovery = new WHUnitType("recovery"){{
+            constructor = PayloadUnit::create;
+            coreUnitDock = true;
+            controller = u -> new BuilderAI(true, coreFleeRange);
+            isEnemy = false;
+            envDisabled = 0;
+
+            range = 60f;
+            targetPriority = -2;
+            lowAltitude = false;
+            faceTarget = true;
+            mineWalls = true;
+            mineFloor = false;
+            mineHardnessScaling = false;
+            flying = true;
+            mineSpeed = 8f;
+            buildBeamOffset = mineBeamOffset = 27 / 4f;
+            mineTier = 4;
+            buildSpeed = 2f;
+            drag = 0.08f;
+            speed = 7f;
+            rotateSpeed = 8f;
+            accel = 0.09f;
+            itemCapacity = 90;
+            health = 800f;
+            armor = 5f;
+            hitSize = 11f;
+            payloadCapacity = 2f * 2f * tilesize * tilesize;
+            pickupUnits = false;
+            vulnerableWithPayloads = true;
+
+            fogRadius = 0f;
+            targetable = false;
+            hittable = false;
+
+            engineOffset = 30 / 4f;
+            engineSize = 3.1f;
+
+            weapons.add(new RepairBeamWeapon(){{
+                            widthSinMag = 0.11f;
+                            reload = 20f;
+                            x = 25 / 4f;
+                            y = 14 / 4f;
+                            rotate = false;
+                            shootY = 0f;
+                            beamWidth = 0.7f;
+                            aimDst = 0f;
+                            shootCone = 15f;
+                            mirror = true;
+
+                            repairSpeed = 3.3f;
+                            fractionRepairSpeed = 0.06f;
+
+                            targetUnits = false;
+                            targetBuildings = true;
+                            autoTarget = false;
+                            controllable = true;
+                            laserColor = Pal.accent;
+                            healColor = Pal.accent;
+
+                            bullet = new BulletType(){{
+                                maxRange = 60f;
+                            }};
+                        }},
+            new HealConeWeapon(name(name + "-weapon")){{
+                x = 0f;
+                y = 27 / 4f;
+                shootY = 0;
+                shootCone = 30f;
+                rotate = true;
+                rotateSpeed = 0.5f;
+                targetUnits = false;
+                bullet = new HealCone(){{
+                    healUnit = false;
+                    healColor = Pal.accent;
+                    lifetime = 180;
+                    healPercent = 0.02f;
+                    healAmount = 80;
+                    findAngle = 30f;
+                    findRange = 90;
+                }};
+                reload = 120;
+                useAmmo = mirror = alternate = false;
+                continuous = true;
+                recoil = 0;
+            }});
+
+            drawBuildBeam = false;
+
+            weapons.add(new BuildWeapon("build-weapon"){{
+                rotate = true;
+                rotateSpeed = 7f;
+                x = 14 / 4f;
+                y = 15 / 4f;
+                layerOffset = -0.001f;
+                shootY = 3f;
+            }});
+        }};
+
+        restore = new WHUnitType("restore"){{
+            constructor = PayloadUnit::create;
+            coreUnitDock = true;
+            controller = u -> new BuilderAI(true, coreFleeRange);
+            isEnemy = false;
+            envDisabled = 0;
+
+            range = 65f;
+            faceTarget = true;
+            targetPriority = -2;
+            lowAltitude = false;
+            mineWalls = true;
+            mineFloor = false;
+            mineHardnessScaling = false;
+            flying = true;
+            buildBeamOffset = mineBeamOffset = 36 / 4f;
+            mineSpeed = 9f;
+            mineTier = 4;
+            buildSpeed = 2.2f;
+            drag = 0.08f;
+            speed = 7.5f;
+            rotateSpeed = 8f;
+            accel = 0.08f;
+            itemCapacity = 110;
+            health = 800f;
+            armor = 5f;
+            hitSize = 12f;
+            payloadCapacity = 2f * 2f * tilesize * tilesize;
+            pickupUnits = false;
+            vulnerableWithPayloads = true;
+
+            fogRadius = 0f;
+            targetable = false;
+            hittable = false;
+
+            engineOffset = 48 / 4f;
+            engineSize = 3.4f;
+            trailLength = 10;
+
+            setEnginesMirror(
+            new UnitEngine(37 / 4f, -40 / 4f, 2, 0)
+            );
+
+            /* engines.addAll(new WHUnitEngine(0,-48/4f,5f,20f,2f));*/
+            AncientEngine.addEngine(this, 37 / 4f, -40 / 4f, 0, 2.5f, true);
+
+
+            weapons.add(new HealConeWeapon(name(name + "-weapon")){{
+                x = 38 / 4f;
+                y = 0;
+                shootY = 0;
+                shootCone = 30f;
+                rotate = true;
+                rotateSpeed = 0.5f;
+                targetUnits = false;
+                bullet = new HealCone(){{
+                    healUnit = false;
+                    healColor = Pal.accent;
+                    lifetime = 180;
+                    healPercent = 0.02f;
+                    healAmount = 100;
+                    findAngle = 30f;
+                    findRange = 90;
+                }};
+                reload = 60;
+                useAmmo = alternate = false;
+                continuous = true;
+                mirror = true;
+                recoil = 0;
+            }});
+        }};
 
         airS6 = new UnitType("air-s6"){
             {

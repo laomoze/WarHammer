@@ -3,6 +3,7 @@ package wh.entities.world.blocks.distribution;
 import arc.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
+import arc.math.*;
 import arc.math.geom.*;
 import arc.util.*;
 import arc.util.io.*;
@@ -140,13 +141,12 @@ public class TubeConduit extends Conduit{
             }
         });
 
-        int mask = 0;
-        for(int i = 0; i < directionals.length; i++){
-            if(directionals[i] != null){
-                mask += (1 << i);
+        int mask = 1 << plan.rotation;
+        for(int rel = 0; rel < 4; rel++){
+            if((bits[3] & (1 << rel)) != 0){
+                mask |= 1 << Mathf.mod(plan.rotation - rel, 4);
             }
         }
-        mask |= (1 << plan.rotation);
         Draw.rect(topRegion[0][mask], plan.drawx(), plan.drawy(), 0);
 
         Draw.scl(bits[1], bits[2]);
@@ -219,9 +219,18 @@ public class TubeConduit extends Conduit{
         @Override
         public void draw(){
             int r = this.rotation;
+            //draw extra conduits facing this one for tiling purposes
+            Draw.z(Layer.blockUnder);
+            for(int i = 0; i < 4; i++){
+                if((blending & (1 << i)) != 0){
+                    int dir = r - i;
+                    drawAt(x + Geometry.d4x(dir) * mindustry.Vars.tilesize * 0.75f, y + Geometry.d4y(dir) * mindustry.Vars.tilesize * 0.75f, 0, i == 0 ? r : dir, i != 0 ? SliceMode.bottom : SliceMode.top);
+                }
+            }
+
             Draw.z(Layer.block);
 
-            float xscl = Draw.xscl, yscl = Draw.yscl;
+            float oldX = Draw.xscl, oldY = Draw.yscl;
             Draw.scl(1.017f, 1.017f);
             if(capped || backCapped){
                 Draw.z(Layer.block - 0.003f);
@@ -231,9 +240,10 @@ public class TubeConduit extends Conduit{
                 Draw.rect(topRegion[0][tiling], x, y, 0);
             }
 
-            Draw.scl(xscl, yscl);
+            Draw.scl(oldX, oldY);
 
             Draw.z(Layer.block - 0.1f);
+            Draw.scl(xscl, yscl);
             drawAt(x, y, blendbits, r, SliceMode.none);
             Draw.scl();
 
@@ -259,7 +269,6 @@ public class TubeConduit extends Conduit{
 
         @Override
         protected void drawAt(float x, float y, int bits, int rotation, SliceMode slice){
-            Draw.scl(xscl, yscl);
             float angle = rotation * 90f;
             Draw.color(botColor);
             Draw.rect(sliced(botRegions[bits], slice), x, y, angle);
@@ -278,8 +287,10 @@ public class TubeConduit extends Conduit{
             }
 
             //the drawing state machine sure was a great design choice with no downsides or hidden behavior!!!
+            float sx = Draw.xscl, sy = Draw.yscl;
             Draw.scl(1f, 1f);
             Drawf.liquid(sliced(liquidr, slice), x + ox, y + oy, smoothLiquid, liquids.current().color.write(Tmp.c1).a(1f));
+            Draw.scl(sx, sy);
 
             if(drawArrow){
                 Draw.z(Layer.block);
@@ -289,26 +300,23 @@ public class TubeConduit extends Conduit{
 
         @Override
         public void onProximityUpdate(){
-            super.onProximityUpdate();
-            int newTiling = 0;
-            for(int i = 0; i < 4; i++){
-                Building other = nearby(i);
-                if(other == null) continue;
+            int[] bits = buildBlending(tile, rotation, null, true);
+            blendbits = bits[0];
+            xscl = bits[1];
+            yscl = bits[2];
+            blending = bits[4];
 
-                boolean isConduit = other.block instanceof Conduit;
-                if(isConduit){
-                    if(rotation == i || (other.rotation + 2) % 4 == i){
-                        newTiling |= (1 << i);
-                    }
-                }else if(!noSideBlend){
-                    if((rotation == i && other.block.liquidCapacity > 0 && other.block.hasLiquids) ||
-                    (rotation != i && other.block.outputsLiquid)){
-                        newTiling |= (1 << i);
-                    }
+            int mask = 1 << rotation;
+            for(int rel = 0; rel < 4; rel++){
+                if((bits[3] & (1 << rel)) != 0){
+                    mask |= 1 << Mathf.mod(rotation - rel, 4);
                 }
             }
+            tiling = mask;
 
-            tiling = newTiling | (1 << rotation);
+            Building next = front(), prev = back();
+            capped = next == null || next.team != team || !next.block.hasLiquids;
+            backCapped = blendbits == 0 && (prev == null || prev.team != team || !prev.block.hasLiquids);
         }
 
         @Override

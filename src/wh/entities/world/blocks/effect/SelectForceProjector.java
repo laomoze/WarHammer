@@ -30,7 +30,7 @@ import static mindustry.Vars.*;
 
 public class SelectForceProjector extends Block {
     // 基本参数
-    public TextureRegion topRegion;
+    public TextureRegion topRegion, nodeRegion;
     public float range = 500f;
     public int maxLink = 4;
     public int maxMount = 4;
@@ -47,9 +47,13 @@ public class SelectForceProjector extends Block {
     public boolean consumeCoolant = true;
     public float coolantAmount = 0.3f;
 
-    public float phaseUseTime = 350f;
-    public float phaseShieldBoost = 400f;
+    public float phaseUseTime = 300;
+    public float phaseShieldBoost = 250;
     public int trailLength = 30;
+    public float pulseMinDistance = 6f; // blocks
+    public float pulseNearInterval = 14f; // ticks, closer = shorter interval
+    public float pulseFarInterval = 28f; // ticks
+    public float pulseCycle = 100f;
     public Color baseColor = WHPal.SkyBlue;
 
     public @Nullable Consume itemConsumer, coolantConsumer;
@@ -60,6 +64,12 @@ public class SelectForceProjector extends Block {
         int size = (int) e.data;
         Lines.square(e.x, e.y, size * tilesize / 2f);
     }).followParent(true);
+
+    public Effect buildupEffect = new Effect(33f, e -> {
+        Draw.color(WHPal.SkyBlue, Items.titanium.color.cpy(), e.fin() * 0.8f);
+        Lines.stroke(3f * e.fout());
+        Lines.spikes(e.x, e.y, 10f * e.finpow(), 2f * e.fout() + 4f * e.fslope(), 4, 45f);
+    });
 
     public Effect absorbEffect = Fx.absorb;
 
@@ -73,8 +83,6 @@ public class SelectForceProjector extends Block {
         envEnabled |= Env.space;
         configurable = true;
         saveConfig = update = true;
-
-        consumePower(2f);
 
         if(consumeCoolant){
             consume(coolantConsumer = new ConsumeCoolant(coolantAmount)).boost().update(false);
@@ -94,13 +102,23 @@ public class SelectForceProjector extends Block {
     public void load() {
         super.load();
         topRegion = atlas.find(name + "-top");
+        nodeRegion = atlas.find("logic-node");
     }
 
     @Override
     public void setStats() {
         super.setStats();
         stats.add(Stat.range, range / tilesize, StatUnit.blocks);
-        stats.add(Stat.shieldHealth, Core.bundle.format("stat.wh-shield-health-detail", OneTileShieldHealth, shieldPercent));
+        stats.add(Stat.shieldHealth, Core.bundle.format("stat.wh-shield-health-detail",
+        Strings.autoFixed(OneTileShieldHealth, 1),
+        Strings.autoFixed(shieldPercent * 100f, 1),
+        Strings.autoFixed(phaseShieldBoost, 1)));
+        stats.add(Stat.abilities, Core.bundle.format("stat.wh-select-projector-links", maxLink, maxMount));
+        stats.add(Stat.repairSpeed, Core.bundle.format("stat.wh-select-projector-regen",
+        Strings.autoFixed(shieldRecovery * 60f, 2), Strings.autoFixed(healPercent * 60f, 3)));
+        if(consumeCoolant){
+            stats.add(Stat.input, Core.bundle.format("stat.wh-select-projector-coolant", Strings.autoFixed(coolantAmount * 60f, 2)));
+        }
     }
 
 
@@ -131,7 +149,7 @@ public class SelectForceProjector extends Block {
     @Override
     public boolean canPlaceOn(Tile tile, Team team, int rotation) {
         if (team != Team.derelict && Groups.build.count(b -> b.team == team && b.block == this) >= maxMount) {
-            drawPlaceText("Maximum Placement Quantity Reached", tile.x, tile.y, false);
+            drawPlaceText(Core.bundle.get("wh-select-projector-max-mount"), tile.x, tile.y, false);
             return false;
         }
         return super.canPlaceOn(tile, team, rotation);
@@ -159,6 +177,7 @@ public class SelectForceProjector extends Block {
         protected float shieldHit = 0f;
         public float warmup, phaseHeat, trailWarmUp;
         private final Trail[] sideTrails = new Trail[2];
+        private final Seq<LinkPath> pathBuffer = new Seq<>();
 
         @Override
         public void drawSelect() {
@@ -260,12 +279,7 @@ public class SelectForceProjector extends Block {
             if (shieldHit > 0) shieldHit -= delta() / 5f;
 
             if (Mathf.chanceDelta(shieldData.sumf(s -> s.buildup / OneTileShieldHealth) * 0.008f)) {
-                new Effect(33.0f, e -> {
-                    Draw.color(WHPal.SkyBlue, Items.titanium.color.cpy(), e.fin() * 0.8f);
-                    Lines.stroke(3.0f * e.fout());
-                    Lines.spikes(e.x, e.y, 10.0f * e.finpow(), 2.0f * e.fout() + 4.0f * e.fslope(), 4, 45.0f);
-                }).at(x + Mathf.range(tilesize / 2f),
-                        y + Mathf.range(tilesize / 2f));
+                buildupEffect.at(x + Mathf.range(tilesize / 2f), y + Mathf.range(tilesize / 2f));
             }
         }
 
@@ -320,7 +334,7 @@ public class SelectForceProjector extends Block {
 
         public void linkPos(int value) {
             Building other = world.build(value);
-            if (other != this && other != null && !targets.removeValue(value) && targets.size < maxLink - 1 && within(other, range)) {
+            if(other != this && other != null && !targets.removeValue(value) && targets.size < maxLink && within(other, range) && !targetedByOtherProjector(other.pos())){
                 ShieldData existing = shieldData.find(s -> s.building == other);
                 if (existing == null) {
                     ShieldData newShield = new ShieldData();
@@ -346,10 +360,13 @@ public class SelectForceProjector extends Block {
         public boolean linkValid(Building other) {
             return other != null &&
                     other.team == team &&
-                    Mathf.within(x, y, other.x, other.y, range) &&
-                    !Groups.build.contains(b -> b != this &&
-                            b.block instanceof SelectForceProjector &&
-                            ((ForceWallBuild) b).targets.contains(other.pos()));
+            Mathf.within(x, y, other.x, other.y, range);
+        }
+
+        private boolean targetedByOtherProjector(int pos){
+            return Groups.build.contains(b -> b != this &&
+            b.block instanceof SelectForceProjector &&
+            ((ForceWallBuild)b).targets.contains(pos));
         }
 
         @Override
@@ -431,10 +448,15 @@ public class SelectForceProjector extends Block {
             Draw.color(team.color);
             for (ShieldData shield : shieldData) {
                 if (shield.building != null && !shield.broken) {
-                    for (int i = 0; i < 4; i++) {
-                        float f = (Time.time - 25 * i) % 100 / 100;
-                        float angle = Angles.angle(shield.building.x, shield.building.y, x, y);
-                        Tmp.v1.trns(angle, f * tilesize * size * 4);
+                    float angle = Angles.angle(shield.building.x, shield.building.y, x, y);
+                    float minDistance = pulseMinDistance * tilesize;
+                    float distance = Mathf.dst(shield.building.x, shield.building.y, x, y);
+                    float travel = Math.max(distance, minDistance);
+                    float t = Mathf.clamp((travel - minDistance) / Math.max(range - minDistance, 1f));
+                    float interval = Mathf.lerp(pulseNearInterval, pulseFarInterval, t);
+                    for(int i = 0; i < 4; i++){
+                        float f = (Time.time - interval * i) % pulseCycle / pulseCycle;
+                        Tmp.v1.trns(angle, f * travel);
                         stroke(warmup * 2f * (1 - f));
                         Lines.square(
                                 shield.building.x + Tmp.v1.x,
@@ -485,8 +507,79 @@ public class SelectForceProjector extends Block {
             else return 1;
         }
 
+        private void ensurePathBuffer(int amount){
+            while(pathBuffer.size < amount){
+                pathBuffer.add(new LinkPath());
+            }
+        }
+
+        private void computeLinkPath(Building b, float offset, LinkPath out){
+            out.building = b;
+
+            float targetOffset = b.block.size * tilesize / 2f + 1f;
+            float angle = angleTo(b);
+            boolean horizontal = Mathf.equal(angle, 0, 45) || Mathf.equal(angle, 180, 45) || Mathf.equal(angle, 360, 45);
+
+            float edgeX = b.x + Mathf.num(!horizontal) * -directionLR(b) * targetOffset;
+            float edgeY = b.y + Mathf.num(horizontal) * -directionUD(b) * targetOffset;
+
+            boolean verticalY = (edgeX >= x - offset && edgeX <= x + offset);
+            boolean verticalX = (edgeY >= y - offset && edgeY <= y + offset);
+
+            boolean onSameXAxis = Mathf.zero(b.x - x, 0.1f);
+            boolean onSameYAxis = Mathf.zero(b.y - y, 0.1f);
+
+            if(verticalY || verticalX){
+                out.fromX = x + Mathf.num(horizontal) * directionLR(b) * offset;
+                out.toX = b.x + Mathf.num(horizontal) * -directionLR(b) * targetOffset;
+                out.fromY = y + Mathf.num(!horizontal) * directionUD(b) * offset;
+                out.toY = b.y + Mathf.num(!horizontal) * -directionUD(b) * targetOffset;
+            }else{
+                out.fromX = x + Mathf.num(horizontal) * directionLR(b) * offset;
+                out.toX = b.x + Mathf.num(!horizontal) * -directionLR(b) * targetOffset;
+                out.fromY = y + Mathf.num(!horizontal) * directionUD(b) * offset;
+                out.toY = b.y + Mathf.num(horizontal) * -directionUD(b) * targetOffset;
+            }
+
+            if(verticalY){
+                out.p1x = out.fromX;
+                out.p1y = (out.fromY + out.toY) / 2f;
+                out.p2x = out.toX;
+                out.p2y = (out.fromY + out.toY) / 2f;
+            }else if(verticalX){
+                out.p1x = (out.fromX + out.toX) / 2f;
+                out.p1y = out.fromY;
+                out.p2x = (out.fromX + out.toX) / 2f;
+                out.p2y = out.toY;
+            }else{
+                out.p1x = horizontal ? out.toX : out.fromX;
+                out.p1y = !horizontal ? out.toY : out.fromY;
+                out.p2x = 0f;
+                out.p2y = 0f;
+            }
+
+            out.twoCorners = (verticalX || verticalY) && !onSameXAxis && !onSameYAxis;
+            out.nodeAngle = (verticalX || verticalY) ? Angles.angle(out.p2x, out.p2y, out.toX, out.toY) : Angles.angle(out.p1x, out.p1y, out.toX, out.toY);
+        }
+
+        private void drawPath(LinkPath path, Color lineColor, float width){
+            color(lineColor);
+            stroke(width);
+            Lines.beginLine();
+            Lines.linePoint(path.fromX, path.fromY);
+            Lines.linePoint(path.p1x, path.p1y);
+            if(path.twoCorners){
+                Lines.linePoint(path.p2x, path.p2y);
+            }
+            Lines.linePoint(path.toX, path.toY);
+            Lines.endLine();
+
+            Lines.square(path.building.x, path.building.y, path.building.block.size * tilesize / 2f + 2f);
+            Draw.rect(nodeRegion, path.toX, path.toY, 6f, 6f, path.nodeAngle);
+        }
+
         @Override
-        public void drawConfigure() {
+        public void drawConfigure(){
 
             float offset = size * tilesize / 2f + 1f;
 
@@ -494,132 +587,22 @@ public class SelectForceProjector extends Block {
             Lines.square(x, y, offset + 1f);
 
             Seq<Building> buildings = linkBuilds();
+            ensurePathBuffer(buildings.size);
 
-            for (Building b : buildings) {
-                float targetOffset = b.block.size * tilesize / 2f + 1f;
-                float angle = angleTo(b);
-                boolean horizontal = Mathf.equal(angle, 0, 45) || Mathf.equal(angle, 180, 45) || Mathf.equal(angle, 360, 45);
-
-                float edgeX = b.x + Mathf.num(!horizontal) * -directionLR(b) * targetOffset;
-                float edgeY = b.y + Mathf.num(horizontal) * -directionUD(b) * targetOffset;
-
-                boolean verticalY = (edgeX >= x - offset && edgeX <= x + offset);
-                boolean verticalX = (edgeY >= y - offset && edgeY <= y + offset);
-
-                boolean onSameXAxis = Mathf.zero(b.x - x, 0.1f);
-                boolean onSameYAxis = Mathf.zero(b.y - y, 0.1f);
-
-                float fromX, toX, fromY, toY;
-
-                if (verticalY || verticalX) {
-                    fromX = x + Mathf.num(horizontal) * directionLR(b) * offset;
-                    toX = b.x + Mathf.num(horizontal) * -directionLR(b) * targetOffset;
-                    fromY = y + Mathf.num(!horizontal) * directionUD(b) * offset;
-                    toY = b.y + Mathf.num(!horizontal) * -directionUD(b) * targetOffset;
-                } else {
-                    fromX = x + Mathf.num(horizontal) * directionLR(b) * offset;
-                    toX = b.x + Mathf.num(!horizontal) * -directionLR(b) * targetOffset;
-                    fromY = y + Mathf.num(!horizontal) * directionUD(b) * offset;
-                    toY = b.y + Mathf.num(horizontal) * -directionUD(b) * targetOffset;
-                }
-
-
-                if (verticalY) {
-                    Tmp.v1.set(fromX, (fromY + toY) / 2);
-                    Tmp.v2.set(toX, (fromY + toY) / 2);
-                } else if (verticalX) {
-                    Tmp.v1.set((fromX + toX) / 2, fromY);
-                    Tmp.v2.set((fromX + toX) / 2, toY);
-                } else {
-                    Tmp.v1.set(horizontal ? toX : fromX, !horizontal ? toY : fromY);
-                }
-
-                color(Pal.gray);
-                stroke(3);
-                Lines.beginLine();
-                Lines.linePoint(fromX, fromY);
-                if ((verticalX || verticalY) && !onSameXAxis && !onSameYAxis) {
-                    Lines.linePoint(Tmp.v1.x, Tmp.v1.y);
-                    Lines.linePoint(Tmp.v2.x, Tmp.v2.y);
-                } else
-                    Lines.linePoint(Tmp.v1.x, Tmp.v1.y);
-                Lines.linePoint(toX, toY);
-                Lines.endLine();
-                stroke(3);
-                Lines.square(b.x, b.y, b.block.size * tilesize / 2f + 2.0f);
-
-                Draw.reset();
-                color(Pal.gray);
-                float ang;
-                if (verticalX || verticalY) {
-                    ang = Angles.angle(Tmp.v2.x, Tmp.v2.y, toX, toY);
-                } else ang = Angles.angle(Tmp.v1.x, Tmp.v1.y, toX, toY);
-                Draw.rect(atlas.find("logic-node"), toX, toY, 12 / 2f, 12 / 2f, ang);
+            for(int i = 0; i < buildings.size; i++){
+                computeLinkPath(buildings.get(i), offset, pathBuffer.get(i));
             }
 
-            for (Building b : buildings) {
-                float targetOffset = b.block.size * tilesize / 2f + 1f;
-                float angle = angleTo(b);
-                boolean horizontal = Mathf.equal(angle, 0, 45) || Mathf.equal(angle, 180, 45) || Mathf.equal(angle, 360, 45);
-
-                float edgeX = b.x + Mathf.num(!horizontal) * -directionLR(b) * targetOffset;
-                float edgeY = b.y + Mathf.num(horizontal) * -directionUD(b) * targetOffset;
-
-                boolean verticalY = (edgeX >= x - offset && edgeX <= x + offset);
-                boolean verticalX = (edgeY >= y - offset && edgeY <= y + offset);
-
-                boolean onSameXAxis = Mathf.zero(b.x - x, 0.1f);
-                boolean onSameYAxis = Mathf.zero(b.y - y, 0.1f);
-
-                float fromX, toX, fromY, toY;
-
-                if (verticalY || verticalX) {
-                    fromX = x + Mathf.num(horizontal) * directionLR(b) * offset;
-                    toX = b.x + Mathf.num(horizontal) * -directionLR(b) * targetOffset;
-                    fromY = y + Mathf.num(!horizontal) * directionUD(b) * offset;
-                    toY = b.y + Mathf.num(!horizontal) * -directionUD(b) * targetOffset;
-                } else {
-                    fromX = x + Mathf.num(horizontal) * directionLR(b) * offset;
-                    toX = b.x + Mathf.num(!horizontal) * -directionLR(b) * targetOffset;
-                    fromY = y + Mathf.num(!horizontal) * directionUD(b) * offset;
-                    toY = b.y + Mathf.num(horizontal) * -directionUD(b) * targetOffset;
-                }
-
-                if (verticalY) {
-                    Tmp.v1.set(fromX, (fromY + toY) / 2);
-                    Tmp.v2.set(toX, (fromY + toY) / 2);
-                } else if (verticalX) {
-                    Tmp.v1.set((fromX + toX) / 2, fromY);
-                    Tmp.v2.set((fromX + toX) / 2, toY);
-                } else {
-                    Tmp.v1.set(horizontal ? toX : fromX, !horizontal ? toY : fromY);
-                }
-
-                color(this.team.color);
-                stroke(1);
-                Lines.beginLine();
-                Lines.linePoint(fromX, fromY);
-
-                if ((verticalX || verticalY) && !onSameXAxis && !onSameYAxis) {
-                    Lines.linePoint(Tmp.v1.x, Tmp.v1.y);
-                    Lines.linePoint(Tmp.v2.x, Tmp.v2.y);
-                } else
-                    Lines.linePoint(Tmp.v1.x, Tmp.v1.y);
-
-                Lines.linePoint(toX, toY);
-                Lines.endLine();
-                stroke(1);
-                Lines.square(b.x, b.y, b.block.size * tilesize / 2f + 2.0f);
-                Draw.reset();
-                color(this.team.color);
-                float ang;
-                if (verticalX || verticalY) {
-                    ang = Angles.angle(Tmp.v2.x, Tmp.v2.y, toX, toY);
-                } else ang = Angles.angle(Tmp.v1.x, Tmp.v1.y, toX, toY);
-                Draw.rect(atlas.find("logic-node"), toX, toY, 12 / 2f, 12 / 2f, ang);
+            for(int i = 0; i < buildings.size; i++){
+                drawPath(pathBuffer.get(i), Pal.gray, 3f);
             }
 
-            color(this.team.color);
+            for(int i = 0; i < buildings.size; i++){
+                drawPath(pathBuffer.get(i), team.color, 1f);
+            }
+
+            Draw.reset();
+            color(team.color);
             Lines.square(x, y, offset);
         }
 
@@ -675,5 +658,13 @@ public class SelectForceProjector extends Block {
         public boolean broken;
         public float hit;
         public float shieldSize;
+    }
+
+    public static class LinkPath{
+        public Building building;
+        public float fromX, toX, fromY, toY;
+        public float p1x, p1y, p2x, p2y;
+        public float nodeAngle;
+        public boolean twoCorners;
     }
 }

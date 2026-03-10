@@ -795,8 +795,8 @@ public final class WHFx{
                 randLenVectors(e.id, 5, range + e.fin() * 18f, (x, y) -> {
                     color(color);
                     stroke(stroke);
-                    Fill.circle(e.x + x, e.y + y, size * 0.75f);
-                    poly(e.x + x, e.y + y, 6, size * e.fout(Interp.pow2Out), 60);
+                    Fill.circle(e.x + x, e.y + y, size / 2 * 0.75f * e.fout(Interp.pow2Out) * Mathf.curve(e.fin(), 0, 0.1f));
+                    poly(e.x + x, e.y + y, 6, size * e.fout(Interp.pow2Out) * Mathf.curve(e.fin(), 0, 0.1f), 60);
                     Drawf.light(e.x + x, e.y + y, size, color, 0.5f);
                     color();
                 });

@@ -137,10 +137,6 @@ public class ChargePointLaser extends PointLaserBulletType{
                 if(Mathf.chance(0.4)) WHFx.hitSparkLarge.at(b.x, b.y, to);
             }
 
-          /*  if(!Vars.headless && DrawCurve && b.timer(4, curveInterval)){
-                activeCurves.add(new DrawEnergyCurve(b.curveStart, b.curveEnd, getColor(b)));
-            }*/
-
         }
     }
 
@@ -209,7 +205,7 @@ public class ChargePointLaser extends PointLaserBulletType{
         float fin = warmup(b);
         if(fin <= 0.01f) return;
         Draw.color(to);
-        float num = 2;
+        float num = 3;
         float phaseOffset = 360 / num;
 
         for(int i = 0; i < num; i++){
@@ -219,17 +215,11 @@ public class ChargePointLaser extends PointLaserBulletType{
             rand.setSeed(b.id);
             Drawn.drawSine2Modifier(b.x + Tmp.v1.x, b.y + Tmp.v1.y, b.curveEnd.x + Tmp.v1.x, b.curveEnd.y + Tmp.v1.y,
             -Time.time * 0.4f, 6f + rand.random(2), 0.6f + rand.random(0.5f), phaseOffset * Mathf.degreesToRadians + rand.random(90f),
-            width / 2, 6, ((x1, y1) -> {
+            width / 2, 20, ((x1, y1) -> {
                 Fill.circle(x1, y1, Lines.getStroke());
             }));
             Fill.circle(b.curveEnd.x, b.curveEnd.y, Lines.getStroke());
         }
-
-      /*  for(DrawEnergyCurve curve : activeCurves){
-            float alpha = Mathf.lerp(1f, 1f, curve.lifeProgress());
-            Draw.color(to,alpha);
-            Drawn.drawCurve(curve.getPoints(), to, 0.3f, curve.lifeProgress());
-        }*/
 
         Draw.reset();
     }

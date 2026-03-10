@@ -16,15 +16,16 @@ import mindustry.world.meta.*;
 import wh.graphics.*;
 import wh.ui.*;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.indexer;
 
 public class HeatTurret extends PowerTurret{
-    public int[] heatRequirements = new int[]{75, 150, 200};
+    public IntSeq heatRequirements = new IntSeq();
     public @Nullable BulletType enhancedBullet;
 
     public HeatTurret(String name){
         super(name);
         heatRequirement = 25;
+        heatRequirements.addAll(50, 100, 150);
     }
 
     @Override
@@ -43,21 +44,31 @@ public class HeatTurret extends PowerTurret{
     }
 
     private Bar get(HeatTurretBuild entity){
+        int stage = stageFor(entity.heatReq);
+        float heatStageRequirement = stageRequirement(stage);
+        return new Bar(() ->
+        Core.bundle.format("bar.wh-heat-stage", stage + 1, (int)((entity.heatReq / heatStageRequirement) * 100)),
+        () -> Pal.lightOrange,
+        () -> entity.heatReq / heatStageRequirement);
+    }
+
+    private int stageFor(float heatReq){
         int stage = 0;
-        for(int i = 0; i<heatRequirements.length - 1; i++){
-            if(entity.heatReq >= heatRequirements[i]){
+        int maxStage = Math.max(heatRequirements.size - 1, 0);
+        for(int i = 0; i < maxStage; i++){
+            if(heatReq >= heatRequirements.get(i)){
                 stage = i + 1;
             }else{
                 break;
             }
         }
-        stage = Math.min(stage, heatRequirements.length - 1);
-        int finalStage = stage;
-        float heatStageRequirement = stage == 0 ? heatRequirements[0] : heatRequirements[stage] ;
-        return new Bar(() ->
-        Core.bundle.format("bar.wh-heat-stage", finalStage+1, (int)((entity.heatReq / heatStageRequirement) * 100)),
-        () -> Pal.lightOrange,
-        () -> entity.heatReq / heatStageRequirement);
+        return Math.min(stage, maxStage);
+    }
+
+    private float stageRequirement(int stage){
+        if(heatRequirements.isEmpty()) return 1f;
+        int idx = Mathf.clamp(stage, 0, heatRequirements.size - 1);
+        return heatRequirements.get(idx);
     }
 
     public class HeatTurretBuild extends PowerTurretBuild{
@@ -74,11 +85,7 @@ public class HeatTurret extends PowerTurret{
         @Override
         public void updateTile(){
             super.updateTile();
-            if(heatReq > heatRequirements[1]){
-                warmup = Mathf.lerpDelta(warmup, 1, 0.08f);
-            }else{
-                warmup = Mathf.lerpDelta(warmup, 0, 0.1f);
-            }
+            warmup = Mathf.lerpDelta(warmup, isEnhancedHeat() ? 1f : 0f, isEnhancedHeat() ? 0.08f : 0.1f);
         }
 
         @Override
@@ -87,8 +94,7 @@ public class HeatTurret extends PowerTurret{
             bulletX = x + Angles.trnsx(rotation - 90, shootX, shootY),
             bulletY = y + Angles.trnsy(rotation - 90, shootX, shootY);
 
-
-            if(enhancedBullet != null && heatReq > heatRequirements[1]){
+            if(enhancedBullet != null && isEnhancedHeat()){
                 type = enhancedBullet;
             }
             if(shoot.firstShotDelay > 0){
@@ -119,6 +125,10 @@ public class HeatTurret extends PowerTurret{
             }
         }
 
+        private boolean isEnhancedHeat(){
+            return heatRequirements.size > 1 && heatReq > heatRequirements.get(1);
+        }
+
         @Override
         public void draw(){
             super.draw();
@@ -147,20 +157,30 @@ public class HeatTurret extends PowerTurret{
         @Override
         public void init(Bullet b){
             super.init(b);
-            if(b.owner instanceof HeatTurretBuild build &&
-            build.block instanceof HeatTurret heatTurret){
-                b.fdata = 1f;
-                for(int i = 0; i < heatTurret.heatRequirements.length - 1; i++){
-                    if(build.heatReq >= heatTurret.heatRequirements[i]){
-                        float ratio = Mathf.curve(build.heatReq / heatTurret.heatRequirements[i], 0, 1);
-                        b.fdata += damageM[i] * ratio;
-                    }
-                }
-                if(build.heatReq >= heatTurret.heatRequirements[heatTurret.heatRequirements.length - 1]){
-                    b.fdata += (int)Mathf.log(5, build.heatReq / (float)heatTurret.heatRequirements[heatTurret.heatRequirements.length - 1]);
-                }
+            if(b.owner instanceof HeatTurretBuild build && build.block instanceof HeatTurret heatTurret){
+                b.fdata = heatFactor(build, heatTurret);
             }
             b.damage = damage * b.fdata;
+        }
+
+        private float heatFactor(HeatTurretBuild build, HeatTurret heatTurret){
+            float factor = 1f;
+            IntSeq requirements = heatTurret.heatRequirements;
+            if(requirements.isEmpty()) return factor;
+            int maxIndex = Math.max(requirements.size - 1, 0);
+            int loopCount = Math.min(damageM.length, maxIndex);
+            for(int i = 0; i < loopCount; i++){
+                int req = requirements.get(i);
+                if(build.heatReq >= req){
+                    float ratio = Mathf.curve(build.heatReq / req, 0, 1);
+                    factor += damageM[i] * ratio;
+                }
+            }
+            int lastReq = requirements.get(requirements.size - 1);
+            if(build.heatReq >= lastReq){
+                factor += (int)Mathf.log(5, build.heatReq / (float)lastReq);
+            }
+            return factor;
         }
 
         @Override
@@ -190,10 +210,7 @@ public class HeatTurret extends PowerTurret{
             if(fragBullet != null && (fragOnAbsorb || !b.absorbed) && !(b.frags >= pierceFragCap && pierceFragCap > 0)){
 
                 for(int i = 0; i < fragBullets; i++){
-                    float len = Mathf.random(fragOffsetMin, fragOffsetMax);
-                    float a = b.rotation() + Mathf.range(fragRandomSpread / 2) + fragAngle + fragSpread * i - (fragBullets - 1) * fragSpread / 2f;
-                    Bullet f = fragBullet.create(b, x + Angles.trnsx(a, len), y + Angles.trnsy(a, len), a, Mathf.random(fragVelocityMin, fragVelocityMax), Mathf.random(fragLifeMin, fragLifeMax));
-                    if(f.type instanceof HeatBulletType) f.fdata = b.fdata;
+                    Bullet f = createFragBullet(b, x, y, i);
                     f.owner = b.owner;
                 }
                 b.frags++;
@@ -206,24 +223,24 @@ public class HeatTurret extends PowerTurret{
             if(fragBullet != null && (fragOnAbsorb || !b.absorbed) && !(b.frags >= pierceFragCap && pierceFragCap > 0)){
                 int splitCount = (int)Mathf.curve((entity.hitSize() / 8f), 0, 1) * extraFrag;
                 for(int i = 0; i < splitCount; i++){
-                    float len = Mathf.random(fragOffsetMin, fragOffsetMax);
-                    float a = b.rotation() + Mathf.range(fragRandomSpread / 2) + fragAngle + fragSpread * i - (fragBullets - 1) * fragSpread / 2f;
-                    Bullet f = fragBullet.create(b, b.x + Angles.trnsx(a, len), b.y + Angles.trnsy(a, len), a, Mathf.random(fragVelocityMin, fragVelocityMax), Mathf.random(fragLifeMin, fragLifeMax));
-                    if(f.type instanceof HeatBulletType) f.fdata = b.fdata;
+                    createFragBullet(b, b.x, b.y, i);
                 }
             }
+        }
+
+        private Bullet createFragBullet(Bullet source, float x, float y, int index){
+            float len = Mathf.random(fragOffsetMin, fragOffsetMax);
+            float angle = source.rotation() + Mathf.range(fragRandomSpread / 2) + fragAngle + fragSpread * index - (fragBullets - 1) * fragSpread / 2f;
+            Bullet frag = fragBullet.create(source, x + Angles.trnsx(angle, len), y + Angles.trnsy(angle, len), angle,
+            Mathf.random(fragVelocityMin, fragVelocityMax), Mathf.random(fragLifeMin, fragLifeMax));
+            if(frag.type instanceof HeatBulletType) frag.fdata = source.fdata;
+            return frag;
         }
 
         @Override
         public void removed(Bullet b){
             createPuddles(b, b.x, b.y);
             super.removed(b);
-        }
-
-        @Override
-        public void update(Bullet b){
-            super.update(b);
-
         }
 
      /*   public float damageMultiplier(Bullet b){

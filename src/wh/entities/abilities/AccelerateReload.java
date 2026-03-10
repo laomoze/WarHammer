@@ -65,12 +65,12 @@ public class AccelerateReload extends Ability{
 
     @Override
     public void addStats(Table t){
-        t.add("[lightgray]" + WHStats.increaseWhenShooting.localized() + ": [white]+" + Strings.autoFixed(increaseTime * 60 * 100, 0) + StatUnit.perSecond.localized());
+        t.add("[lightgray]" + WHStats.increaseWhenShooting.localized() + ": [white]+" + Strings.autoFixed(60f * 100f / increaseTime, 0) + "%" + StatUnit.perSecond.localized());
         t.row();
-        t.add("[lightgray]" + WHStats.decreaseNotShooting.localized() + ": [white]-" + Strings.autoFixed(decreaseTime * 60 * 100, 0) + StatUnit.perSecond.localized());
+        t.add("[lightgray]" + WHStats.decreaseNotShooting.localized() + ": [white]-" + Strings.autoFixed(60f * 100f / decreaseTime, 0) + "%" + StatUnit.perSecond.localized());
         t.row();
         t.add("[lightgray]" + WHStats.maxBoostPercent.localized() + ": [white]" + Strings.autoFixed(maxMultiplier * 100, 0) + "%");
         t.row();
-        t.add("[lightgray]" + new Stat("wh-reset-time", StatCat.function).localized() + ": [white]" + Strings.autoFixed(resetTime / 60f, 0) + StatUnit.perSecond.localized());
+        t.add("[lightgray]" + new Stat("wh-maintain-time", StatCat.function).localized() + ": [white]" + Strings.autoFixed(resetTime / 60f, 0) + " " + StatUnit.seconds.localized());
     }
 }

@@ -138,7 +138,7 @@ public class ShelterDome extends PayloadBlock{
         @Override
         public void updateTile(){
             super.updateTile();
-            heat = Mathf.lerpDelta(heat, consumePayload != null ? 1f : 0f, 0.08f);
+            heat = Mathf.lerpDelta(heat, consumePayload != null && efficiency > 0f ? 1f : 0f, 0.05f);
 
             if(consumePayload != null){
                 float reload = consumePayload.buildTime() / deconstructSpeed;

@@ -1,26 +1,18 @@
 package wh.entities.world.blocks.distribution;
 
-import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.struct.*;
-import arc.util.*;
 import mindustry.*;
 import mindustry.core.*;
-import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.input.*;
 import mindustry.world.*;
 import mindustry.world.blocks.power.*;
-import mindustry.world.blocks.power.BeamNode.*;
-import mindustry.world.draw.*;
 import mindustry.world.meta.*;
-import mindustry.world.modules.*;
-import wh.content.*;
-import wh.graphics.*;
 
 import java.util.*;
 
@@ -31,8 +23,8 @@ public class CompositePoweNode extends PowerNode{
     public Color laserColor1 = Color.white;
     public Color laserColor2 = Pal.powerLight;
     public float pulseScl = 7, pulseMag = 0.05f;
-    public float laserWidth = 0.4f;
-    public int crossLinkRange = 30;
+    public float laserWidth = 0.8f;
+    public int crossLinkRange = 50;
 
     public CompositePoweNode(String name){
         super(name);
@@ -135,8 +127,12 @@ public class CompositePoweNode extends PowerNode{
             float w = laserWidth + Mathf.absin(pulseScl, pulseMag);
 
             for(int i = 0; i < 4; i++){
-                if(dests[i] != null && links[i] != null && links[i].wasVisible){
+                if(dests[i] != null && links[i] != null){
                     if(links[i].block.hasPower && links[i].team == team){
+                        //Avoid duplicate beams when both endpoints are visible.
+                        //If the other end is not visible, still draw from this side.
+                        if(links[i].wasVisible && id > links[i].id) continue;
+
                         int dst = Math.max(Math.abs(dests[i].x - tile.x), Math.abs(dests[i].y - tile.y));
                         //don't draw lasers for adjacent blocks
                         if(dst > 1 + size / 2){
@@ -192,54 +188,89 @@ public class CompositePoweNode extends PowerNode{
         }
 
         public void updateDirections(){
+            Building[] prevLinks = links.clone();
+            Tile[] prevDests = dests.clone();
+            Building[] candidates = new Building[4];
+            Tile[] candidateDests = new Tile[4];
+
+            //Scan potential 4-direction links.
             for(int i = 0; i < 4; i++){
-                var prev = links[i];
                 var dir = Geometry.d4[i];
-                links[i] = null;
-                dests[i] = null;
                 int offset = size / 2;
-                //find first block with power in range
                 for(int j = 1 + offset; j <= crossLinkRange + offset; j++){
                     var other = world.build(tile.x + j * dir.x, tile.y + j * dir.y);
 
-                    //hit insulated wall
                     if(other != null && other.isInsulated()){
                         break;
                     }
 
                     if(other != null && other.block.hasPower && other.block.connectedPower && other.team == team){
-                        links[i] = other;
-                        dests[i] = world.tile(tile.x + j * dir.x, tile.y + j * dir.y);
+                        candidates[i] = other;
+                        candidateDests[i] = world.tile(tile.x + j * dir.x, tile.y + j * dir.y);
                         break;
                     }
                 }
+            }
 
+            //Count non-directional links already present; those also consume maxNodes.
+            IntSet prevDirectional = new IntSet(4);
+            for(var prev : prevLinks){
+                if(prev != null) prevDirectional.add(prev.pos());
+            }
+
+            int externalLinks = 0;
+            for(int i = 0; i < power.links.size; i++){
+                int p = power.links.get(i);
+                if(!prevDirectional.contains(p)){
+                    externalLinks++;
+                }
+            }
+
+            int allowedDirectional = Math.max(0, maxNodes - externalLinks);
+            int kept = 0;
+
+            //Apply cap: total links (manual + directional) must not exceed maxNodes.
+            for(int i = 0; i < 4; i++){
+                if(candidates[i] != null && kept < allowedDirectional){
+                    links[i] = candidates[i];
+                    dests[i] = candidateDests[i];
+                    kept++;
+                }else{
+                    links[i] = null;
+                    dests[i] = null;
+                }
+            }
+
+            //Diff previous and current, then sync graph links.
+            for(int i = 0; i < 4; i++){
+                var prev = prevLinks[i];
                 var next = links[i];
 
                 if(next != prev){
-                    //unlinked, disconnect and reflow
                     if(prev != null && prev.isAdded()){
                         prev.power.links.removeValue(pos());
                         power.links.removeValue(prev.pos());
 
                         PowerGraph newgraph = new PowerGraph();
-                        //reflow from this point, covering all tiles on this side
                         newgraph.reflow(this);
 
                         if(prev.power.graph != newgraph){
-                            //reflow power for other end
                             PowerGraph og = new PowerGraph();
                             og.reflow(prev);
                         }
                     }
 
-                    //linked to a new one, connect graphs
                     if(next != null){
                         power.links.addUnique(next.pos());
                         next.power.links.addUnique(pos());
-
                         power.graph.addGraph(next.power.graph);
                     }
+                }else if(next == null){
+                    //keep arrays clean if nothing is linked on this side
+                    dests[i] = null;
+                }else if(dests[i] == null){
+                    //preserve previous destination tile when endpoint didn't change
+                    dests[i] = prevDests[i];
                 }
             }
         }

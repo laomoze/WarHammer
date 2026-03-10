@@ -4,23 +4,20 @@ import arc.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
-import arc.scene.ui.layout.Table;
+import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
-import mindustry.*;
 import mindustry.ai.types.*;
 import mindustry.audio.*;
 import mindustry.entities.*;
 import mindustry.entities.bullet.*;
-import mindustry.entities.pattern.ShootPattern;
-import mindustry.entities.units.WeaponMount;
+import mindustry.entities.pattern.*;
+import mindustry.entities.units.*;
 import mindustry.gen.*;
-import mindustry.graphics.*;
 import mindustry.type.*;
 import mindustry.world.meta.*;
 import wh.graphics.*;
 import wh.ui.*;
-import wh.util.*;
 
 import static mindustry.Vars.*;
 
@@ -395,9 +392,9 @@ public class MarkWeapon extends Weapon{
     public void addStats(UnitType u, Table t){
         super.addStats(u, t);
         t.row();
-        t.add("[lightgray]" + new Stat("wh-mark-chance", StatCat.function).localized() + "[white]" + (int)(markChance * 100) + "%");
+        t.add("[lightgray]" + new Stat("wh-mark-chance", StatCat.function).localized() + ": [white]" + (int)(markChance * 100) + "%");
         t.row();
-        t.add(Core.bundle.format("stat.wh-markBullet"));
+        t.add(Core.bundle.get("stat.wh-markBullets"));
         t.row();
         UIUtils.ammo(ObjectMap.of(u, markBullet)).display(t);
     }

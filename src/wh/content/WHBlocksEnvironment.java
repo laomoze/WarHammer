@@ -12,10 +12,11 @@ public class WHBlocksEnvironment{
     public static final Attribute hasPromethium = Attribute.add("promethium");
     public static Block road;
     //ore
-    public static Block promethium, vibraniumOre, molybdenumOre,
+    public static Block promethium,
+    manganeseOre, chromiumOre, cobaltOre, uraniumOre, molybdenumOre, vibraniumOre,
     mineralSand, quartzSand, promethiumSand, radiationSand;
     //liquid
-    public static Block radiationWater, radiationWaterDeep, swageWater, swageWaterDeep, mineralSandSwageWater, mineralSandRadiationWater;
+    public static Block radiationWater, radiationWaterDeep, effluent, effluentDeep, mineralSandSwageWater, mineralSandRadiationWater;
     //Floor
     public static Block apatite, cementFloor, darkHotRock, darkMagmaRock, darkRock, mineralSandstone,
     parasiticTrachyte, trachyte, purpleStone, radiationCraters, radiationRockFloor,
@@ -34,8 +35,23 @@ public class WHBlocksEnvironment{
 
     public static void load(){
         road = new Road("road-autotile");
+        manganeseOre = new OreBlock("manganese-ore", WHItems.manganese){{
+            variants = 4;
+        }};
 
-        molybdenumOre = new OreBlock("molybdenum-ore", WHItems.molybdenum);
+        chromiumOre = new OreBlock("chromium-ore", WHItems.chromium);
+
+        cobaltOre = new OreBlock("cobalt-ore", WHItems.cobalt){{
+            variants = 4;
+        }};
+
+        uraniumOre = new OreBlock("uranium-ore", WHItems.uranium){{
+            variants = 4;
+        }};
+
+        molybdenumOre = new OreBlock("molybdenum-ore", WHItems.molybdenum){{
+            variants = 4;
+        }};
 
         vibraniumOre = new OreBlock("vibranium-ore", WHItems.vibranium){{
             variants = 4;
@@ -105,7 +121,7 @@ public class WHBlocksEnvironment{
             supportsOverlay = true;
         }};
 
-        swageWaterDeep = new Floor("swage-water-deep"){{
+        effluentDeep = new Floor("effluent-deep"){{
             speedMultiplier = 0.2f;
             variants = 0;
             liquidDrop = WHLiquids.swageWater;
@@ -119,7 +135,7 @@ public class WHBlocksEnvironment{
             supportsOverlay = true;
         }};
 
-        swageWater = new Floor("swage-water"){{
+        effluent = new Floor("effluent"){{
             speedMultiplier = 0.5f;
             variants = 0;
             status = WHStatusEffects.rust;
@@ -138,7 +154,7 @@ public class WHBlocksEnvironment{
             supportsOverlay = true;
         }};
 
-        ((ShallowLiquid)mineralSandSwageWater).set(swageWater, mineralSand);
+        ((ShallowLiquid)mineralSandSwageWater).set(effluent, mineralSand);
 
         mineralSandRadiationWater = new ShallowLiquid("mineral-sand-water2"){{
             speedMultiplier = 0.8f;
@@ -221,7 +237,7 @@ public class WHBlocksEnvironment{
             attributes.set(Attribute.water, -1);
         }};
 
-        titaniumCrystal = new Floor("titanium-crystal"){{
+      /*  titaniumCrystal = new Floor("titanium-crystal"){{
             attributes.set(Attribute.oil, 0.8f);
             variants = 4;
             dragMultiplier = 0.8f;
@@ -230,7 +246,7 @@ public class WHBlocksEnvironment{
         titaniumCrystalStone = new Floor("titanium-crystal-stone"){{
             attributes.set(Attribute.oil, 1f);
             dragMultiplier = 0.8f;
-        }};
+        }};*/
 
         apatiteWall = new StaticWall("apatite-wall"){{
             apatite.asFloor().wall = this;
@@ -264,9 +280,9 @@ public class WHBlocksEnvironment{
             scorchedStone.asFloor().wall = scorchedEarth.asFloor().wall = this;
         }};
 
-        titaniumCrystalWall = new StaticWall("titanium-crystal-wall"){{
+      /*  titaniumCrystalWall = new StaticWall("titanium-crystal-wall"){{
             titaniumCrystalStone.asFloor().wall = titaniumCrystal.asFloor().wall = this;
-        }};
+        }};*/
 
         trachyteWall = new StaticWall("trachyte-wall"){{
             trachyte.asFloor().wall = parasiticTrachyte.asFloor().wall = this;

@@ -48,16 +48,20 @@ public final class WHItems{
             hardness = 2;
             cost = 0.7f;
             alwaysUnlocked = true;
+            healthScaling = 0.06f;
         }};
 
         chromium = new Item("chromium", Color.valueOf("DC9B94FF")){{
             hardness = 3;
             cost = 0.8f;
+            flammability = 0.3f;
+            healthScaling = 0.08f;
         }};
 
         cobalt = new Item("cobalt", Color.valueOf("A9C0CDFF")){{
             hardness = 4;
             cost = 0.9f;
+            healthScaling = 0.1f;
         }};
 
         uranium = new Item("uranium", Color.valueOf("6A9A4DFF")){{

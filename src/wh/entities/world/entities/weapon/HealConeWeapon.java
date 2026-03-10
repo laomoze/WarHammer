@@ -16,6 +16,7 @@ import wh.entities.bullet.*;
 import static mindustry.Vars.*;
 
 public class HealConeWeapon extends Weapon{
+    public boolean targetUnits = true;
     public boolean targetBuildings = true;
 
     public HealConeWeapon(String name){
@@ -48,9 +49,12 @@ public class HealConeWeapon extends Weapon{
 
     @Override
     protected Teamc findTarget(Unit unit, float x, float y, float range, boolean air, boolean ground){
-        Unit out = Units.closest(unit.team, x, y, range, u -> u != unit && u.damaged());
-        if(out != null || !targetBuildings) return out;
-        return Units.findAllyTile(unit.team, x, y, range, Building::damaged);
+        Unit out;
+        if(targetUnits){
+            out = Units.closest(unit.team, x, y, range, u -> u != unit && u.damaged());
+            if(out != null || !targetBuildings) return out;
+        }
+        return targetBuildings ? Units.findAllyTile(unit.team, x, y, range, Building::damaged) : null;
     }
 
 

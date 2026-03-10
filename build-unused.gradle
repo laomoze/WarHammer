@@ -1,0 +1,229 @@
+import ent.*
+
+import java.util.zip.ZipInputStream
+
+/**
+ * W: Why is my compiler unable to use pattern variables and other methods that require higher versions of Java?
+ * A: Check Gradle JVM in IntelliJ IDEA at
+ * Build, Execution, Deployment > Build Tools > Gradle.
+ */
+
+buildscript{
+    def arcVersion = project.findProperty('arcVersion').toString()
+    def useJitpack = project.findProperty('mindustryBE').toString().toBoolean()
+
+    repositories{
+        mavenCentral()
+        if(!useJitpack) maven{ url = uri('https://maven.xpdustry.com/mindustry') }
+        maven{ url = uri('https://raw.githubusercontent.com/GglLfr/EntityAnnoMaven/main') }
+        maven{ url = uri('https://jitpack.io') }
+    }
+
+    dependencies{
+        classpath("com.github.Anuken.Arc:arc-core:${arcVersion}")
+    }
+}
+
+plugins{
+    id 'java'
+    id 'com.github.GglLfr.EntityAnno'
+}
+
+version = '1.0'
+
+sourceSets.main.java.setSrcDirs(['src'])
+
+def useJitpack = project.findProperty('mindustryBE').toString().toBoolean()
+def mindustryVersion = project.findProperty('mindustryVersion').toString()
+def mindustryBEVersion = project.findProperty('mindustryBEVersion').toString()
+def arcVersion = project.findProperty('arcVersion').toString()
+def entVersion = project.findProperty('entVersion').toString()
+def jabelVersion = project.findProperty('jabelVersion')?.toString() ?: '93fde537c7'
+def modName = project.findProperty('modName').toString()
+def modArtifact = project.findProperty('modArtifact')?.toString() ?: project.name
+def modFetch = project.findProperty('modFetch').toString()
+def modGenSrc = project.findProperty('modGenSrc').toString()
+def modGen = project.findProperty('modGen').toString()
+
+def isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
+def sdkRoot = System.getenv('ANDROID_HOME')
+
+def mindustry = { String module ->
+    "com.github.Anuken.Mindustry${module}:${mindustryVersion}"
+}
+
+def arc = { String module ->
+    "com.github.Anuken.Arc${module}:${arcVersion}"
+}
+
+def entity = { String module ->
+    "com.github.GglLfr.EntityAnno${module}:${entVersion}"
+}
+
+repositories{
+    mavenCentral()
+    maven{ url = uri('https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository') }
+    maven{ url = uri('https://maven.xpdustry.com/mindustry') }
+    maven{ url = uri('https://jitpack.io') }
+    maven{ url = uri('https://raw.githubusercontent.com/GglLfr/EntityAnnoMaven/main') }
+}
+
+configurations.configureEach{
+    resolutionStrategy.eachDependency{
+        if(useJitpack && requested.group == 'com.github.Anuken.Mindustry'){
+            useTarget("com.github.Anuken.MindustryJitpack:${requested.module.name}:${mindustryBEVersion}")
+        }else if(requested.group == 'com.github.Anuken.Arc'){
+            useVersion(arcVersion)
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach{
+    options.encoding = 'UTF-8'
+    options.release = 8
+    sourceCompatibility = '17'
+    options.compilerArgs.addAll([
+            '-AmodName=' + modName,
+            '-AgenPackage=' + modGen,
+            '-AfetchPackage=' + modFetch,
+            '-ArevisionDir=' + layout.projectDirectory.dir('revisions').asFile.absolutePath
+    ])
+}
+
+tasks.named('fetchComps'){ task ->
+    // Replace EntityAnno's GitHub API call to avoid unauthenticated API 403.
+    task.actions.clear()
+    task.doLast{
+        def repo = useJitpack ? 'MindustryJitpack' : 'Mindustry'
+        def ref = useJitpack ? mindustryBEVersion : mindustryVersion
+        def zipUrl = useJitpack ?
+                "https://codeload.github.com/Anuken/${repo}/zip/${ref}" :
+                "https://codeload.github.com/Anuken/${repo}/zip/refs/tags/${ref}"
+
+        def fetchedRoot = layout.buildDirectory.dir('fetched').get().asFile
+        def outDir = new File(fetchedRoot, modFetch.replace('.', '/'))
+        project.delete(fetchedRoot)
+        outDir.mkdirs()
+
+        def extracted = 0
+        new URL(zipUrl).withInputStream{ is ->
+            def zis = new ZipInputStream(is)
+            try{
+                def entry
+                while((entry = zis.nextEntry) != null){
+                    def name = entry.name
+                    if(!entry.isDirectory() &&
+                            name.contains('/core/src/mindustry/entities/comp/') &&
+                            name.endsWith('.java')){
+                        def fileName = name.substring(name.lastIndexOf('/') + 1)
+                        def baos = new ByteArrayOutputStream()
+                        def buf = new byte[8192]
+                        int read
+                        while((read = zis.read(buf)) != -1){
+                            baos.write(buf, 0, read)
+                        }
+                        def source = baos.toString('UTF-8')
+                        def processed = EntityAnnoPlugin.procComp(source, modFetch)
+                        new File(outDir, fileName).setText(processed, 'UTF-8')
+                        extracted++
+                    }
+                    zis.closeEntry()
+                }
+            }finally{
+                zis.close()
+            }
+        }
+
+        if(extracted == 0){
+            throw new GradleException("No component files extracted from ${zipUrl}.")
+        }
+
+        logger.lifecycle("Wrote ${extracted} components from ${repo}@${ref}.")
+    }
+}
+
+extensions.configure(EntityAnnoExtension){ ext ->
+    ext.modName = modName
+    ext.mindustryVersion = useJitpack ? mindustryBEVersion : mindustryVersion
+    ext.isJitpack = useJitpack
+    ext.revisionDir = layout.projectDirectory.dir('revisions').asFile
+    ext.fetchPackage = modFetch
+    ext.genSrcPackage = modGenSrc
+    ext.genPackage = modGen
+}
+
+dependencies{
+    implementation 'org.jetbrains:annotations:24.0.1'
+
+    compileOnly(arc(':arc-core'))
+    compileOnly(mindustry(':core'))
+
+    annotationProcessor "com.github.Anuken:jabel:${jabelVersion}"
+    annotationProcessor(entity(':downgrader'))
+    compileOnly(entity(':entity'))
+    annotationProcessor(entity(':entity'))
+}
+
+tasks.named('jar', Jar){
+    archiveFileName = "${modArtifact}Desktop.jar"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from{
+        configurations.runtimeClasspath.collect{ it.isDirectory() ? it : zipTree(it) }
+    }
+
+    from(rootDir){
+        include 'mod.hjson'
+    }
+
+    from('assets/'){
+        include '**'
+    }
+}
+
+tasks.register('jarAndroid'){
+    dependsOn 'jar'
+
+    doLast{
+        if(!sdkRoot || !new File(sdkRoot).exists()){
+            throw new GradleException('No valid Android SDK found. Ensure that ANDROID_HOME is set to your Android SDK directory.')
+        }
+
+        def platformRoot = new File("${sdkRoot}/platforms/").listFiles().sort().reverse().find{
+            f -> new File(f, 'android.jar').exists()
+        }
+
+        if(!platformRoot){
+            throw new GradleException('No android.jar found. Ensure that you have an Android platform installed.')
+        }
+
+        def dependencies = (configurations.compileClasspath.asList() + configurations.runtimeClasspath.asList() + [new File(platformRoot, 'android.jar')])
+                .collect{ "--classpath ${it.path}" }
+                .join(' ')
+
+        def d8 = isWindows ? 'd8.bat' : 'd8'
+        "${d8} ${dependencies} --min-api 14 --output ${modArtifact}Android.jar ${modArtifact}Desktop.jar"
+                .execute(null, new File("${buildDir}/libs"))
+                .waitForProcessOutput(System.out, System.err)
+    }
+}
+
+tasks.register('deploy', Jar){
+    dependsOn 'jarAndroid'
+    dependsOn 'jar'
+    archiveFileName = "${modArtifact}.jar"
+
+    from{
+        [
+                zipTree("${buildDir}/libs/${modArtifact}Desktop.jar"),
+                zipTree("${buildDir}/libs/${modArtifact}Android.jar")
+        ]
+    }
+
+    doLast{
+        delete{
+            delete "${buildDir}/libs/${modArtifact}Desktop.jar"
+            delete "${buildDir}/libs/${modArtifact}Android.jar"
+        }
+    }
+}

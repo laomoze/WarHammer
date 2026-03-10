@@ -14,6 +14,9 @@ public class WHStats{
     increaseWhenShooting = new Stat("wh-increase-when-shooting", StatCat.function),
     decreaseNotShooting = new Stat("wh-decrease-not-shooting", StatCat.function),
     maxBoostPercent = new Stat("wh-max-boost-percent", StatCat.function),
+    reactionArmorTriggerHits = new Stat("wh-reaction-armor-trigger-hits", StatCat.function),
+    reactionArmorLayers = new Stat("wh-reaction-armor-layers", StatCat.function),
+    sharedDamageReduction = new Stat("wh-shared-damage-reduction", StatCat.function),
 
     payloadIsBuildRate = new Stat("wh-payload-is-build-rate", StatCat.function);
 }

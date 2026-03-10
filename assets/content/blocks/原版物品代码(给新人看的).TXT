@@ -425,15 +425,3 @@ surge-alloy -巨浪合金
 spore-pod -孢子荚
 blast-compound -爆炸混合物
 pyratite -硫
-
-"scaleLife": true,/合适位置爆炸
-tungsten 钨
-carbide  碳
-adamantium 精金
-ceramite    陶钢
-refine-ceramite  精炼陶钢
-sealed-promethium   封装钷能
-titanium-steel    钛钢/速建钢
-vibranium        振金
-ore-promethium  原钷
-refine-promethium高能钷素

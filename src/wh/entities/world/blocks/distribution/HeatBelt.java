@@ -1,42 +1,29 @@
 package wh.entities.world.blocks.distribution;
 
-import arc.Core;
-import arc.func.Boolf;
-import arc.graphics.Blending;
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.TextureRegion;
+import arc.*;
+import arc.func.*;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
 import arc.math.*;
-import arc.math.geom.Geometry;
-import arc.struct.IntSet;
-import arc.struct.Seq;
-import arc.util.Eachable;
-import arc.util.Nullable;
-import arc.util.Time;
+import arc.math.geom.*;
+import arc.struct.*;
+import arc.util.*;
 import arc.util.io.*;
-import mindustry.Vars;
-import mindustry.entities.TargetPriority;
-import mindustry.entities.units.BuildPlan;
+import mindustry.*;
+import mindustry.entities.*;
+import mindustry.entities.units.*;
 import mindustry.gen.*;
-import mindustry.graphics.Layer;
-import mindustry.graphics.Pal;
+import mindustry.graphics.*;
 import mindustry.type.*;
-import mindustry.ui.Bar;
+import mindustry.ui.*;
 import mindustry.world.*;
-import mindustry.world.blocks.Autotiler;
-import mindustry.world.blocks.distribution.ChainedBuilding;
-import mindustry.world.blocks.distribution.StackConveyor.*;
+import mindustry.world.blocks.*;
+import mindustry.world.blocks.distribution.*;
 import mindustry.world.blocks.heat.*;
-import mindustry.world.blocks.heat.HeatConductor.*;
-import mindustry.world.draw.DrawBlock;
-import mindustry.world.draw.DrawDefault;
-import mindustry.world.meta.BlockGroup;
-import mindustry.world.meta.Env;
-import wh.content.WHBlocks;
-import wh.entities.world.blocks.distribution.TubeConveyor.*;
+import mindustry.world.blocks.power.*;
+import mindustry.world.meta.*;
+import wh.content.*;
 import wh.entities.world.blocks.production.*;
-
-import java.util.*;
 
 import static mindustry.Vars.*;
 import static mindustry.input.Placement.isSidePlace;
@@ -118,14 +105,24 @@ public class HeatBelt extends Block implements Autotiler{
 
     @Override
     public boolean blends(Tile tile, int rotation, int otherx, int othery, int otherrot, Block otherblock){
+        boolean directionalProducer =
+        otherblock instanceof HeatProducer || otherblock instanceof FlammabilityHeatProducer || otherblock instanceof OverheatGenericCrafter || otherblock instanceof NuclearReactor;
+
+        boolean orientationMatch = directionalProducer ? otherFacesThis(tile, otherx, othery, otherrot, otherblock) :
+        lookingAtEither(tile, rotation, otherx, othery, otherrot, otherblock);
 
         return
-        (otherblock instanceof HeatBlock || (lookingAt(tile, rotation, otherx, othery, otherblock))
+        (otherblock instanceof HeatBlock || lookingAt(tile, rotation, otherx, othery, otherblock)
         || otherblock instanceof HeatBelt
         || otherblock instanceof FlammabilityHeatProducer
         || otherblock instanceof OverheatGenericCrafter
         || (otherblock instanceof HeatProducer b && b.heatOutput > 0)
-        || otherblock instanceof HeatDirectionBridge) && lookingAtEither(tile, rotation, otherx, othery, otherrot, otherblock);
+        || otherblock instanceof HeatDirectionBridge) && orientationMatch;
+    }
+
+    private boolean otherFacesThis(Tile tile, int otherx, int othery, int otherrot, Block otherblock){
+        Tile facing = Edges.getFacingEdge(otherblock, otherx, othery, tile);
+        return facing != null && facing.relativeTo(tile) == otherrot;
     }
 
     @Override

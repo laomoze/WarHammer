@@ -32,7 +32,6 @@ import wh.entities.bullet.laser.*;
 import java.text.*;
 
 import static arc.Core.*;
-import static mindustry.Vars.content;
 import static mindustry.Vars.*;
 import static mindustry.world.meta.StatValues.*;
 
@@ -339,45 +338,61 @@ public final class UIUtils{
         return ib;
     }
 
-    public static StatValue itemRangeBoosters(String unit, StatusEffect[] status, float timePeriod, float rangeBoost, ItemStack[] items, boolean replace, Boolf<Item> filter){
+    public static StatValue itemRangeBoosters(String unit, StatusEffect[] status, float timePeriod, float rangeBoost, float extraBoostPercent, int selectableCount, ItemStack[] items, boolean replace, Boolf<Item> filter){
         return table -> {
             table.row();
-            table.table(c -> {
-                for(Item item : content.items()){
-                    if(!filter.get(item)) continue;
-                    c.table(Styles.grayPanel, b -> {
-                        b.table(it -> {
-                            for(ItemStack stack : items){
-                                if(timePeriod < 0){
-                                    it.add(displayItem(stack.item, stack.amount, true)).pad(10f).padLeft(15f).left();
-                                }else{
-                                    it.add(displayItem(stack.item, stack.amount, timePeriod, true)).pad(10f).padLeft(15f).left();
-                                }
-                                if(items.length > 1) it.row();
-                                ;
-                            }
-                        }).left();
+            table.table(Styles.grayPanel, panel -> {
+                panel.left().top().defaults().left().top();
 
-                        b.table(bt -> {
-                            bt.left().defaults().left();
-                            if(status.length > 0){
-                                for(StatusEffect s : status){
-                                    if(s == StatusEffects.none) continue;
-                                    bt.row();
-                                    bt.add(UIUtils.selfStyleImageButton(new TextureRegionDrawable(s.uiIcon), Styles.emptyi, () -> ui.content.show(s))).padTop(2f).padBottom(6f).size(42);
-                                    bt.add(s.localizedName).padLeft(5);
-                                }
-                                if(replace){
-                                    bt.row();
-                                    bt.add(Core.bundle.get("statValue.replace"));
-                                }
+                panel.table(content -> {
+                    content.left().top().defaults().left().padBottom(3f);
+
+                    boolean any = false;
+                    for(ItemStack stack : items){
+                        if(!filter.get(stack.item)) continue;
+                        any = true;
+                        if(timePeriod < 0){
+                            content.add(displayItem(stack.item, stack.amount, true)).left().row();
+                        }else{
+                            content.add(displayItem(stack.item, stack.amount, timePeriod, true)).left().row();
+                        }
+                    }
+                    if(!any){
+                        content.add("@none").color(Color.lightGray).left().row();
+                    }
+
+                    if(status != null && status.length > 0){
+                        content.add(Core.bundle.get("statValue.boostStatus")).color(Pal.accent).padTop(2f).row();
+                        for(StatusEffect s : status){
+                            if(s == StatusEffects.none) continue;
+                            content.table(row -> {
+                                row.left();
+                                row.add(UIUtils.selfStyleImageButton(new TextureRegionDrawable(s.uiIcon), Styles.emptyi, () -> ui.content.show(s))).size(36f).padRight(6f);
+                                row.add(s.localizedName);
+                            }).left().row();
+                        }
+                    }
+
+                    if(replace){
+                        content.add("[lightgray]" + Core.bundle.get("statValue.replace")).padTop(2f).row();
+                    }
+
+                    if(extraBoostPercent != 0f || rangeBoost != 0f){
+                        content.table(extra -> {
+                            extra.left().defaults().left().padRight(10f);
+                            if(extraBoostPercent != 0f){
+                                extra.add(Core.bundle.format("statValue.extraOverdrive", (int)extraBoostPercent));
                             }
-                            bt.row();
-                            if(rangeBoost != 0) bt.add("[lightgray]+[stat]" + Strings.autoFixed(rangeBoost / tilesize, 2) + "[lightgray] " + StatUnit.blocks.localized()).row();
-                        }).right().grow().pad(10f).padRight(15f);
-                    }).growX().pad(5).padBottom(-5).row();
-                }
-            }).growX().colspan(table.getColumns());
+                            if(rangeBoost != 0f){
+                                extra.add(Core.bundle.format("statValue.extraRange", Strings.autoFixed(rangeBoost / tilesize, 2)));
+                            }
+                        }).left().padTop(2f).row();
+                    }
+
+                    content.add("[lightgray]" + Core.bundle.get("statValue.selectableCountLabel")).padTop(2f).left().row();
+                    content.add("[stat]" + selectableCount).left();
+                }).growX().pad(10f).left().top();
+            }).growX().pad(5f).padBottom(-5f).colspan(table.getColumns()).left();
             table.row();
         };
     }
@@ -389,7 +404,7 @@ public final class UIUtils{
             table.table(Styles.grayPanel, bt -> {
                 bt.left().top().defaults().padRight(15);
 
-                // 创建分组映射：强化物品 -> 主弹药列表
+                //强化物品 -> 主弹药列表
                 ObjectMap<Item, Seq<Item>> groups = new ObjectMap<>();
                 enhancerMap.each((base, enhancer) -> {
                     groups.get(enhancer, Seq::new).add(base);
@@ -452,7 +467,6 @@ public final class UIUtils{
     }
 
     //何以为
-
     public static <T extends UnlockableContent> StatValue ammo(ObjectMap<T, BulletType> map, boolean nested, boolean showUnit){
         return table -> {
 
@@ -521,12 +535,23 @@ public final class UIUtils{
                         sep(bt, Core.bundle.format("bullet.knockback", Strings.autoFixed(type.knockback, 2)));
                     }
 
-                    if(type.healPercent > 0f){
-                        sep(bt, Core.bundle.format("bullet.healpercent", Strings.autoFixed(type.healPercent, 2)));
-                    }
+                    if(type instanceof HealCone cone){
+                        if(cone.healPercent > 0f){
+                            sep(bt, bundle.format("bullet.wh-healpercent-per-second", Strings.autoFixed(cone.healPercent, 2)));
+                        }
+                        if(cone.healAmount > 0f){
+                            sep(bt, bundle.format("wh-bullet.secondHealAmount", Strings.autoFixed(cone.healAmount, 2)));
+                        }
+                        sep(bt, bundle.format("bullet.wh-cone-range", Strings.fixed(cone.findRange / tilesize, 1)));
+                        sep(bt, bundle.format("bullet.wh-cone-angle", Strings.fixed(cone.findAngle, 1)));
+                    }else{
+                        if(type.healPercent > 0f){
+                            sep(bt, Core.bundle.format("bullet.healpercent", Strings.autoFixed(type.healPercent, 2)));
+                        }
 
-                    if(type.healAmount > 0f){
-                        sep(bt, Core.bundle.format("bullet.healamount", Strings.autoFixed(type.healAmount, 2)));
+                        if(type.healAmount > 0f){
+                            sep(bt, Core.bundle.format("bullet.healamount", Strings.autoFixed(type.healAmount, 2)));
+                        }
                     }
 
                     if(type.pierce || type.pierceCap != -1){
@@ -539,6 +564,52 @@ public final class UIUtils{
 
                     if(type.homingPower > 0.01f){
                         sep(bt, "@bullet.homing");
+                    }
+
+                    if(type instanceof MoveSuppressionBullet stype){
+                        sep(bt, bundle.format("bullet.wh-cone-range", Strings.fixed(stype.findRange / tilesize, 1)));
+                        sep(bt, bundle.format("bullet.wh-cone-angle", Strings.fixed(stype.findAngle, 1)));
+                        sep(bt, bundle.get(stype.traction ? "bullet.wh-traction" : "bullet.wh-repulse"));
+                        sep(bt, bundle.format("bullet.wh-force", Strings.autoFixed(stype.force, 1)));
+                    }
+
+                    if(type instanceof ApproachBullet stype){
+                        if(stype.reload > 0f){
+                            sep(bt, bundle.format("bullet.wh-approach-reload", Strings.autoFixed(stype.reload / 60f, 1)));
+                        }
+                        if(stype.bulletType != null && stype.bulletType.showStats){
+                            bt.row();
+
+                            Table ac = new Table();
+                            ammo(ObjectMap.of(t, stype.bulletType), true, false).display(ac);
+                            Collapser coll = new Collapser(ac, true);
+                            coll.setDuration(0.1f);
+
+                            bt.table(at -> {
+                                at.left().defaults().left();
+                                at.add(bundle.get("bullet.wh-approach-sub"));
+                                at.button(Icon.downOpen, Styles.emptyi, () -> coll.toggle(false)).update(i -> i.getStyle().imageUp = (!coll.isCollapsed() ? Icon.upOpen : Icon.downOpen)).size(8).padLeft(16f).expandX();
+                            });
+                            bt.row();
+                            bt.add(coll);
+                        }
+                    }
+
+                    if(type instanceof BlackHoleBulletType stype){
+                        sep(bt, bundle.format("bullet.wh-blackhole-inner-range", Strings.fixed(stype.inRad / tilesize, 1)));
+                        sep(bt, bundle.format("bullet.wh-blackhole-outer-range", Strings.fixed(stype.outRad / tilesize, 1)));
+                        if(stype.damageInterval > 0f){
+                            sep(bt, bundle.format("bullet.wh-blackhole-damage-interval", Strings.autoFixed(stype.damageInterval / 60f, 1)));
+                        }
+                    }
+
+                    if(type instanceof ShieldBreakerType stype){
+                        if(stype.maxShieldDamage > 0f){
+                            sep(bt, bundle.format("bullet.wh-shield-breaker-max", Strings.autoFixed(stype.maxShieldDamage, 0)));
+                        }
+                        if(stype.fragSpawnSpacing > 0f){
+                            sep(bt, bundle.format("bullet.wh-shield-breaker-interval", Strings.autoFixed(stype.fragSpawnSpacing / 60f, 1)));
+                        }
                     }
 
 
@@ -560,8 +631,10 @@ public final class UIUtils{
                     }
 
                     if(type instanceof LaserBeamBulletType stype){
-                        sep(bt, bundle.format("bullet.wh-extension-length", Strings.fixed((stype.extensionProportion * stype.length) / tilesize, 1)));
-                        sep(bt, bundle.format("bullet.wh-max-damgae", Strings.fixed((stype.damageMult * stype.damage) / 60, 1)));
+                        float maxLength = Math.max(stype.length * (1f + stype.extensionProportion), stype.maxRange);
+                        sep(bt, bundle.format("bullet.wh-extension-length", Strings.fixed(maxLength / tilesize, 1)));
+                        float extraDps = stype.damageInterval <= 0f ? 0f : (stype.damageMult * stype.damage) / stype.damageInterval * 60f;
+                        sep(bt, bundle.format("bullet.wh-max-damage", Strings.fixed(extraDps, 1)));
                     }
 
                     if(type instanceof ChainLightingBulletType stype){

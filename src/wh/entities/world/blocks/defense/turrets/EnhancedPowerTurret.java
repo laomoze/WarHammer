@@ -1,25 +1,18 @@
 package wh.entities.world.blocks.defense.turrets;
 
-import arc.*;
 import arc.math.*;
-import arc.scene.ui.*;
-import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
 import arc.util.io.*;
-import mindustry.*;
 import mindustry.entities.bullet.*;
 import mindustry.entities.pattern.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.type.Item;
+import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.world.blocks.defense.turrets.*;
-import mindustry.world.blocks.defense.turrets.ItemTurret.*;
-import mindustry.world.consumers.*;
 import mindustry.world.meta.*;
-
-import static mindustry.Vars.content;
+import wh.ui.*;
 
 public class EnhancedPowerTurret extends Turret{
 
@@ -32,6 +25,15 @@ public class EnhancedPowerTurret extends Turret{
     public EnhancedPowerTurret(String name){
         super(name);
         hasPower = true;
+    }
+
+    @Override
+    public void init(){
+        super.init();
+        if(enhancedBullet != null && enhancerItem != null){
+            hasItems = true;
+            itemCapacity = Math.max(itemCapacity, Mathf.ceil(maxAmmo / Math.max(1f, enhancedBullet.ammoMultiplier)));
+        }
     }
 
     public void enhance(Item enhancer, BulletType bullet, ShootPattern pattern){
@@ -52,8 +54,9 @@ public class EnhancedPowerTurret extends Turret{
     @Override
     public void setStats(){
         super.setStats();
-        stats.add(Stat.ammo, StatValues.ammo(ObjectMap.of(this, shootType)));
-        if(enhancedBullet != null && enhancerItem != null) stats.add(Stat.ammo, StatValues.ammo(ObjectMap.of(enhancerItem, enhancedBullet)));
+        stats.remove(Stat.ammo);
+        stats.add(Stat.ammo, UIUtils.ammo(ObjectMap.of(this, shootType)));
+        if(enhancedBullet != null && enhancerItem != null) stats.add(Stat.ammo, UIUtils.ammo(ObjectMap.of(enhancerItem, enhancedBullet)));
         stats.add(Stat.ammoCapacity, maxAmmo / ammoPerShot, StatUnit.shots);
     }
 
