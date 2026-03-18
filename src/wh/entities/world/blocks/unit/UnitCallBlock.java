@@ -5,6 +5,7 @@ import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
+import arc.scene.event.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
@@ -31,7 +32,7 @@ import wh.util.*;
 
 import static arc.Core.bundle;
 import static mindustry.Vars.*;
-import static wh.ui.UIUtils.*;
+import static wh.ui.UIUtils.LEN;
 
 public class UnitCallBlock extends Block{
     public boolean useCoreItems = true;
@@ -77,24 +78,12 @@ public class UnitCallBlock extends Block{
         });
 
         config(Integer.class, (UnitCallBlockBuild build, Integer i) -> {
-            if(build.currentPlan == i) return;
-            build.currentPlan = i < 0 || i >= plans.size ? -1 : i;
-            build.unitBuildProgress = 0;
-            if(build.command != null && (build.unit() == null || !build.unit().commands.contains(build.command))){
-                build.command = null;
-            }
-            build.CanSpawn();
+            build.selectPlan(i);
         });
 
         config(UnitType.class, (UnitCallBlockBuild build, UnitType val) -> {
             int next = plans.indexOf(p -> p.unit == val);
-            if(build.currentPlan == next) return;
-            build.currentPlan = next;
-            build.unitBuildProgress = 0;
-            if(build.command != null && !val.commands.contains(build.command)){
-                build.command = null;
-            }
-            build.CanSpawn();
+            build.selectPlan(next);
         });
 
         config(UnitCommand.class, (UnitCallBlockBuild build, UnitCommand command) -> build.command = command);
@@ -116,6 +105,13 @@ public class UnitCallBlock extends Block{
     public void init(){
         super.init();
         capacities = new int[Vars.content.items().size];
+        for(UnitPlan plan : plans){
+            for(ItemStack stack : plan.requirements){
+                int perItem = Math.max(1, stack.amount) * 2;
+                capacities[stack.item.id] = Math.max(capacities[stack.item.id], perItem);
+                itemCapacity = Math.max(itemCapacity, capacities[stack.item.id]);
+            }
+        }
         consumeBuilder.each(c -> c.multiplier = b -> state.rules.unitCost(b.team));
     }
 
@@ -138,7 +134,9 @@ public class UnitCallBlock extends Block{
         super.setBars();
 
         addBar("warmup", (UnitCallBlockBuild e) -> new Bar(
-        () -> Core.bundle.get("bar.warmup") + ": " + Mathf.round(e.warmup * 100) + "%",
+        () -> (bundle.has("bar.warmup") ? bundle.get("bar.warmup") :
+        (bundle.has("bar.wh-warmup") ? bundle.get("bar.wh-warmup") : "warmup")) +
+        ": " + Mathf.round(e.warmup * 100) + "%",
         () -> Pal.lightOrange,
         () -> e.warmup
         ));
@@ -150,11 +148,51 @@ public class UnitCallBlock extends Block{
         Core.bundle.format("bar.unitcap",
         Fonts.getUnicodeStr(e.unit().name),
         e.team.data().countType(e.unit()),
-        e.unit() == null ? Units.getStringCap(e.team) : (e.unit().useUnitCap ? Units.getStringCap(e.team) : "∞")
+        e.unit() == null ? Units.getStringCap(e.team) : (e.unit().useUnitCap ? Units.getStringCap(e.team) : "inf")
         ),
         () -> Pal.power,
         () -> e.unit() == null ? 0f : (e.unit().useUnitCap ? (float)e.team.data().countType(e.unit()) / Units.getCap(e.team) : 1f)
         ));
+    }
+
+    @Override
+    public void setStats(){
+        super.setStats();
+        stats.add(Stat.range, range / tilesize, StatUnit.blocks);
+        stats.add(Stat.output, table -> {
+            table.left();
+            table.defaults().left().growX().pad(4f);
+            table.row();
+            for(UnitPlan plan : plans){
+                if(plan.unit == null || plan.unit.isBanned()) continue;
+                table.table(Styles.grayPanel, panel -> {
+                    panel.left().top();
+                    panel.defaults().left().top().pad(3f);
+                    panel.margin(6f);
+
+                    panel.image(plan.unit.uiIcon).size(40f).pad(4f).scaling(Scaling.fit);
+                    panel.table(info -> {
+                        info.left();
+                        info.defaults().left().padBottom(2f);
+                        info.add(plan.unit.localizedName).left().row();
+                        info.add("[lightgray]" + Core.bundle.get("stat.productiontime") + ": [white]" +
+                        Strings.autoFixed(plan.time / 60f, 2) + "s").left();
+                    }).growX().left().top().pad(4f);
+
+                    panel.table(cost -> {
+                        cost.left();
+                        if(plan.requirements.length == 0){
+                            cost.add("[lightgray]-").left();
+                        }else{
+                            for(ItemStack stack : plan.requirements){
+                                cost.add(StatValues.stack(stack.item, stack.amount, true)).pad(3f);
+                            }
+                        }
+                    }).left().top().padLeft(8f);
+                }).left().growX().fillX().pad(2f);
+                table.row();
+            }
+        });
     }
 
     @Override
@@ -216,8 +254,42 @@ public class UnitCallBlock extends Block{
             return currentPlan == -1 ? null : plans.get(currentPlan).unit;
         }
 
+        public void selectPlan(int next){
+            int resolved = next < 0 || next >= plans.size ? -1 : next;
+            if(currentPlan == resolved) return;
+
+            currentPlan = resolved;
+            unitBuildProgress = 0f;
+
+            UnitType selected = unit();
+            if(command != null && (selected == null || !selected.commands.contains(command))){
+                command = null;
+            }
+            updateCanSpawnState();
+        }
+
+        public boolean usesCoreItemsNow(){
+            return useCoreItems && team.data().hasCore() && team.core() != null;
+        }
+
+        public int requirementAmount(ItemStack stack){
+            return Math.max(1, Mathf.ceil(stack.amount * state.rules.unitCost(team)));
+        }
+
         public ItemModule realItems(){
-            return useCoreItems && team.data().hasCore() ? team.core().items : items;
+            return usesCoreItemsNow() ? team.core().items : items;
+        }
+
+        public boolean hasRequirements(UnitPlan plan){
+            if(plan == null) return false;
+            if((state != null && state.rules != null) && (state.rules.infiniteResources || state.rules.editor)) return true;
+            ItemModule source = realItems();
+            for(ItemStack stack : plan.requirements){
+                if(source.get(stack.item) < requirementAmount(stack)){
+                    return false;
+                }
+            }
+            return true;
         }
 
         @Override
@@ -262,6 +334,12 @@ public class UnitCallBlock extends Block{
                 currentPlan = -1;
             }
 
+            if(currentPlan != -1){
+                updateCanSpawnState();
+            }else{
+                canSpawn = false;
+            }
+
             if(warmup > 0.98 && currentPlan != -1 && canSpawn){
                 unitBuildProgress += edelta() * Vars.state.rules.unitBuildSpeed(team);
             }
@@ -300,11 +378,13 @@ public class UnitCallBlock extends Block{
             Drawn.posSquareLink(color, 1.5f, 3.5f, true, this, target);
             Draw.color();
 
+            String ableText = bundle.has("wh-able-to-spawn") ? bundle.get("wh-able-to-spawn") : "spawn ok";
+            String unableText = bundle.has("wh-unable-to-spawn") ? bundle.get("wh-unable-to-spawn") : "cannot spawn";
             if(!canSpawn){
-                Drawn.overlayText(bundle.format("wh-unable-to-spawn"),
+                Drawn.overlayText(unableText,
                 target.x, target.y, tilesize * 2f, Pal.remove, true);
             }else{
-                Drawn.overlayText(bundle.format("wh-able-to-spawn"),
+                Drawn.overlayText(ableText,
                 target.x, target.y, tilesize * 2f, Pal.accent, true);
             }
 
@@ -320,49 +400,41 @@ public class UnitCallBlock extends Block{
 
         @Override
         public void created(){
+            super.created();
             //auto-set to the first plan, it's better than nothing.
             if(currentPlan == -1){
                 currentPlan = plans.indexOf(u -> u.unit.unlockedNow());
             }
             spawnPos.set(this);
+            updateCanSpawnState();
         }
 
 
         @Override
         public int getMaximumAccepted(Item item){
-            Building core = team.data().hasCore() ? team.core() : self();
-            if(core == null) return Math.min(capacities[item.id], Mathf.round(capacities[item.id] * state.rules.unitCost(team)));
-            return super.getMaximumAccepted(item);
+            if(usesCoreItemsNow()) return 0;
+            int base = capacities[item.id];
+            return Math.min(base, Mathf.ceil(base * state.rules.unitCost(team)));
         }
 
         @Override
         public boolean shouldConsume(){
             if(currentPlan == -1) return false;
-            Building core = team.data().hasCore() ? team.core() : self();
-            if(core != null){
-                for(ItemStack stack : plans.get(currentPlan).requirements){
-                    if(core.items.get(stack.item) < stack.amount){
-                        return false;
-                    }
-                }
-            }
-            return enabled;
+            return enabled && hasRequirements(plans.get(currentPlan));
         }
 
         @Override
         public boolean acceptItem(Building source, Item item){
-            return currentPlan != -1 && items.get(item) < getMaximumAccepted(item) &&
+            return !usesCoreItemsNow() && currentPlan != -1 && items.get(item) < getMaximumAccepted(item) &&
             Structs.contains(plans.get(currentPlan).requirements, stack -> stack.item == item);
         }
 
         public void costItems(){
-            Building core = team.data().hasCore() ? team.core() : self();
-            if(team.core() != null){
-                for(ItemStack stack : plans.get(currentPlan).requirements){
-                    core.items.remove(stack.item, stack.amount);
-                }
-            }else{
-                consume();
+            if(currentPlan == -1) return;
+            if((state != null && state.rules != null) && (state.rules.infiniteResources || state.rules.editor)) return;
+            ItemModule source = realItems();
+            for(ItemStack stack : plans.get(currentPlan).requirements){
+                source.remove(stack.item, requirementAmount(stack));
             }
         }
 
@@ -370,21 +442,24 @@ public class UnitCallBlock extends Block{
         public void buildConfiguration(Table table){
 
             Seq<UnitType> units = Seq.with(plans).map(u -> u.unit).retainAll(u -> u.unlockedNow() && !u.isBanned());
+            final float panelWidth = LEN * 8.2f;
 
             if(units.any()){
                 Table unitList = new Table();
-                unitList.background(Tex.pane);
-                unitList.defaults().growX().left().pad(OFFSET / 2);
+                unitList.background(Styles.black6);
+                unitList.defaults().growX().left().pad(4f);
 
                 unitPlan(unitList);
 
                 ScrollPane scrollPane = new ScrollPane(unitList);
                 scrollPane.setScrollingDisabled(true, false);
-                table.add(scrollPane).maxHeight(LEN * 7).growX().row();
+                scrollPane.setFadeScrollBars(false);
+                scrollPane.setOverscroll(false, false);
+                table.add(scrollPane).width(panelWidth).minWidth(panelWidth).maxWidth(panelWidth).maxHeight(LEN * 7f).left().row();
 
                 Table buttons = new Table();
-                buttons.defaults().growX().height(LEN).pad(2);
-                buttons.button("@select-position", Icon.move, () -> {
+                buttons.defaults().growX().height(LEN * 0.95f).pad(3f);
+                buttons.button("@wh-airborne-select-pos", Icon.move, Styles.flatt, () -> {
                     UIUtils.selectPos(table, pos -> {
                         Vec2 worldPos = new Vec2(
                         pos.x * tilesize + tilesize / 2f,
@@ -397,67 +472,122 @@ public class UnitCallBlock extends Block{
                         }
 
                         configure(worldPos);
-                        CanSpawn();
+                        updateCanSpawnState();
                     });
                 });
-                table.add(buttons).growX().left();
+                table.add(buttons).width(panelWidth).minWidth(panelWidth).maxWidth(panelWidth).left();
             }else{
                 table.table(Styles.black3, t -> t.add("@none").color(Color.lightGray));
             }
         }
 
         public void unitPlan(Table table){
-            ButtonGroup<ImageButton> group = new ButtonGroup<>();
+            ButtonGroup<Button> group = new ButtonGroup<>();
             group.setMinCheckCount(0);
             table.clearChildren();
+            Button.ButtonStyle planStyle = new Button.ButtonStyle(Styles.black8, Styles.black8, Styles.black8);
+            planStyle.over = Styles.black8;
+            planStyle.checked = Styles.black8;
+            planStyle.disabled = Styles.black8;
 
             Runnable rebuild = () -> {
                 group.clear();
-                for(UnitPlan plan : plans){
+                for(int i = 0; i < plans.size; i++){
+                    UnitPlan plan = plans.get(i);
+                    int planIndex = i;
                     table.button(b -> {
-                        b.image(plan.unit.uiIcon).size(LEN).scaling(Scaling.fit).left();
-                        b.table(info -> {
-                            info.add("[accent]" + plan.unit.localizedName + "[]").left().row();
-                            /* info.add("[gray]" + plan.unit.description).left().wrap().width(200);*/
-                            info.add(new Label(() ->
-                            "@[lightgray]buildtime: " +
-                            Strings.fixed(plan.time / 60f, 0) + "*second"
-                            )).left().padBottom(OFFSET / 2);
-                        }).growX().left();
+                        b.left();
+                        b.defaults().left().growX();
 
-                        b.table(consumption -> {
-                            consumption.background(Styles.none);
-                            consumption.defaults().pad(2).left();
-                            for(ItemStack stack : plan.requirements){
-                                consumption.add(new ItemImageDynamic(stack.item, () -> stack.amount, realItems())).left();
+                        b.stack(
+                        new UIUtils.PlanBackBar(
+                        () -> planIndex == currentPlan ? (canSpawn ? Pal.accent : Pal.remove) : Pal.gray,
+                        () -> {
+                            float timeSeconds = plan.time / 60f;
+                            if(planIndex == currentPlan){
+                                return "[white]" + plan.unit.localizedName + " [lightgray]- " +
+                                Strings.autoFixed(Mathf.clamp(fraction()) * 100f, 0) + "%";
                             }
-                        }).growX().padBottom(OFFSET / 2);
-                    }, Styles.flatTogglet, () -> {
-                        configure(plans.indexOf(plan));
-                        CanSpawn();
-                    }).update(b -> b.setChecked(currentPlan == plans.indexOf(plan))).group(group).width(LEN * 14f).pad(OFFSET).row();
+                            return "[white]" + plan.unit.localizedName + " [lightgray]- " + Strings.autoFixed(timeSeconds, 1) + "s";
+                        },
+                        () -> planIndex == currentPlan ? Mathf.clamp(fraction()) : 0f
+                        ),
+                        new Table(icon -> icon.left().image(plan.unit.uiIcon).size(LEN * 0.75f).padLeft(8f).padTop(4f).padBottom(4f).scaling(Scaling.fit)),
+                        new Table(time -> {
+                            time.right();
+                            time.label(() -> "[lightgray]" + Strings.autoFixed(plan.time / 60f, 1) + "s").padRight(8f);
+                        }),
+                        new Table(){
+                            {
+                                touchable = Touchable.disabled;
+                            }
+
+                            @Override
+                            public void draw(){
+                                super.draw();
+                                if(planIndex != currentPlan) return;
+
+                                Color edge = canSpawn ? Pal.accent : Pal.remove;
+                                float alpha = parentAlpha * color.a;
+
+                                Draw.color(edge, 0.95f * alpha);
+                                Lines.stroke(2f);
+                                Lines.rect(x + 1f, y + 1f, Math.max(0f, width - 2f), Math.max(0f, height - 2f));
+
+                                Draw.color(edge, 0.4f * alpha);
+                                Lines.stroke(1f);
+                                Lines.rect(x + 3f, y + 3f, Math.max(0f, width - 6f), Math.max(0f, height - 6f));
+                                Draw.reset();
+                            }
+                        }
+                        ).height(LEN * 0.72f).growX();
+                    }, planStyle, () -> {
+                        configure(planIndex);
+                        updateCanSpawnState();
+                    }).update(b -> b.setChecked(currentPlan == planIndex)).group(group).growX().pad(3f).row();
                 }
             };
             rebuild.run();
 
         }
 
-        public boolean CanSpawn(){
-            if(!spawnPos.epsilonEquals(x, y, hitSize())){
-                canSpawn = WHUtils.hasAnyValidSpawnPosition(unit(), spawnPos.x, spawnPos.y, spawnRange);
+        public boolean updateCanSpawnState(){
+            UnitType current = unit();
+            if(current == null || spawnPos == null || currentPlan < 0 || currentPlan >= plans.size){
+                canSpawn = false;
+            }else{
+                UnitPlan plan = plans.get(currentPlan);
+                canSpawn = plan != null
+                && plan.unit != null
+                && !plan.unit.isBanned()
+                && hasRequirements(plan)
+                && (team == Vars.state.rules.waveTeam || Units.canCreate(team, current))
+                && WHUtils.hasAnyValidSpawnPosition(current, spawnPos.x, spawnPos.y, spawnRange);
             }
             return canSpawn;
+        }
+
+        public boolean CanSpawn(){
+            return updateCanSpawnState();
         }
 
         public void spawn(UnitPlan plan){
             if(!isValid()) return;
 
             Vec2 target = spawnPos;
+            boolean spawned = false;
 
-            if(canSpawn) WHUtils.spawnUnit(team, target.x, target.y, angleTo(target), spawnRange, spawnReloadTime, spawnDelay, plan.unit, 1, plan.airdrop, s -> {
-                if(commandPos != null) s.commandPos.set(commandPos);
-            });
-            costItems();
+            if(canSpawn){
+                spawned = WHUtils.spawnUnit(team, target.x, target.y, angleTo(target), spawnRange, spawnReloadTime, spawnDelay, plan.unit, 1, plan.airdrop, s -> {
+                    if(commandPos != null) s.commandPos.set(commandPos);
+                });
+            }
+
+            if(spawned){
+                costItems();
+            }else{
+                canSpawn = false;
+            }
         }
 
         @Override
@@ -485,6 +615,9 @@ public class UnitCallBlock extends Block{
             currentPlan = read.s();
             canSpawn = read.bool();
             spawnPos = TypeIO.readVecNullable(read);
+            if(spawnPos == null){
+                spawnPos = new Vec2(x, y);
+            }
             if(revision >= 2){
                 commandPos = TypeIO.readVecNullable(read);
             }

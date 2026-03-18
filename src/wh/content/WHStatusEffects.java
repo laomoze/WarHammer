@@ -1,5 +1,4 @@
 package wh.content;
-
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
@@ -12,55 +11,55 @@ import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
 import wh.graphics.*;
-
 import static arc.graphics.g2d.Draw.*;
-import static arc.graphics.g2d.Lines.lineAngle;
+import static arc.graphics.g2d.Lines.*;
 import static arc.math.Angles.randLenVectors;
 import static wh.content.WHFx.rand;
-
 public final class WHStatusEffects{
     public static StatusEffect
-    plasmaFireBurn, powerEnhance1, powerEnhance2, powerReduce1, powerReduce2,
-    assault, bless, distort, rust,
-    energyAmplification, forcesOfChaos, melta, palsy, plasma, tear;
-
+    powerEnhance1, powerEnhance2,
+    powerReduce1, powerReduce2,
+    rust, radiation,
+    assault, bless, energyAmplification, protection,
+    tear, armorFracture, rock,
+    scare,
+    distort, forcesOfChaos, melta, palsy, plasma, plasmaFireBurn;
     private WHStatusEffects(){
     }
-
     public static void load(){
         powerEnhance1 = new StatusEffect("power-enhance"){{
-            color = Color.lightGray.cpy();
+            color = Color.lightGray.cpy().lerp(Pal.accent.cpy(), 0.2f);
             speedMultiplier = 1.3f;
-            init(() -> opposite(WHStatusEffects.powerReduce1, WHStatusEffects.powerReduce2));
+            init(() -> opposite(WHStatusEffects.powerReduce1, WHStatusEffects.powerReduce2, StatusEffects.slow));
         }};
         powerEnhance2 = new StatusEffect("power-enhance-2"){{
-            color = Color.lightGray.cpy();
+            color = Color.lightGray.cpy().lerp(Pal.accent.cpy(), 0.4f);
             speedMultiplier = 1.5f;
-            init(() -> opposite(WHStatusEffects.powerReduce1, WHStatusEffects.powerReduce2));
+            init(() -> opposite(WHStatusEffects.powerReduce1, WHStatusEffects.powerReduce2, StatusEffects.slow));
         }};
         powerReduce1 = new StatusEffect("power-damage"){{
-            color = Color.lightGray.cpy();
+            color = Color.lightGray.cpy().lerp(Team.crux.color.cpy(), 0.2f);
             speedMultiplier = 0.8f;
         }};
         powerReduce2 = new StatusEffect("power-damage-2"){{
-            color = Color.lightGray.cpy();
+            color = Color.lightGray.cpy().lerp(Team.crux.color.cpy(), 0.4f);
             speedMultiplier = 0.5f;
         }};
-
 
         assault = new StatusEffect("assault"){{
             color = Team.crux.color.cpy();
             healthMultiplier = 1.3f;
             speedMultiplier = 1.6f;
             reloadMultiplier = 1.3f;
-            effectChance = 0.1f;
-            effect = WHFx.square(Team.crux.color.cpy(), 30, 4, 25, 5);
+            effectChance = 0.05f;
+            effect = WHFx.square(30, Team.crux.color.cpy(), 4, 25, 5);
         }};
         bless = new StatusEffect("bless"){{
             color = Color.valueOf("F4EEADFF");
-            healthMultiplier = 1.5f;
+            healthMultiplier = 1.3f;
             speedMultiplier = 0.9f;
-            damage = 900 / 60f;
+            damage = -900 / 60f;
+            buildSpeedMultiplier = 1.1f;
             effectChance = 0.05f;
             parentizeEffect = true;
             applyEffect = effect = new Effect(120, e -> {
@@ -73,7 +72,6 @@ public final class WHStatusEffects{
             init(() -> {
                 opposite(StatusEffects.boss, WHStatusEffects.forcesOfChaos, WHStatusEffects.distort);
             });
-
         }};
         distort = new StatusEffect("distort"){{
             color = Pal.sapBullet.cpy();
@@ -94,9 +92,8 @@ public final class WHStatusEffects{
         }};
         energyAmplification = new StatusEffect("energy-amplification"){{
             color = Pal.techBlue.cpy();
-            reloadMultiplier = 1.5f;
-            healthMultiplier = 1.4f;
-            dragMultiplier = 1.5f;
+            reloadMultiplier = 1.2f;
+            healthMultiplier = 1.2f;
             damageMultiplier = 1.2f;
             speedMultiplier = 1.1f;
             effectChance = 0.1f;
@@ -119,6 +116,20 @@ public final class WHStatusEffects{
                 });
             });
         }};
+        protection = new StatusEffect("protection"){
+            {
+                color = Pal.accent.cpy().lerp(Pal.slagOrange, 0.3f);
+                healthMultiplier = 2f;
+                damage = -1000 / 60f;
+            }
+
+            @Override
+            public void update(Unit unit, StatusEntry entry){
+                super.update(unit, entry);
+                unit.shield += damage * Time.delta;
+            }
+        };
+
         forcesOfChaos = new StatusEffect("forces-of-chaos"){{
             color = Team.crux.color.cpy();
             reloadMultiplier = 1.5f;
@@ -144,7 +155,6 @@ public final class WHStatusEffects{
             healthMultiplier = 0.8f;
             damage = 6;
             effect = Fx.melting;
-
             init(() -> {
                 opposite(StatusEffects.wet, StatusEffects.freezing, WHStatusEffects.plasma);
                 affinity(StatusEffects.tarred, (unit, result, time) -> {
@@ -160,9 +170,9 @@ public final class WHStatusEffects{
             healthMultiplier = 0.9f;
             reloadMultiplier = 0.65f;
             effectChance = 0.1f;
-            effect = WHFx.square(Pal.powerLight.cpy(), 30, 3, 35, Mathf.random(5, 8));
+            effect = WHFx.square(30, Pal.powerLight.cpy(), 3, 35, Mathf.random(5, 8));
             init(() -> {
-                affinity(StatusEffects.electrified, (unit, status, time) -> {
+                affinity(tear, (unit, status, time) -> {
                     if(Mathf.chance(0.155))
                         unit.damage(20);
                     Drawn.randFadeLightningEffect(unit.x + Mathf.range(unit.hitSize), unit.y + Mathf.range(unit.hitSize),
@@ -171,26 +181,64 @@ public final class WHStatusEffects{
                 });
             });
         }};
-
         tear = new StatusEffect("tear"){
             {
                 color = WHItems.molybdenumAlloy.color.cpy();
                 damage = 300 / 60f;
-                speedMultiplier = 0.9f;
-                dragMultiplier = 1.1f;
             }
-
             @Override
             public void update(Unit unit, StatusEntry entry){
                 super.update(unit, entry);
                 if(unit.shield > 0) unit.shield -= Mathf.clamp(unit.shield / unit.maxHealth, 1, 10) * 0.5f / 60f * Time.delta;
                 if(Mathf.chanceDelta(0.05f) && unit.shield > 0){
                     Tmp.v1.rnd(Mathf.range(unit.type.hitSize / 2f));
-                    WHFx.shuttle(color, color.cpy().lerp(Color.gray, 0.1f), 40, true, 0, 0).
+                    WHFx.shuttle(40, color, color.cpy().lerp(Color.gray, 0.1f), true, 0, 0).
                     at(unit.x + Tmp.v1.x, unit.y + Tmp.v1.y, Mathf.chanceDelta(0.5f) ? 45 : 135f, color, Mathf.range(unit.type.hitSize / 4f, unit.type.hitSize / 2f));
                 }
             }
         };
+        rock = new StatusEffect("rock"){
+            {
+                color = WHItems.molybdenumAlloy.color.cpy().lerp(Color.white, 0.3f);
+                speedMultiplier = 0.8f;
+                reloadMultiplier = 0.95f;
+                dragMultiplier = 1.2f;
+                buildSpeedMultiplier = 0.9f;
+                effectChance = 0.05f;
+                effect = WHFx.hitSpark(120, color, 5, 30, 1.5f, 10);
+            }
+        };
+        armorFracture = new StatusEffect("armor-fracture"){
+            {
+                color = WHItems.molybdenumAlloy.color.cpy().lerp(Color.gray, 0.5f);
+                intervalDamageTime = 20f;
+                intervalDamage = 100;
+                intervalDamagePierce = true;
+            }
+
+            final float amount = 3;
+
+            @Override
+            public void applied(Unit unit, float time, boolean extend){
+                super.applied(unit, time, extend);
+                if(extend) return;
+                float baseArmor = unit.type.armor;
+                if(baseArmor <= 0f) return;
+                float minArmor = baseArmor / 2f;
+                float currentArmor = unit.armorOverride >= 0f ? unit.armorOverride : baseArmor;
+                float nextArmor = Math.max(minArmor, currentArmor - amount);
+                unit.statusArmor(nextArmor);
+            }
+        };
+        scare = new StatusEffect("scare"){{
+            color = Pal.sap;
+            speedMultiplier = 0.8f;
+            reloadMultiplier = 0.7f;
+            buildSpeedMultiplier = 0.3f;
+            effect = Fx.sapped;
+            effectChance = 0.1f;
+            init(() -> opposite(bless));
+        }};
 
         plasmaFireBurn = new StatusEffect("plasma-fire"){{
             color = WHPal.SkyBlue;
@@ -207,7 +255,6 @@ public final class WHStatusEffects{
                 affinity(plasma, (unit, result, time) -> result.set(plasmaFireBurn, result.time + time));
             });
         }};
-
         plasma = new StatusEffect("plasma"){{
             color = WHPal.SkyBlue;
             damage = 500 / 60f;
@@ -230,7 +277,6 @@ public final class WHStatusEffects{
             });
         }};
 
-
         rust = new StatusEffect("rust"){
             {
                 color = WHLiquids.swageWater.color.cpy();
@@ -239,19 +285,45 @@ public final class WHStatusEffects{
                 dragMultiplier = 0.95f;
                 effectChance = 0.09f;
                 transitionDamage = 14;
-
                 effect = new Effect(80f, e -> {
                     color(WHLiquids.swageWater.color.cpy());
                     alpha(Mathf.clamp(e.fin() * 2f));
-
                     Fill.circle(e.x, e.y, e.fout());
                 });
-
                 init(() -> {
                     affinity(StatusEffects.shocked, (unit, result, time) -> {
                         unit.damage(transitionDamage);
                     });
                     opposite(StatusEffects.burning, StatusEffects.melting, palsy);
+                });
+            }
+        };
+        radiation = new StatusEffect("radiation"){
+            {
+                color = WHLiquids.swageWater.color.cpy().lerp(Items.plastanium.color, 0.35f);
+                damage = 90 / 60f;
+                speedMultiplier = 0.9f;
+                dragMultiplier = 0.95f;
+                effectChance = 0.09f;
+                transitionDamage = 1000 / 60f;
+                effect = new Effect(90, e -> {
+                    if(!(e.data instanceof Unit u)) return;
+                    rand.setSeed(e.id);
+                    color(color, Color.white, e.fout() * 0.3F);
+                    stroke(e.fout() * 1.5f);
+                    randLenVectors(e.id, 5, e.finpow() * u.hitSize / 2 + rand.random(0.4f, 0.8f) * u.hitSize * 0.5f, e.rotation, 360.0F, (x, y) -> {
+                        float ang = Mathf.angle(x, y);
+                        lineAngle(e.x + x, e.y + y, ang, e.fout() * 10 * 0.85F + 10 * 0.15F);
+                    });
+                });
+                init(() -> {
+                    affinity(armorFracture, (unit, result, time) -> {
+                        unit.damage(transitionDamage);
+                    });
+                    affinity(tear, (unit, result, time) -> {
+                        unit.damage(transitionDamage);
+                    });
+                    opposite(forcesOfChaos, bless, palsy);
                 });
             }
         };

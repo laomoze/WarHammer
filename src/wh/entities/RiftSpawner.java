@@ -234,8 +234,7 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
         rand.setSeed(id);
         float lineLen = Mathf.clamp(type.hitSize * 1.6f, 12f, type.hitSize * 2.4f);
         Tmp.v3.trns(rotation() - 90f, Mathf.random(-lineLen / 2f, lineLen / 2f), 0f);
-        WHFx.square(team.color.cpy(), 180, (int)Mathf.clamp(type.hitSize / 20, 1, 4),
-        Mathf.clamp(type.hitSize / 4f, 20, 40), Mathf.clamp(type.hitSize / 10f, 2, 5))
+        WHFx.square(180, team.color.cpy(), (int)Mathf.clamp(type.hitSize / 20, 1, 4), Mathf.clamp(type.hitSize / 4f, 20, 40), Mathf.clamp(type.hitSize / 10f, 2, 5))
         .layer(WHFx.EFFECT_MASK + 0.0001f).at(x + Tmp.v3.x, y + Tmp.v3.y, rotation());
     }
 

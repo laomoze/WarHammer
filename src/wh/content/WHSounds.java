@@ -15,9 +15,9 @@ public final class WHSounds{
     jump = new Sound(),
     lightningShoot = new Sound(),
     blast = new Sound(),
-    missileShoot = new Sound(),
-    missileShoot2 = new Sound(),
-    rocket = new Sound(),
+    /* missileShoot = new Sound(),
+     missileShoot2 = new Sound(),
+     rocket = new Sound(),*/
     energyShoot = new Sound(),
     LaserGatling = new Sound(),
     machineGunShoot = new Sound(),
@@ -39,9 +39,9 @@ public final class WHSounds{
             jump = new Sound(ogg("jump"));
             lightningShoot = new Sound(ogg("CT1"));
             blast = new Sound(ogg("DBZ1"));
-            missileShoot = new Sound(ogg("DD1"));
+          /*  missileShoot = new Sound(ogg("DD1"));
             missileShoot2 = new Sound(ogg("lbp3SearchlightEdited"));
-            rocket = new Sound(ogg("FJ"));
+            rocket = new Sound(ogg("FJ"));*/
             energyShoot = new Sound(ogg("JG1"));
             LaserGatling = new Sound(ogg("trLaserGatling"));
             machineGunShoot = new Sound(ogg("mgsvGatling"));

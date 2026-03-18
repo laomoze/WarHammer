@@ -54,6 +54,67 @@ public final class UIUtils{
     private UIUtils(){
     }
 
+    /**
+     * 通用的配置行背景条：支持渐变底色、进度填充与文本裁剪。
+     * 供不同面板复用，避免各模块重复维护同一套绘制代码。
+     */
+    public static class PlanBackBar extends Table{
+        public Prov<Color> barColor;
+        public Prov<CharSequence> info;
+        public Floatp fraction;
+
+        public PlanBackBar(Prov<Color> barColor, Prov<CharSequence> info, Floatp fraction){
+            this.barColor = barColor;
+            this.info = info;
+            this.fraction = fraction;
+            setClip(true);
+            this.left();
+
+            Label infoLabel = this.label(() -> info.get()).left().padLeft(58f).padRight(72f).growX().get();
+            infoLabel.setEllipsis(true);
+            infoLabel.setWrap(false);
+        }
+
+        @Override
+        public void draw(){
+            float alpha = parentAlpha * color.a;
+            float barWidth = width;
+            float barHeight = height;
+
+            float bgL = Tmp.c1.set(0.07f, 0.09f, 0.12f, 0.9f * alpha).toFloatBits();
+            float bgR = Tmp.c2.set(0.07f, 0.09f, 0.12f, 0.28f * alpha).toFloatBits();
+            Fill.quad(
+            x, y, bgL,
+            x + barWidth, y, bgR,
+            x + barWidth, y + barHeight, bgR,
+            x, y + barHeight, bgL
+            );
+
+            float progress = Mathf.clamp(fraction.get());
+            float fillWidth = barWidth * progress;
+            Color fillColor = barColor.get();
+            if(fillWidth > 0.001f){
+                float fillL = Tmp.c1.set(fillColor).mul(0.9f).a(0.82f * alpha).toFloatBits();
+                float fillR = Tmp.c2.set(fillColor).mul(0.9f).a(0.22f * alpha).toFloatBits();
+                Fill.quad(
+                x, y, fillL,
+                x + fillWidth, y, fillR,
+                x + fillWidth, y + barHeight, fillR,
+                x, y + barHeight, fillL
+                );
+            }
+
+            Lines.stroke(1f);
+            Draw.color(0f, 0f, 0f, 0.55f * alpha);
+            Lines.rect(x + 0.5f, y + 0.5f, Math.max(0f, barWidth - 1f), Math.max(0f, barHeight - 1f));
+            Draw.color(0f, 0f, 0f, 0.32f * alpha);
+            Lines.rect(x + 1.5f, y + 1.5f, Math.max(0f, barWidth - 3f), Math.max(0f, barHeight - 3f));
+
+            Draw.color();
+            super.draw();
+        }
+    }
+
     public static void statToTable(Stats stat, Table table){
         var m = stat.toMap().keys().toSeq();
         for(int i = 0; i < m.size; i++){
@@ -764,6 +825,38 @@ public final class UIUtils{
 
                             st.add(Core.bundle.format("bullet.spawnBullets", type.spawnBullets.size));
                             if(sc.getChildren().size > 0) st.button(Icon.downOpen, Styles.emptyi, () -> coll.toggle(false)).update(i -> i.getStyle().imageUp = (!coll.isCollapsed() ? Icon.upOpen : Icon.downOpen)).size(8).padLeft(16f).expandX();
+                        });
+                        bt.row();
+                        bt.add(coll);
+                    }
+
+                    if(type instanceof MultiBulletType mtype && mtype.bullets.length > 0){
+                        bt.row();
+
+                        Table mc = new Table();
+                        int shown = 0;
+                        for(BulletType sub : mtype.bullets){
+                            if(sub == null) continue;
+                            shown++;
+                            int index = shown;
+                            mc.table(sb -> {
+                                sb.left().defaults().left();
+                                sb.add(bundle.format("bullet.wh-multi-entry", index));
+                            }).left().padTop(2f);
+                            mc.row();
+                            ammo(ObjectMap.of(t, sub), true, false).display(mc);
+                        }
+                        Collapser coll = new Collapser(mc, true);
+                        coll.setDuration(0.1f);
+
+                        int shownCount = shown;
+                        int total = mtype.bullets.length;
+                        int repeatCount = Math.max(1, mtype.repeat);
+                        bt.table(mt -> {
+                            mt.left().defaults().left();
+
+                            mt.add(bundle.format("bullet.wh-multi-sub", shownCount, total, repeatCount));
+                            if(mc.getChildren().size > 0) mt.button(Icon.downOpen, Styles.emptyi, () -> coll.toggle(false)).update(i -> i.getStyle().imageUp = (!coll.isCollapsed() ? Icon.upOpen : Icon.downOpen)).size(8).padLeft(16f).expandX();
                         });
                         bt.row();
                         bt.add(coll);

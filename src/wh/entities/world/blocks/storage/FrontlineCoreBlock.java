@@ -77,7 +77,7 @@ public class FrontlineCoreBlock extends CoreBlock{
         @Override
         public void draw(){
             super.draw();
-            if(killed){
+            if(kill){
                 Draw.z(WHFx.EFFECT_MASK);
                 Draw.color(team.color.cpy(), Pal.remove, time / killTime);
                 Lines.stroke(2 * alpha);

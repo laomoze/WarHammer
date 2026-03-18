@@ -174,10 +174,12 @@ public class SelectOverdriveProjector extends Block {
             smoothEfficiency = Mathf.lerpDelta(smoothEfficiency, efficiency, 0.08f);
             heat = Mathf.lerpDelta(heat, efficiency > 0 ? 1f : 0f, 0.08f);
             charge += heat * Time.delta;
+            float realRange = range + phaseHeat * phaseRangeBoost;
 
             float phaseTarget = hasBoost ? optionalEfficiency : 0f;
             phaseHeat = Mathf.lerpDelta(phaseHeat, phaseTarget, phaseHeatLerp);
             phaseHeat = Mathf.clamp(phaseHeat, 0f, 1f);
+            realRange = range + phaseHeat * phaseRangeBoost;
 
             if (hasBoost) {
                 if(!boostEffect && phaseHeat >= phaseEffectOn){
@@ -191,7 +193,6 @@ public class SelectOverdriveProjector extends Block {
             }
 
             if (charge >= reload) {
-                float realRange = range + phaseHeat * phaseRangeBoost;
                 charge = 0f;
                 indexer.eachBlock(team, Tmp.r1.setCentered(x, y, realRange), other -> other.block.canOverdrive, other -> other.applyBoost(realBoost(), reload + 1f));
                 if (hasBoost) {
@@ -199,7 +200,7 @@ public class SelectOverdriveProjector extends Block {
                 }
             }
 
-            Units.nearby(Tmp.r1.setCentered(x, y, realBoost()), u -> {
+            Units.nearby(Tmp.r1.setCentered(x, y, realRange), u -> {
                 if (u.team == team) {
                     boolean phase = hasBoost && boostEffect;
                     if(phase){

@@ -16,7 +16,7 @@ public class WHLogicStatements{
     public static void load(){
         autoTriggerCategory = new LCategory("wh-autotrigger", Pal.surge.cpy().lerp(Pal.gray, 0.25f));
 
-        registerStatement("wh-raidcontrol", RaidControl::new, RaidControl::new);
+        /*     registerStatement("wh-raidcontrol", RaidControl::new, RaidControl::new);*/
         registerStatement("wh-defaultraids", DefaultRaids::new, DefaultRaids::new);
         registerStatement("defaultairraid", DefaultAirborneRaid::new, DefaultAirborneRaid::new);
 

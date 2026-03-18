@@ -89,14 +89,13 @@ public class WarHammerMod extends Mod {
         WHBlocksEnvironment.load();
         WHBlocks.load();
 
-        WHPlanets.load();
-        WHTechTree.load();
-
         WHOverride.load();
         WHEvents.load();
         WHAutoTriggerSetup.load();
         WHLogicStatements.load();
         WHObjectiveRegistry.load();
 
+        WHPlanets.load();
+        WHTechTree.load();
     }
 }

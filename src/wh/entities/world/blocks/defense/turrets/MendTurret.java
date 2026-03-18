@@ -29,6 +29,12 @@ public class MendTurret extends ContinuousTurret {
     }
 
     @Override
+    public void init(){
+        WHItemTurret.intTurret(this);
+        super.init();
+    }
+
+    @Override
     public void setStats() {
         stats.timePeriod = consTime;
         super.setStats();

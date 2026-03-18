@@ -155,11 +155,18 @@ public final class Drawn{
 
     public static void shockWave(float x, float y, float rad, float width, float percent, float angle, Color colorFrom, Color colorTo){
         float p = Mathf.clamp(percent);
-        float currentRad = rad * p;
-        float currentInnerRad = currentRad - width;
+        if(p <= 0f || rad <= 0f) return;
 
-        int sides = Lines.circleVertices(currentRad);
+        float currentRad = rad * p;
+        if(currentRad <= 0.001f) return;
+
+        float thickness = Math.min(Math.abs(width), currentRad);
+        float currentInnerRad = Math.max(0f, currentRad - thickness);
+
+        int sides = Math.max(20, Lines.circleVertices(currentRad));
         float space = 360.0F / sides;
+        float c1 = colorFrom.toFloatBits();
+        float c2 = colorTo.toFloatBits();
 
         for(int i = 0; i < sides; i++){
             float a = space * i + angle;
@@ -167,11 +174,6 @@ public final class Drawn{
             float sin = Mathf.sinDeg(a);
             float cos2 = Mathf.cosDeg(a + space);
             float sin2 = Mathf.sinDeg(a + space);
-
-            Color color1 = colorFrom.cpy();
-            Color color2 = colorTo.cpy();
-
-            float c1 = color1.toFloatBits(), c2 = color2.toFloatBits();
 
             Fill.quad(
             x + currentInnerRad * cos, y + currentInnerRad * sin, c1,
@@ -298,6 +300,120 @@ public final class Drawn{
             tri(v1.x, v1.y, ((interp + 1) * outerSize + rand.random(0, outerSize / 8)) * interp, (outerSize + 0.25f) * (Interp.exp5In.apply(interp)) / 2f, angle);
             tri(v1.x, v1.y, ((interp + 1) / 2 * innerSize + rand.random(0, innerSize / 8)) * interp, (innerSize + 0.5f) * (Interp.exp5In.apply(interp)), angle - 180);
         }
+    }
+
+    /**
+     * Render a tentacle from pre-updated node positions/angles (Exogenesis-like split of update and draw).
+     */
+    public static void coronaChain(float originX, float originY, float[] nodeX, float[] nodeY, float[] nodeAngle, float width, float widthScale){
+        if(nodeX == null || nodeY == null || nodeAngle == null) return;
+        int size = Math.min(nodeX.length, Math.min(nodeY.length, nodeAngle.length));
+        if(size <= 0 || width <= 0.0001f || widthScale <= 0.0001f) return;
+
+        float halfWidth = width * 0.5f * widthScale;
+        if(halfWidth <= 0.0001f) return;
+
+        float lx = originX, ly = originY;
+        float lrot = nodeAngle[0];
+
+        for(int i = 0; i < size; i++){
+            float cx = nodeX[i], cy = nodeY[i], crot = nodeAngle[i];
+            float frontWidth = ((size - i) / (float)size) * halfWidth;
+            float backWidth = ((size - (i + 1f)) / (float)size) * halfWidth;
+
+            v1.trns(lrot - 90f, frontWidth).add(lx, ly);
+            v2.trns(lrot + 90f, frontWidth).add(lx, ly);
+            v3.trns(crot + 90f, backWidth).add(cx, cy);
+            v4.trns(crot - 90f, backWidth).add(cx, cy);
+            Fill.quad(v1.x, v1.y, v2.x, v2.y, v3.x, v3.y, v4.x, v4.y);
+
+            lx = cx;
+            ly = cy;
+            lrot = crot;
+        }
+    }
+
+    /**
+     * 伪3D圆环：将圆环在Y轴方向压缩成椭圆，并分前后半环分层绘制。
+     * yScale越小越“扁”，建议取值 0.2~0.9。
+     */
+    public static void pseudo3dRing(float x, float y, float radius, float width, float yScale, float rotation, Color nearColor, Color farColor){
+        if(radius <= 0f || width <= 0f) return;
+
+        float outer = Math.abs(radius);
+        float inner = Math.max(0f, outer - Math.abs(width));
+        float sclY = Mathf.clamp(yScale, 0.05f, 1f);
+        float center = (inner + outer) * 0.5f;
+        float halfBase = Math.max(0.0001f, (outer - inner) * 0.5f);
+
+        int sides = Math.max(24, Lines.circleVertices(outer));
+        float step = 360f / sides;
+
+        // 连续深度插值 + 宽度透视，避免前后半环颜色“硬切”且增强伪3D体积感。
+        for(int i = 0; i < sides; i++){
+            float angle = i * step;
+            float mid = angle + step * 0.5f;
+            float depth = (Mathf.sinDeg(mid) + 1f) * 0.5f;
+            float smooth = Interp.smoother.apply(depth);
+            float blended = blendColor(farColor, nearColor, smooth);
+            float half = halfBase * Mathf.lerp(0.55f, 1.28f, smooth);
+            float segInner = Math.max(0f, center - half);
+            float segOuter = center + half;
+
+            ringSegment(x, y, segInner, segOuter, sclY, angle, step, rotation, blended, blended);
+
+            // 近端外圈高光：让环更像有“厚度”的体，不是平面描边。
+            if(smooth > 0.62f){
+                float h = Interp.smoother.apply(Mathf.curve(smooth, 0.62f, 1f));
+                float hi = Color.toFloatBits(
+                Mathf.lerp(nearColor.r, 1f, 0.3f),
+                Mathf.lerp(nearColor.g, 1f, 0.3f),
+                Mathf.lerp(nearColor.b, 1f, 0.3f),
+                nearColor.a * 0.2f * h
+                );
+                float hiInner = Math.max(0f, segOuter - halfBase * 0.28f);
+                float hiOuter = segOuter + halfBase * 0.12f * h;
+                ringSegment(x, y, hiInner, hiOuter, sclY, angle, step, rotation, hi, hi);
+            }
+        }
+    }
+
+    public static void pseudo3dRing(float x, float y, float radius, float width, float yScale, float rotation, Color color){
+        // 单色版本：前半环保持原色，后半环仅降低透明度做层次，不需要传两种颜色。
+        pseudo3dRing(x, y, radius, width, yScale, rotation, Tmp.c1.set(color), Tmp.c2.set(color).cpy().lerp(Pal.coalBlack, 0.3f));
+    }
+
+    private static float blendColor(Color from, Color to, float t){
+        return Color.toFloatBits(
+        Mathf.lerp(from.r, to.r, t),
+        Mathf.lerp(from.g, to.g, t),
+        Mathf.lerp(from.b, to.b, t),
+        Mathf.lerp(from.a, to.a, t)
+        );
+    }
+
+    private static void ringSegment(float x, float y, float inner, float outer, float yScale, float angle, float step, float rotation, float innerColor, float outerColor){
+        float a1 = angle;
+        float a2 = angle + step;
+
+        float cos1 = Mathf.cosDeg(a1), sin1 = Mathf.sinDeg(a1) * yScale;
+        float cos2 = Mathf.cosDeg(a2), sin2 = Mathf.sinDeg(a2) * yScale;
+
+        float ix1 = Angles.trnsx(rotation, inner * cos1, inner * sin1);
+        float iy1 = Angles.trnsy(rotation, inner * cos1, inner * sin1);
+        float ox1 = Angles.trnsx(rotation, outer * cos1, outer * sin1);
+        float oy1 = Angles.trnsy(rotation, outer * cos1, outer * sin1);
+        float ox2 = Angles.trnsx(rotation, outer * cos2, outer * sin2);
+        float oy2 = Angles.trnsy(rotation, outer * cos2, outer * sin2);
+        float ix2 = Angles.trnsx(rotation, inner * cos2, inner * sin2);
+        float iy2 = Angles.trnsy(rotation, inner * cos2, inner * sin2);
+
+        Fill.quad(
+        x + ix1, y + iy1, innerColor,
+        x + ox1, y + oy1, outerColor,
+        x + ox2, y + oy2, outerColor,
+        x + ix2, y + iy2, innerColor
+        );
     }
 
     public static void drawConnected(float x, float y, float size, Color color){

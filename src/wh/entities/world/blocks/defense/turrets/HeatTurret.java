@@ -5,14 +5,17 @@ import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.struct.*;
 import arc.util.*;
+import mindustry.*;
 import mindustry.content.*;
 import mindustry.entities.*;
 import mindustry.entities.bullet.*;
+import mindustry.entities.pattern.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.ui.*;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.meta.*;
+import wh.content.*;
 import wh.graphics.*;
 import wh.ui.*;
 
@@ -20,12 +23,11 @@ import static mindustry.Vars.indexer;
 
 public class HeatTurret extends PowerTurret{
     public IntSeq heatRequirements = new IntSeq();
-    public @Nullable BulletType enhancedBullet;
+    public Seq<BulletType> stageEnhancedBullets = new Seq<>();
 
     public HeatTurret(String name){
         super(name);
-        heatRequirement = 25;
-        heatRequirements.addAll(50, 100, 150);
+        heatRequirement = 20;
     }
 
     @Override
@@ -46,10 +48,37 @@ public class HeatTurret extends PowerTurret{
     private Bar get(HeatTurretBuild entity){
         int stage = stageFor(entity.heatReq);
         float heatStageRequirement = stageRequirement(stage);
+        float damageMul = heatDamageMultiplier(entity.heatReq);
         return new Bar(() ->
-        Core.bundle.format("bar.wh-heat-stage", stage + 1, (int)((entity.heatReq / heatStageRequirement) * 100)),
+        Core.bundle.format("bar.wh-heat-stage", stage + 1, (int)((entity.heatReq / heatStageRequirement) * 100)) +
+        "  x" + Strings.autoFixed(damageMul, 2),
         () -> Pal.lightOrange,
-        () -> entity.heatReq / heatStageRequirement);
+        () -> Mathf.clamp(entity.heatReq / heatStageRequirement));
+    }
+
+    private int unlockedEnhancedStages(float heatReq){
+        int enhancedStageCount = stageEnhancedBullets.size;
+        if(enhancedStageCount <= 0 || heatRequirements.isEmpty()) return 0;
+
+        int stage = -1;
+        int usableStages = Math.min(enhancedStageCount, heatRequirements.size);
+        for(int i = 0; i < usableStages; i++){
+            if(heatReq >= heatRequirements.get(i)){
+                stage = i;
+            }else{
+                break;
+            }
+        }
+        return Mathf.clamp(stage + 1, 0, enhancedStageCount);
+    }
+
+    private float heatDamageMultiplier(float heatReq){
+        return 1f + unlockedEnhancedStages(heatReq);
+    }
+
+    public void init(){
+        WHItemTurret.intTurret(this);
+        super.init();
     }
 
     private int stageFor(float heatReq){
@@ -86,6 +115,14 @@ public class HeatTurret extends PowerTurret{
         public void updateTile(){
             super.updateTile();
             warmup = Mathf.lerpDelta(warmup, isEnhancedHeat() ? 1f : 0f, isEnhancedHeat() ? 0.08f : 0.1f);
+
+            Tmp.v1.trns(rotation, -18);
+            float cx = x + Tmp.v1.x, cy = y + Tmp.v1.y;
+            if(warmup > 0.9f && Mathf.chanceDelta(0.08)){
+                WHFx.tentacleCorona(50f, 15, 8, 1, 1f, Pal.lighterOrange, Pal.lightOrange)
+                .rotWithParent(true)
+                .at(cx, cy, rotation, Pal.lighterOrange, this);
+            }
         }
 
         @Override
@@ -94,16 +131,21 @@ public class HeatTurret extends PowerTurret{
             bulletX = x + Angles.trnsx(rotation - 90, shootX, shootY),
             bulletY = y + Angles.trnsy(rotation - 90, shootX, shootY);
 
-            if(enhancedBullet != null && isEnhancedHeat()){
-                type = enhancedBullet;
+            BulletType stageBullet = currentStageBullet();
+            if(stageBullet != null){
+                type = stageBullet;
             }
+
             if(shoot.firstShotDelay > 0){
                 chargeSound.at(bulletX, bulletY, Mathf.random(soundPitchMin, soundPitchMax));
-                type.chargeEffect.at(bulletX, bulletY, rotation);
+                type.chargeEffect.at(bulletX, bulletY, rotation, type.hitColor);
             }
 
             BulletType finalType = type;
-            shoot.shoot(barrelCounter, (xOffset, yOffset, angle, delay, mover) -> {
+
+            ShootPattern pattern = finalType.shootPattern != null ? finalType.shootPattern : shoot;
+
+            pattern.shoot(barrelCounter, (xOffset, yOffset, angle, delay, mover) -> {
                 queuedBullets++;
                 int barrel = barrelCounter;
 
@@ -125,32 +167,57 @@ public class HeatTurret extends PowerTurret{
             }
         }
 
+        private int reachedHeatStage(){
+            int stage = -1;
+            for(int i = 0; i < heatRequirements.size; i++){
+                if(heatReq >= heatRequirements.get(i)){
+                    stage = i;
+                }else{
+                    break;
+                }
+            }
+            return stage;
+        }
+
+        private @Nullable BulletType currentStageBullet(){
+            int stage = reachedHeatStage();
+            if(stage < 0) return null;
+
+            if(stageEnhancedBullets.size > 0){
+                int idx = Mathf.clamp(stage, 0, stageEnhancedBullets.size - 1);
+                return stageEnhancedBullets.get(idx);
+            }
+
+            return null;
+        }
+
         private boolean isEnhancedHeat(){
-            return heatRequirements.size > 1 && heatReq > heatRequirements.get(1);
+            if(heatRequirements.isEmpty()) return false;
+            return heatReq >= heatRequirements.peek() - 1;
         }
 
         @Override
         public void draw(){
             super.draw();
-            Draw.z(Layer.effect + 0.001f);
-            Tmp.v1.set(x, y).trns(rotation, -18);
+            Tmp.v1.trns(rotation, -18);
+            float cx = x + Tmp.v1.x, cy = y + Tmp.v1.y;
+            Draw.z(Layer.effect + 0.0014f);
             Draw.color(Pal.lighterOrange);
-            Fill.circle(x + Tmp.v1.x, y + Tmp.v1.y, 8 * warmup);
+            Fill.circle(cx, cy, 7f * warmup);
             Draw.color(Pal.coalBlack);
-            Fill.circle(x + Tmp.v1.x, y + Tmp.v1.y, 5 * warmup);
+            Fill.circle(cx, cy, 4f * warmup);
             Draw.color(Pal.lighterOrange);
-            Drawn.surround(id, x + Tmp.v1.x, y + Tmp.v1.y, 13 * warmup, 5, 3, 5, warmup);
+            Drawn.surround(id, cx, cy, 13 * warmup, 3, 3, 5, warmup);
         }
     }
 
     public static class HeatBulletType extends BasicBulletType{
-        public float[] damageM = new float[]{1f, 2f, 2f};
-        public int extraFrag = 8;
+        public int extraFrag = 5;
 
         public HeatBulletType(){
             puddleLiquid = Liquids.slag;
             puddleAmount = 5f;
-            puddles = 3;
+            puddles = 6;
             puddleRange = 32f;
         }
 
@@ -164,23 +231,7 @@ public class HeatTurret extends PowerTurret{
         }
 
         private float heatFactor(HeatTurretBuild build, HeatTurret heatTurret){
-            float factor = 1f;
-            IntSeq requirements = heatTurret.heatRequirements;
-            if(requirements.isEmpty()) return factor;
-            int maxIndex = Math.max(requirements.size - 1, 0);
-            int loopCount = Math.min(damageM.length, maxIndex);
-            for(int i = 0; i < loopCount; i++){
-                int req = requirements.get(i);
-                if(build.heatReq >= req){
-                    float ratio = Mathf.curve(build.heatReq / req, 0, 1);
-                    factor += damageM[i] * ratio;
-                }
-            }
-            int lastReq = requirements.get(requirements.size - 1);
-            if(build.heatReq >= lastReq){
-                factor += (int)Mathf.log(5, build.heatReq / (float)lastReq);
-            }
-            return factor;
+            return heatTurret.heatDamageMultiplier(build.heatReq);
         }
 
         @Override
@@ -221,7 +272,7 @@ public class HeatTurret extends PowerTurret{
         public void hitEntity(Bullet b, Hitboxc entity, float health){
             super.hitEntity(b, entity, health);
             if(fragBullet != null && (fragOnAbsorb || !b.absorbed) && !(b.frags >= pierceFragCap && pierceFragCap > 0)){
-                int splitCount = (int)Mathf.curve((entity.hitSize() / 8f), 0, 1) * extraFrag;
+                int splitCount = (int)Mathf.clamp((entity.hitSize() / 8f), 0, 1) * extraFrag;
                 for(int i = 0; i < splitCount; i++){
                     createFragBullet(b, b.x, b.y, i);
                 }

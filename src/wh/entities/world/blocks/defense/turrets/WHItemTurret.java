@@ -1,6 +1,7 @@
 package wh.entities.world.blocks.defense.turrets;
 
 import arc.*;
+import arc.math.*;
 import arc.util.*;
 import mindustry.gen.*;
 import mindustry.world.blocks.defense.turrets.*;
@@ -17,12 +18,21 @@ public class WHItemTurret extends ItemTurret{
 
         outlineColor = WHPal.Outline;
         outlineRadius = 3;
+        squareSprite = false;
+    }
+
+    public static void intTurret(Turret turret){
+        turret.armor = 3 * turret.size;
+        turret.researchCostMultiplier = Mathf.clamp(1.4f - 0.04f * turret.size * turret.size, 0.2f, 1.5f);
+        turret.depositCooldown = turret.size * 0.5f + 1;
+        turret.buildCostMultiplier = Mathf.clamp(4.5f - turret.size * 0.7f, 0.7f, 4);
+        turret.scaledHealth = 10 * turret.size * turret.size + 20 * turret.size;
     }
 
     @Override
     public void init(){
+        intTurret(this);
         super.init();
-        armor = 3 * size;
     }
 
     @Override
@@ -30,12 +40,12 @@ public class WHItemTurret extends ItemTurret{
         super.setStats();
         String specialText = special;
         String specialKey = "block." + name + ".special";
-        String bundleSpecial = Core.bundle.get(specialKey);
-        if(bundleSpecial != null && !bundleSpecial.equals(specialKey)){
+        String bundleSpecial = Core.bundle.has(specialKey) ? Core.bundle.get(specialKey) : null;
+        if(bundleSpecial != null && !bundleSpecial.isEmpty() && !isMissingBundleText(bundleSpecial)){
             specialText = bundleSpecial;
         }
         final String finalSpecialText = specialText;
-        if(finalSpecialText != null && !finalSpecialText.isEmpty() && !finalSpecialText.equals("_")){
+        if(finalSpecialText != null && !finalSpecialText.isEmpty() && !finalSpecialText.equals("_") && !isMissingBundleText(finalSpecialText)){
             stats.add(Stat.abilities, t -> {
                 t.row();
                 t.add("[gray]" + (unlocked() ? finalSpecialText : Iconc.lock + " " + Core.bundle.get("unlock.incampaign")))
@@ -44,5 +54,9 @@ public class WHItemTurret extends ItemTurret{
         }
         stats.remove(Stat.ammo);
         stats.add(Stat.ammo, UIUtils.ammo(ammoTypes));
+    }
+
+    private static boolean isMissingBundleText(String text){
+        return text.startsWith("???") && text.endsWith("???");
     }
 }

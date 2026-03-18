@@ -109,7 +109,7 @@ public class TankEn2UnitType extends WHUnitType{
             WHFx.shootLine(10, 20),
             Fx.shootBig);
             hitEffect = despawnEffect = new MultiEffect(
-            WHFx.square(hitColor, 35, 10, splashDamageRadius, 6),
+            WHFx.square(35, hitColor, 10, splashDamageRadius, 6),
             WHFx.generalExplosion(7, hitColor, 20, 3, false),
             WHFx.instHit(hitColor, true, 2, splashDamageRadius)
             );

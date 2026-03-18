@@ -46,6 +46,12 @@ public class ReckoningTurret extends ItemTurret{
         Draw.reset();
     });
 
+    @Override
+    public void init(){
+        WHItemTurret.intTurret(this);
+        super.init();
+    }
+
     public ReckoningTurret(String name){
         super(name);
         canOverdrive = false;

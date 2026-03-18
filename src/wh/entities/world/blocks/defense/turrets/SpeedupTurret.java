@@ -52,7 +52,8 @@ public class SpeedupTurret extends PowerTurret{
     }
 
     @Override
-    public void init() {
+    public void init(){
+        WHItemTurret.intTurret(this);
         super.init();
     }
 

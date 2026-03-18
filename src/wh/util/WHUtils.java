@@ -526,6 +526,7 @@ public final class WHUtils{
         bullet.hitSize = bt.hitSize;
         bullet.mover = mover;
         bullet.damage = (damage < 0 ? bt.damage : damage) * bullet.damageMultiplier();
+        bullet.buildingDamageMultiplier = bt.buildingDamageMultiplier;
         //reset trail
         if(bullet.trail != null){
             bullet.trail.clear();

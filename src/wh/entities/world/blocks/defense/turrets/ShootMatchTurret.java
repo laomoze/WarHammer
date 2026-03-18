@@ -33,8 +33,8 @@ public class ShootMatchTurret extends ItemTurret {
 
     @Override
     public void init(){
+        WHItemTurret.intTurret(this);
         super.init();
-        armor = 3*size;
     }
 
     @Override

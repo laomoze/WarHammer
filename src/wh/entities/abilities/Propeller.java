@@ -46,7 +46,7 @@ public class Propeller extends Ability{
 
     @Override
     public String localized(){
-        return Core.bundle.format("ability.wh-utilities-propeller", px, py);
+        return Core.bundle.format("ability." + name("utilities-propeller-ability"), px, py);
     }
 
     @Override

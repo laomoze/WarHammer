@@ -21,8 +21,6 @@ public class DrawBladePart extends DrawUnitPart{
     public Color color = Pal.accent;
     public UnitPartProgress actionProgress = UnitPartProgress.actionTime;
 
-    public Interval interval = new Interval();
-
     public DrawBladePart(){
     }
 
@@ -46,14 +44,9 @@ public class DrawBladePart extends DrawUnitPart{
 
         Tmp.v1.set(x + mx, y + my).rotateRadExact((params.rotation - 90) * Mathf.degRad);
 
-        float rx = Tmp.v1.x + params.x, ry = Tmp.v1.y + params.y;
-
         Tmp.v2.set(Tmp.v1).trnsExact(rot, rad).add(params.x, params.y);
 
-        boolean in;
-        if(unit.mounts[0] instanceof MainWeaponMount m){
-            in = m.shouldAction;
-            float progress = in ? action * (Math.abs(actionRot) / 360f) : 0;
+        if(unit.mounts.length > 0){
             float w = trailWidth * action;
 
 

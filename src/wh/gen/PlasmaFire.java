@@ -46,7 +46,8 @@ public class PlasmaFire extends Fire{
         }
         Drawf.light(e.x, e.y, 50f + Mathf.absin(5f, 5f), WHPal.SkyBlue, 0.6f * e.fout());
     });
-@Override
+
+    @Override
     public void draw() {
         {
             Draw.alpha(0.35f);
@@ -150,7 +151,7 @@ public class PlasmaFire extends Fire{
 
             if (flammability > 0 && (fireballTimer += Time.delta * Mathf.clamp(flammability / 10.0F, 0.0F, 0.5F)) >= fireballDelay) {
                 fireballTimer = 0.0F;
-                WHBullets.PlasmaFireBall.createNet(Team.derelict, x, y, Mathf.random(360.0F), -1.0F, 1, 1);
+                WHBullets.PlasmaFireBall.createNet(Team.derelict, x, y, Mathf.random(360.0F), -1.0F, 1, Mathf.random(1f, 3f));
             }
 
             if ((damageTimer += Time.delta) >= damageDelay) {

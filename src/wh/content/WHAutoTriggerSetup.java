@@ -14,12 +14,11 @@ public class WHAutoTriggerSetup{
     public static boolean debugAnyMode = false;
 
     public static void load(){
-        // 初始化触发器管理器，并重新装载模板。
         PortableAutoEventTrigger.init();
 
         PortableAutoEventTrigger.clearTemplates();
         applyDebugMode(debugAnyMode);
-        registerTemplates();
+        /* registerTemplates();*/
     }
 
     private static void registerTemplates(){

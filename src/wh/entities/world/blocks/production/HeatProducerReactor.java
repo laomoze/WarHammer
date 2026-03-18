@@ -56,10 +56,10 @@ public class HeatProducerReactor extends NuclearReactor{
         Color c = WHItems.uranium.color.cpy().lerp(Pal.lighterOrange, 0.5f);
         float life = 300;
         explodeEffect = new MultiEffect(
-        WHFx.hitSpark(c, 90, 40, explosionRadius * Vars.tilesize, 2, 20),
-        WHFx.hitCircle(c, c, life, 15, explosionRadius * Vars.tilesize, 25),
+        WHFx.hitSpark(90, c, 40, explosionRadius * Vars.tilesize, 2, 20),
+        WHFx.hitCircle(life, c, c, 15, explosionRadius * Vars.tilesize, 25),
         WHFx.generalExplosion(life, c, explosionRadius * Vars.tilesize, 25, false),
-        WHFx.circleOut(c, life, explosionRadius * Vars.tilesize)
+        WHFx.circleOut(life, c, explosionRadius * Vars.tilesize)
         );
         explodeSound = Sounds.explosionReactor;
     }

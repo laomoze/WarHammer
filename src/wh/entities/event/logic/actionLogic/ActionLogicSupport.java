@@ -348,9 +348,6 @@ public final class ActionLogicSupport{
             case 3 -> WHBullets.CycloneMissleLauncherMissile1;
             case 4 -> WHBullets.CycloneMissleLauncherMissile2;
             case 5 -> WHBullets.CycloneMissleLauncherMissile3;
-            case 6 -> WHBullets.SSWordTiSteel;
-            case 7 -> WHBullets.SSWordPyratite;
-            case 8 -> WHBullets.SSWordSurgeAlloy;
             default -> WHBullets.airRaiderMissile;
         };
     }

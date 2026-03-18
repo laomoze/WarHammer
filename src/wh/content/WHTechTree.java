@@ -14,7 +14,7 @@ public final class WHTechTree {
     private WHTechTree() {}
 
     public static void load() {
-        TechNode root = nodeRoot("[yellow]IMPERIUM", WHPlanets.kellex, () -> {
+        TechNode root = nodeRoot("[yellow]IMPERIUM", WHPlanets.karvex, () -> {
             nodeProduce(WHItems.imperium, () -> {
                 nodeProduce(WHItems.manganeseSteel, () -> {
                     nodeProduce(WHItems.ceramite, () -> {

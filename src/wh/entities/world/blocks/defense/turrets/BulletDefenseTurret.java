@@ -2,13 +2,13 @@ package wh.entities.world.blocks.defense.turrets;
 
 import arc.audio.*;
 import arc.graphics.*;
-import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.util.*;
 import arc.util.io.*;
 import mindustry.content.*;
 import mindustry.entities.*;
 import mindustry.entities.bullet.*;
+import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.world.blocks.defense.turrets.*;
@@ -16,6 +16,7 @@ import mindustry.world.draw.*;
 import mindustry.world.meta.*;
 import wh.core.*;
 import wh.entities.world.drawer.part.*;
+import wh.graphics.*;
 
 public class BulletDefenseTurret extends Turret {
 
@@ -27,7 +28,6 @@ public class BulletDefenseTurret extends Turret {
     public float checkRange = 15f;
     public float realDamage;
     public float shootLength = 13f;
-    public DrawTurret drawer = new DrawTurret();
 
     public BulletType interceptor = new InterceptorBulletType() {
         {
@@ -50,10 +50,10 @@ public class BulletDefenseTurret extends Turret {
         public void update(Bullet b) {
             super.update(b);
             Groups.bullet.intersect(b.x - checkRange, b.y - checkRange, checkRange * 2, checkRange * 2, bullet -> {
-                if (bullet.team != b.team && bullet.type().hittable) {
+                if(isTargetableBullet(b.team, bullet)){
                     if (bullet.damage > b.damage) {
                        // b.remove();
-                        bullet.damage((bullet.damage() - realDamage)*0.9f);
+                        bullet.damage((bullet.damage() - realDamage) * 0.85f);
                         Fx.hitLancer.at(bullet.x, bullet.y);
                     } else {
                         b.remove();
@@ -75,6 +75,8 @@ public class BulletDefenseTurret extends Turret {
         range = 350f;
         scaledHealth = 500;
         hasPower = true;
+        outlineColor = WHPal.Outline;
+        outlineRadius = 3;
         consumePower(30f);
         float aimLength = 48f;
         clipSize = aimLength * 2f;
@@ -91,15 +93,17 @@ public class BulletDefenseTurret extends Turret {
         };
     }
 
-    @Override
-    public TextureRegion[] icons(){
-        return drawer.finalIcons(this);
+    protected boolean isTargetableBullet(Team ownTeam, @Nullable Bullet bullet){
+        return bullet != null
+        && bullet.isAdded()
+        && bullet.team != ownTeam
+        && bullet.type() != null && bullet.type().hittable;
     }
+
 
     @Override
     public void load(){
         super.load();
-        drawer.load(this);
     }
 
     @Override
@@ -108,42 +112,51 @@ public class BulletDefenseTurret extends Turret {
         stats.add(Stat.reload, 60f / reload, StatUnit.perSecond);
     }
 
+    @Override
+    public void init(){
+        WHItemTurret.intTurret(this);
+        super.init();
+    }
+
     public class BulletDefenseTurretBuild extends TurretBuild {
-        public @Nullable Bullet target;
+        public @Nullable Bullet bulletTarget;
 
         @Override
         public void updateTile() {
 
-            if(target != null && !target.isAdded()){
-                target = null;
+            if(timer(timerTarget, retargetTime)){
+                bulletTarget = Groups.bullet.intersect(x - range, y - range, range * 2, range * 2)
+                .min(b -> isTargetableBullet(team, b), b -> b.dst2(this));
             }
-            boolean canShoot = canConsume() && (target != null || warmupHold > 0);
-            boolean shootTimeout = reloadCounter >= reload * 10;
-            float warmupTarget = canShoot && !shootTimeout ? 1f : 0f;
 
-            if (target != null) {
+            if(bulletTarget != null){
                 warmupHold = 60f;
             }
+
+            if(bulletTarget != null && !bulletTarget.isAdded()){
+                bulletTarget = null;
+            }
+
+            target = bulletTarget;
+
+            boolean canShoot = canConsume() && (bulletTarget != null || warmupHold > 0);
+            float warmupTarget = canShoot ? 1f : 0f;
             if (warmupHold > 0) {
                 warmupHold -= Time.delta;
             }
 
             shootWarmup = Mathf.lerpDelta(shootWarmup, warmupTarget, warmupTarget > 0 ? 0.06f : 0.1f);
-
-            if (timer(timerTarget, retargetTime)) {
-                target = Groups.bullet.intersect(x - range, y - range, range * 2, range * 2)
-                        .min(b -> b.team != team && b.type().hittable, b -> b.dst2(this));
-            }
             if(coolant != null){
                 updateCooling();
             }
-            if (target != null && target.team != team && target.type().hittable) {
-                float dest = angleTo(target);
+            if(isTargetableBullet(team, bulletTarget) && bulletTarget.within(this, range)){
+                float dest = angleTo(bulletTarget);
                 rotation = Angles.moveToward(rotation, dest, Math.max(rotateSpeed * edelta(), 0.5f));
                 reloadCounter += edelta();
                 Tmp.v1.trns(rotation, shootLength);
                 if (Angles.within(rotation, dest, Math.max(shootCone,10)) && reloadCounter >= reload) {
-                    interceptor.create(this, team, x + Tmp.v1.x, y + Tmp.v1.y, rotation, 100f, 1f, 1f, target);
+                    realDamage = interceptor.damage;
+                    interceptor.create(this, team, x + Tmp.v1.x, y + Tmp.v1.y, rotation, interceptor.damage, 1f, 1f, bulletTarget);
                     shootEffect.at(x + Tmp.v1.x, y + Tmp.v1.y, rotation, color);
                     shootSound.at(x + Tmp.v1.x, y + Tmp.v1.y, Mathf.random(0.9f, 1.1f));
                     reloadCounter = 0;
@@ -152,20 +165,14 @@ public class BulletDefenseTurret extends Turret {
             }
         }
 
-
-        @Override
-        public boolean canConsume() {
-            return power.status > 0.99f && super.canConsume();
-        }
-
         @Override
         public boolean shouldConsume() {
-            return super.shouldConsume() && target != null;
+            return enabled && bulletTarget != null;
         }
 
         @Override
-        public void draw(){
-            drawer.draw(this);
+        public boolean hasAmmo(){
+            return true;
         }
 
         @Override

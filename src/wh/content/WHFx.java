@@ -57,8 +57,9 @@ public final class WHFx{
 
     public static Effect hitSparkHuge;
     public static Effect hitSparkLarge;
-    public static Effect hugeSmokeGray;
     public static Effect hugeSmoke;
+    public static Effect hugeSmokeGray;
+    public static Effect smokeTrail;
 
     public static Effect lightningSpark;
     public static Effect chainLightningFade;
@@ -70,6 +71,7 @@ public final class WHFx{
 
     public static Effect PlasmaFireBurn;
     public static Effect shareDamage;
+    public static Effect tentacleCoronaHeat;
 
     public static Effect spawn;
     public static Effect jumpTrail;
@@ -88,37 +90,41 @@ public final class WHFx{
     private WHFx(){
     }
 
-
+    @FunctionalInterface
     public interface EffectParam{
-        void draw(long var1, float var3, float var4, float var5, float var6);
+        void draw(long id, float x, float y, float rotation, float fin);
     }
 
     public static float fslope(float fin){
         return (0.5f - Math.abs(fin - 0.5f)) * 2f;
     }
 
-
-    public static Effect boolSelector = new Effect(0, 0, e -> {
+    public static final Effect boolSelector = new Effect(0, 0, e -> {
     });
 
     public static float fout(float fin, float margin){
         return fin >= 1 - margin ? 1 - (fin - (1 - margin)) / margin : 1;
     }
 
+    public static Effect tentacleCorona(float lifetime, float length, float width, int rays, float spinSpeed, Color glowColor, Color coreColor){
+        return new TentacleEffect(lifetime, length, width, rays, spinSpeed, glowColor, coreColor)
+        .followParent(true)
+        .rotWithParent(true);
+    }
 
-    public static Effect square(Color color, float lifetime, int num, float range, float size){
+    public static Effect square(float lifetime, Color color, int num, float range, float size){
         return new Effect(lifetime, (e) -> {
             color(color);
             rand.setSeed(e.id);
             randLenVectors(e.id, num, range * e.finpow(), (x, y) -> {
-                float s = e.fout(Interp.pow3In) * (size + rand.range(size / 3.0F));
+                float s = Mathf.curve(e.fin(), 0f, 0.1f) * e.fout(Interp.pow3In) * (size + rand.range(size / 3.0F));
                 Fill.square(e.x + x, e.y + y, s, 45.0F);
                 Drawf.light(e.x + x, e.y + y, s * 2.25F, color, 0.7F);
             });
         });
     }
 
-    public static Effect tri(Color color, float lifetime, int num, float range, float size){
+    public static Effect tri(float lifetime, Color color, int num, float range, float size){
         return new Effect(lifetime, (e) -> {
             color(color);
             rand.setSeed(e.id);
@@ -132,8 +138,9 @@ public final class WHFx{
         });
     }
 
-    public static Effect hitSpark(Color color, float lifetime, int num, float range, float stroke, float length){
+    public static Effect hitSpark(float lifetime, Color color, int num, float range, float stroke, float length){
         return new Effect(lifetime, (e) -> {
+            rand.setSeed(e.id);
             color(color, Color.white, e.fout() * 0.3F);
             stroke(e.fout() * stroke);
             randLenVectors(e.id, num, e.finpow() * range, e.rotation, 360.0F, (x, y) -> {
@@ -143,17 +150,30 @@ public final class WHFx{
         });
     }
 
-    public static Effect hitCircle(Color color, Color to, float lifetime, int num, float range, float size){
+    public static Effect hitSparkAng(float lifetime, Color color, Color colorTo, int num, float range, float angle, float stroke, float length){
         return new Effect(lifetime, (e) -> {
+            rand.setSeed(e.id);
+            color(color, colorTo, e.fout());
+            stroke(e.fout() * stroke * rand.random(0.5f, 1.25f));
+            randLenVectors(e.id + 114, num, e.finpow() * range, e.rotation, angle, (x, y) -> {
+                float ang = Mathf.angle(x, y);
+                lineAngle(e.x + x, e.y + y, ang, (e.fout() * length * 0.85F + length * 0.15F) * rand.random(0.5f, 1.5f));
+            });
+        });
+    }
+
+    public static Effect hitCircle(float lifetime, Color color, Color to, int num, float range, float size){
+        return new Effect(lifetime, (e) -> {
+            rand.setSeed(e.id);
             color(color, to, e.fout() * 0.3F);
             randLenVectors(e.id, num, e.finpow() * range, e.rotation, 360.0F, (x, y) -> {
-                Fill.circle(e.x + x, e.y + y, e.fout() * size * 0.85F);
+                Fill.circle(e.x + x, e.y + y, e.fout() * size * rand.random(0.5f, 1.5f));
             });
         });
     }
 
 
-    public static Effect hitPoly(Color color, Color to, float lifetime, int num, float range, float size, int sides, float rotation){
+    public static Effect hitPoly(float lifetime, Color color, Color to, int num, float range, float size, int sides, float rotation){
         return new Effect(lifetime, (e) -> {
             rand.setSeed(e.id);
             float rot = rand.random(rotation * 1.5f);
@@ -164,10 +184,10 @@ public final class WHFx{
         });
     }
 
-    public static TrailEffect trailHitSpark(Color color, float lifetime, int num, float range, float stroke, float length){
+    public static TrailEffect trailHitSpark(float lifetime, Color color, int num, float range, float stroke, float length){
         return new TrailEffect(lifetime, range * 2, color, color, num, (int)length, stroke)
         .trailUpdater((e, trail, x, y, width, len, index) -> {
-            long id = e.id + index * 45;
+            long id = e.id + index * 45L;
             rand.setSeed(e.id + id);
             randLenVectors(e.id + id, 1, e.fin(Interp.pow3Out) * range, e.rotation, 360, (x1, y1) -> {
                 trail.length = (int)(len * WHFx.fout(e.fin(), 0.06f));
@@ -176,7 +196,7 @@ public final class WHFx{
         }).drawTri(true);
     }
 
-    public static TrailEffect trailCircleHitSpark(Color color, float lifetime, int num, float range, float stroke, float length){
+    public static TrailEffect trailCircleHitSpark(float lifetime, Color color, int num, float range, float stroke, float length){
         return new TrailEffect(lifetime, range * 2, color, color, num, (int)length, stroke)
         .trailUpdater((e, trail, x, y, width, len, index) -> {
             long id = e.id + index * 45L;
@@ -189,7 +209,7 @@ public final class WHFx{
     }
 
 
-    public static Effect smoothColorRect(Color out, float rad, float lifetime){
+    public static Effect smoothColorRect(float lifetime, Color out, float rad){
         return new Effect(lifetime, rad * 2, e -> {
             blend(Blending.additive);
             float radius = e.fin(Interp.pow3Out) * rad;
@@ -198,17 +218,17 @@ public final class WHFx{
             stroke(radius * 2.0F + 0.2F);
             Lines.square(e.x, e.y, radius, 90f);
             blend();
-        }).layer(Layer.effect + 0.15f);
+        }).layer(WHFx.EFFECT_MASK);
     }
 
-    public static Effect smoothColorCircle(Color out, float rad, float lifetime){
+    public static Effect smoothColorCircle(float lifetime, Color out, float rad){
         return (new Effect(lifetime, rad * 2.0F, (e) -> {
             blend(Blending.additive);
             float radius = e.fin(Interp.pow3Out) * rad;
             Fill.light(e.x, e.y, circleVertices(radius), radius, Color.clear, Tmp.c1.set(out).a(e.fout(Interp.pow5Out)));
             Drawf.light(e.x, e.y, radius * 1.3F, out, 0.7F * e.fout(0.23F));
             blend();
-        })).layer(110.15F);
+        })).layer(WHFx.EFFECT_MASK);
     }
 
     public static Effect instTrail(Color color, float angle, boolean random){
@@ -227,7 +247,7 @@ public final class WHFx{
         }).followParent(true);
     }
 
-    public static Effect explosionSmokeEffect(Color color, float lifetime, float range, int amount, float size){
+    public static Effect explosionSmokeEffect(float lifetime, Color color, float range, int amount, float size){
         return new Effect(lifetime, 180.0F, (e) -> {
             color(color);
             Drawf.light(e.x, e.y, e.fout() * 90.0F, color, 0.7F);
@@ -264,7 +284,7 @@ public final class WHFx{
         });
     }
 
-    public static Effect shuttle(Color color, Color bottomColor, float lifetime, Boolean drawBottom, float length, float rotation){
+    public static Effect shuttle(float lifetime, Color color, Color bottomColor, Boolean drawBottom, float length, float rotation){
         return new Effect(lifetime, length * 1.5f, (e) -> {
             float len, ang;
             if(e.data instanceof Float){
@@ -296,7 +316,7 @@ public final class WHFx{
         }).layer(Layer.effect - 1f);
     }
 
-    public static Effect instRotation(Color color, float lifetime, float size, float rotateAngle, boolean rotate){
+    public static Effect instRotation(float lifetime, Color color, float size, float rotateAngle, boolean rotate){
         return new Effect(lifetime, size * 1.6f, e -> {
             rand.setSeed(e.id);
             float ang = rotate ? rand.random(0, 180f) * e.fin(Interp.smooth) + rotateAngle : rotateAngle;
@@ -405,7 +425,7 @@ public final class WHFx{
         });
     }
 
-    public static Effect sharpBlast(Color colorExternal, Color colorInternal, float lifetime, float range){
+    public static Effect sharpBlast(float lifetime, Color colorExternal, Color colorInternal, float range){
         return new Effect(lifetime, range * 2.0F, (e) -> {
             randLenVectors(e.id, (int)Mathf.clamp(range / 8.0F, 4.0F, 18.0F), range / 8.0F, range * (1.0F + e.fout(Interp.pow2OutInverse)) / 2.0F, (x, y) -> {
                 float angle = Mathf.angle(x, y);
@@ -423,7 +443,7 @@ public final class WHFx{
         });
     }
 
-    public static Effect crossBlastArrow45(Color color, Color to, float lifetime, float with, float length, float arrowStartLen, float range){
+    public static Effect crossBlastArrow45(float lifetime, Color color, Color to, float width, float length, float arrowStartLen, float range){
         return new Effect(lifetime, (e) -> {
             color(color, to, e.fout());
             Drawf.light(e.x, e.y, e.fout() * 70.0F, e.color, 0.7F);
@@ -432,13 +452,13 @@ public final class WHFx{
                 circle(e.x, e.y, range * ix.finpow());
             });
             rand.setSeed(e.id);
-            float randL = rand.random(length);
+            float randL = rand.random(length) + 0.1f * length;
             float f = Mathf.curve(e.fin(), 0, 0.08f);
 
             for(int i = 0; i < 4; ++i){
                 Tmp.v1.trns(45 + i * 90, arrowStartLen);
                 Drawn.arrow(e.x + Tmp.v1.x, e.y + Tmp.v1.y,
-                with * (e.fout() * 3f + 1) / 4 * e.fout(Interp.pow3In),
+                width * (e.fout() * 3f + 1) / 4 * e.fout(Interp.pow3In),
                 (length + randL) * f * e.fout(Interp.pow3),
                 -randL / 6f * f, (float)(i * 90 + 45));
             }
@@ -464,7 +484,7 @@ public final class WHFx{
         });
     }
 
-    public static Effect plasmaShoot(Color color, float lifetime, float size, int amount){
+    public static Effect plasmaShoot(float lifetime, Color color, float size, int amount){
         return new Effect(lifetime, e -> {
             rand.setSeed(e.id);
             color(color);
@@ -474,34 +494,34 @@ public final class WHFx{
         });
     }
 
-    public static Effect plasmaBlast(float lifetime, Color color, float size, int amount){
+    public static Effect plasmaBlast(float lifetime, Color color, int particleCount, float blastRadius){
         return new Effect(lifetime, e -> {
 
             color(color);
             e.scaled(lifetime * 0.7f, a -> {
                 rand.setSeed(a.id);
-                randLenVectors(a.id + 999, amount * 3, size * 0.7f * Mathf.curve(a.fin(), 0, 0.08f), size * 0.3f * rand.random(0.8f, 1.2f) * a.finpow(), (x, y) -> {
+                randLenVectors(a.id + 999, particleCount * 3, blastRadius * 0.7f * Mathf.curve(a.fin(), 0, 0.08f), blastRadius * 0.3f * rand.random(0.8f, 1.2f) * a.finpow(), (x, y) -> {
                     Fill.circle(a.x + x, a.y + y, Mathf.curve(a.fin(), 0, 0.08f) * a.fout(Interp.pow10Out) * 4 * rand.random(0.7f, 1.6f));
                 });
             });
 
             rand.setSeed(e.id);
 
-            randLenVectors(e.id + 114514, amount, size * rand.random(0.4f, 1) * e.fin(), (x, y) -> {
+            randLenVectors(e.id + 114514, particleCount, blastRadius * rand.random(0.4f, 1) * e.fin(), (x, y) -> {
                 float fout = e.fout(Interp.pow5Out);
                 Fill.circle(e.x + x, e.y + y, 12 * rand.random(0.7f, 1f) * fout);
             });
 
           /*  e.scaled(lifetime * 0.6f, i -> {
-                randLenVectors(i.id, amount, 1f + Mathf.randomSeed(i.id, 0.5f, 1) * size * 0.85f * i.finpow(), (x, y) -> {
-                    Fill.poly(i.x + x, i.y + y, 6, rand.random(0.5f, 1f) * size / 10 * i.fout(), rand.random(360) * i.fout() + 60f);
+                randLenVectors(i.id, particleCount, 1f + Mathf.randomSeed(i.id, 0.5f, 1) * blastRadius * 0.85f * i.finpow(), (x, y) -> {
+                    Fill.poly(i.x + x, i.y + y, 6, rand.random(0.5f, 1f) * blastRadius / 10 * i.fout(), rand.random(360) * i.fout() + 60f);
                 });
             });*/
             e.scaled(lifetime, i -> {
                 float intensity = 0.25f;
                 color(color);
-                Fill.circle(i.x, i.y, intensity * size * i.fout(Interp.pow3Out));
-                float scl = 0.3f * size;
+                Fill.circle(i.x, i.y, intensity * blastRadius * i.fout(Interp.pow3Out));
+                float scl = 0.3f * blastRadius;
                 Rand rand = new Rand(i.id);
                 randLenVectors(i.id, 8, scl / 3, scl * (1.0F + i.fout(Interp.circleOut)) / 1.5f, (x, y) -> {
                     float angle = Mathf.angle(x, y);
@@ -516,9 +536,9 @@ public final class WHFx{
                     Drawn.tri(i.x + x, i.y + y, width / 2.0F, length / 1.5F * i.fout(), angle);
                 });
                 color(Pal.coalBlack.cpy());
-                Fill.circle(i.x, i.y, intensity * size * 0.6f * i.fout(Interp.pow3Out));
+                Fill.circle(i.x, i.y, intensity * blastRadius * 0.6f * i.fout(Interp.pow3Out));
             });
-            Drawf.light(e.x, e.y, size, color, 0.8f * e.fout());
+            Drawf.light(e.x, e.y, blastRadius, color, 0.8f * e.fout());
         });
     }
 
@@ -580,7 +600,7 @@ public final class WHFx{
         });
     }
 
-    public static Effect airAsh(float lifetime, float range, float start, float pin, Color color, float width,
+    public static Effect airAsh(float lifetime, Color color, float range, float start, float pin, float width,
                                 int amount){
 /*         new MultiEffect(
         new Effect(lifetime, e -> {
@@ -704,14 +724,14 @@ public final class WHFx{
                 float theta = rand2.random(0f, Mathf.PI2);
                 v.set(Mathf.cos(theta), Mathf.sin(theta)).scl(radius * sBegin / (e.lifetime - childLifetime));
 
-                Tmp.c1.set(e.color).lerp(Color.white, fout * 0.7f);
+                Tmp.c1.set(e.color).lerp(Color.white, fout * 0.5f);
                 color(Tmp.c1);
                 drawer.draw(e.id + s + 9999, e.x + v.x, e.y + v.y, Mathf.radiansToDegrees * theta, fin);
             }
         });
     }
 
-    public static Effect multipRings(Color color, float radius, float amount, float baseLifetime){
+    public static Effect multipRings(float baseLifetime, Color color, float radius, float amount){
         return new MultiEffect(
         new Effect(baseLifetime, radius * 2f, e -> {
             color(color);
@@ -742,8 +762,8 @@ public final class WHFx{
         }));
     }
 
-    public static Effect arcSmelt(Color color, float radius, float amount, float Lifetime){
-        return new Effect(Lifetime, radius * 2f, e -> {
+    public static Effect arcSmelt(float lifetime, Color color, float radius, float amount){
+        return new Effect(lifetime, radius * 2f, e -> {
             float flameRadiusScl = 3f, flameRadiusMag = 0.3f, circleStroke = 1.5f;
             blend(Blending.additive);
             color(color, color, e.fin());
@@ -757,10 +777,10 @@ public final class WHFx{
             blend();
             reset();
             rand2.setSeed(e.id);
-            e.scaled(Lifetime, (e2) -> {
+            e.scaled(lifetime, (e2) -> {
                 for(int s = 0; s < amount; s++){
-                    float timeOffset = s * Lifetime * 2 / amount;
-                    float progress = (e2.time - timeOffset) / Lifetime;
+                    float timeOffset = s * lifetime * 2 / amount;
+                    float progress = (e2.time - timeOffset) / lifetime;
                     if(progress < 0 || progress > 1) return;
 
                     randLenVectors(e2.id + s, 1, radius * e.foutpow(), (x, y) -> {
@@ -788,7 +808,7 @@ public final class WHFx{
         });
     }
 
-    public static Effect hexagonSmoke(Color color, float lifetime, float stroke, float size, float range){
+    public static Effect hexagonSmoke(float lifetime, Color color, float stroke, float size, float range){
         {
             return new Effect(lifetime, e -> {
                 rand.setSeed(e.id);
@@ -804,7 +824,7 @@ public final class WHFx{
         }
     }
 
-    public static Effect hexagonWave(Color color, float lifetime, float stroke, Interp fin, float size){
+    public static Effect hexagonWave(float lifetime, Color color, float stroke, Interp fin, float size){
 
         return new Effect(lifetime, e -> {
             z(Layer.effect);
@@ -816,7 +836,7 @@ public final class WHFx{
         });
     }
 
-    public static Effect linePolyOut(Color color, float lifetime, float size, float stroke, int sides, float angle){
+    public static Effect linePolyOut(float lifetime, Color color, float size, float stroke, int sides, float angle){
         return new Effect(lifetime, (e) -> {
             color(color);
             stroke(e.fout() * stroke);
@@ -824,7 +844,7 @@ public final class WHFx{
         });
     }
 
-    public static Effect lineCircleOut(Color color, float lifetime, float size, float stroke){
+    public static Effect lineCircleOut(float lifetime, Color color, float size, float stroke){
         return new Effect(lifetime, (e) -> {
             color(color);
             stroke(e.fout() * stroke);
@@ -840,7 +860,7 @@ public final class WHFx{
         });
     }
 
-    public static Effect lineCircleIn(Color color, float lifetime, float size, float stroke){
+    public static Effect lineCircleIn(float lifetime, Color color, float size, float stroke){
         return new Effect(lifetime, (e) -> {
             color(color);
             stroke(e.fin() * stroke);
@@ -856,7 +876,7 @@ public final class WHFx{
         });
     }
 
-    public static Effect circleOut(Color color, float lifetime, float range){
+    public static Effect circleOut(float lifetime, Color color, float range){
         return new Effect(lifetime, range * 1.5F, (e) -> {
             rand.setSeed(e.id);
             color(Color.white, color.cpy(), e.fin() + 0.6F);
@@ -889,7 +909,8 @@ public final class WHFx{
         });
     }
 
-    public static Effect spreadOutSpark(float lifetime, float radius, int sparks, int sparkSpikes, float sparkLifetime, float sparkSize, float sparkLength, Interp spreadOutInterp){
+    public static Effect spreadOutSpark(float lifetime, float radius, int sparks, int sparkSpikes,
+                                        float sparkLifetime, float sparkSize, float sparkLength, Interp spreadOutInterp){
         return new Effect(lifetime, radius * 2f, e -> {
             rand.setSeed(e.id);
             float finT = e.lifetime * e.fin(spreadOutInterp);
@@ -920,7 +941,7 @@ public final class WHFx{
         });
     }
 
-    public static Effect railShoot(Color color, float length, float width, float lifetime, float spacing){
+    public static Effect railShoot(float lifetime, Color color, float length, float width, float spacing){
         return new Effect(lifetime, length * 2f, e -> {
             TextureRegion arrowRegion = WHContent.arrowRegion;
 
@@ -960,7 +981,53 @@ public final class WHFx{
     }
 
 
-    public static Effect genericCharge(Color color, float size, float range, float lifetime){
+    public static Effect convergeSpinLines(float lifetime, Color color, int lineCount, float startLength, float endLength,
+                                           float baseStroke, float ang, float angleShiftStrength){
+        return new Effect(lifetime, (startLength + endLength) * 2f + 64f, e -> {
+            float fout = e.fout(Interp.smooth);
+            int lines = Math.max(1, lineCount);
+            float beamLen = Mathf.lerp(startLength, endLength, Mathf.curve(e.fin(), 0, 0.65f));
+            float sideOffsetBase = 2;
+
+            Draw.blend(Blending.additive);
+            for(int i = 0; i < lines; i++){
+                float data = i * (360f / lines);
+                float sin = Mathf.sinDeg(data + e.time * (angleShiftStrength * (1.6f - fout)));
+                float side = sin * (startLength * 0.4f * fout + sideOffsetBase);
+
+                float startX = e.x + Angles.trnsx(e.rotation, 0f, side);
+                float startY = e.y + Angles.trnsy(e.rotation, 0f, side);
+                float orbitAngle = e.rotation + (sin * ang) * fout;
+
+                float tipX = startX + Angles.trnsx(orbitAngle, beamLen);
+                float tipY = startY + Angles.trnsy(orbitAngle, beamLen);
+
+                float startHalf = baseStroke * (0.2f * fout + 0.3f);
+                float endHalf = baseStroke * (0.5f * fout + 0.5f);
+                float sx = Angles.trnsx(orbitAngle + 90f, startHalf);
+                float sy = Angles.trnsy(orbitAngle + 90f, startHalf);
+                float tx = Angles.trnsx(orbitAngle + 90f, endHalf);
+                float ty = Angles.trnsy(orbitAngle + 90f, endHalf);
+                float cStart = Tmp.c1.set(color).toFloatBits();
+                float cEnd = Tmp.c2.set(color).a(0f).toFloatBits();
+
+                Draw.z(Layer.effect);
+
+                Fill.quad(
+                startX + sx, startY + sy, cStart,
+                tipX + tx, tipY + ty, cEnd,
+                tipX - tx, tipY - ty, cEnd,
+                startX - sx, startY - sy, cStart
+                );
+
+                Drawf.light(startX, startY, tipX, tipY, baseStroke * 0.9f * fout, color, 0.35f);
+            }
+            Draw.blend();
+        });
+    }
+
+
+    public static Effect genericCharge(float lifetime, Color color, float size, float range){
         return new Effect(lifetime, e -> {
             color(color);
             stroke(size / 7f * e.fin());
@@ -974,9 +1041,9 @@ public final class WHFx{
         });
     }
 
-    public static Effect genericChargeCircle(Color color, float size, float range, float lifetime){
+    public static Effect genericChargeCircle(float lifetime, Color color, float size, float range){
         return new Effect(lifetime, e -> {
-            z(Layer.effect - 0.001f);
+            z(Layer.effect);
             color(color);
             stroke(size / 7f * e.fin());
             rand.setSeed(e.id);
@@ -985,7 +1052,7 @@ public final class WHFx{
                 color(color.cpy().lerp(Color.white, 0.7f));
                 Fill.circle(e.x + x, e.y + y, e.fin() * size * 0.23f);
             });
-            z(Layer.effect);
+            z(EFFECT_MASK);
             color(color);
             Fill.circle(e.x, e.y, size * Interp.pow3Out.apply(e.fin()));
             color(color.cpy().lerp(Color.white, 0.7f));
@@ -993,7 +1060,7 @@ public final class WHFx{
         });
     }
 
-    public static Effect arcShieldBreak = new Effect(40, e -> {
+    public static final Effect arcShieldBreak = new Effect(40, e -> {
         stroke(3 * e.fout(), e.color);
         if(e.data instanceof Unit u){
             PcShieldArcAbility ab = (PcShieldArcAbility)Structs.find(u.abilities, a -> a instanceof PcShieldArcAbility);
@@ -1013,7 +1080,7 @@ public final class WHFx{
         }
     });
 
-    public static Effect triSpread(Color color, float lifetime, int amount, float width, float range){
+    public static Effect triSpread(float lifetime, Color color, int amount, float width, float range){
         return new Effect(lifetime, e -> {
             color(color);
             rand.setSeed(e.id);
@@ -1027,22 +1094,7 @@ public final class WHFx{
     }
 
 
-    public static Effect trailCharge(Color color, float length, float width, float range, int amount, float lifetime){
-       /* return new Effect(lifetime, e -> {
-            float fee = e.time < e.lifetime / 2 ? e.fin() * 2 : e.fout() * 2;
-            z(Layer.bullet + 0.01f);
-            for(int a = 1; a < amount + 1; ++a){
-                rand.setSeed(e.id);
-                float random = rand.random(0f, 0.5f);
-                for(int i = 0; i < length; i++){
-                    float
-                    dx = WHUtils.dx(e.x, range * e.fout(Interp.pow2In) + random * range, (e.time * 4 + i) * a + random * 360f + Mathf.randomSeed(e.id, -10, 10)),
-                    dy = WHUtils.dy(e.y, range * e.fout(Interp.pow2In) + random * range, (e.time * 4 + i) * a + random * 360f + Mathf.randomSeed(e.id, -10, 10));
-                    color(color);
-                    Fill.circle(dx, dy, (size * i / length) * fee);
-                }
-            }
-        });*/
+    public static Effect trailCharge(float lifetime, Color color, float length, float width, float range, int amount){
         return new TrailEffect(lifetime, 1000, color, color, amount, (int)length, width)
         .trailUpdater((e, trail, x, y, w, len, index) -> {
             rand.setSeed(e.id + index);
@@ -1057,7 +1109,45 @@ public final class WHFx{
         });
     }
 
-    public static Effect fillCircle(Color color, float size, float lifetime, Interp inp){
+    public static Effect trailCharge2(float lifetime, Color color, float length, float width, float range, int amount){
+        return new TrailEffect(lifetime, 500 + range, color, color, amount, (int)length, width)
+        .trailUpdater((e, trail, x, y, w, len, index) -> {
+            rand.setSeed(e.id + index);
+            float rand1 = rand.random(0.5f, 1f);
+            float cur = Mathf.curve(e.fin(), 0, 0.15f);
+            Draw.z(Layer.effect);
+            Angles.randLenVectors(e.id + index, 1, range * rand1 * e.fout(), (x1, y1) -> {
+                trail.length = (int)(cur * len);
+                trail.update(x1 + x, y1 + y, w * e.fout());
+            });
+        });
+    }
+
+    public static Effect sineTrail(float lifetime, Color color, float length, float moveLen, float width, float scl, float mag){
+        return new TrailEffect(lifetime, 1000f, color, color, 1, (int)length, width)
+        .trailUpdater((e, trail, x, y, w, len, index) -> {
+            rand.setSeed(e.id + index * 1145L);
+            float fee = e.time < e.lifetime / 2f ? e.fin() * 2f : e.fout() * 2f;
+            float phase = rand.random(Mathf.PI2);
+            float amplitudeScale = rand.random(0.75f, 1.25f);
+            float wave =
+            Mathf.sin(e.time,
+            amplitudeScale * scl + phase,
+            mag * rand.random(0.2f, 1) * Mathf.sign(rand.random(0, 1) > 0.5f));
+
+            z(Layer.effect);
+
+            Tmp.v3.trns(e.rotation, rand.random(0.5f, 1.5f) * moveLen * e.fin());
+            Tmp.v4.trns(e.rotation + 90f, wave);
+
+            trail.length = Math.max(1, (int)(fee * len * rand.random(0.5f, 1f)));
+            trail.update(x + Tmp.v3.x + Tmp.v4.x, y + Tmp.v3.y + Tmp.v4.y, w * fee);
+            trail.draw(color, w * fee);
+            trail.drawCap(color, w * fee);
+        });
+    }
+
+    public static Effect fillCircle(float lifetime, Color color, float size, Interp inp){
         return new Effect(lifetime, e -> {
             z(Layer.effect);
             color(color);
@@ -1068,7 +1158,7 @@ public final class WHFx{
     }
 
     //好几把怪
-    public static Effect circleLightning(Color color, float lifetime, float lightingLifetime, int points, float size){
+    public static Effect circleLightning(float lifetime, Color color, float lightingLifetime, int points, float size){
         Effect[] effects = new Effect[Mathf.ceil(lifetime / lightingLifetime)];
         for(int a = 0; a < effects.length; a++){
             float sizeOffset = Mathf.curve((float)a / effects.length, 0, 1f);
@@ -1138,8 +1228,8 @@ public final class WHFx{
         });
     }
 
-    public static Effect diffuse(int size, Color color, float life){
-        return new Effect(life, e -> {
+    public static Effect diffuse(float lifetime, Color color, int size){
+        return new Effect(lifetime, e -> {
             float f = e.fout();
             if(f < 1e-4f) return;
             float r = Math.max(0f, Mathf.clamp(2f - f * 2f) * size * tilesize / 2f - f - 0.2f), w = Mathf.clamp(0.5f - f) * size * tilesize;
@@ -1155,17 +1245,27 @@ public final class WHFx{
     }
 
     static{
+        smokeTrail = new Effect(70, 300, e -> {
+            color(e.color, 0.8f * e.fout());
+            rand.setSeed(e.id);
+            randLenVectors(e.id, 2, 2 + 10 * rand.random(1, 2) * e.fin(), (x, y) -> {
+                Fill.circle(e.x + x, e.y + y, 5 * Mathf.curve(e.fin(), 0, 0.1f) * rand.random(0.5f, 1f) * e.fout());
+            });
+        });
 
         hugeSmokeGray = new Effect(40f, e -> {
             Draw.color(Color.gray, Color.darkGray, e.fin());
             Angles.randLenVectors(e.id, 6, 2.0F + 19.0F * e.finpow(), (x, y) -> Fill.circle(e.x + x / 2.0F, e.y + y / 2.0F, e.fout() * 2f));
-            e.scaled(25f, i -> Angles.randLenVectors(e.id, 6, 2.0F + 19.0F * i.finpow(), (x, y) -> Fill.circle(e.x + x, e.y + y, i.fout() * 4.0F)));
+            e.scaled(25f, i ->
+            Angles.randLenVectors(e.id, 6, 2.0F + 19.0F * i.finpow(),
+            (x, y) -> Fill.circle(e.x + x, e.y + y, i.fout() * 4.0F)));
         });
 
         hugeSmoke = new Effect(40f, e -> {
             Draw.color(e.color);
             Angles.randLenVectors(e.id, 6, 2.0F + 19.0F * e.finpow(), (x, y) -> Fill.circle(e.x + x / 2.0F, e.y + y / 2.0F, e.fout() * 2f));
-            e.scaled(25f, i -> Angles.randLenVectors(e.id, 6, 2.0F + 19.0F * i.finpow(), (x, y) -> Fill.circle(e.x + x, e.y + y, i.fout() * 4.0F)));
+            e.scaled(25f, i -> Angles.randLenVectors(e.id, 6, 2.0F + 19.0F * i.finpow(),
+            (x, y) -> Fill.circle(e.x + x, e.y + y, i.fout() * 4.0F)));
         });
 
         hitSparkLarge = new Effect(40.0F, (e) -> {
@@ -1579,12 +1679,12 @@ public final class WHFx{
             stroke(e.fout() * 1.667F);
             circle(e.x, e.y, 2.0F + e.finpow() * 7.0F);
         });
+
         healSendCircle = new Effect(22.0F, (e) -> {
             color(e.color);
             stroke(e.fout() * 2.0F);
             circle(e.x, e.y, e.finpow() * e.rotation);
         });
-
 
         jumpTrailOut = new Effect(120f, 200, e -> {
             if(!(e.data instanceof UnitType)) return;
@@ -1891,3 +1991,4 @@ public final class WHFx{
     }
 
 }
+

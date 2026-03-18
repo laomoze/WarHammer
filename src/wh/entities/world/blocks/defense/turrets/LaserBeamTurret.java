@@ -27,7 +27,7 @@ public class LaserBeamTurret extends PowerTurret{
             @Override
             public void update(Building build){
                 if(build instanceof LaserBeamTurretBuild c){
-                    if(c.warmup() >= 0.95f){
+                    if(c.wasShooting){
                         super.update(build);
                     }
                 }
@@ -48,6 +48,7 @@ public class LaserBeamTurret extends PowerTurret{
 
     @Override
     public void init(){
+        WHItemTurret.intTurret(this);
         super.init();
         if(coolant == null){
             coolant = findConsumer(c -> c instanceof ConsumeCoolant b && b.filter != cost);

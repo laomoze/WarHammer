@@ -60,9 +60,11 @@ public class LaserBeamBulletType extends ContinuousBulletType{
         collides = false;
         hittable = false;
         absorbable = false;
+        laserAbsorb = true;
     }
 
     public LaserBeamBulletType(){
+        laserAbsorb = true;
     }
 
 
@@ -221,7 +223,7 @@ public class LaserBeamBulletType extends ContinuousBulletType{
 
         if(!(b instanceof LaserDataBullet data)) return;
 
-        b.damage = damage * (1 + b.fin(moveInterp) * damageMult * b.damageMultiplier());
+        b.damage = damage * (1 + b.fin(moveInterp) * damageMult) * b.damageMultiplier();
 
         float lerp = rotate ? moveSpeed : moveSpeed * 0.6f + b.fin(moveInterp) * moveSpeed * 0.4f;
         float rot = b.rotation() + data.rotation;

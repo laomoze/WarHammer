@@ -209,13 +209,15 @@ public class UnitRegionPart extends DrawUnitPart{
                 float sign = (i == 1 ? -1 : 1) * params.sideMultiplier;
                 Tmp.v1.set((x + mx) * sign, y + my).rotateRadExact((params.rotation - 90) * Mathf.degRad);
 
-                float chargeTime, smothHeat;
-                if(unit.mounts[0] instanceof MainWeaponMount m && m.weapon instanceof MainWeapon mw && mw.melee){
-                    chargeTime = m.actionProgress;
-                    smothHeat = m.smoothHeat;
-                }else{
-                    chargeTime = 1;
-                    smothHeat = 1;
+                float chargeTime = 1f, smothHeat = 1f;
+                if(unit.mounts.length > 0){
+                    var source = unit.mounts[0];
+                    PowerArmourWeaponData data = PowerArmourWeaponData.get(source.weapon);
+                    PowerArmourUnit.WeaponAnimState state = unit.weaponAnimState(0);
+                    if(data != null && data.melee && state != null){
+                        chargeTime = state.actionProgress;
+                        smothHeat = state.smoothHeat;
+                    }
                 }
                 childParam.set(unit, type, params.warmup, params.reload, params.smoothReload, params.heat, params.recoil, params.charge, smothHeat, chargeTime, params.x + Tmp.v1.x, params.y + Tmp.v1.y, mr * sign + params.rotation);
                 childParam.sideMultiplier = params.sideMultiplier;

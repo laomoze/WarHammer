@@ -33,10 +33,13 @@ import static wh.util.WHUtils.rand;
 
 public class WHBulletsOther{
     public static BulletType IonizeInterval;
+    public static BulletType ViperBulletMain;
+    public static BulletType ViperBulletMain2;
+    public static BulletType ViperBulletComp;
+    public static BulletType ViperBulletFrag;
     public static BulletType PyrosBulletInterval;
-    public static BulletType PyrosBulletEnhance;
-    public static BulletType PyrosBulletEnhance2;
-    public static BulletType PyrosBulletEnhance3;
+    public static BulletType PyrosBulletComp1;
+    public static BulletType PyrosBulletComp2;
     public static BulletType PyrosBulletFrag;
     public static BulletType CollapseSealedPromethiumInterval;
     public static BulletType CycloneMissleLauncherMissile2Frag;
@@ -55,15 +58,15 @@ public class WHBulletsOther{
             {
                 buildingDamageMultiplier = 0.2f;
                 lifetime = 180;
-                speed = 3;
+                speed = 2.5f;
                 damage = 90;
                 keepVelocity = false;
-                lightningColor = trailColor = hitColor = WHItems.resonantCrystal.color.cpy();
+                lightningColor = trailColor = lightColor = hitColor = WHItems.resonantCrystal.color.cpy().lerp(Pal.techBlue, 0.7f);
                 trailWidth = 2;
                 trailLength = 18;
                 splashDamage = 50;
                 splashDamageRadius = 32;
-                despawnEffect = hitEffect = WHFx.square(WHItems.resonantCrystal.color.cpy(), 60, 4, 30, 3);
+                despawnEffect = hitEffect = WHFx.square(60, hitColor, 4, 30, 3);
                 buildingDamageMultiplier = 0.2f;
                 homingRange = 100;
                 lightningDamage = 50;
@@ -169,41 +172,183 @@ public class WHBulletsOther{
             }
         };
 
+        ViperBulletFrag = new ShrapnelBulletType(){{
+            length = 100;
+            damage = 80;
+            armorMultiplier = 0.5f;
+            toColor = WHPal.MnSteelColor.cpy().lerp(Pal.techBlue.cpy(), 0.2f);
+            shootEffect = smokeEffect = Fx.thoriumShoot;
+        }};
+
+        ViperBulletMain = new LightingLaserBulletType(){
+            {
+                damage = 500;
+                length = 345;
+                width = 50;
+                sideWidth = 0;
+                sideLength = 0;
+                lifetime = 35;
+                collidesAir = false;
+                pierce = true;
+                pierceCap = 3;
+                lightningColor = hitColor = WHPal.MnSteelColor.cpy().lerp(Pal.techBlue.cpy(), 0.2f);
+                shootEffect = new MultiEffect(
+                WHFx.shootLine(6, 30));
+                colors = new Color[]{hitColor.cpy().a(0.4f),
+                hitColor.cpy().a(0.6f), hitColor};
+
+                fragBullets = 3;
+                fragBullet = ViperBulletFrag;
+                fragSpread = 120;
+                fragOnDespawn = false;
+                fragRandomSpread = 0;
+            }
+
+            @Override
+            public void hitEntity(Bullet b, Hitboxc entity, float health){
+                int hitCount = b.data instanceof Integer ? (int)b.data : 0;
+                float damageMultiplier = hitCount < 3 ? 1.5f : 1f;
+                b.damage *= damageMultiplier;
+
+                super.hitEntity(b, entity, health);
+
+                b.damage /= damageMultiplier;
+                b.data = hitCount + 1;
+            }
+        };
+
+        ViperBulletMain2 = new LightingLaserBulletType(){
+            {
+                renderingDistortion = true;
+                damage = 600;
+                length = 420;
+                rangeChange = length - 360;
+                reloadMultiplier = 0.7f;
+                width = 60;
+                sideWidth = 0;
+                sideLength = 0;
+                lifetime = 60;
+                collidesAir = false;
+                largeHit = true;
+                pierceCap = 5;
+                lightningColor = hitColor = WHPal.MnSteelColor.cpy().lerp(Pal.techBlue.cpy(), 0.2f);
+                shootEffect = new MultiEffect(
+                WHFx.shootLine(6, 30));
+                colors = new Color[]{hitColor.cpy().a(0.4f),
+                hitColor.cpy().a(0.6f), hitColor};
+
+                fragBullets = 3;
+                fragBullet = ViperBulletFrag;
+                fragSpread = 120;
+                fragOnDespawn = false;
+                fragRandomSpread = 0;
+
+                lightningSpacing = 60;
+                lightningDelay = 5f;
+                intervalBullet = new CritBulletType(0, 0){{
+                    instantDisappear = true;
+                    armorMultiplier = 0.5f;
+                    splashDamage = 250;
+                    hittable = absorbable = reflectable = false;
+                    splashDamageRadius = 40;
+
+                    lightningColor = hitColor = WHPal.MnSteelColor.cpy().lerp(Pal.techBlue.cpy(), 0.2f);
+                    collidesTiles = collidesAir = false;
+                    despawnEffect = new MultiEffect(
+                    WHFx.square(60, hitColor, 10, splashDamageRadius, 5),
+                    WHFx.hitSpark(60, hitColor, 15, splashDamageRadius, 1.5f, 15),
+                    WHFx.generalExplosion(30, hitColor, splashDamageRadius, 5, false));
+                }};
+            }
+
+            @Override
+            public void init(Bullet b){
+                float resultLength = Damage.collideLaser(b, length, largeHit, laserAbsorb, pierceCap), rot = b.rotation();
+                PositionLightning.createEffect(b, b.fdata * 0.95f, b.rotation(), lightningColor, 2, Mathf.random(2, 3));
+
+                laserEffect.at(b.x, b.y, rot, resultLength * 0.75f);
+
+                if(lightningSpacing > 0){
+                    int idx = 0;
+                    for(float i = 0; i <= resultLength; i += lightningSpacing){
+                        float cx = b.x + Angles.trnsx(rot, i),
+                        cy = b.y + Angles.trnsy(rot, i);
+                        int f = idx++;
+                        Time.run(f * lightningDelay, () -> {
+                            if(b.isAdded() && b.type == this && b != null){
+                                intervalBullet.create(b, cx, cy, b.rotation());
+                            }
+                        });
+                    }
+                }
+                addRectPathDistortion(b, b.rotation());
+            }
+
+            @Override
+            public void hitEntity(Bullet b, Hitboxc entity, float health){
+                int hitCount = b.data instanceof Integer ? (int)b.data : 0;
+                float damageMultiplier = hitCount < 3 ? 1.5f : 1f;
+                b.damage *= damageMultiplier;
+
+                super.hitEntity(b, entity, health);
+
+                b.damage /= damageMultiplier;
+                b.data = hitCount + 1;
+            }
+        };
+
+        ViperBulletComp = new LaserBulletType(){
+            {
+                damage = 300;
+                length = 200;
+                width = 40;
+                sideWidth = 0;
+                sideLength = 0;
+                collidesAir = false;
+                pierce = true;
+                largeHit = true;
+                lifetime = 20;
+                pierceCap = 3;
+                lightningColor = hitColor = WHPal.MnSteelColor.cpy().lerp(Pal.techBlue.cpy(), 0.2f);
+                shootEffect = new MultiEffect(
+                WHFx.shootLine(6, 30)
+                );
+                colors = new Color[]{hitColor.cpy().a(0.4f),
+                hitColor.cpy().a(0.6f), hitColor};
+            }
+        };
+
         PyrosBulletFrag = new HeatBulletType(){
             {
                 buildingDamageMultiplier = 0.1f;
                 sprite = "circle-bullet";
-                trailColor = WHPal.ShootOrange;
-                trailWidth = 2f;
-                trailLength = 10;
+                frontColor = backColor = lightningColor = lightColor =
+                hitColor = trailColor = Pal.slagOrange.cpy().lerp(Pal.lightOrange, 0.25f);
+
                 status = WHStatusEffects.melta;
-                statusDuration = 10f;
+                statusDuration = 25f;
                 width = height = 12f;
+
+                trailWidth = 1.5f;
+                trailLength = 5;
+
                 shrinkX = shrinkY = 0f;
                 lifetime = 18;
-                speed = 4;
+                speed = 2;
                 damage = 100;
                 splashDamage = 100;
                 splashDamageRadius = 32f;
-                sticky = false;
-                puddleAmount = 3;
+                puddleAmount = 8;
                 puddleLiquid = Liquids.slag;
-                backColor = WHPal.ShootOrange;
-                frontColor = WHPal.ShootOrangeLight;
-                hitEffect = despawnEffect = new ExplosionEffect(){{
-                    waveColor = sparkColor = WHPal.ShootOrangeLight;
-                    waveLife = 20f;
-                    lifetime = 30f;
-                    sparks = 12;
-                    sparkLen = 8f;
-                    sparkRad = 35f;
-                    sparkStroke = 2f;
-                }};
+                armorMultiplier = 0.5f;
+                hitEffect = despawnEffect = new MultiEffect(
+                WHFx.hitCircle(30, hitColor, Pal.lightishGray, 5, splashDamageRadius, 7),
+                WHFx.generalExplosion(30, hitColor, splashDamageRadius, 0, false));
             }
         };
         PyrosBulletInterval = new HeatBulletType(){
             public final float before = 30;
-            public final float rotSpeed = 1f;
+            public final float rotSpeed = 5f;
 
             {
                 sprite = "circle-bullet";
@@ -211,20 +356,24 @@ public class WHBulletsOther{
                 lifetime = 70;
                 speed = 3f;
                 drag = 0.05f;
-                frontColor = Color.white;
-                backColor = hitColor = trailColor = WHPal.ShootOrangeLight.cpy();
+                damage = 80;
+                frontColor = backColor = lightningColor = lightColor =
+                hitColor = trailColor = Pal.slagOrange.cpy().lerp(Pal.lightOrange, 0.25f);
                 width = height = 5;
                 trailLength = 30;
                 trailWidth = 2;
                 shrinkY = shrinkX = 0;
-                absorbable = reflectable = false;
+                reflectable = false;
+                pierceCap = 5;
 
                 status = WHStatusEffects.melta;
                 statusDuration = 10;
                 homingDelay = 20;
                 homingRange = 48;
 
-                hitEffect = despawnEffect = WHFx.square(WHPal.ShootOrangeLight.cpy(), 60, 8, 20, 4);
+                hitEffect = despawnEffect = new MultiEffect(
+                WHFx.hitSparkAng(60, hitColor, Pal.lightishGray, 8, 30, 20, 1.5f, 10),
+                WHFx.square(60, hitColor, 8, 20, 4));
             }
 
             @Override
@@ -238,44 +387,50 @@ public class WHBulletsOther{
 
             @Override
             public void updateHoming(Bullet b){
-                super.updateHoming(b);
-                if(!(b.data instanceof Position pos)) return;
+                Position target = null;
+                if(b.data instanceof Position pos){
+                    target = pos;
+                }else if(b.owner instanceof HeatTurretBuild h){
+                    target = h.target;
+                }
+                if(target == null || target == b) return;
+
                 b.initVel(b.rotation(), b.time < before ? speed * (1 - b.time / (before + 10)) : speed * b.fin());
-                if(b.time > homingDelay) b.vel.setAngle(Angles.moveToward(b.rotation(), b.angleTo(pos), rotSpeed * Time.delta));
+                if(b.time > homingDelay){
+                    b.vel.setAngle(Angles.moveToward(b.rotation(), b.angleTo(target), rotSpeed * Time.delta));
+                }
             }
         };
 
-        PyrosBulletEnhance2 = new HeatBulletType(){
+        PyrosBulletComp1 = new HeatBulletType(){
             {
                 weaveRandom = true;
-                weaveMag = 1f;
-                weaveScale = 20;
+                weaveMag = 6;
+                weaveScale = 4.5f;
 
-                sprite = name("pierce");
-                damage = 50;
-                speed = 3f;
+                sprite = "large-orb";
+                damage = 150;
+                speed = 2.5f;
                 lifetime = 400 / 3f;
                 hittable = false;
                 splashDamage = 80;
                 splashDamageRadius = 50;
                 scaledSplashDamage = true;
 
+                frontColor = backColor = lightningColor = lightColor =
+                hitColor = trailColor = Pal.slagOrange.cpy().lerp(Pal.lightOrange, 0.25f);
+
                 sticky = true;
-                height = 30;
-                width = 12;
+                width = height = 10f;
                 shrinkX = shrinkY = 0;
-                frontColor = backColor = lightningColor = hitColor = trailColor = WHPal.ShootOrangeLight.cpy();
+
                 trailWidth = 4;
                 trailSpread = 5;
                 trailChance = 0.3f;
-                trailLength = 15;
-                trailSinScl = 12f;
-                trailSinMag = 0.16f;
+                trailLength = 8;
+
                 hitEffect = despawnEffect = new MultiEffect(
-                WHFx.lineCircleOut(WHPal.ShootOrangeLight.cpy(), 90, 50, 2f),
-                WHFx.hitSpark(WHPal.ShootOrangeLight.cpy(), 120, 15, 40, 1f, 8),
-                WHFx.square(WHPal.ShootOrangeLight.cpy(), 60, 18, 60, 5),
-                WHFx.fillCircle(WHPal.ShootOrangeLight.cpy(), 10, 60, Interp.pow3Out)
+                WHFx.generalExplosion(20, hitColor, splashDamageRadius, 5, true)
                 );
                 fragBullets = 1;
                 fragBullet = WHBulletsOther.PyrosBulletFrag;
@@ -294,75 +449,8 @@ public class WHBulletsOther{
             }
         };
 
-        PyrosBulletEnhance3 = PyrosBulletEnhance2.copy();
-        PyrosBulletEnhance3.weaveRandom = false;
-
-        PyrosBulletEnhance = new HeatBulletType(){
-            {
-                intervalDelay = 20;
-                bulletInterval = 8;
-                intervalRandomSpread = -60;
-                intervalBullets = 2;
-                intervalAngle = 180f;
-                intervalSpread = 300f;
-                intervalBullet = PyrosBulletInterval;
-
-                sprite = "large-orb";
-                damage = 80;
-                hittable = false;
-                speed = 3f;
-                lifetime = 400 / 3f;
-                splashDamage = 120;
-                splashDamageRadius = 50;
-                scaledSplashDamage = true;
-
-                sticky = true;
-                height = width = 25;
-                shrinkX = shrinkY = 0;
-                frontColor = backColor = lightningColor = hitColor = trailColor = WHPal.ShootOrangeLight.cpy();
-                trailWidth = 4;
-                trailSpread = 5;
-                trailInterval = 0.1f;
-                trailChance = 0.3f;
-                trailLength = 15;
-                trailSinScl = 12f;
-                trailSinMag = 0.16f;
-                hitEffect = despawnEffect = new MultiEffect(
-                WHFx.lineCircleOut(WHPal.ShootOrangeLight.cpy(), 90, 50, 2f),
-                WHFx.hitSpark(WHPal.ShootOrangeLight.cpy(), 120, 15, 40, 1f, 8),
-                WHFx.square(WHPal.ShootOrangeLight.cpy(), 60, 18, 60, 5),
-                WHFx.fillCircle(WHPal.ShootOrangeLight.cpy(), 10, 60, Interp.pow3Out),
-                WHFx.subEffect(140, 40, 8, 34f, Interp.pow2Out, ((i, x, y, rot, fin) -> {
-                    Draw.color(WHPal.ShootOrangeLight.cpy());
-                    float fout = Interp.pow2Out.apply(1 - fin);
-                    for(int s : Mathf.signs){
-                        Drawf.tri(x, y, 8 * fout, 17 * Mathf.curve(fin, 0, 0.1f) * WHFx.fout(fin, 0.25f), rot + s * 90);
-                    }
-                }))
-                );
-                fragBullets = 8;
-                fragLifeMin = 0.3f;
-                fragLifeMax = 1f;
-                fragVelocityMin = 0.3f;
-                fragVelocityMax = 1f;
-                fragBullet = WHBulletsOther.PyrosBulletFrag;
-            }
-
-            @Override
-            public void updateBulletInterval(Bullet b){
-                if(!(b.owner instanceof HeatTurretBuild heatTurret)) return;
-                if(intervalBullet != null && b.time >= intervalDelay && b.timer.get(2, bulletInterval)){
-                    float ang = b.rotation();
-                    Position bulletPos = heatTurret.targetPos;
-                    for(int i = 0; i < intervalBullets; i++){
-                        Tmp.v1.trns(ang, -10);
-                        intervalBullet.create(b, b.team, b.x + Tmp.v1.x, b.y + Tmp.v1.y,
-                        ang + Mathf.range(intervalRandomSpread) + intervalAngle + ((i - (intervalBullets - 1f) / 2f) * intervalSpread),
-                        -1, 1, 1, bulletPos);
-                    }
-                }
-            }
-        };
+        PyrosBulletComp2 = PyrosBulletComp1.copy();
+        PyrosBulletComp2.weaveRandom = false;
 
         CollapseSealedPromethiumInterval = new BasicBulletType(){
             public final float before = 12;
@@ -392,7 +480,7 @@ public class WHBulletsOther{
                 homingRange = 48;
                 homingPower = 0.05f;
 
-                hitEffect = despawnEffect = WHFx.square(WHPal.WHYellow.cpy(), 60, 8, 20, 4);
+                hitEffect = despawnEffect = WHFx.square(60, WHPal.WHYellow.cpy(), 8, 20, 4);
             }
 
             @Override
@@ -510,9 +598,9 @@ public class WHBulletsOther{
                 inRad = 40;
                 outRad = 150;
                 despawnEffect = new MultiEffect(
-                WHFx.square(WHItems.sealedPromethium.color.cpy(), 60, 30, 100, 4),
+                WHFx.square(60, WHItems.sealedPromethium.color.cpy(), 30, 100, 4),
                 WHFx.circleOut(WHItems.sealedPromethium.color.cpy(), 130),
-                WHFx.hitSpark(WHItems.sealedPromethium.color.cpy(), 60, 30, 100, 1.5f, 9f),
+                WHFx.hitSpark(60, WHItems.sealedPromethium.color.cpy(), 30, 100, 1.5f, 9f),
                 WHFx.subEffect(180, 100, 8, 45f, Interp.pow2Out, ((i, x, y, rot, fin) -> {
                     Draw.color(hitColor);
                     float fout = Interp.pow2Out.apply(1 - fin);
@@ -650,13 +738,13 @@ public class WHBulletsOther{
                 effectTimer = 4;
                 hitColor = trailColor = lightningColor = f;
                 trailWidth = 5;
-                fx = WHFx.square(f, 60, 1, 10, 4);
+                fx = WHFx.square(60, f, 1, 10, 4);
                 despawnEffect = new MultiEffect(
                 WHFx.generalExplosion(30, f, DOTRadius * 1.3f, 30, true),
-                WHFx.hitSpark(f, 60, 40, DOTRadius, 1.2f, 8),
-                WHFx.sharpBlast(f, b, 180, DOTRadius * 0.7f),
-                WHFx.trailCircleHitSpark(f, 150, 20, DOTRadius * 1.5f, 2.5f, 40).layer(Layer.effect),
-                WHFx.plasmaBlast(180, f, DOTRadius, 30)
+                WHFx.hitSpark(60, f, 40, DOTRadius, 1.2f, 8),
+                WHFx.sharpBlast(180, f, b, DOTRadius * 0.7f),
+                WHFx.trailCircleHitSpark(150, f, 20, DOTRadius * 1.5f, 2.5f, 40).layer(Layer.effect),
+                WHFx.plasmaBlast(180, f, 30, DOTRadius)
                 );
                 intervalBullets = 2;
                 bulletInterval = 5;
@@ -839,8 +927,8 @@ public class WHBulletsOther{
                     buildingDamageMultiplier = 0.2f;
 
                     despawnEffect = new MultiEffect(
-                    WHFx.square(f, 60, 8, 30, 5),
-                    WHFx.lineCircleOut(f, 60, 30, 2));
+                    WHFx.square(60, f, 8, 30, 5),
+                    WHFx.lineCircleOut(60, f, 30, 2));
                     hitSound = despawnSound = Sounds.explosion;
                 }
 
@@ -1086,8 +1174,8 @@ public class WHBulletsOther{
                 despawnEffect = Fx.none;
                 hitEffect = new MultiEffect(
                 WHFx.generalExplosion(30, hitColor, splashDamageRadius, 10, true),
-                WHFx.sharpBlast(hitColor, frontColor, 35.0F, splashDamageRadius));
-                shootEffect = WHFx.hitSpark(backColor, 45.0F, 12, 60.0F, 3.0F, 8.0F);
+                WHFx.sharpBlast(35.0F, hitColor, frontColor, splashDamageRadius));
+                shootEffect = WHFx.hitSpark(45.0F, backColor, 12, 60.0F, 3.0F, 8.0F);
                 smokeEffect = WHFx.hugeSmoke;
             }
         };
@@ -1100,14 +1188,13 @@ public class WHBulletsOther{
 
                 color = hitColor = WHPal.WHYellow;
                 despawnEffect = new MultiEffect(
-                WHFx.square(hitColor, 90, 10, 60, 8)
+                WHFx.square(90, hitColor, 10, 60, 8)
                 );
 
-                trailEffect = WHFx.hitCircle(hitColor, hitColor, 60, 2, 15, 5).layer(Layer.bullet - 0.001f);
-                ;
+                trailEffect = WHFx.hitCircle(60, hitColor, hitColor, 2, 15, 5).layer(Layer.bullet - 0.001f);
                 trailChance = 0.5f;
 
-                shootEffect = WHFx.hitSpark(hitColor, 20, 4, 30, 1, 8);
+                shootEffect = WHFx.hitSpark(20, hitColor, 4, 30, 1, 8);
 
                 reload = 300 / 3f - 5f;
 
@@ -1134,12 +1221,12 @@ public class WHBulletsOther{
                         pierceBuilding = true;
                         splashDamageRadius = 40;
 
-                        shootEffect = WHFx.hitSpark(hitColor, 20, 4, 30, 1, 8);
+                        shootEffect = WHFx.hitSpark(20, hitColor, 4, 30, 1, 8);
 
                         despawnEffect = hitEffect = new MultiEffect(
                         WHFx.generalExplosion(10, hitColor, splashDamageRadius, 0, false),
-                        WHFx.square(hitColor, 60, 10, 60, 8),
-                        WHFx.trailHitSpark(hitColor, 15, 3, splashDamageRadius, 1.5f, 12)
+                        WHFx.square(60, hitColor, 10, 60, 8),
+                        WHFx.trailHitSpark(15, hitColor, 3, splashDamageRadius, 1.5f, 12)
                         );
                     }
                 };
@@ -1152,14 +1239,13 @@ public class WHBulletsOther{
 
                 color = hitColor = WHPal.WHYellow;
                 despawnEffect = new MultiEffect(
-                WHFx.square(hitColor, 90, 10, 60, 8)
+                WHFx.square(90, hitColor, 10, 60, 8)
                 );
 
-                trailEffect = WHFx.hitCircle(hitColor, hitColor, 60, 2, 15, 5).layer(Layer.bullet - 0.001f);
-                ;
+                trailEffect = WHFx.hitCircle(60, hitColor, hitColor, 2, 15, 5).layer(Layer.bullet - 0.001f);
                 trailChance = 0.5f;
 
-                shootEffect = WHFx.hitSpark(hitColor, 20, 4, 30, 1, 8);
+                shootEffect = WHFx.hitSpark(20, hitColor, 4, 30, 1, 8);
 
                 reload = lifetime / 3f - 5f;
 
@@ -1220,12 +1306,12 @@ public class WHBulletsOther{
                         homingDelay = 3;
                         followAimSpeed = 10;
 
-                        shootEffect = WHFx.hitSpark(hitColor, 10, 4, 30, 1, 8);
+                        shootEffect = WHFx.hitSpark(10, hitColor, 4, 30, 1, 8);
 
                         despawnEffect = hitEffect = new MultiEffect(
                         WHFx.generalExplosion(10, hitColor, splashDamageRadius, 8, false),
-                        WHFx.square(hitColor, 60, 10, 60, 8),
-                        WHFx.trailHitSpark(hitColor, 10, 10, splashDamageRadius, 1.5f, 8)
+                        WHFx.square(60, hitColor, 10, 60, 8),
+                        WHFx.trailHitSpark(10, hitColor, 10, splashDamageRadius, 1.5f, 8)
                         );
                     }
                 };
@@ -1238,14 +1324,14 @@ public class WHBulletsOther{
 
                 color = hitColor = WHPal.WHYellow;
                 despawnEffect = new MultiEffect(
-                WHFx.square(hitColor, 60, 10, 30, 6),
+                WHFx.square(60, hitColor, 10, 30, 6),
                 WHFx.generalExplosion(8, hitColor, 20, 30, false)
                 );
 
-                trailEffect = WHFx.hitCircle(hitColor, hitColor, 60, 2, 15, 5).layer(Layer.bullet - 0.001f);
+                trailEffect = WHFx.hitCircle(60, hitColor, hitColor, 2, 15, 5).layer(Layer.bullet - 0.001f);
                 trailChance = 0.5f;
 
-                shootEffect = WHFx.hitSpark(hitColor, 20, 4, 30, 1, 8);
+                shootEffect = WHFx.hitSpark(20, hitColor, 4, 30, 1, 8);
 
                 reload = lifetime;
                 rotateSpeed = 5;
@@ -1316,15 +1402,14 @@ public class WHBulletsOther{
                 color = hitColor = WHPal.WHYellow;
                 despawnEffect = new MultiEffect(
                 WHFx.generalExplosion(60, hitColor, splashDamageRadius, 10, false),
-                WHFx.sharpBlast(hitColor, hitColor, 60, splashDamageRadius),
-                WHFx.circleOut(hitColor, 60, splashDamageRadius)
+                WHFx.sharpBlast(60, hitColor, hitColor, splashDamageRadius),
+                WHFx.circleOut(60, hitColor, splashDamageRadius)
                 );
 
-                trailEffect = WHFx.hitCircle(hitColor, hitColor, 60, 2, 15, 5).layer(Layer.bullet - 0.001f);
-                ;
+                trailEffect = WHFx.hitCircle(60, hitColor, hitColor, 2, 15, 5).layer(Layer.bullet - 0.001f);
                 trailChance = 0.5f;
 
-                shootEffect = WHFx.hitSpark(hitColor, 20, 4, 30, 1, 8);
+                shootEffect = WHFx.hitSpark(20, hitColor, 4, 30, 1, 8);
 
                 reload = 300 / 2f - 5f;
 
@@ -1381,16 +1466,16 @@ public class WHBulletsOther{
                     );
 
                     hitEffect = new MultiEffect(
-                    WHFx.trailCircleHitSpark(hitColor, 30, 12, 70, 1.5f, 10f),
-                    WHFx.hitPoly(hitColor, hitColor, 30, 10, 64, 5, 6, 45),
+                    WHFx.trailCircleHitSpark(30, hitColor, 12, 70, 1.5f, 10f),
+                    WHFx.hitPoly(30, hitColor, hitColor, 10, 64, 5, 6, 45),
                     WHFx.generalExplosion(10, hitColor, splashDamageRadius * 0.45f, 6, true),
                     WHFx.instHit(hitColor, true, 3, splashDamageRadius)
                     );
 
                     despawnEffect = new MultiEffect(
-                    WHFx.circleOut(hitColor, 60, splashDamageRadius),
-                    WHFx.instRotation(hitColor, 60, splashDamageRadius * 1.5f, 45, true),
-                    WHFx.hitSpark(hitColor, 20, 10, splashDamageRadius, 1.5f, 10)
+                    WHFx.circleOut(60, hitColor, splashDamageRadius),
+                    WHFx.instRotation(60, hitColor, splashDamageRadius * 1.5f, 45, true),
+                    WHFx.hitSpark(20, hitColor, 10, splashDamageRadius, 1.5f, 10)
                     );
 
                     fragBullets = 3;
@@ -1408,10 +1493,10 @@ public class WHBulletsOther{
 
                         hitEffect = despawnEffect = new MultiEffect(
                         WHFx.generalExplosion(10, hitColor, splashDamageRadius, 5, false),
-                        WHFx.circleOut(hitColor, 30, splashDamageRadius),
-                        WHFx.instRotation(hitColor, 30, splashDamageRadius * 0.8f, 90, false),
-                        WHFx.hitPoly(hitColor, hitColor, 30, 5, splashDamageRadius, 4, 5, 45),
-                        WHFx.trailCircleHitSpark(hitColor, 30, 5, splashDamageRadius, 1f, 6)
+                        WHFx.circleOut(30, hitColor, splashDamageRadius),
+                        WHFx.instRotation(30, hitColor, splashDamageRadius * 0.8f, 90, false),
+                        WHFx.hitPoly(30, hitColor, hitColor, 5, splashDamageRadius, 4, 5, 45),
+                        WHFx.trailCircleHitSpark(30, hitColor, 5, splashDamageRadius, 1f, 6)
                         );
                     }};
 

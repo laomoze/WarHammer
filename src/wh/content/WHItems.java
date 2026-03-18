@@ -8,6 +8,7 @@ package wh.content;
 import arc.graphics.*;
 import arc.struct.*;
 import mindustry.content.*;
+import mindustry.graphics.*;
 import mindustry.type.*;
 import wh.graphics.*;
 
@@ -64,17 +65,17 @@ public final class WHItems{
             healthScaling = 0.1f;
         }};
 
-        uranium = new Item("uranium", Color.valueOf("6A9A4DFF")){{
+        uranium = new Item("uranium", Color.valueOf("6A9A4DFF").lerp(Pal.plastaniumFront, 0.1f)){{
             hardness = 5;
             explosiveness = 0.2f;
             radioactivity = 1.4f;
-            cost = 1.1f;
+            cost = 1.3f;
             healthScaling = 0.2f;
         }};
 
         molybdenum = new Item("molybdenum", Color.valueOf(" DF90CAFF")){{
             hardness = 6;
-            cost = 1.2f;
+            cost = 1.4f;
             healthScaling = 0.8f;
         }};
 
@@ -85,7 +86,7 @@ public final class WHItems{
         }};
 
         manganeseSteel = new Item("manganese-steel", WHPal.MnSteelColor){{
-            cost = 0.75f;
+            cost = 1f;
             healthScaling = 0.12f;
         }};
 
@@ -95,32 +96,36 @@ public final class WHItems{
             cost = 0.05f;
         }};
 
-        armorAlloy = new Item("armor-alloy", Color.valueOf("FF6363FF")){{
-            cost = 1.5f;
-            healthScaling = 0.28f;
+        armorAlloy = new Item("armor-alloy", Color.valueOf("8693AEFF")){{
+            cost = 1.6f;
+            healthScaling = 0.3f;
         }};
 
         cobaltNitride = new Item("cobalt-nitride", Color.valueOf("938197FF")){{
-            cost = 1.2f;
-            healthScaling = 0.18f;
+            cost = 1.4f;
+            charge = 0.5f;
+            healthScaling = 0.2f;
         }};
 
         ceramite = new Item("ceramite", WHPal.CeramiteColor){{
-            cost = 1.5f;
-            healthScaling = 1.4f;
+            cost = 1.6f;
+            healthScaling = 0.4f;
         }};
 
         entanglement = new Item("entanglement", Color.valueOf("8C67ADFF")){{
             cost = 1.5f;
             healthScaling = 0.18f;
+            charge = 1;
             radioactivity = 0.8f;
             explosiveness = 0.2f;
         }};
 
         culverCrystal = new Item("culver-crystal", Color.valueOf("DE5750FF")){{
+            cost = 1.4f;
             flammability = 0.2f;
             explosiveness = 0.5f;
             charge = 0.3f;
+            healthScaling = 0.5f;
         }};
 
         refineCeramite = new Item("refine-ceramite", WHPal.RefineCeramiteColor){{
@@ -129,25 +134,26 @@ public final class WHItems{
             healthScaling = 1.8f;
         }};
 
-
         molybdenumAlloy = new Item("molybdenum-alloy", WHPal.molybdenumAlloyColor){{
             hardness = 5;
-            cost = 1.5f;
-            healthScaling = 0.8f;
+            cost = 1.8f;
+            healthScaling = 1f;
         }};
 
         resonantCrystal = new Item("resonant-crystal", WHPal.resonantCrystalColor){{
-            cost = 1.1f;
-            healthScaling = 0.8f;
+            cost = 1.3f;
+            charge = 0.3f;
+            healthScaling = 0.55f;
         }};
 
         protocolChip = new Item("protocol-chip", Color.valueOf("FF6363FF")){{
+            cost = 2.5f;
             charge = 0.8f;
             frames = 28;
             transitionFrames = 2;
             frameTime = 1;
+            healthScaling = 0.8f;
         }};
-
 
         adamantium = new Item("adamantium", Color.valueOf("E3AE6FFF")){{
             cost = 6f;
@@ -155,11 +161,11 @@ public final class WHItems{
         }};
 
         sealedPromethium = new Item("sealed-promethium", Color.valueOf("68FFFFFF")){{
-            cost = 1f;
+            cost = 1.5f;
             radioactivity = 1.5f;
             flammability = 0.8f;
             explosiveness = 0.8f;
-            healthScaling = 0.5f;
+            healthScaling = 0.3f;
             charge = 0.8f;
             frames = 12;
             transitionFrames = 2;

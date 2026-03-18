@@ -1,9 +1,9 @@
 package wh.content;
 
-import arc.graphics.Color;
+import arc.graphics.*;
 import mindustry.content.*;
 import mindustry.type.*;
-import wh.graphics.WHPal;
+import wh.graphics.*;
 
 public final class WHLiquids{
     public static Liquid orePromethium, refinePromethium, liquidNitrogen, swageWater;
@@ -40,7 +40,7 @@ public final class WHLiquids{
                 lightColor = Color.valueOf("97C9FFD0");
                 flammability = 0f;
                 temperature = 0.1f;
-                heatCapacity = 1.6f;
+                heatCapacity = 1.5f;
                 explosiveness = 0f;
                 viscosity = 0.3f;
                 boilPoint = 0.2f;

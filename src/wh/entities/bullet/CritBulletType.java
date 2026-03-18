@@ -20,6 +20,8 @@ public class CritBulletType extends BasicBulletType{
 
     public float critChance = 0.1f, critMultiplier = 2f;
     public Effect critEffect = Fx.none;
+    public float critEffectChance = 0.35f;
+    public boolean folowBullet = false;
     public boolean bouncing, despawnHitEffects = true;
     public boolean makePlaFire;
     public float plaFireChance = -1;
@@ -92,8 +94,8 @@ public class CritBulletType extends BasicBulletType{
     public void update(Bullet b){
         super.update(b);
 
-        if(Mathf.chanceDelta(1) && isCrit(b)){
-            critEffect.at(b.x, b.y, b.rotation(), b.team.color);
+        if(Mathf.chanceDelta(critEffectChance) && isCrit(b)){
+            critEffect.at(b.x, b.y, b.rotation(), hitColor, folowBullet ? b : null);
         }
     }
 

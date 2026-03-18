@@ -29,11 +29,13 @@ public class EnhancedPowerTurret extends Turret{
 
     @Override
     public void init(){
+        WHItemTurret.intTurret(this);
         super.init();
         if(enhancedBullet != null && enhancerItem != null){
             hasItems = true;
             itemCapacity = Math.max(itemCapacity, Mathf.ceil(maxAmmo / Math.max(1f, enhancedBullet.ammoMultiplier)));
         }
+
     }
 
     public void enhance(Item enhancer, BulletType bullet, ShootPattern pattern){

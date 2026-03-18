@@ -45,6 +45,8 @@ public class ReactionArmorWall extends Wall{
 
         @Override
         public void pickedUp(){
+            hitCount = 0;
+            immunity = 0;
             isImmune = false;
         }
 
@@ -57,22 +59,26 @@ public class ReactionArmorWall extends Wall{
 
         @Override
         public boolean collision(Bullet bullet){
+            // Resolve this hit first, then update reaction armor state.
+            boolean collided = super.collision(bullet);
             if(isImmune){
-                immunity++;
-            }else hitCount++;
+                // Immunity layers are consumed per hit.
+                immunity = Math.max(0, immunity - 1);
+                if(immunity <= 0){
+                    immunity = 0;
+                    isImmune = false;
+                }
+                return collided;
+            }
 
-            if(hitCount >= frequency){
+            hitCount++;
+            int triggerHits = Math.max(1, frequency);
+            if(hitCount >= triggerHits){
                 hitCount = 0;
-                immunity = immunityAccount;
-                isImmune = true;
+                immunity = Math.max(0, immunityAccount);
+                isImmune = immunity > 0;
             }
-
-            if(immunity > immunityAccount){
-                immunity = 0;
-                isImmune = false;
-            }
-
-            return super.collision(bullet);
+            return collided;
         }
 
         public void findLinkWalls(){

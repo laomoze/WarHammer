@@ -56,7 +56,7 @@ public class BombLauncher extends CommandableAttackerBlock {
 	@Override
 	public void init(){
 		super.init();
-		if(bullet.shootEffect == WHFx.boolSelector)bullet.shootEffect = WHFx.square(baseColor, 50f, 6, size * tilesize * 2f, size);
+        if(bullet.shootEffect == WHFx.boolSelector) bullet.shootEffect = WHFx.square(50f, baseColor, 6, size * tilesize * 2f, size);
 	}
 	
 	@Override

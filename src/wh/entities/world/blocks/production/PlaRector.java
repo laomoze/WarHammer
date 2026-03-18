@@ -54,7 +54,7 @@ public class PlaRector extends VariableReactor{
             damage = 120f;
             speed = 3f;
             lifetime = 120f;
-            hitEffect = WHFx.hitSpark(Placolor, 30f, 5, 12f, 1.5f, 9f);
+            hitEffect = WHFx.hitSpark(30f, Placolor, 5, 12f, 1.5f, 9f);
             trailLength = 12;
             trailWidth = 1.5f;
             trailColor = Placolor;
