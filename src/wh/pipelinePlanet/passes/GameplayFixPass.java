@@ -1,6 +1,5 @@
 package wh.pipelinePlanet.passes;
 
-import arc.math.*;
 import arc.math.geom.*;
 import arc.util.noise.*;
 import mindustry.content.*;
@@ -9,9 +8,7 @@ import wh.pipelinePlanet.core.*;
 import wh.pipelinePlanet.data.*;
 
 /**
- * 可玩性约束：
- * - 保持出生区可建造且开阔
- * - 用 spawn 覆层标记敌方锚点
+ * 中文说明：可玩性修复阶段：清理出生区并补充必要标记。
  */
 public class GameplayFixPass implements GenPass{
     @Override

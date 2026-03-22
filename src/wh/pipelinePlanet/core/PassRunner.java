@@ -4,7 +4,7 @@ import arc.struct.*;
 import arc.util.*;
 
 /**
- * 统一执行 pass 管线。
+ * 中文说明：按顺序执行 GenPass，可选输出每个 pass 的耗时日志。
  */
 public class PassRunner{
     private final Seq<GenPass> passes = new Seq<>();

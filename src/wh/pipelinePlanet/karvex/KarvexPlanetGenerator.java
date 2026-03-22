@@ -8,9 +8,9 @@ import arc.math.geom.*;
 import arc.struct.*;
 import arc.util.*;
 import arc.util.noise.*;
+import mindustry.*;
 import mindustry.content.*;
 import mindustry.game.*;
-import mindustry.gen.*;
 import mindustry.mod.*;
 import mindustry.type.*;
 import mindustry.world.*;
@@ -20,204 +20,198 @@ import wh.pipelinePlanet.core.*;
 import wh.pipelinePlanet.passes.*;
 import wh.pipelinePlanet.passes.tile.*;
 
-import static mindustry.Vars.mods;
-import static mindustry.Vars.state;
-
-public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
-    private static final int fixedSectorSize = 600;
-    private static final String sCoreSchematicPath = "assets/schematics/s-core.msch";
-    private static final String sCoreSchematicPathFallback = "schematics/s-core.msch";
-    private static final String legacyDefaultLoadoutBase64 =
-    "bXNjaAF4nGNgY2BjYWDJS8xNZWDL0U3OL0pl4ErOzytJzSvxTSxgYKquZeBOSS1OLsosKMnMz2NgACpLTErNKWZgjX6/cHksIwNneYYuVCcDAyMDAxMQMgAAEs8WlA==";
-
-    protected final KarvexSurfaceTable surface = new KarvexSurfaceTable();
-    protected final Seq<Sector> emptySectors = new Seq<>();
+public class KarvexPlanetGenerator
+extends PipelinePlanetGenerator{
+    private static final int FIXED_SECTOR_SIZE = 500;
+    private static final float CHUNK_SCALE_MIN = 450.0f;
+    private static final float CHUNK_SCALE_MAX = 1200.0f;
+    private static final float CHUNK_SCALE_SEED_MAX = 2000.0f;
+    private static final String S_CORE_SCHEMATIC_PATH = "assets/schematics/s-core.msch";
+    private static final String S_CORE_SCHEMATIC_PATH_FALLBACK = "schematics/s-core.msch";
+    private static final String LEGACY_DEFAULT_LOADOUT_BASE64 = "bXNjaAF4nGNgYWABorzE3FQGtmLd5PyiVAau5Py8ktS8Et/EAgam6loG7pTU4uSizIKSzPw8BgYGtpzEpNScYgbW6PcLl8cyMnCWZ+hCdTIwMIIQkAAAE/MWnA==";
+    protected final KarvexSurfaceProfile surfaceProfile = new KarvexSurfaceProfile();
+    protected final Seq<Sector> emptySectors = new Seq();
 
     public KarvexPlanetGenerator(){
+        this.configureGenerationDefaults();
+        this.baseSeed = 2;
+        this.defaultLoadout = this.loadFrontlineCoreLoadout();
+    }
 
-        config.minRooms = 1;
-        config.maxRooms = 2;
-        config.enemyRoomScale = 1f;
-
-        config.enableLakes = true;
-        config.enableTechGrid = true;
-        config.techGridCellSize = 24;
-        config.techGridWallChance = 0.22f;
-
-        baseSeed = 2;
-        defaultLoadout = loadFrontlineCoreLoadout();
+    private void configureGenerationDefaults(){
+        this.config.minRooms = 1;
+        this.config.maxRooms = 2;
+        this.config.enemyRoomScale = 1.0f;
+        this.config.enableLakes = true;
+        this.config.enableTechGrid = true;
+        this.config.techGridCellSize = 20;
+        this.config.techGridThresholdA = 0.63f;
+        this.config.techGridThresholdB = 0.6f;
+        this.config.techGridWallChance = 0.7f;
+        this.config.techGridInnerOffset = 2.0f;
+        this.config.enablePassTimingLog = false;
     }
 
     @Override
     protected void configurePipeline(PassRunner runner){
-        TilePassStage surfaceStage = new TilePassStage("KarvexDecorationStage")
-        .add(new KarvexDecorationTilePass(surface));
+        TilePassStage surfaceStage = this.createDecorationStage();
+        this.addTerrainAndLayoutPasses(runner).add(new ErekirWallPass()).add(surfaceStage).add(new KarvexOreBalancePass()).add(new KarvexFinalizePass(this.defaultLoadout));
+    }
 
-        addTerrainAndLayoutPasses(runner)
-        .add(new TechGridPass())
-        .add(surfaceStage)
-        .add(new KarvexOreBalancePass())
-        .add(new KarvexFinalizePass(defaultLoadout));
+    private TilePassStage createDecorationStage(){
+        return new TilePassStage("KarvexDecorationStage").add(new KarvexDecorationTilePass(this.surfaceProfile));
     }
 
     private PassRunner addTerrainAndLayoutPasses(PassRunner runner){
-        return runner
-        .add(new BaseTerrainPass())
-        .add(new CellularCavesPass(4))
-        .add(new RoomPlacementPass())
-        .add(new ConnectivityPass())
-        .add(new DistortPass(9f, 12f))
-        .add(new DistortPass(5f, 7f))
-        .add(new KarvexHydrologyPass())
-        .add(new KarvexBasinPass())
-        .add(new DistortPass(3.2f, 4.8f))
-        .add(new KarvexTerrainPolishPass())
-        .add(new GameplayFixPass())
-        .add(new KarvexVentPass())
-        .add(new KarvexValidationPass());
+        return runner.add(new BaseTerrainPass()).add(new RoomPlacementPass()).add(new ConnectivityPass()).add(new DistortPass(16.0f, 5.0f)).add(new DistortPass(10.0f, 3.0f)).add(new KarvexHydrologyPass()).add(new KarvexHazardBasinPass()).add(new KarvexTerrainRefinePass()).add(new TechGridPass()).add(new GameplayFixPass()).add(new KarvexVentPass()).add(new KarvexMapValidationPass());
     }
 
     private Schematic loadFrontlineCoreLoadout(){
-        Schematic fromFile = tryReadModSchematicFile();
+        Schematic fromFile = this.tryReadModSchematicFile();
         if(fromFile != null){
             return fromFile;
         }
-        return Schematics.readBase64(legacyDefaultLoadoutBase64);
+        return Schematics.readBase64((String)LEGACY_DEFAULT_LOADOUT_BASE64);
     }
 
     private Schematic tryReadModSchematicFile(){
         try{
-            if(mods == null) return null;
-            Mods.LoadedMod mod = mods.getMod(WarHammerMod.class);
-            if(mod == null || mod.root == null) return null;
-
-            Fi primary = mod.root.child(sCoreSchematicPath);
-            if(primary != null && primary.exists()){
-                return Schematics.read(primary);
+            if(Vars.mods == null){
+                return null;
             }
-
-            Fi fallback = mod.root.child(sCoreSchematicPathFallback);
-            if(fallback != null && fallback.exists()){
-                return Schematics.read(fallback);
+            Mods.LoadedMod mod = Vars.mods.getMod(WarHammerMod.class);
+            if(mod == null || mod.root == null){
+                return null;
             }
-        }catch(Throwable ignored){
-            // Fallback is handled by base64 default loadout.
+            Schematic primary = this.readSchematicIfExists(mod.root.child(S_CORE_SCHEMATIC_PATH));
+            if(primary != null){
+                return primary;
+            }
+            return this.readSchematicIfExists(mod.root.child(S_CORE_SCHEMATIC_PATH_FALLBACK));
+        }catch(Throwable throwable){
+            return null;
         }
-        return null;
     }
 
-    @Override
+    @Nullable
+    private Schematic readSchematicIfExists(@Nullable Fi file){
+        if(file == null || !file.exists()){
+            return null;
+        }
+        try{
+            return Schematics.read((Fi)file);
+        }catch(Throwable ignored){
+            return null;
+        }
+    }
+
     public void onSectorCaptured(Sector sector){
         sector.planet.reloadMeshAsync();
     }
 
-    @Override
     public void onSectorLost(Sector sector){
         sector.planet.reloadMeshAsync();
     }
 
-    @Override
     public void beforeSaveWrite(Sector sector){
         sector.planet.reloadMeshAsync();
     }
 
-    @Override
     public boolean isEmissive(){
         return true;
     }
 
     public boolean allowNumberedLaunch(Sector s){
-        boolean hasLargeSavedCore = s.info.bestCoreType != null && s.info.bestCoreType.size >= 4;
-        boolean hasLargeLiveCore = s.isBeingPlayed() &&
-        state != null &&
-        state.rules != null &&
-        state.rules.defaultTeam != null &&
-        state.rules.defaultTeam.cores().contains(b -> b.block.size >= 4);
-
-        return s.hasBase() && !s.isAttacked() && (hasLargeSavedCore || hasLargeLiveCore);
+        return s.hasBase() && !s.isAttacked() && (this.hasLargeSavedCore(s) || this.hasLargeLiveCore(s));
     }
 
-    @Override
+    private boolean hasLargeSavedCore(Sector sector){
+        return sector.info.bestCoreType != null && sector.info.bestCoreType.size >= 4;
+    }
+
+    private boolean hasLargeLiveCore(Sector sector){
+        return sector.isBeingPlayed() && Vars.state != null && Vars.state.rules != null && Vars.state.rules.defaultTeam != null && Vars.state.rules.defaultTeam.cores().contains(b -> b.block.size >= 4);
+    }
+
     public boolean allowLanding(Sector sector){
         return sector.planet.allowLaunchToNumbered && (sector.hasBase() || sector.near().contains(this::allowNumberedLaunch));
     }
 
-    @Override
-    public @Nullable Sector findLaunchCandidate(Sector destination, @Nullable Sector selected){
+    @Nullable
+    public Sector findLaunchCandidate(Sector destination, @Nullable Sector selected){
         if(destination.preset == null || !destination.preset.requireUnlock){
-            if(selected != null && selected.isNear(destination) && allowNumberedLaunch(selected)){
+            if(selected != null && selected.isNear(destination) && this.allowNumberedLaunch(selected)){
                 return selected;
-            }else{
-                return destination.near().find(this::allowNumberedLaunch);
             }
-        }else{
-            return super.findLaunchCandidate(destination, selected);
+            return (Sector)destination.near().find(this::allowNumberedLaunch);
         }
+        return super.findLaunchCandidate(destination, selected);
     }
 
-    @Override
     public void getLockedText(Sector hovered, StringBuilder out){
         if((hovered.preset == null || !hovered.preset.requireUnlock) && hovered.near().contains(Sector::hasBase)){
-            out.append("[red]").append(Iconc.cancel).append("[]").append(Blocks.coreFoundation.emoji()).append(Core.bundle.get("sector.foundationrequired"));
+            out.append("[red]").append('\ue815').append("[]").append(Blocks.coreFoundation.emoji()).append(Core.bundle.get("sector.foundationrequired"));
         }else{
             super.getLockedText(hovered, out);
         }
     }
 
-    @Override
     public float getHeight(Vec3 position){
-        float height = surface.rawHeight(seed, position);
-        return Math.max(height, surface.water);
+        float height = this.surfaceProfile.sampleRawHeight(this.seed, position);
+        return Math.max(height, this.surfaceProfile.seaLevel);
     }
 
-    @Override
     public void getColor(Vec3 position, Color out){
-        surface.pickSurfaceColor(seed, position, renderSectors(), out);
+        this.surfaceProfile.sampleSurfaceColor(this.seed, position, this.renderSectors(), out);
     }
 
-    @Override
     public void getEmissiveColor(Vec3 position, Color out){
-        Seq<Sector> sectors = renderSectors();
-        Block block = surface.pickSurfaceBlock(seed, position, sectors, true);
-        float pulse = 0.78f + Simplex.noise3d(seed + 77, 1, 1f, 8.2f, position.x, position.y + 41f, position.z) * 0.22f;
-        out.set(0f, 0f, 0f, 0f);
-
-        if(block == WHBlocksEnvironment.radiationWater
-        || block == WHBlocksEnvironment.radiationWaterDeep
-        || block == WHBlocksEnvironment.radiationSandWater
-        || block == WHBlocksEnvironment.mineralSandRadiationWater){
-            out.set(0.25f, 0.78f, 0.92f, 1f).mul(0.36f * pulse);
+        Seq<Sector> sectors = this.renderSectors();
+        Block block = this.surfaceProfile.selectSurfaceBlock(this.seed, position, sectors, true);
+        float pulse = 0.78f + Simplex.noise3d((int)(this.seed + 77), (double)1.0, (double)1.0, (double)8.2f, (double)position.x, (double)(position.y + 41.0f), (double)position.z) * 0.22f;
+        out.set(0.0f, 0.0f, 0.0f, 0.0f);
+        if(this.isRadiationLiquid(block)){
+            out.set(0.25f, 0.78f, 0.92f, 1.0f).mul(0.36f * pulse);
         }else if(block == WHBlocksEnvironment.promethium){
-            out.set(0.94f, 0.63f, 0.30f, 1f).mul(0.24f * pulse);
-        }else if(block == WHBlocksEnvironment.effluent
-        || block == WHBlocksEnvironment.effluentDeep
-        || block == WHBlocksEnvironment.mineralSandEffluentWater
-        || block == Blocks.darksandTaintedWater
-        || block == Blocks.deepTaintedWater){
-            out.set(0.30f, 0.58f, 0.82f, 1f).mul(0.18f * pulse);
+            out.set(0.94f, 0.63f, 0.3f, 1.0f).mul(0.24f * pulse);
+        }else if(this.isPollutedLiquid(block)){
+            out.set(0.3f, 0.58f, 0.82f, 1.0f).mul(0.18f * pulse);
         }
+    }
+
+    private boolean isRadiationLiquid(Block block){
+        return block == WHBlocksEnvironment.radiationWater || block == WHBlocksEnvironment.radiationWaterDeep || block == WHBlocksEnvironment.radiationSandWater || block == WHBlocksEnvironment.mineralSandRadiationWater;
+    }
+
+    private boolean isPollutedLiquid(Block block){
+        return block == WHBlocksEnvironment.effluent || block == WHBlocksEnvironment.effluentDeep || block == WHBlocksEnvironment.mineralSandEffluentWater || block == Blocks.darksandTaintedWater || block == Blocks.deepTaintedWater;
     }
 
     @Override
     protected void genTile(Vec3 position, TileGen tile){
-
-        tile.floor = surface.pickSurfaceBlock(seed, position, renderSectors(), false);
+        tile.floor = this.surfaceProfile.selectSurfaceBlock(this.seed, position, this.renderSectors(), false);
         tile.overlay = Blocks.air;
         Block wall = tile.floor.asFloor().wall;
-        tile.block = wall == null ? Blocks.air : wall;
-
-        if(Ridged.noise3d(seed + 1, position.x, position.y, position.z, 2, 22) > 0.28f){
+        Block block = tile.block = wall == null ? Blocks.air : wall;
+        if(Ridged.noise3d((int)(this.seed + 1), (double)position.x, (double)position.y, (double)position.z, (int)2, (float)14.0f) > 0.13f){
             tile.block = Blocks.air;
         }
     }
 
     protected Seq<Sector> renderSectors(){
-        if(sector != null && sector.planet != null) return sector.planet.sectors;
-        return emptySectors;
+        if(this.sector != null && this.sector.planet != null){
+            return this.sector.planet.sectors;
+        }
+        return this.emptySectors;
     }
 
-    @Override
     public int getSectorSize(Sector sector){
-        return fixedSectorSize;
+        // Map size is fixed for gameplay balance. Hazard chunk scale is controlled separately.
+        return FIXED_SECTOR_SIZE;
+    }
+
+    static float seedDrivenChunkScale(int seed){
+        float normalized = Mathf.clamp((float)Math.max(seed, 0) / CHUNK_SCALE_SEED_MAX);
+        return Mathf.lerp(CHUNK_SCALE_MIN, CHUNK_SCALE_MAX, normalized);
     }
 }

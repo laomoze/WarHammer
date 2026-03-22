@@ -18,12 +18,12 @@ public class WHBlocksEnvironment{
     //liquid
     public static Block radiationWater, radiationWaterDeep, effluent, effluentDeep, mineralSandEffluentWater, mineralSandRadiationWater, radiationSandWater;
     //Floor
-    public static Block apatite, cementFloor, darkHotRock, darkMagmaRock, darkRock, mineralSandstone, chromiteStone, manganeseStone, cobaltStone,
-    parasiticTrachyte, trachyte, purpleStone, radiationCraters, radiationRockFloor,
+    public static Block apatite, cementFloor, darkHotRock, darkMagmaRock, darkRock, gravel, mineralSandstone, mineralFloor, chromiteStone, chromiteFloor, chromiteFloorDark, manganeseStone, manganeseFloor, cobaltStone, cobaltFloor,
+    trachyte, oreShale, oreSalt, radiationCraters, radiationRockFloor,
     scorchedEarth, scorchedStone;
     //Wall
     public static Block apatiteWall, cementWall, darkRockWall, mineralSandstoneWall, chromiteWall, manganeseWall, cobaltWall,
-    purpleStoneWall, quartzSandWall, radiationRockWall,
+    oreShaleWall, oreSaltWall, quartzSandWall, radiationRockWall,
     scorchedEarthWall, trachyteWall;
     //MeltaFloor
     public static Block darkMetalFloor1, darkMetalFloor2, darkMetalFloor3, darkMetalFloor4, darkMetalFloor5, darkMetalFloor6,
@@ -36,7 +36,7 @@ public class WHBlocksEnvironment{
     public static Block apatiteVent, cementVent, darkRockVent, radiationRockVent, scorchedEarthVent;
     //Boulders/Props
     public static Block apatiteBoulder, chromiteBoulder, cobaltBoulder, darkRockBoulder, manganeseBoulder, mineralSandBoulder, radiationBoulder,
-    purpleStoneCrystalCluster, quartzCrystalCluster;
+    darkStoneCrystalCluster, quartzCrystalCluster;
 
 
     public static void load(){
@@ -158,6 +158,7 @@ public class WHBlocksEnvironment{
             statusDuration = 50f;
             albedo = 0.9f;
             supportsOverlay = true;
+            mapColor.set(Color.valueOf("5e7087"));
         }};
 
         ((ShallowLiquid)mineralSandEffluentWater).set(effluent, mineralSand);
@@ -167,6 +168,7 @@ public class WHBlocksEnvironment{
             statusDuration = 50f;
             albedo = 0.9f;
             supportsOverlay = true;
+            mapColor.set(Color.valueOf("4f8497"));
         }};
 
         ((ShallowLiquid)mineralSandRadiationWater).set(radiationWater, mineralSand);
@@ -176,6 +178,7 @@ public class WHBlocksEnvironment{
             statusDuration = 50f;
             albedo = 0.9f;
             supportsOverlay = true;
+            mapColor.set(Color.valueOf("6d89a1"));
         }};
 
         ((ShallowLiquid)radiationSandWater).set(radiationWater, radiationSand);
@@ -214,6 +217,11 @@ public class WHBlocksEnvironment{
             lightColor = Color.orange.cpy().lerp(Pal.slagOrange, 0.15f).a(0.3f);
         }};
 
+        gravel = new Floor("gravel"){{
+            variants = 3;
+            attributes.set(Attribute.water, -0.2f);
+        }};
+
         mineralSandstone = new Floor("mineral-sandstone"){{
             itemDrop = WHItems.oreSand;
             playerUnmineable = true;
@@ -221,32 +229,53 @@ public class WHBlocksEnvironment{
             attributes.set(hasPromethium, 0.4f);
         }};
 
+        mineralFloor = new Floor("mineral-floor"){{
+            variants = 4;
+            attributes.set(Attribute.oil, 0.35f);
+            attributes.set(hasPromethium, 0.25f);
+        }};
+
         chromiteStone = new Floor("chromite-stone"){{
             variants = 3;
-            attributes.set(Attribute.water, -0.35f);
+        }};
+
+        chromiteFloor = new Floor("chromite-floor"){{
+            variants = 5;
+        }};
+
+        chromiteFloorDark = new Floor("chromite-floor-dark"){{
+            variants = 3;
+            blendGroup = chromiteFloor;
         }};
 
         manganeseStone = new Floor("manganese-stone"){{
             variants = 3;
-            attributes.set(Attribute.water, -0.35f);
+        }};
+
+        manganeseFloor = new Floor("manganese-floor"){{
+            variants = 4;
         }};
 
         cobaltStone = new Floor("cobalt-stone"){{
             variants = 3;
-            attributes.set(Attribute.water, -0.35f);
         }};
 
-        parasiticTrachyte = new Floor("parasitic-trachyte"){{
-            dragMultiplier = 1.1f;
-            speedMultiplier = 0.85f;
-            attributes.set(Attribute.water, 0.3f);
-        }};
-
-        trachyte = new Floor("trachyte");
-
-        purpleStone = new Floor("purple-stone"){{
-            /*attributes.set(Attribute.water, -1f);*/
+        cobaltFloor = new Floor("cobalt-floor"){{
             variants = 4;
+        }};
+
+        trachyte = new Floor("trachyte"){{
+            variants = 3;
+        }};
+
+        oreShale = new Floor("ore-shale"){{
+            variants = 4;
+        }};
+
+        oreSalt = new Floor("ore-salt"){{
+            variants = 0;
+            attributes.set(Attribute.water, 0.25f);
+            attributes.set(Attribute.oil, 0.3f);
         }};
 
         radiationRockFloor = new Floor("radiation-rock-floor"){{
@@ -260,7 +289,7 @@ public class WHBlocksEnvironment{
 
         scorchedEarth = new Floor("scorched-earth"){{
             attributes.set(Attribute.water, 0.3f);
-            variants = 5;
+            variants = 6;
         }};
 
         scorchedStone = new Floor("scorched-stone"){{
@@ -334,8 +363,14 @@ public class WHBlocksEnvironment{
             cobaltStone.asFloor().wall = this;
         }};
 
-        purpleStoneWall = new StaticWall("purple-stone-wall"){{
-            purpleStone.asFloor().wall = this;
+        oreShaleWall = new StaticWall("ore-shale-wall"){{
+            variants = 2;
+            oreShale.asFloor().wall = this;
+        }};
+
+        oreSaltWall = new StaticWall("ore-salt-wall"){{
+            variants = 2;
+            oreSalt.asFloor().wall = this;
         }};
 
         quartzSandWall = new StaticWall("quartz-sand-wall"){{
@@ -355,7 +390,7 @@ public class WHBlocksEnvironment{
         }};*/
 
         trachyteWall = new StaticWall("trachyte-wall"){{
-            trachyte.asFloor().wall = parasiticTrachyte.asFloor().wall = this;
+            trachyte.asFloor().wall = this;
         }};
 
         apatiteBoulder = new Prop("apatite-boulder"){{
@@ -393,11 +428,11 @@ public class WHBlocksEnvironment{
             radiationSand.asFloor().decoration = radiationRockFloor.asFloor().decoration = radiationCraters.asFloor().decoration = this;
         }};
 
-        purpleStoneCrystalCluster = new TallBlock("purple-stone-crystal-cluster"){{
+        darkStoneCrystalCluster = new TallBlock("dark-stone-crystal-cluster"){{
             variants = 3;
             customShadow = true;
             clipSize = 128f;
-            purpleStone.asFloor().decoration = this;
+            oreShale.asFloor().decoration = this;
         }};
 
         quartzCrystalCluster = new TallBlock("quartz-crystal-cluster"){{

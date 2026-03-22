@@ -1,7 +1,7 @@
 package wh.pipelinePlanet.core;
 
 /**
- * 单个生成步骤。每个 pass 只负责一件明确的事。
+ * 中文说明：生成阶段接口：每个 pass 实现 apply() 并声明名称。
  */
 public interface GenPass{
     String name();

@@ -3,8 +3,7 @@ package wh.pipelinePlanet.core;
 import mindustry.world.*;
 
 /**
- * 按单格执行的管线单元。
- * 实现时应避免在热点循环中产生额外分配。
+ * 中文说明：逐格处理接口，用于封装对单个 tile 的轻量规则。
  */
 public interface TilePass{
     String name();

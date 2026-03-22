@@ -10,6 +10,9 @@ import wh.content.*;
 import wh.pipelinePlanet.core.*;
 import wh.pipelinePlanet.data.*;
 
+/**
+ * 中文说明：Karvex 水文阶段：水体、污水与辐射水分布。
+ */
 public class KarvexHydrologyPass implements GenPass{
     @Override
     public String name(){
@@ -21,11 +24,14 @@ public class KarvexHydrologyPass implements GenPass{
         if(!ctx.cfg.enableLakes) return;
 
         seedPollutedPools(ctx);
-        spreadPollutedPools(ctx, 2);
-        deepenBasins(ctx);
         ensureMinimumCoverage(ctx);
+        spreadPollutedPools(ctx, 3);
+        deepenBasins(ctx);
+        polishWaterShapes(ctx, 3);
+        smoothLiquidBasins(ctx, 2);
+        roughenShoreline(ctx, 2);
         cleanupSingles(ctx);
-        polishWaterShapes(ctx, 2);
+        enforceMaximumCoverage(ctx);
         protectCriticalRooms(ctx);
     }
 
@@ -35,6 +41,9 @@ public class KarvexHydrologyPass implements GenPass{
             if(!tile.floor().hasSurface() || tile.floor().isLiquid) continue;
             if(isNearCriticalRoom(ctx, tile.x, tile.y, 28f, 16f)) continue;
 
+            float effBasin = basinMask(ctx, tile.x, tile.y, 811);
+            float radBasin = basinMask(ctx, tile.x, tile.y, 877);
+
             float effA = noise(ctx, ctx.seed + 701, tile.x + 782f, tile.y, 5, 0.75f, 250f);
             float effB = noise(ctx, ctx.seed + 709, tile.x - 210f, tile.y + 380f, 2, 0.92f, 74f);
             float effShape = effA + effB * 0.11f;
@@ -42,18 +51,16 @@ public class KarvexHydrologyPass implements GenPass{
             float radA = noise(ctx, ctx.seed + 721, tile.x + 165f, tile.y - 240f, 4, 0.76f, 138f);
             float radB = noise(ctx, ctx.seed + 727, tile.x - 95f, tile.y + 540f, 2, 0.9f, 44f);
 
-            if(isRadiationCandidate(tile.floor()) && radA > 0.74f && radB > 0.52f){
-                tile.setFloor((radA > 0.79f && !nearSolid(ctx, tile.x, tile.y, 1)
-                ? WHBlocksEnvironment.radiationWaterDeep
-                : WHBlocksEnvironment.mineralSandRadiationWater).asFloor());
+            if(isRadiationCandidate(tile.floor()) && radBasin > 0.50f && radA > 0.74f && radB > 0.50f){
+                tile.setFloor(WHBlocksEnvironment.mineralSandRadiationWater.asFloor());
                 tile.setOverlay(Blocks.air);
                 continue;
             }
 
             if(!canPaintEffluent(tile.floor())) continue;
-            float threshold = isDarksandEffluentBase(tile.floor()) ? 0.72f : 0.67f;
-            if(effShape > threshold){
-                tile.setFloor(effluentForBase(tile.floor(), effShape > threshold + 0.09f && !nearSolid(ctx, tile.x, tile.y, 1)).asFloor());
+            float threshold = isDarksandEffluentBase(tile.floor()) ? 0.67f : 0.63f;
+            if(effBasin > 0.42f && effShape > threshold){
+                tile.setFloor(effluentForBase(tile.floor(), false).asFloor());
                 tile.setOverlay(Blocks.air);
             }
         }
@@ -79,16 +86,25 @@ public class KarvexHydrologyPass implements GenPass{
                     boolean cardinal = Math.abs(p.x) + Math.abs(p.y) == 1;
                     if(isRadiationWater(tile.floor())){
                         if(!isRadiationCandidate(near.floor())) continue;
-                        float chance = cardinal ? 0.24f : 0.13f;
+                        float basin = basinMask(ctx, nx, ny, 877);
+                        if(basin < 0.37f) continue;
+                        if(effluentNeighborCount(ctx, nx, ny) > 1) continue;
+                        int around = radiationNeighborCount(ctx, nx, ny);
+                        if(around < (cardinal ? 1 : 1)) continue;
+                        float chance = cardinal ? 0.42f : 0.27f;
                         if(ctx.rand.chance(chance)){
-                            marks[nx + ny * width] = (byte)(ctx.rand.chance(0.36f) ? 4 : 3);
+                            marks[nx + ny * width] = 3;
                         }
                     }else{
                         if(!canPaintEffluent(near.floor())) continue;
-                        float chance = cardinal ? 0.36f : 0.20f;
+                        float basin = basinMask(ctx, nx, ny, 811);
+                        if(basin < 0.30f) continue;
+                        if(radiationNeighborCount(ctx, nx, ny) > 0) continue;
+                        int around = effluentNeighborCount(ctx, nx, ny);
+                        if(around < (cardinal ? 1 : 2)) continue;
+                        float chance = cardinal ? 0.62f : 0.41f;
                         if(ctx.rand.chance(chance)){
-                            boolean deep = ctx.rand.chance(cardinal ? 0.24f : 0.14f) && !nearSolid(ctx, nx, ny, 1);
-                            marks[nx + ny * width] = (byte)(deep ? 2 : 1);
+                            marks[nx + ny * width] = 1;
                         }
                     }
                 }
@@ -98,10 +114,10 @@ public class KarvexHydrologyPass implements GenPass{
                 int mark = marks[tile.x + tile.y * width];
                 if(mark == 0) continue;
 
-                if(mark == 1 || mark == 2){
+                if(mark == 1){
                     tile.setFloor(effluentForBase(tile.floor(), mark == 2).asFloor());
                 }else{
-                    tile.setFloor((mark == 4 ? WHBlocksEnvironment.radiationWaterDeep : WHBlocksEnvironment.mineralSandRadiationWater).asFloor());
+                    tile.setFloor(WHBlocksEnvironment.mineralSandRadiationWater.asFloor());
                 }
                 tile.setOverlay(Blocks.air);
             }
@@ -110,13 +126,28 @@ public class KarvexHydrologyPass implements GenPass{
 
     private void deepenBasins(GenContext ctx){
         for(Tile tile : ctx.tiles){
-            if(tile.floor() == WHBlocksEnvironment.mineralSandEffluentWater || tile.floor() == Blocks.darksandTaintedWater){
-                if(surroundedBySameLiquid(ctx, tile.x, tile.y) && ctx.rand.chance(tile.floor() == Blocks.darksandTaintedWater ? 0.36f : 0.46f)){
-                    tile.setFloor((tile.floor() == Blocks.darksandTaintedWater ? Blocks.deepTaintedWater : WHBlocksEnvironment.effluentDeep).asFloor());
+            Block floor = tile.floor();
+            if(floor == WHBlocksEnvironment.mineralSandEffluentWater || floor == Blocks.darksandTaintedWater){
+                int near = effluentNeighborCount(ctx, tile.x, tile.y);
+                float basin = basinMask(ctx, tile.x, tile.y, 811);
+                if(near >= 7 && basin > 0.55f){
+                    tile.setFloor((floor == Blocks.darksandTaintedWater ? Blocks.deepTaintedWater : WHBlocksEnvironment.effluentDeep).asFloor());
                 }
-            }else if(tile.floor() == WHBlocksEnvironment.mineralSandRadiationWater){
-                if(surroundedBySameLiquid(ctx, tile.x, tile.y) && ctx.rand.chance(0.42f)){
+            }else if(floor == WHBlocksEnvironment.effluentDeep || floor == Blocks.deepTaintedWater){
+                int near = effluentNeighborCount(ctx, tile.x, tile.y);
+                if(near <= 5){
+                    tile.setFloor((floor == Blocks.deepTaintedWater ? Blocks.darksandTaintedWater : WHBlocksEnvironment.mineralSandEffluentWater).asFloor());
+                }
+            }else if(floor == WHBlocksEnvironment.mineralSandRadiationWater){
+                int near = radiationNeighborCount(ctx, tile.x, tile.y);
+                float basin = basinMask(ctx, tile.x, tile.y, 877);
+                if(near >= 7 && basin > 0.60f){
                     tile.setFloor(WHBlocksEnvironment.radiationWaterDeep.asFloor());
+                }
+            }else if(floor == WHBlocksEnvironment.radiationWaterDeep){
+                int near = radiationNeighborCount(ctx, tile.x, tile.y);
+                if(near <= 5){
+                    tile.setFloor(WHBlocksEnvironment.mineralSandRadiationWater.asFloor());
                 }
             }
         }
@@ -124,27 +155,32 @@ public class KarvexHydrologyPass implements GenPass{
 
     private void ensureMinimumCoverage(GenContext ctx){
         int area = ctx.width() * ctx.height();
-        int minEffluent = Math.max(170, area / 1350);
-        int minRadiation = Math.max(54, area / 3000);
+        int minEffluent = Math.max(860, area / 360);
+        int minRadiation = Math.max(260, area / 900);
+
+        int effluentCount = countEffluent(ctx);
+        int radiationCount = countRadiationWater(ctx);
 
         int tries = 0;
-        while(countEffluent(ctx) < minEffluent && tries++ < 14){
-            paintPatch(ctx, false);
+        while(effluentCount < minEffluent && tries++ < 30){
+            effluentCount += paintPatch(ctx, false);
         }
 
         tries = 0;
-        while(countRadiationWater(ctx) < minRadiation && tries++ < 10){
-            paintPatch(ctx, true);
+        while(radiationCount < minRadiation && tries++ < 24){
+            radiationCount += paintPatch(ctx, true);
         }
     }
 
-    private void paintPatch(GenContext ctx, boolean radiation){
+    private int paintPatch(GenContext ctx, boolean radiation){
         int cx = ctx.rand.random(12, ctx.width() - 13);
         int cy = ctx.rand.random(12, ctx.height() - 13);
-        if(isNearCriticalRoom(ctx, cx, cy, 28f, 16f)) return;
+        if(isNearCriticalRoom(ctx, cx, cy, 28f, 16f)) return 0;
+        if(basinMask(ctx, cx, cy, radiation ? 877 : 811) < (radiation ? 0.36f : 0.32f)) return 0;
 
-        int radius = ctx.rand.random(radiation ? 5 : 7, radiation ? 9 : 12);
+        int radius = ctx.rand.random(radiation ? 9 : 11, radiation ? 16 : 20);
         int r2 = radius * radius;
+        int placed = 0;
 
         for(int ox = -radius; ox <= radius; ox++){
             for(int oy = -radius; oy <= radius; oy++){
@@ -155,34 +191,39 @@ public class KarvexHydrologyPass implements GenPass{
 
                 if(radiation){
                     if(!isRadiationCandidate(tile.floor())) continue;
+                    if(basinMask(ctx, tile.x, tile.y, 877) < 0.34f) continue;
                 }else{
                     if(!canPaintEffluent(tile.floor())) continue;
+                    if(basinMask(ctx, tile.x, tile.y, 811) < 0.24f) continue;
                 }
 
                 float edge = Mathf.dst(ox, oy) / Math.max(radius, 1f);
-                if(!ctx.rand.chance(Mathf.lerp(0.9f, 0.36f, edge))) continue;
+                float coreChance = radiation ? 0.92f : 0.97f;
+                float rimChance = radiation ? 0.66f : 0.79f;
+                if(!ctx.rand.chance(Mathf.lerp(coreChance, rimChance, edge))) continue;
 
                 if(radiation){
-                    boolean deep = edge < 0.56f && ctx.rand.chance(0.42f);
-                    tile.setFloor((deep ? WHBlocksEnvironment.radiationWaterDeep : WHBlocksEnvironment.mineralSandRadiationWater).asFloor());
+                    tile.setFloor(WHBlocksEnvironment.mineralSandRadiationWater.asFloor());
                 }else{
-                    boolean deep = edge < 0.54f && ctx.rand.chance(0.45f);
-                    tile.setFloor(effluentForBase(tile.floor(), deep).asFloor());
+                    tile.setFloor(effluentForBase(tile.floor(), false).asFloor());
                 }
                 tile.setOverlay(Blocks.air);
+                placed++;
             }
         }
+
+        return placed;
     }
 
     private void cleanupSingles(GenContext ctx){
         for(Tile tile : ctx.tiles){
             if(!isPollutedWater(tile.floor())) continue;
 
-            int pollutedNear = pollutedNeighborCount(ctx, tile.x, tile.y);
-            if(pollutedNear <= 1){
+            int near = isRadiationWater(tile.floor()) ? radiationNeighborCount(ctx, tile.x, tile.y) : effluentNeighborCount(ctx, tile.x, tile.y);
+            if(near <= 1){
                 tile.setFloor(findNearbyLandFloor(ctx, tile.x, tile.y, 6).asFloor());
                 tile.setOverlay(Blocks.air);
-            }else if(isDeepPolluted(tile.floor()) && pollutedNear <= 2){
+            }else if(isDeepPolluted(tile.floor()) && near <= 2){
                 tile.setFloor(shallowVersion(tile.floor()).asFloor());
             }
         }
@@ -200,17 +241,18 @@ public class KarvexHydrologyPass implements GenPass{
                 Block floor = tile.floor();
 
                 if(isPollutedWater(floor)){
-                    int pollutedNear = pollutedNeighborCount(ctx, tile.x, tile.y);
-                    if(pollutedNear <= 2){
+                    int near = isRadiationWater(floor) ? radiationNeighborCount(ctx, tile.x, tile.y) : effluentNeighborCount(ctx, tile.x, tile.y);
+                    if(near <= 1){
                         marks[idx] = 1;
-                    }else if(isDeepPolluted(floor) && pollutedNear <= 3){
+                    }else if(isDeepPolluted(floor) && near <= 2){
                         marks[idx] = 2;
                     }
                 }else if(tile.block() == Blocks.air && floor.asFloor().hasSurface() && !floor.asFloor().isLiquid){
-                    int pollutedNear = pollutedNeighborCount(ctx, tile.x, tile.y);
-                    if(pollutedNear >= 6 && canPaintEffluent(floor)){
+                    int effNear = effluentNeighborCount(ctx, tile.x, tile.y);
+                    int radNear = radiationNeighborCount(ctx, tile.x, tile.y);
+                    if(effNear >= 4 && canPaintEffluent(floor) && basinMask(ctx, tile.x, tile.y, 811) > 0.39f){
                         marks[idx] = 3;
-                    }else if(pollutedNear >= 5 && isRadiationCandidate(floor) && nearRadiationWater(ctx, tile.x, tile.y)){
+                    }else if(radNear >= 4 && isRadiationCandidate(floor) && basinMask(ctx, tile.x, tile.y, 877) > 0.43f){
                         marks[idx] = 4;
                     }
                 }
@@ -227,6 +269,103 @@ public class KarvexHydrologyPass implements GenPass{
                 }else if(mark == 3){
                     tile.setFloor(effluentForBase(tile.floor(), false).asFloor());
                 }else if(mark == 4){
+                    tile.setFloor(WHBlocksEnvironment.mineralSandRadiationWater.asFloor());
+                }
+                tile.setOverlay(Blocks.air);
+            }
+        }
+    }
+
+    private void smoothLiquidBasins(GenContext ctx, int iterations){
+        int width = ctx.width();
+        int height = ctx.height();
+
+        for(int i = 0; i < iterations; i++){
+            byte[] marks = new byte[width * height];
+
+            for(Tile tile : ctx.tiles){
+                if(tile.block() != Blocks.air) continue;
+
+                int idx = tile.x + tile.y * width;
+                Block floor = tile.floor();
+                int effNear = effluentNeighborCount(ctx, tile.x, tile.y);
+                int radNear = radiationNeighborCount(ctx, tile.x, tile.y);
+
+                if(isEffluentWater(floor)){
+                    if(effNear <= 1){
+                        marks[idx] = 1;
+                    }
+                }else if(isRadiationWater(floor)){
+                    if(radNear <= 1){
+                        marks[idx] = 2;
+                    }
+                }else if(floor.asFloor().hasSurface() && !floor.asFloor().isLiquid){
+                    if(effNear >= 4 && effNear >= radNear + 1 && canPaintEffluent(floor) && basinMask(ctx, tile.x, tile.y, 811) > 0.40f){
+                        marks[idx] = 3;
+                    }else if(radNear >= 4 && radNear >= effNear + 1 && isRadiationCandidate(floor) && basinMask(ctx, tile.x, tile.y, 877) > 0.44f){
+                        marks[idx] = 4;
+                    }
+                }
+            }
+
+            for(Tile tile : ctx.tiles){
+                int mark = marks[tile.x + tile.y * width];
+                if(mark == 0) continue;
+
+                if(mark == 1 || mark == 2){
+                    tile.setFloor(findNearbyLandFloor(ctx, tile.x, tile.y, 6).asFloor());
+                }else if(mark == 3){
+                    tile.setFloor(effluentForBase(tile.floor(), false).asFloor());
+                }else{
+                    tile.setFloor(WHBlocksEnvironment.mineralSandRadiationWater.asFloor());
+                }
+                tile.setOverlay(Blocks.air);
+            }
+        }
+    }
+
+    private void roughenShoreline(GenContext ctx, int iterations){
+        int width = ctx.width();
+        int height = ctx.height();
+
+        for(int i = 0; i < iterations; i++){
+            byte[] marks = new byte[width * height];
+
+            for(Tile tile : ctx.tiles){
+                if(tile.block() != Blocks.air) continue;
+                int idx = tile.x + tile.y * width;
+                Block floor = tile.floor();
+
+                int effNear = effluentNeighborCount(ctx, tile.x, tile.y);
+                int radNear = radiationNeighborCount(ctx, tile.x, tile.y);
+                float shore = noise(ctx, ctx.seed + 933 + i * 11, tile.x + 53f, tile.y - 29f, 2, 0.64f, 18f);
+
+                if(isEffluentWater(floor)){
+                    if(effNear <= 2 && shore < -0.20f){
+                        marks[idx] = 1;
+                    }
+                }else if(isRadiationWater(floor)){
+                    if(radNear <= 2 && shore < -0.16f){
+                        marks[idx] = 2;
+                    }
+                }else if(floor.asFloor().hasSurface() && !floor.asFloor().isLiquid){
+                    if(effNear >= 2 && effNear >= radNear + 1 && canPaintEffluent(floor) && basinMask(ctx, tile.x, tile.y, 811) > 0.40f && shore > 0.12f){
+                        marks[idx] = 3;
+                    }else if(radNear >= 2 && radNear >= effNear && isRadiationCandidate(floor) && basinMask(ctx, tile.x, tile.y, 877) > 0.44f && shore > 0.12f){
+                        marks[idx] = 4;
+                    }
+                }
+            }
+
+            for(Tile tile : ctx.tiles){
+                int mark = marks[tile.x + tile.y * width];
+                if(mark == 0) continue;
+
+                if(mark == 1 || mark == 2){
+                    tile.setFloor(findNearbyLandFloor(ctx, tile.x, tile.y, 5).asFloor());
+                }else if(mark == 3){
+                    tile.setFloor(effluentForBase(tile.floor(), false).asFloor());
+                }else{
                     tile.setFloor(WHBlocksEnvironment.mineralSandRadiationWater.asFloor());
                 }
                 tile.setOverlay(Blocks.air);
@@ -264,18 +403,57 @@ public class KarvexHydrologyPass implements GenPass{
         return deep ? WHBlocksEnvironment.effluentDeep : WHBlocksEnvironment.mineralSandEffluentWater;
     }
 
+    private void enforceMaximumCoverage(GenContext ctx){
+        int area = ctx.width() * ctx.height();
+        int maxEffluent = Math.max(1800, area / 70);
+        int maxRadiation = Math.max(980, area / 125);
+
+        int effluentCount = countEffluent(ctx);
+        int radiationCount = countRadiationWater(ctx);
+
+        int passes = 0;
+        while(effluentCount > maxEffluent && passes++ < 6){
+            effluentCount -= trimExcessLiquid(ctx, false, effluentCount - maxEffluent);
+        }
+
+        passes = 0;
+        while(radiationCount > maxRadiation && passes++ < 6){
+            radiationCount -= trimExcessLiquid(ctx, true, radiationCount - maxRadiation);
+        }
+    }
+
+    private int trimExcessLiquid(GenContext ctx, boolean radiation, int targetTrim){
+        if(targetTrim <= 0) return 0;
+
+        int removed = 0;
+        for(Tile tile : ctx.tiles){
+            if(removed >= targetTrim) break;
+            if(tile.block() != Blocks.air) continue;
+            if(radiation){
+                if(!isRadiationWater(tile.floor())) continue;
+            }else{
+                if(!isEffluentWater(tile.floor())) continue;
+            }
+
+            int near = radiation ? radiationNeighborCount(ctx, tile.x, tile.y) : effluentNeighborCount(ctx, tile.x, tile.y);
+            float basin = basinMask(ctx, tile.x, tile.y, radiation ? 877 : 811);
+            if(near >= 4 && basin > (radiation ? 0.56f : 0.50f)) continue;
+
+            tile.setFloor(findNearbyLandFloor(ctx, tile.x, tile.y, 8).asFloor());
+            tile.setOverlay(Blocks.air);
+            removed++;
+        }
+
+        return removed;
+    }
+
     private boolean canPaintEffluent(Block floor){
         return floor == WHBlocksEnvironment.mineralSand
         || floor == WHBlocksEnvironment.mineralSandstone
         || floor == WHBlocksEnvironment.quartzSand
         || floor == WHBlocksEnvironment.promethiumSand
-        || floor == WHBlocksEnvironment.darkRock
-        || floor == WHBlocksEnvironment.chromiteStone
-        || floor == WHBlocksEnvironment.manganeseStone
-        || floor == WHBlocksEnvironment.cobaltStone
         || floor == Blocks.darksand
         || floor == Blocks.shale
-        || floor == Blocks.dacite
         || floor == Blocks.yellowStone
         || floor == Blocks.yellowStonePlates;
     }
@@ -287,7 +465,6 @@ public class KarvexHydrologyPass implements GenPass{
         || floor == WHBlocksEnvironment.mineralSand
         || floor == WHBlocksEnvironment.mineralSandstone
         || floor == WHBlocksEnvironment.quartzSand
-        || floor == WHBlocksEnvironment.darkRock
         || floor == Blocks.darksand;
     }
 
@@ -305,6 +482,14 @@ public class KarvexHydrologyPass implements GenPass{
         || floor == WHBlocksEnvironment.radiationWaterDeep
         || floor == WHBlocksEnvironment.mineralSandRadiationWater
         || floor == WHBlocksEnvironment.radiationSandWater;
+    }
+
+    private boolean isEffluentWater(Block floor){
+        return floor == WHBlocksEnvironment.effluent
+        || floor == WHBlocksEnvironment.effluentDeep
+        || floor == WHBlocksEnvironment.mineralSandEffluentWater
+        || floor == Blocks.darksandTaintedWater
+        || floor == Blocks.deepTaintedWater;
     }
 
     private boolean isRadiationWater(Block floor){
@@ -327,25 +512,32 @@ public class KarvexHydrologyPass implements GenPass{
         return floor;
     }
 
-    private int pollutedNeighborCount(GenContext ctx, int x, int y){
+    private int effluentNeighborCount(GenContext ctx, int x, int y){
         int count = 0;
         for(Point2 p : Geometry.d8){
             Tile near = ctx.tiles.get(x + p.x, y + p.y);
-            if(near != null && isPollutedWater(near.floor())){
+            if(near != null && isEffluentWater(near.floor())){
                 count++;
             }
         }
         return count;
     }
 
-    private boolean nearRadiationWater(GenContext ctx, int x, int y){
+    private int radiationNeighborCount(GenContext ctx, int x, int y){
+        int count = 0;
         for(Point2 p : Geometry.d8){
             Tile near = ctx.tiles.get(x + p.x, y + p.y);
             if(near != null && isRadiationWater(near.floor())){
-                return true;
+                count++;
             }
         }
-        return false;
+        return count;
+    }
+
+    private float basinMask(GenContext ctx, int x, int y, int seedOffset){
+        float broad = noise(ctx, ctx.seed + seedOffset, x + 91f, y - 63f, 2, 0.62f, 360f);
+        float region = noise(ctx, ctx.seed + seedOffset + 5, x - 173f, y + 121f, 2, 0.64f, 220f);
+        return broad * 0.68f + region * 0.32f;
     }
 
     private boolean surroundedBySameLiquid(GenContext ctx, int x, int y){

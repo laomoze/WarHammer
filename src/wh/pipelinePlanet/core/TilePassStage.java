@@ -4,8 +4,7 @@ import arc.struct.*;
 import mindustry.world.*;
 
 /**
- * 在一次全图遍历中执行多个 TilePass。
- * 用于避免轻量级单格逻辑反复全图扫描。
+ * 中文说明：把多个 TilePass 组合成一个 GenPass 阶段。
  */
 public class TilePassStage implements GenPass{
     private final Seq<TilePass> tilePasses = new Seq<>();

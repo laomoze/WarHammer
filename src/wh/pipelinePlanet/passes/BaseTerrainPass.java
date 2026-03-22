@@ -1,11 +1,11 @@
 package wh.pipelinePlanet.passes;
 
 import mindustry.content.*;
-import wh.pipelinePlanet.core.*;
 import mindustry.world.*;
+import wh.pipelinePlanet.core.*;
 
 /**
- * 基础地形修正：确保地面与静态墙状态合法。
+ * 中文说明：基础地形阶段：初始地板/墙体填充与底稿构建。
  */
 public class BaseTerrainPass implements GenPass{
     @Override

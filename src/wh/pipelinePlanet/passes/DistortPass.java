@@ -3,12 +3,12 @@ package wh.pipelinePlanet.passes;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.util.noise.*;
-import mindustry.Vars;
+import mindustry.*;
 import mindustry.world.*;
 import wh.pipelinePlanet.core.*;
 
 /**
- * 接近原版风格的地形扭曲 pass，思路对应 BasicGenerator.distort(scl, mag)。
+ * 中文说明：扭曲阶段：对地形做噪声扰动以降低规则感。
  */
 public class DistortPass implements GenPass{
     private final float scl;

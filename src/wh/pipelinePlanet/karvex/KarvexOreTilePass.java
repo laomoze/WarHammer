@@ -8,6 +8,9 @@ import mindustry.world.*;
 import wh.content.*;
 import wh.pipelinePlanet.core.*;
 
+/**
+ * 中文说明：Karvex 单格矿脉判定逻辑，用于装饰阶段矿覆写。
+ */
 public class KarvexOreTilePass implements TilePass{
     @Override
     public String name(){

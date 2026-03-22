@@ -2,13 +2,12 @@ package wh.pipelinePlanet.core;
 
 import arc.math.*;
 import arc.struct.*;
-import wh.pipelinePlanet.data.*;
 import mindustry.type.*;
 import mindustry.world.*;
+import wh.pipelinePlanet.data.*;
 
 /**
- * 单次地图生成执行期间的上下文。
- * pass 间共享状态统一放在这里，避免隐式全局耦合。
+ * 中文说明：单次地图生成上下文，封装 tiles、sector、随机源与房间锚点。
  */
 public class GenContext{
     public final Tiles tiles;

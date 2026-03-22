@@ -1,7 +1,6 @@
 package wh.content;
 
 import arc.graphics.*;
-import mindustry.content.*;
 import mindustry.graphics.g3d.*;
 import mindustry.type.*;
 import mindustry.world.*;
@@ -20,14 +19,17 @@ public final class WHPlanets{
             Color promethium = colorOf(WHBlocksEnvironment.promethiumSand, "7a5b3a");
             Color darkRock = colorOf(WHBlocksEnvironment.darkRock, "3a3f48");
             Color chromite = colorOf(WHBlocksEnvironment.chromiteStone, "59616d");
+            Color toxicYellow = Color.valueOf("d8c86e");
+            Color toxicGreen = Color.valueOf("8da85f");
+            Color hazeYellow = Color.valueOf("e2d882");
 
             meshLoader = () -> new HexMesh(this, 7);
 
-            // Visible but not overblown halo.
+            // Keep atmosphere/cloud layers clearly visible in planet view.
             cloudMeshLoader = () -> new MultiMesh(
-            new HexSkyMesh(this, 6, 0.20f, 0.13f, 5, chromite.cpy().lerp(radiation, 0.18f).a(0.09f), 2, 0.45f, 1.00f, 0.36f),
-            new HexSkyMesh(this, 2, 0.44f, 0.14f, 5, Color.valueOf("a7bfd9").a(0.11f), 2, 0.45f, 1.08f, 0.38f),
-            new HexSkyMesh(this, 1, 0.60f, 0.16f, 5, Color.valueOf("c8d8e6").a(0.10f), 2, 0.45f, 1.15f, 0.40f)
+            new HexSkyMesh(this, 6, 0.20f, 0.13f, 5, chromite.cpy().lerp(radiation, 0.24f).lerp(toxicGreen, 0.34f).a(0.30f), 2, 0.45f, 1.00f, 0.36f),
+            new HexSkyMesh(this, 2, 0.44f, 0.14f, 5, toxicYellow.cpy().lerp(toxicGreen, 0.26f).a(0.34f), 2, 0.45f, 1.08f, 0.38f),
+            new HexSkyMesh(this, 1, 0.60f, 0.16f, 5, hazeYellow.cpy().lerp(toxicGreen, 0.18f).a(0.30f), 2, 0.45f, 1.15f, 0.40f)
             );
 
             iconColor = darkRock.cpy().lerp(chromite, 0.25f).lerp(promethium, 0.08f);
@@ -42,11 +44,11 @@ public final class WHPlanets{
             allowLaunchSchematics = false;
             orbitTime = 210 * 60;
 
-            // Dimmer atmosphere to avoid washed-out planet preview.
-            atmosphereRadIn = 0.015f;
-            atmosphereRadOut = 0.20f;
-            atmosphereColor = Color.valueOf("8fa4bb");
-            landCloudColor = Color.valueOf("96a9be").a(0.16f);
+            hasAtmosphere = true;
+            atmosphereRadIn = 0.028f;
+            atmosphereRadOut = 0.34f;
+            atmosphereColor = Color.valueOf("c9cf63");
+            landCloudColor = Color.valueOf("a7c166").a(0.42f);
 
             clipRadius = 6.8f;
             camRadius = 0.28f;

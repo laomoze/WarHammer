@@ -5,7 +5,7 @@ import mindustry.maps.filters.*;
 import wh.pipelinePlanet.core.*;
 
 /**
- * 在管线中执行一个或多个地图滤镜。
+ * 中文说明：将 Mindustry 过滤器以 pass 形式应用到当前地图。
  */
 public class GenerateFilterPass implements GenPass{
     private final Seq<GenerateFilter> filters = new Seq<>();

@@ -1,9 +1,7 @@
 package wh.pipelinePlanet.karvex;
 
-import arc.math.*;
 import mindustry.content.*;
 import mindustry.game.*;
-import mindustry.type.*;
 import mindustry.world.*;
 import mindustry.world.blocks.environment.*;
 import wh.content.*;
@@ -13,8 +11,7 @@ import wh.pipelinePlanet.data.*;
 import static mindustry.Vars.*;
 
 /**
- * Final map fixes after all terrain/resource passes.
- * Ensures player core exists and enemy spawn overlays remain visible.
+ * 中文说明：Karvex 收尾阶段：出生点落载、规则收束与残局清理。
  */
 public class KarvexFinalizePass implements GenPass{
     private final Schematic preferredLoadout;
@@ -36,65 +33,103 @@ public class KarvexFinalizePass implements GenPass{
     public void apply(GenContext ctx){
         if(ctx.spawnRoom == null) return;
 
-        sanitizeSpawnArea(ctx);
+        clearLiquidWalls(ctx);
+        sanitizeArea(ctx, ctx.spawnRoom.x, ctx.spawnRoom.y, 15);
+        for(RoomAnchor enemy : ctx.enemyRooms){
+            sanitizeArea(ctx, enemy.x, enemy.y, 6);
+        }
+
         placePlayerCore(ctx.spawnRoom.x, ctx.spawnRoom.y);
         restoreEnemySpawnOverlays(ctx);
     }
 
-    private void placePlayerCore(int x, int y){
-        Team team = state != null && state.rules != null && state.rules.defaultTeam != null ? state.rules.defaultTeam : Team.sharded;
-        Schematic loadout = preferredLoadout != null ? preferredLoadout : universe.getLastLoadout();
-        boolean placed = false;
-        boolean resourcesApplied = false;
+    private void clearLiquidWalls(GenContext ctx){
+        for(Tile tile : ctx.tiles){
+            if(!tile.floor().isLiquid) continue;
 
-        try{
-            if(loadout != null){
-                Schematics.placeLoadout(loadout, x, y, team);
-                placed = true;
+            if(tile.block() != Blocks.air){
+                tile.setBlock(Blocks.air);
             }
-        }catch(Throwable ignored){
-            placed = false;
-        }
-
-        try{
-            if(!placed){
-                Schematics.placeLaunchLoadout(x, y);
-                placed = true;
-                resourcesApplied = true;
-            }
-        }catch(Throwable ignored){
-            if(!placed){
-                Schematics.placeLoadout(Loadouts.basicShard, x, y, team);
-                placed = true;
-            }
-        }
-
-        if(placed && !resourcesApplied){
-            Tile center = world == null ? null : world.tile(x, y);
-            if(center != null && center.build != null && universe != null){
-                center.build.items.add(universe.getLaunchResources());
+            if(tile.overlay().needsSurface){
+                tile.setOverlay(Blocks.air);
             }
         }
     }
 
-    private void sanitizeSpawnArea(GenContext ctx){
-        int radius = Math.max(5, ctx.spawnRoom.radius + 3);
+    private void sanitizeArea(GenContext ctx, int cx, int cy, int radius){
         int r2 = radius * radius;
 
         for(int ox = -radius; ox <= radius; ox++){
             for(int oy = -radius; oy <= radius; oy++){
                 if(ox * ox + oy * oy > r2) continue;
 
-                Tile tile = ctx.tiles.get(ctx.spawnRoom.x + ox, ctx.spawnRoom.y + oy);
+                Tile tile = ctx.tiles.get(cx + ox, cy + oy);
                 if(tile == null) continue;
 
                 tile.setOverlay(Blocks.air);
                 tile.setBlock(Blocks.air);
 
                 if(!tile.floor().hasSurface() || tile.floor().isLiquid){
-                    tile.setFloor(findNearbyLandFloor(ctx, tile.x, tile.y, 8).asFloor());
+                    tile.setFloor(findNearbyLandFloor(ctx, tile.x, tile.y, 10).asFloor());
                 }
             }
+        }
+    }
+
+    private void placePlayerCore(int x, int y){
+        Team team = defaultTeam();
+
+        if(tryPlacePreferredLoadout(x, y, team)){
+            addLaunchResources(x, y);
+            return;
+        }
+
+        if(tryPlaceLaunchLoadout(x, y)){
+            return;
+        }
+
+        if(tryPlaceSchematic(Loadouts.basicShard, x, y, team)){
+            addLaunchResources(x, y);
+        }
+    }
+
+    private Team defaultTeam(){
+        return state != null && state.rules != null && state.rules.defaultTeam != null ? state.rules.defaultTeam : Team.sharded;
+    }
+
+    private boolean tryPlacePreferredLoadout(int x, int y, Team team){
+        Schematic loadout = preferredLoadout;
+        if(loadout == null && universe != null){
+            loadout = universe.getLastLoadout();
+        }
+        return tryPlaceSchematic(loadout, x, y, team);
+    }
+
+    private boolean tryPlaceLaunchLoadout(int x, int y){
+        try{
+            Schematics.placeLaunchLoadout(x, y);
+            return true;
+        }catch(Throwable ignored){
+            return false;
+        }
+    }
+
+    private boolean tryPlaceSchematic(Schematic loadout, int x, int y, Team team){
+        if(loadout == null) return false;
+        try{
+            Schematics.placeLoadout(loadout, x, y, team);
+            return true;
+        }catch(Throwable ignored){
+            return false;
+        }
+    }
+
+    private void addLaunchResources(int x, int y){
+        if(universe == null || world == null) return;
+
+        Tile center = world.tile(x, y);
+        if(center != null && center.build != null){
+            center.build.items.add(universe.getLaunchResources());
         }
     }
 
@@ -107,7 +142,7 @@ public class KarvexFinalizePass implements GenPass{
                 tile.setBlock(Blocks.air);
             }
             if(tile.floor().isLiquid || !tile.floor().hasSurface()){
-                tile.setFloor(findNearbyLandFloor(ctx, tile.x, tile.y, 7).asFloor());
+                tile.setFloor(findNearbyLandFloor(ctx, tile.x, tile.y, 8).asFloor());
             }
             tile.setOverlay(Blocks.spawn);
         }

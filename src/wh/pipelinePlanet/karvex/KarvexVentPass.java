@@ -10,7 +10,7 @@ import wh.content.*;
 import wh.pipelinePlanet.core.*;
 
 /**
- * 在合适生态地表上放置 WH 喷口。
+ * 中文说明：Karvex 喷口与热区生成阶段。
  */
 public class KarvexVentPass implements GenPass{
     private static final int ventSpacing = 9;

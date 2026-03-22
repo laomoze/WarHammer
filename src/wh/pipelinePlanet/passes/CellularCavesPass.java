@@ -8,7 +8,7 @@ import mindustry.world.*;
 import wh.pipelinePlanet.core.*;
 
 /**
- * 与原版对齐的细胞自动机 pass，对应 BasicGenerator.cells(iterations, 16, 16, 3)。
+ * 中文说明：细胞自动机洞穴阶段，塑造空腔与破碎结构。
  */
 public class CellularCavesPass implements GenPass{
     private final int iterations;

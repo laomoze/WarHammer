@@ -4,14 +4,11 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.util.noise.*;
 import mindustry.content.*;
-import wh.pipelinePlanet.core.*;
 import mindustry.world.*;
+import wh.pipelinePlanet.core.*;
 
 /**
- * 科技地板网格 pass。
- * 等价于原版 BasicGenerator.tech(...) 的核心逻辑：
- * - 在规则网格边缘生成 darkPanel3 / darkPanel4
- * - 按概率把实体墙替换为 darkMetal
+ * 中文说明：科技网格阶段：铺设科技地板并替换部分墙体。
  */
 public class TechGridPass implements GenPass{
     private final Block floor1;

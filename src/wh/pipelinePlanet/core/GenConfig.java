@@ -1,7 +1,7 @@
 package wh.pipelinePlanet.core;
 
 /**
- * 生成器配置。建议由你的具体星球生成器按需覆写默认值。
+ * 中文说明：流水线生成参数集合，统一管理房间、水域、科技网格等可调项。
  */
 public class GenConfig{
     /** 水域占比阈值，可用于判断是否需要启用海图相关逻辑。 */
@@ -24,9 +24,9 @@ public class GenConfig{
     /** 科技网格单元尺寸。原版默认 20。 */
     public int techGridCellSize = 20;
     /** 科技网格噪声阈值 A。原版默认 0.63。 */
-    public float techGridThresholdA = 0.63f;
+    public float techGridThresholdA = 0.4f;
     /** 科技网格噪声阈值 B。原版默认 0.6。 */
-    public float techGridThresholdB = 0.6f;
+    public float techGridThresholdB = 0.43f;
     /** 科技墙替换概率。原版默认 0.7。 */
     public float techGridWallChance = 0.7f;
     /** 面板内圈偏移（越大，floor2 覆盖范围越大）。原版默认 2。 */

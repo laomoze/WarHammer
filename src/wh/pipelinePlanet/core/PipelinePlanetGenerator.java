@@ -6,8 +6,7 @@ import mindustry.maps.generators.*;
 import mindustry.world.*;
 
 /**
- * 可组合的行星生成器基类。
- * 具体生成器应显式定义自己的 pass 管线顺序。
+ * 中文说明：可组合行星生成器基类，负责装配并驱动 pass 流水线。
  */
 public abstract class PipelinePlanetGenerator extends PlanetGenerator{
     protected final GenConfig config = new GenConfig();

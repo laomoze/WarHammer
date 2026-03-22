@@ -2757,10 +2757,10 @@ public class WHBullets{
         PyrosBulletEnhance1Main = PyrosBulletEnhance1.copy();
         PyrosBulletEnhance1Main.intervalBullets = 2;
         PyrosBulletEnhance1Main.intervalBullet = PyrosBulletInterval;
-        PyrosBullet.intervalDelay = 30;
-        PyrosBullet.bulletInterval = 10;
-        PyrosBullet.intervalAngle = 180f;
-        PyrosBullet.damage = 600;
+        PyrosBulletEnhance1Main.intervalDelay = 30;
+        PyrosBulletEnhance1Main.bulletInterval = 10;
+        PyrosBulletEnhance1Main.intervalAngle = 180f;
+        PyrosBulletEnhance1Main.damage = 600;
         PyrosBulletEnhance1Main.splashDamage = 600;
         PyrosBulletEnhance1Main.splashDamageRadius = 70;
         PyrosBulletEnhance1Main.fragBullets = 3;
