@@ -18,7 +18,7 @@ public class WHBlocksEnvironment{
     //liquid
     public static Block radiationWater, radiationWaterDeep, effluent, effluentDeep, mineralSandEffluentWater, mineralSandRadiationWater, radiationSandWater;
     //Floor
-    public static Block apatite, cementFloor, darkHotRock, darkMagmaRock, darkRock, gravel, mineralSandstone, mineralFloor, chromiteStone, chromiteFloor, chromiteFloorDark, manganeseStone, manganeseFloor, cobaltStone, cobaltFloor,
+    public static Block apatite, cementFloor, darkHotRock, darkMagmaRock, darkRock, gravel, mineralSandstone, mineralFloor, mineralSandFloor, chromiteStone, chromiteFloor, chromiteFloorDark, manganeseStone, manganeseFloor, cobaltStone, cobaltFloor,
     trachyte, oreShale, oreSalt, radiationCraters, radiationRockFloor,
     scorchedEarth, scorchedStone;
     //Wall
@@ -35,7 +35,7 @@ public class WHBlocksEnvironment{
     //Vents
     public static Block apatiteVent, cementVent, darkRockVent, radiationRockVent, scorchedEarthVent;
     //Boulders/Props
-    public static Block apatiteBoulder, chromiteBoulder, cobaltBoulder, darkRockBoulder, manganeseBoulder, mineralSandBoulder, radiationBoulder,
+    public static Block apatiteBoulder, chromiteBoulder, cobaltBoulder, darkRockBoulder, manganeseBoulder, mineralSandBoulder, mineralSandFloorBoulder, radiationBoulder,
     darkStoneCrystalCluster, quartzCrystalCluster;
 
 
@@ -75,6 +75,7 @@ public class WHBlocksEnvironment{
         }};
 
         mineralSand = new Floor("mineral-sand"){{
+            variants = 5;
             itemDrop = WHItems.oreSand;
             playerUnmineable = true;
             attributes.set(Attribute.oil, 0.5f);
@@ -88,14 +89,14 @@ public class WHBlocksEnvironment{
         }};
 
         promethiumSand = new Floor("promethium-sand"){{
-            itemDrop = Items.sand;
+            itemDrop = WHItems.oreSand;
             playerUnmineable = true;
             attributes.set(Attribute.oil, 1.5f);
             attributes.set(hasPromethium, 1f);
         }};
 
         radiationSand = new Floor("radiation-sand"){{
-            itemDrop = Items.sand;
+            itemDrop = WHItems.oreSand;
             playerUnmineable = true;
             attributes.set(hasPromethium, 1f);
         }};
@@ -235,6 +236,13 @@ public class WHBlocksEnvironment{
             attributes.set(hasPromethium, 0.25f);
         }};
 
+        mineralSandFloor = new Floor("mineral-sand-floor"){{
+            variants = 5;
+            blendGroup = mineralFloor;
+            attributes.set(Attribute.oil, 0.33f);
+            attributes.set(hasPromethium, 0.22f);
+        }};
+
         chromiteStone = new Floor("chromite-stone"){{
             variants = 3;
         }};
@@ -265,7 +273,7 @@ public class WHBlocksEnvironment{
         }};
 
         trachyte = new Floor("trachyte"){{
-            variants = 3;
+            variants = 5;
         }};
 
         oreShale = new Floor("ore-shale"){{
@@ -423,6 +431,11 @@ public class WHBlocksEnvironment{
             mineralSand.asFloor().decoration = mineralSandstone.asFloor().decoration = this;
         }};
 
+        mineralSandFloorBoulder = new Prop("mineral-sand-floor-boulder"){{
+            variants = 3;
+            mineralSandFloor.asFloor().decoration = this;
+        }};
+
         radiationBoulder = new Prop("radiation-boulder"){{
             variants = 2;
             radiationSand.asFloor().decoration = radiationRockFloor.asFloor().decoration = radiationCraters.asFloor().decoration = this;
@@ -463,9 +476,7 @@ public class WHBlocksEnvironment{
 
         metalTile4 = new Floor("metal-tile-4", 0);
 
-      /*  metalTile5= new Floor("metal-tile-5", 0){{
-
-        }};*/
+        metalTile5 = new Floor("metal-tile-5", 0);
 
         metalMesh = new Floor("metal-mesh", 2);
 
@@ -493,5 +504,13 @@ public class WHBlocksEnvironment{
             drawEdgeOut = false;
             drawEdgeIn = false;
         }};
+    }
+
+    public static boolean isMineralCoreFloor(Block floor){
+        return floor == mineralFloor || floor == mineralSandFloor;
+    }
+
+    public static Block defaultMineralFloor(){
+        return mineralSandFloor != null ? mineralSandFloor : mineralFloor;
     }
 }

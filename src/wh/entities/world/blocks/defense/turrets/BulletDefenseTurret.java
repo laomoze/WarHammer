@@ -14,6 +14,7 @@ import mindustry.graphics.*;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.draw.*;
 import mindustry.world.meta.*;
+import wh.content.*;
 import wh.core.*;
 import wh.entities.world.drawer.part.*;
 import wh.graphics.*;
@@ -25,8 +26,7 @@ public class BulletDefenseTurret extends Turret {
     public final int timerTarget = timers++;
     public float retargetTime = 8f;
     public Color color = Pal.missileYellowBack;
-    public float checkRange = 15f;
-    public float realDamage;
+    public float checkRange = 12f;
     public float shootLength = 13f;
 
     public BulletType interceptor = new InterceptorBulletType() {
@@ -40,11 +40,10 @@ public class BulletDefenseTurret extends Turret {
             lifetime = 17.5f;
             hittable = false;
             absorbable = false;
-            hitEffect = Fx.hitLancer;
-            despawnEffect = Fx.hitBulletSmall;
             trailLength = 3;
-            trailWidth = 8/2.6f;
+            trailWidth = width / 4.5f;
             hitColor=trailColor = Pal.missileYellowBack;
+            hitEffect = despawnEffect = WHFx.generalExplosion(30, hitColor, 20, 3, false);
         }
        @Override
         public void update(Bullet b) {
@@ -53,12 +52,12 @@ public class BulletDefenseTurret extends Turret {
                 if(isTargetableBullet(b.team, bullet)){
                     if (bullet.damage > b.damage) {
                        // b.remove();
-                        bullet.damage((bullet.damage() - realDamage) * 0.85f);
-                        Fx.hitLancer.at(bullet.x, bullet.y);
+                        bullet.damage((bullet.damage() - damage) * 0.85f);
+                        hitEffect.at(bullet.x, bullet.y, hitColor);
                     } else {
                         b.remove();
                         bullet.remove();
-                        Fx.hitLancer.at(bullet.x, bullet.y);
+                        hitEffect.at(bullet.x, bullet.y, hitColor);
                     }
                 }
             });
@@ -77,7 +76,7 @@ public class BulletDefenseTurret extends Turret {
         hasPower = true;
         outlineColor = WHPal.Outline;
         outlineRadius = 3;
-        consumePower(30f);
+        consumePower(1800 / 60f);
         float aimLength = 48f;
         clipSize = aimLength * 2f;
         drawer = new DrawTurret(WarHammerMod.name("turret-")){
@@ -155,7 +154,6 @@ public class BulletDefenseTurret extends Turret {
                 reloadCounter += edelta();
                 Tmp.v1.trns(rotation, shootLength);
                 if (Angles.within(rotation, dest, Math.max(shootCone,10)) && reloadCounter >= reload) {
-                    realDamage = interceptor.damage;
                     interceptor.create(this, team, x + Tmp.v1.x, y + Tmp.v1.y, rotation, interceptor.damage, 1f, 1f, bulletTarget);
                     shootEffect.at(x + Tmp.v1.x, y + Tmp.v1.y, rotation, color);
                     shootSound.at(x + Tmp.v1.x, y + Tmp.v1.y, Mathf.random(0.9f, 1.1f));

@@ -23,13 +23,12 @@ public final class WHPlanets{
             Color toxicGreen = Color.valueOf("8da85f");
             Color hazeYellow = Color.valueOf("e2d882");
 
-            meshLoader = () -> new HexMesh(this, 7);
+            meshLoader = () -> new HexMesh(this, 6);
 
-            // Keep atmosphere/cloud layers clearly visible in planet view.
             cloudMeshLoader = () -> new MultiMesh(
             new HexSkyMesh(this, 6, 0.20f, 0.13f, 5, chromite.cpy().lerp(radiation, 0.24f).lerp(toxicGreen, 0.34f).a(0.30f), 2, 0.45f, 1.00f, 0.36f),
-            new HexSkyMesh(this, 2, 0.44f, 0.14f, 5, toxicYellow.cpy().lerp(toxicGreen, 0.26f).a(0.34f), 2, 0.45f, 1.08f, 0.38f),
-            new HexSkyMesh(this, 1, 0.60f, 0.16f, 5, hazeYellow.cpy().lerp(toxicGreen, 0.18f).a(0.30f), 2, 0.45f, 1.15f, 0.40f)
+            new HexSkyMesh(this, 2, 0.44f, 0.14f, 5, toxicYellow.cpy().lerp(toxicGreen, 0.26f).a(0.45f), 2, 0.45f, 1.08f, 0.38f),
+            new HexSkyMesh(this, 1, 0.60f, 0.16f, 5, hazeYellow.cpy().lerp(toxicGreen, 0.18f).a(0.65f), 2, 0.45f, 1.15f, 0.40f)
             );
 
             iconColor = darkRock.cpy().lerp(chromite, 0.25f).lerp(promethium, 0.08f);

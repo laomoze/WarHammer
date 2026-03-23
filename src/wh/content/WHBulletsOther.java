@@ -463,7 +463,7 @@ public class WHBulletsOther{
                 speed = 6f;
                 drag = -0.03f;
                 frontColor = Color.white;
-                backColor = hitColor = trailColor = WHPal.WHYellow.cpy();
+                Color c = hitColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
                 width = 15;
                 height = 25;
                 trailLength = 30;
@@ -480,7 +480,7 @@ public class WHBulletsOther{
                 homingRange = 48;
                 homingPower = 0.05f;
 
-                hitEffect = despawnEffect = WHFx.square(60, WHPal.WHYellow.cpy(), 8, 20, 4);
+                hitEffect = despawnEffect = WHFx.square(60, c, 8, 20, 4);
             }
 
             @Override

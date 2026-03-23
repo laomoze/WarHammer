@@ -1,9 +1,9 @@
 package wh.pipelinePlanet.karvex;
 
+import arc.math.*;
 import mindustry.content.*;
 import mindustry.game.*;
 import mindustry.world.*;
-import mindustry.world.blocks.environment.*;
 import wh.content.*;
 import wh.pipelinePlanet.core.*;
 import wh.pipelinePlanet.data.*;
@@ -11,7 +11,7 @@ import wh.pipelinePlanet.data.*;
 import static mindustry.Vars.*;
 
 /**
- * 中文说明：Karvex 收尾阶段：出生点落载、规则收束与残局清理。
+ * Finalizes core placement, spawn markers and rules.
  */
 public class KarvexFinalizePass implements GenPass{
     private final Schematic preferredLoadout;
@@ -33,26 +33,17 @@ public class KarvexFinalizePass implements GenPass{
     public void apply(GenContext ctx){
         if(ctx.spawnRoom == null) return;
 
-        clearLiquidWalls(ctx);
-        sanitizeArea(ctx, ctx.spawnRoom.x, ctx.spawnRoom.y, 15);
-        for(RoomAnchor enemy : ctx.enemyRooms){
-            sanitizeArea(ctx, enemy.x, enemy.y, 6);
-        }
-
+        sanitizeCoreZones(ctx);
         placePlayerCore(ctx.spawnRoom.x, ctx.spawnRoom.y);
-        restoreEnemySpawnOverlays(ctx);
+        restoreEnemySpawns(ctx);
+        applyRules(ctx);
     }
 
-    private void clearLiquidWalls(GenContext ctx){
-        for(Tile tile : ctx.tiles){
-            if(!tile.floor().isLiquid) continue;
-
-            if(tile.block() != Blocks.air){
-                tile.setBlock(Blocks.air);
-            }
-            if(tile.overlay().needsSurface){
-                tile.setOverlay(Blocks.air);
-            }
+    private void sanitizeCoreZones(GenContext ctx){
+        sanitizeArea(ctx, ctx.spawnRoom.x, ctx.spawnRoom.y, 15);
+        for(int i = 0; i < ctx.enemyRooms.size; i++){
+            RoomAnchor enemy = ctx.enemyRooms.get(i);
+            sanitizeArea(ctx, enemy.x, enemy.y, 8);
         }
     }
 
@@ -66,11 +57,11 @@ public class KarvexFinalizePass implements GenPass{
                 Tile tile = ctx.tiles.get(cx + ox, cy + oy);
                 if(tile == null) continue;
 
-                tile.setOverlay(Blocks.air);
                 tile.setBlock(Blocks.air);
+                tile.setOverlay(Blocks.air);
 
                 if(!tile.floor().hasSurface() || tile.floor().isLiquid){
-                    tile.setFloor(findNearbyLandFloor(ctx, tile.x, tile.y, 10).asFloor());
+                    tile.setFloor(findNearbyLand(ctx, tile.x, tile.y, 10).asFloor());
                 }
             }
         }
@@ -84,12 +75,45 @@ public class KarvexFinalizePass implements GenPass{
             return;
         }
 
-        if(tryPlaceLaunchLoadout(x, y)){
-            return;
-        }
+        if(tryPlaceLaunchLoadout(x, y)) return;
 
         if(tryPlaceSchematic(Loadouts.basicShard, x, y, team)){
             addLaunchResources(x, y);
+        }
+    }
+
+    private void restoreEnemySpawns(GenContext ctx){
+        for(int i = 0; i < ctx.enemyRooms.size; i++){
+            RoomAnchor enemy = ctx.enemyRooms.get(i);
+            Tile tile = ctx.tiles.get(enemy.x, enemy.y);
+            if(tile == null) continue;
+
+            tile.setBlock(Blocks.air);
+            if(tile.floor().isLiquid || !tile.floor().hasSurface()){
+                tile.setFloor(findNearbyLand(ctx, tile.x, tile.y, 8).asFloor());
+            }
+            tile.setOverlay(Blocks.spawn);
+        }
+    }
+
+    private void applyRules(GenContext ctx){
+        if(state == null || state.rules == null) return;
+
+        state.rules.env = ctx.sector.planet.defaultEnv;
+        state.rules.placeRangeCheck = true;
+        state.rules.enemyCoreBuildRadius = 600f;
+
+        float difficulty = Mathf.clamp(ctx.sector.threat);
+        if(ctx.sector.hasEnemyBase()){
+            state.rules.attackMode = true;
+            state.rules.waves = true;
+            state.rules.showSpawns = true;
+            state.rules.spawns = Waves.generate(difficulty, new Rand(ctx.sector.id), true, true, false);
+        }else{
+            state.rules.attackMode = false;
+            state.rules.waves = true;
+            state.rules.winWave = 10 + 5 * (int)Math.max(difficulty * 10f, 1f);
+            state.rules.waveSpacing = Mathf.lerp(60f * 65f * 2f, 60f * 60f, Math.max(difficulty - 0.4f, 0f));
         }
     }
 
@@ -133,22 +157,7 @@ public class KarvexFinalizePass implements GenPass{
         }
     }
 
-    private void restoreEnemySpawnOverlays(GenContext ctx){
-        for(RoomAnchor enemy : ctx.enemyRooms){
-            Tile tile = ctx.tiles.get(enemy.x, enemy.y);
-            if(tile == null) continue;
-
-            if(tile.block() != Blocks.air){
-                tile.setBlock(Blocks.air);
-            }
-            if(tile.floor().isLiquid || !tile.floor().hasSurface()){
-                tile.setFloor(findNearbyLandFloor(ctx, tile.x, tile.y, 8).asFloor());
-            }
-            tile.setOverlay(Blocks.spawn);
-        }
-    }
-
-    private Floor findNearbyLandFloor(GenContext ctx, int x, int y, int radius){
+    private Block findNearbyLand(GenContext ctx, int x, int y, int radius){
         for(int r = 1; r <= radius; r++){
             for(int ox = -r; ox <= r; ox++){
                 for(int oy = -r; oy <= r; oy++){
@@ -160,7 +169,6 @@ public class KarvexFinalizePass implements GenPass{
                 }
             }
         }
-
-        return WHBlocksEnvironment.mineralSandstone.asFloor();
+        return WHBlocksEnvironment.defaultMineralFloor();
     }
 }

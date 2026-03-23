@@ -47,13 +47,13 @@ import static arc.graphics.g2d.Draw.color;
 import static arc.graphics.g2d.Lines.*;
 import static arc.math.Angles.randLenVectors;
 import static mindustry.Vars.*;
-import static mindustry.content.Fx.none;
 import static mindustry.content.Fx.*;
+import static mindustry.content.Fx.none;
 import static mindustry.content.StatusEffects.*;
-import static mindustry.gen.Sounds.explosion;
 import static mindustry.gen.Sounds.*;
-import static wh.content.WHFx.rand;
+import static mindustry.gen.Sounds.explosion;
 import static wh.content.WHFx.*;
+import static wh.content.WHFx.rand;
 import static wh.core.WarHammerMod.name;
 import static wh.graphics.Drawn.arcProcessFlip;
 
@@ -8794,13 +8794,9 @@ public final class WHUnitTypes{
                 }}
                 );
             }
-        }
+        };
 
-        ;
-
-        M1 = new
-
-        PowerArmourUnitType("m1"){
+        M1 = new PowerArmourUnitType("m1"){
             {
                 speed = 0.7f;
                 hitSize = 12;
