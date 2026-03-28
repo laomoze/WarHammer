@@ -2718,9 +2718,7 @@ public final class WHUnitTypes{
                     }
                 });
             }
-        }
-
-        ;
+        };
 
         air3 = new WHUnitType("air3"){
             {
@@ -2851,9 +2849,7 @@ public final class WHUnitTypes{
                     markBullet = markB;
                 }});
             }
-        }
-
-        ;
+        };
 
         air2 = new WHUnitType("air2"){
             {
@@ -2929,9 +2925,7 @@ public final class WHUnitTypes{
                     }};
                 }});
             }
-        }
-
-        ;
+        };
 
         air1 = new WHUnitType("air1"){
             {
@@ -3009,9 +3003,7 @@ public final class WHUnitTypes{
                     }};
                 }});
             }
-        }
-
-        ;
+        };
 
 
         airB6 = new WHUnitType("airB6"){
@@ -3608,9 +3600,7 @@ public final class WHUnitTypes{
                 copyAndMove(airBCannon, 85f / 4f, -39f / 4f)
                 );
             }
-        }
-
-        ;
+        };
 
 
         airB4 = new WHUnitType("airB4"){
@@ -3803,9 +3793,7 @@ public final class WHUnitTypes{
                 }}
                 );
             }
-        }
-
-        ;
+        };
 
         airB3 = new WHUnitType("airB3"){
             {
@@ -3942,9 +3930,7 @@ public final class WHUnitTypes{
                 }}
                 );
             }
-        }
-
-        ;
+        };
 
         airB2 = new WHUnitType("airB2"){
             {
@@ -4024,9 +4010,7 @@ public final class WHUnitTypes{
                     }};
                 }});
             }
-        }
-
-        ;
+        };
 
         airB1 = new WHUnitType("airB1"){
             {
@@ -4712,9 +4696,7 @@ public final class WHUnitTypes{
                     }
                 });
             }
-        }
-
-        ;
+        };
 
         tank2s = new WHTankUnitType("tank2s"){
             {
@@ -5235,6 +5217,18 @@ public final class WHUnitTypes{
                         shootSound = shootTank;
                         shake = 6;
                         shoot.firstShotDelay = 30;
+
+                        parts.add(
+                        new RegionPart("-barrel"){
+                            {
+                                under = true;
+                                mirror = false;
+                                heatProgress = PartProgress.recoil;
+                                progress = PartProgress.recoil;
+                                moveY = -4f;
+                            }
+                        }
+                        );
 
                         bullet = new CritBulletType(20, 1500, name("pierce")){
                             {
@@ -5772,13 +5766,9 @@ public final class WHUnitTypes{
                     }
                 });
             }
-        }
+        };
 
-        ;
-
-        Mecha7 = new
-
-        TitanUnitType("mecha7"){
+        Mecha7 = new TitanUnitType("mecha7"){
             {
                 constructor = TitanUnit::create;
                 speed = 0.45f;
@@ -8022,9 +8012,7 @@ public final class WHUnitTypes{
                 }}
                 );
             }
-        }
-
-        ;
+        };
 
         M4C = new PowerArmourUnitType("m4C"){
             {
@@ -8258,9 +8246,7 @@ public final class WHUnitTypes{
                 }}
                 );
             }
-        }
-
-        ;
+        };
 
         M4D = new PowerArmourUnitType("m4D"){
             {
@@ -8912,9 +8898,7 @@ public final class WHUnitTypes{
                 }}
                 );
             }
-        }
-
-        ;
+        };
 
         MEn1 = new PowerArmourUnitType("mEn1"){
             {
@@ -9874,7 +9858,7 @@ public final class WHUnitTypes{
         airS6 = new UnitType("air-s6"){
             {
                 constructor = UnitTypes.eclipse.constructor;
-                researchCostMultiplier = 0.1f;
+                researchCostMultiplier = 3;
                 health = 68000;
                 armor = 33;
                 speed = 0.75f;
@@ -10057,16 +10041,12 @@ public final class WHUnitTypes{
                     }};
                 }});
             }
-        }
+        };
 
-        ;
-
-        airSGreen6 = new
-
-        UnitType("air-g-s6"){
+        airSGreen6 = new UnitType("air-g-s6"){
             {
                 constructor = UnitTypes.oct.constructor;
-                researchCostMultiplier = 0.1f;
+                researchCostMultiplier = 3;
                 health = 60000;
                 armor = 20;
                 speed = 0.45f;
@@ -10271,7 +10251,7 @@ public final class WHUnitTypes{
         mechaS6 = new UnitType("mech-s6"){
             {
                 constructor = MechUnit::create;
-                researchCostMultiplier = 0.1f;
+                researchCostMultiplier = 3;
                 hitSize = 48;
                 canDrown = false;
                 armor = 26;
@@ -10440,6 +10420,7 @@ public final class WHUnitTypes{
         mechaSGreen6 = new UnitType("mech-g-s6"){
             {
                 constructor = LegsUnit::create;
+                researchCostMultiplier = 3;
                 speed = 0.45f;
                 rotateSpeed = 0.8f;
                 hitSize = 50f;
@@ -10650,6 +10631,7 @@ public final class WHUnitTypes{
             {
                 groundLayer = Layer.legUnit;
                 constructor = LegsUnit::create;
+                researchCostMultiplier = 3;
                 drag = 0.1f;
                 speed = 0.42f;
                 hitSize = 35.5f;
@@ -10919,7 +10901,7 @@ public final class WHUnitTypes{
 
             {
                 constructor = UnitTypes.omura.constructor;
-                researchCostMultiplier = 0.1f;
+                researchCostMultiplier = 3;
                 faceTarget = false;
                 speed = 0.52f;
                 rotateSpeed = 0.75f;
@@ -11213,7 +11195,7 @@ public final class WHUnitTypes{
                 pickupUnits = true;
                 hovering = true;
                 constructor = HoverPayloadUnit::new;
-                researchCostMultiplier = 0.1f;
+                researchCostMultiplier = 3;
                 speed = 1.03f;
                 rotateSpeed = 0.86f;
                 immunities.addAll(StatusEffects.slow, StatusEffects.unmoving, StatusEffects.electrified);
@@ -11496,18 +11478,12 @@ public final class WHUnitTypes{
                 copyAndMove(navyGWeapons, 116 / 4f, -82 / 4f)
                 );
             }
-        }
+        };
 
-        ;
-
-        airRaiderS = new
-
-        UnitType(name("air-raider-s")){
+        airRaiderS = new UnitType(name("air-raider-s")){
             {
                 constructor = AirRaiderUnitType::new;
-                controller = u -> new
-
-                AirRaiderAI(Mode.strafe);
+                controller = u -> new AirRaiderAI(Mode.strafe);
 
                 lifetime = 1500f;
                 speed = 5;
@@ -11518,9 +11494,7 @@ public final class WHUnitTypes{
 
                 add(StatusEffects.unmoving);
 
-                ammoType = new
-
-                PowerAmmoType(3000);
+                ammoType = new PowerAmmoType(3000);
 
                 hitSize = 20f;
                 flying = true;
@@ -11580,9 +11554,7 @@ public final class WHUnitTypes{
                 });
             }
         };
-        airRaiderM = new
-
-        UnitType("air-raider-m"){
+        airRaiderM = new UnitType("air-raider-m"){
             {
                 constructor = AirRaiderUnitType::new;
                 controller = u -> new AirRaiderAI(Mode.missile){{
@@ -11643,9 +11615,7 @@ public final class WHUnitTypes{
             }
         };
 
-        airRaiderB = new
-
-        UnitType("air-raider-b"){
+        airRaiderB = new UnitType("air-raider-b"){
             {
                 constructor = AirRaiderUnitType::new;
                 controller = u -> new AirRaiderAI(Mode.bomb){{
@@ -11692,9 +11662,7 @@ public final class WHUnitTypes{
             }
         };
 
-        test = new
-
-        UnitType("scepter"){
+        test = new UnitType("scepter"){
             {
                 constructor = MechUnit::create;
                 speed = 3.6f;

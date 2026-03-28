@@ -118,21 +118,23 @@ public class AirRaiderCallBlock extends Block{
         ));
 
         addBar("team-builds", (AirRaiderUnitBuild entity) -> new Bar(
-        () -> Core.bundle.get("bar.wh-amount")+ Groups.build.count(b -> b.team == entity.team && b.block == this)+" / " + maxMount,
+        () -> {
+            int count = WorldRegister.teamBlockCount(entity.team, this);
+            return Core.bundle.get("bar.wh-amount") + count + " / " + maxMount;
+        },
         () -> Pal.accent,
-        () -> (float)Groups.build.count(b -> b.team == entity.team && b.block == this) / maxMount
+        () -> (float)WorldRegister.teamBlockCount(entity.team, this) / maxMount
         ));
     }
 
 
-
-        public boolean canPlaceOn(Tile tile, Team team, int rotation) {
-            if (team != Team.derelict && Groups.build.count(b -> b.team == team && b.block == this) >= maxMount) {
-                drawPlaceText("Maximum Placement Quantity Reached", tile.x, tile.y, false);
-                return false;
-            }
-            return super.canPlaceOn(tile, team, rotation);
-        };
+    public boolean canPlaceOn(Tile tile, Team team, int rotation){
+        if(team != Team.derelict && WorldRegister.teamBlockCount(team, this) >= maxMount){
+            drawPlaceText("Maximum Placement Quantity Reached", tile.x, tile.y, false);
+            return false;
+        }
+        return super.canPlaceOn(tile, team, rotation);
+    }
 
 
 
@@ -196,14 +198,20 @@ public class AirRaiderCallBlock extends Block{
 
         @Override
         public void add(){
-            if(!added) WorldRegister.ARBuilds.add(this);
+            if(!added){
+                WorldRegister.ARBuilds.add(this);
+                WorldRegister.registerBuild(this);
+            }
 
             super.add();
         }
 
         @Override
         public void remove(){
-            if(added) WorldRegister.ARBuilds.remove(this);
+            if(added){
+                WorldRegister.ARBuilds.remove(this);
+                WorldRegister.unregisterBuild(this);
+            }
             if(!spawnedUnits.isEmpty())
                 for(var unit : spawnedUnits){
                     if(unit.controller() instanceof AirRaiderAI ai){

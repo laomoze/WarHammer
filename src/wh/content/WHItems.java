@@ -68,7 +68,7 @@ public final class WHItems{
         uranium = new Item("uranium", Color.valueOf("6A9A4DFF").lerp(Pal.plastaniumFront, 0.1f)){{
             hardness = 5;
             explosiveness = 0.2f;
-            radioactivity = 1.4f;
+            radioactivity = 0.8f;
             cost = 1.3f;
             healthScaling = 0.2f;
         }};
@@ -116,7 +116,7 @@ public final class WHItems{
             cost = 1.5f;
             healthScaling = 0.18f;
             charge = 1;
-            radioactivity = 0.8f;
+            radioactivity = 1f;
             explosiveness = 0.2f;
         }};
 
@@ -131,7 +131,7 @@ public final class WHItems{
         refineCeramite = new Item("refine-ceramite", WHPal.RefineCeramiteColor){{
             cost = 3.2f;
             charge = 0.8f;
-            healthScaling = 1.8f;
+            healthScaling = 1.6f;
         }};
 
         molybdenumAlloy = new Item("molybdenum-alloy", WHPal.molybdenumAlloyColor){{
@@ -143,7 +143,7 @@ public final class WHItems{
         resonantCrystal = new Item("resonant-crystal", WHPal.resonantCrystalColor){{
             cost = 1.3f;
             charge = 0.3f;
-            healthScaling = 0.55f;
+            healthScaling = 0.35f;
         }};
 
         protocolChip = new Item("protocol-chip", Color.valueOf("FF6363FF")){{
@@ -152,7 +152,7 @@ public final class WHItems{
             frames = 28;
             transitionFrames = 2;
             frameTime = 1;
-            healthScaling = 0.8f;
+            healthScaling = 0.7f;
         }};
 
         adamantium = new Item("adamantium", Color.valueOf("E3AE6FFF")){{

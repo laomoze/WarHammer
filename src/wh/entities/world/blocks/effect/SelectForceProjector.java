@@ -20,6 +20,7 @@ import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.consumers.*;
 import mindustry.world.meta.*;
+import wh.entities.*;
 import wh.graphics.*;
 import wh.util.*;
 
@@ -139,16 +140,19 @@ public class SelectForceProjector extends Block {
         ));
 
         addBar("team-builds", (ForceWallBuild entity) -> new Bar(
-        () -> Core.bundle.get("bar.wh-amount")+ Groups.build.count(b -> b.team == entity.team && b.block == this)+" / " + maxMount,
+        () -> {
+            int count = WorldRegister.teamBlockCount(entity.team, this);
+            return Core.bundle.get("bar.wh-amount") + count + " / " + maxMount;
+        },
         () -> Pal.accent,
-        () -> (float)Groups.build.count(b -> b.team == entity.team && b.block == this) / maxMount
+        () -> (float)WorldRegister.teamBlockCount(entity.team, this) / maxMount
         ));
 
     }
 
     @Override
     public boolean canPlaceOn(Tile tile, Team team, int rotation) {
-        if (team != Team.derelict && Groups.build.count(b -> b.team == team && b.block == this) >= maxMount) {
+        if(team != Team.derelict && WorldRegister.teamBlockCount(team, this) >= maxMount){
             drawPlaceText(Core.bundle.get("wh-select-projector-max-mount"), tile.x, tile.y, false);
             return false;
         }
@@ -178,6 +182,22 @@ public class SelectForceProjector extends Block {
         public float warmup, phaseHeat, trailWarmUp;
         private final Trail[] sideTrails = new Trail[2];
         private final Seq<LinkPath> pathBuffer = new Seq<>();
+
+        @Override
+        public void add(){
+            if(!added){
+                WorldRegister.registerBuild(this);
+            }
+            super.add();
+        }
+
+        @Override
+        public void remove(){
+            if(added){
+                WorldRegister.unregisterBuild(this);
+            }
+            super.remove();
+        }
 
         @Override
         public void drawSelect() {

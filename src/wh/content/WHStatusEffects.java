@@ -1,4 +1,5 @@
 package wh.content;
+
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
@@ -11,6 +12,7 @@ import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
 import wh.graphics.*;
+
 import static arc.graphics.g2d.Draw.*;
 import static arc.graphics.g2d.Lines.*;
 import static arc.math.Angles.randLenVectors;
@@ -242,7 +244,7 @@ public final class WHStatusEffects{
 
         plasmaFireBurn = new StatusEffect("plasma-fire"){{
             color = WHPal.SkyBlue;
-            damage = 200 / 60f;
+            damage = 300 / 60f;
             parentizeEffect = true;
             effect = new Effect(25.0F, (e) -> {
                 if(!(e.data instanceof Unit u)) return;

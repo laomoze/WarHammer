@@ -3,6 +3,7 @@ package wh.gen;
 import arc.func.*;
 import arc.struct.*;
 import mindustry.gen.*;
+import wh.content.WHBulletsOther.*;
 import wh.entities.*;
 import wh.entities.bullet.ApproachBullet.*;
 import wh.entities.event.*;
@@ -51,6 +52,7 @@ public final class EntityRegister{
         register("RevengeUnit", RevengeUnit.class, RevengeUnit::new);
 
         register("ApproachB", AB.class, AB::new);
+        register("TrailBullet", TrailBullet.class, TrailBullet::new);
         register("Spawner", Spawner.class, Spawner::new);
         register("AirborneSpawner", AirborneSpawner.class, AirborneSpawner::new);
         register("RiftSpawner", RiftSpawner.class, RiftSpawner::new);

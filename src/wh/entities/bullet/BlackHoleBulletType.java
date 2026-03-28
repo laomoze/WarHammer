@@ -1,30 +1,25 @@
 package wh.entities.bullet;
 
-import arc.Core;
-import arc.graphics.Color;
+import arc.*;
+import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
-import arc.math.geom.Vec2;
 import arc.struct.*;
 import arc.util.*;
 import arc.util.pooling.*;
-import mindustry.Vars;
-import mindustry.content.Fx;
+import mindustry.*;
+import mindustry.content.*;
 import mindustry.entities.*;
-import mindustry.entities.bullet.BulletType;
+import mindustry.entities.bullet.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.type.unit.MissileUnitType;
+import mindustry.type.unit.*;
 import wh.content.*;
-import wh.content.WHFx.*;
 import wh.graphics.*;
 import wh.util.*;
 
-import static arc.graphics.g2d.Draw.color;
-import static arc.graphics.g2d.Lines.stroke;
 import static mindustry.Vars.*;
-import static wh.util.WHUtils.rand;
 
 /** @author guiy **/
 public class BlackHoleBulletType extends BulletType{
@@ -44,7 +39,7 @@ public class BlackHoleBulletType extends BulletType{
     //吸积盘基数
     public int amount = 1;
     public float fadeTime = 72;
-    public float maxAbsorbBulletDamage = 150f;
+    public float maxAbsorbBulletDamage = 200;
     public float maxAbs = 16f;
 
 

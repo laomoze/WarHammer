@@ -214,10 +214,10 @@ public class SpecialDrill extends Block {
             }
         });
 
-        stats.add(Stat.drillTier, StatValues.drillables(drillTime, hardnessDrillMultiplier, size, drillMultipliers, b -> b instanceof Floor f && !f.wallOre && f.itemDrop != null &&
+        stats.add(Stat.drillTier, StatValues.drillables(drillTime, hardnessDrillMultiplier, mineSize, drillMultipliers, b -> b instanceof Floor f && !f.wallOre && f.itemDrop != null &&
                 f.itemDrop.hardness <= tier && f.itemDrop != blockedItem && allowedItems.contains(f.itemDrop) && (indexer.isBlockPresent(f) || state.isMenu())));
 
-        stats.add(Stat.drillSpeed,   mineSize * mineSize/(60f / drillTime), StatUnit.itemsSecond);
+        stats.add(Stat.drillSpeed, 60f * mineSize * mineSize / drillTime, StatUnit.itemsSecond);
 
         if (liquidBoostIntensity != 1 && findConsumer(f -> f instanceof ConsumeLiquidBase) instanceof ConsumeLiquidBase consBase) {
             stats.remove(Stat.booster);

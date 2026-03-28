@@ -42,6 +42,13 @@ public final class Drawn{
     public static final Vec2 v4 = new Vec2();
     public static final Vec2 v5 = new Vec2();
     public static final Vec2 v6 = new Vec2();
+    public static final Vec2 v7 = new Vec2();
+    public static final Vec3 v31 = new Vec3();
+    public static final Vec3 v32 = new Vec3();
+    public static final Vec3 v33 = new Vec3();
+    public static final Vec3 v34 = new Vec3();
+    public static final Vec3 v35 = new Vec3();
+
     static final Color c1 = new Color();
     static final Color c2 = new Color();
     private static final float PERSPECTIVE_STRENGTH = 0.06f;
@@ -189,7 +196,7 @@ public final class Drawn{
         circlePercent(x, y, rad, f > 0.0F ? f : -f, in + (float)(-90 * Mathf.sign(f)));
     }
 
-    //arc加个progress
+    //arc鍔犱釜progress
     public static void arcProcess(float x, float y, float radius, float fraction, float rotation, int sides, float progress){
         int max = Mathf.ceil(sides * fraction);
         points.clear();
@@ -334,8 +341,8 @@ public final class Drawn{
     }
 
     /**
-     * 伪3D圆环：将圆环在Y轴方向压缩成椭圆，并分前后半环分层绘制。
-     * yScale越小越“扁”，建议取值 0.2~0.9。
+     * 浼?D鍦嗙幆锛氬皢鍦嗙幆鍦╕杞存柟鍚戝帇缂╂垚妞渾锛屽苟鍒嗗墠鍚庡崐鐜垎灞傜粯鍒躲€?
+     * yScale瓒婂皬瓒娾€滄墎鈥濓紝寤鸿鍙栧€?0.2~0.9銆?
      */
     public static void pseudo3dRing(float x, float y, float radius, float width, float yScale, float rotation, Color nearColor, Color farColor){
         if(radius <= 0f || width <= 0f) return;
@@ -349,7 +356,7 @@ public final class Drawn{
         int sides = Math.max(24, Lines.circleVertices(outer));
         float step = 360f / sides;
 
-        // 连续深度插值 + 宽度透视，避免前后半环颜色“硬切”且增强伪3D体积感。
+        // 杩炵画娣卞害鎻掑€?+ 瀹藉害閫忚锛岄伩鍏嶅墠鍚庡崐鐜鑹测€滅‖鍒団€濅笖澧炲己浼?D浣撶Н鎰熴€?
         for(int i = 0; i < sides; i++){
             float angle = i * step;
             float mid = angle + step * 0.5f;
@@ -362,7 +369,7 @@ public final class Drawn{
 
             ringSegment(x, y, segInner, segOuter, sclY, angle, step, rotation, blended, blended);
 
-            // 近端外圈高光：让环更像有“厚度”的体，不是平面描边。
+            // 杩戠澶栧湀楂樺厜锛氳鐜洿鍍忔湁鈥滃帤搴︹€濈殑浣擄紝涓嶆槸骞抽潰鎻忚竟銆?
             if(smooth > 0.62f){
                 float h = Interp.smoother.apply(Mathf.curve(smooth, 0.62f, 1f));
                 float hi = Color.toFloatBits(
@@ -379,7 +386,7 @@ public final class Drawn{
     }
 
     public static void pseudo3dRing(float x, float y, float radius, float width, float yScale, float rotation, Color color){
-        // 单色版本：前半环保持原色，后半环仅降低透明度做层次，不需要传两种颜色。
+        // 鍗曡壊鐗堟湰锛氬墠鍗婄幆淇濇寔鍘熻壊锛屽悗鍗婄幆浠呴檷浣庨€忔槑搴﹀仛灞傛锛屼笉闇€瑕佷紶涓ょ棰滆壊銆?
         pseudo3dRing(x, y, radius, width, yScale, rotation, Tmp.c1.set(color), Tmp.c2.set(color).cpy().lerp(Pal.coalBlack, 0.3f));
     }
 
@@ -416,6 +423,73 @@ public final class Drawn{
         );
     }
 
+    /** 画一个 2.5D 晶体：先画主体，再按前后关系画边线。 */
+    public static void drawCrystal(float x, float y, float length, float width, float height, float centOffX, float centOffY, float edgeStoke,
+                                   float edgeLayer, float botLayer, float crystalRotation, float rotation, Color color, Color edgeColor){
+        // v31：长度方向的一半（决定左右两个尖端）
+        v31.set(length / 2, 0, 0);
+        // v32：宽度方向的一半，并绕 X 轴倾斜，做出立体感
+        v32.set(0, width / 2, 0).rotate(Vec3.X, crystalRotation);
+        // v33：中心偏移 + 高度方向的一半，也按同样角度倾斜
+        v33.set(centOffX, centOffY, height / 2).rotate(Vec3.X, crystalRotation);
+
+        float w1, w2;
+        // 取屏幕上更大的“半宽”，作为主体四边形的宽度
+        float widthReal = Math.max(w1 = Math.abs(v32.y), w2 = Math.abs(v33.y));
+
+        // 三个方向向量一起按平面朝向旋转到最终位置
+        v31.rotate(Vec3.Z, -rotation);
+        v32.rotate(Vec3.Z, -rotation);
+        v33.rotate(Vec3.Z, -rotation);
+
+        float z = Draw.z();
+        Draw.z(botLayer);
+        Draw.color(color);
+
+        // 先画主体面（底层）
+        float mx = Angles.trnsx(rotation + 90, widthReal), my = Angles.trnsy(rotation + 90, widthReal);
+        Fill.quad(
+        x + v31.x, y + v31.y,
+        x + mx, y + my,
+        x - v31.x, y - v31.y,
+        x - mx, y - my
+        );
+
+        if(edgeStoke > 0.01f && edgeColor.a > 0.01){
+            Lines.stroke(edgeStoke, edgeColor);
+            // 再画两组边线，通过 z 层切换做出前后遮挡
+            crystalEdge(x, y, w1 >= widthReal, v32.z > v33.z, edgeLayer, botLayer, v32);
+            crystalEdge(x, y, w2 >= widthReal, v33.z > v32.z, edgeLayer, botLayer, v33);
+        }
+
+        Draw.z(z);
+    }
+
+    /** 画晶体的一组边线，并根据前后关系切换层级。 */
+    private static void crystalEdge(float x, float y, boolean w, boolean r, float edgeLayer, float botLayer, Vec3 v){
+        // 正向两条边：在前层或后层绘制
+        Draw.z(r || w ? edgeLayer : botLayer - 0.01f);
+        Lines.line(
+        x + v.x, y + v.y,
+        x + v31.x, y + v31.y
+        );
+        Lines.line(
+        x + v.x, y + v.y,
+        x - v31.x, y - v31.y
+        );
+        // 反向两条边：用相反条件切层，形成遮挡感
+        Draw.z(!r || w ? edgeLayer : botLayer - 0.01f);
+        Lines.line(
+        x - v.x, y - v.y,
+        x + v31.x, y + v31.y
+        );
+        Lines.line(
+        x - v.x, y - v.y,
+        x - v31.x, y - v31.y
+        );
+    }
+
+
     public static void drawConnected(float x, float y, float size, Color color){
         Draw.reset();
         float sin = Mathf.absin(Time.time, 8.0F, 1.25F);
@@ -436,7 +510,7 @@ public final class Drawn{
         overlayText(Fonts.outline, text, x, y, offset, 1.0F, 0.25F, color, underline, false);
     }
 
-    //Block，drawPlaceText原型
+    //Block锛宒rawPlaceText鍘熷瀷
     public static void overlayText(Font font, String text, float x, float y, float offset, float offsetScl, float size, Color color, boolean underline, boolean align){
         GlyphLayout layout = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
         boolean ints = font.usesIntegerPositions();

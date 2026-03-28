@@ -550,10 +550,11 @@ public final class WHFx{
 
             e.scaled(lifetime, i -> {
                 stroke(3f * i.fout(Interp.pow2Out));
-                if(!smooth) circle(e.x, e.y, 3f + i.fin(Interp.smooth) * size);
+                if(!smooth) circle(e.x, e.y, 3f + i.fin(Interp.circleOut) * size);
                 if(smooth){
                     Draw.blend(Blending.additive);
-                    Drawn.shockWave(i.x, i.y, size, size * 0.65f * i.fout(Interp.pow2Out), i.fin(Interp.pow3Out), color);
+                    circle(e.x, e.y, i.fin(Interp.circleOut) * size);
+                    Drawn.shockWave(i.x, i.y, size, size * 0.55f * i.fout(Interp.pow2Out), i.fin(Interp.circleOut), color);
                     Draw.blend();
                 }
             });

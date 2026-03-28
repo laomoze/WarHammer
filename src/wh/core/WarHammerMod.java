@@ -96,6 +96,6 @@ public class WarHammerMod extends Mod {
         WHObjectiveRegistry.load();
 
         WHPlanets.load();
-        WHTechTree.load();
+        KarvexTeachTree.load();
     }
 }

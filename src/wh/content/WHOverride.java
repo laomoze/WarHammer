@@ -36,5 +36,7 @@ public class WHOverride{
         reignWeapon1.shoot.shotDelay = 4f;
         reignWeapon1.reload = 15f;
         UnitTypes.fortress.weapons.get(0).layerOffset = -0.001f;
+
+
     }
 }

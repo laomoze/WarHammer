@@ -41,14 +41,14 @@ public class AirborneUnitCallBlock extends Block{
     public float reload = 60f * 45f;
     public float dropLifetime = 180;
     public float range = 600;
-    public float spawnRadius = 56f;
+    public float spawnRadius = 90;
 
     public int maxSpawnCount = 3;
     public int maxBoostItemsPerUnit = 20;
     public int buffThresholdItems = 24;
     public int maxSpawnersPerWave = 12;
     public int capacityRecountInterval = 60;
-    public float spawnerInterval = 20f;
+    public float spawnerInterval = 120;
 
     public Item boostItem = Items.phaseFabric;
     public float shieldPerBoostItem = 20f;
@@ -223,7 +223,7 @@ public class AirborneUnitCallBlock extends Block{
 
     @Override
     public boolean canPlaceOn(Tile tile, Team team, int rotation){
-        if(Groups.build.contains(b -> b.block == this)){
+        if(WorldRegister.blockCount(this) > 0){
             drawPlaceText(Core.bundle.get("wh-airborne-only-one"), tile.x, tile.y, false);
             return false;
         }
@@ -267,6 +267,22 @@ public class AirborneUnitCallBlock extends Block{
 
         protected final Seq<PendingCapacity> pendingCaps = new Seq<>();
         protected final Interval timer = new Interval();
+
+        @Override
+        public void add(){
+            if(!added){
+                WorldRegister.registerBuild(this);
+            }
+            super.add();
+        }
+
+        @Override
+        public void remove(){
+            if(added){
+                WorldRegister.unregisterBuild(this);
+            }
+            super.remove();
+        }
 
         @Override
         public void created(){
@@ -459,7 +475,7 @@ public class AirborneUnitCallBlock extends Block{
         }
 
         public int configuredCapacity(Seq<IntSeq> groups, int groupAmount){
-            return AirborneGroupLogic.configuredCapacity(groups, groupAmount, plans, -1);
+            return AirborneGroupLogic.configuredCapacity(groups, groupAmount, plans, GROUP_AMOUNT, -1);
         }
 
         public void setSpawnPos(Vec2 pos){

@@ -33,7 +33,7 @@ public class WHBlocksEnvironment{
     //AutoTileFloor
     public static Block cementTile1, cementTile2, cementTile3, cementTile4;
     //Vents
-    public static Block apatiteVent, cementVent, darkRockVent, radiationRockVent, scorchedEarthVent;
+    public static Block apatiteVent, cementVent, darkRockVent, radiationRockVent, scorchedEarthVent, chromiteVent, manganeseVent, cobaltVent;
     //Boulders/Props
     public static Block apatiteBoulder, chromiteBoulder, cobaltBoulder, darkRockBoulder, manganeseBoulder, mineralSandBoulder, mineralSandFloorBoulder, radiationBoulder,
     darkStoneCrystalCluster, quartzCrystalCluster;
@@ -316,6 +316,21 @@ public class WHBlocksEnvironment{
 
         darkRockVent = new SteamVent("dark-rock-vent"){{
             parent = blendGroup = darkRock;
+            attributes.set(Attribute.steam, 1f);
+        }};
+
+        chromiteVent = new SteamVent("chromite-vent"){{
+            parent = blendGroup = chromiteStone;
+            attributes.set(Attribute.steam, 1f);
+        }};
+
+        manganeseVent = new SteamVent("manganese-vent"){{
+            parent = blendGroup = manganeseStone;
+            attributes.set(Attribute.steam, 1f);
+        }};
+
+        cobaltVent = new SteamVent("cobalt-vent"){{
+            parent = blendGroup = cobaltStone;
             attributes.set(Attribute.steam, 1f);
         }};
 

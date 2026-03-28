@@ -11,8 +11,8 @@ public final class AirborneGroupLogic{
     private AirborneGroupLogic(){
     }
 
-    public static int configuredCapacity(Seq<IntSeq> groups, int groupAmount, Seq<AirborneUnitCallBlock.UnitSpacePlan> plans, int defaultFallbackPlan){
-        IntIntMap requests = collectRequests(groups, groupAmount, plans, groupAmount, defaultFallbackPlan);
+    public static int configuredCapacity(Seq<IntSeq> groups, int requestGroups, Seq<AirborneUnitCallBlock.UnitSpacePlan> plans, int slotsPerGroup, int defaultFallbackPlan){
+        IntIntMap requests = collectRequests(groups, requestGroups, plans, slotsPerGroup, defaultFallbackPlan);
         int capacity = 0;
 
         for(IntIntMap.Entry entry : requests){
@@ -51,6 +51,10 @@ public final class AirborneGroupLogic{
     public static int slotLeadPlan(@Nullable IntSeq group, int slot, @Nullable IntSeq firstGroup, int fallback, Seq<AirborneUnitCallBlock.UnitSpacePlan> plans, int groupAmount){
         int planIndex = leadPlanAtVisualSlot(group, slot, plans, groupAmount);
         if(planIndex >= 0) return planIndex;
+
+        // If the slot is already occupied by the span of a larger unit in this group,
+        // do not inherit from group 1.
+        if(planAtVisualSlot(group, slot, plans, groupAmount) >= 0) return -1;
 
         planIndex = leadPlanAtVisualSlot(firstGroup, slot, plans, groupAmount);
         if(planIndex >= 0) return planIndex;

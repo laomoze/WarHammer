@@ -60,10 +60,20 @@ public class KarvexVentPass implements GenPass{
         if(floor == WHBlocksEnvironment.scorchedEarth || floor == WHBlocksEnvironment.scorchedStone){
             return WHBlocksEnvironment.scorchedEarthVent;
         }
+        if(floor == WHBlocksEnvironment.chromiteStone
+        || floor == WHBlocksEnvironment.chromiteFloor
+        || floor == WHBlocksEnvironment.chromiteFloorDark){
+            return WHBlocksEnvironment.chromiteVent;
+        }
+        if(floor == WHBlocksEnvironment.manganeseStone
+        || floor == WHBlocksEnvironment.manganeseFloor){
+            return WHBlocksEnvironment.manganeseVent;
+        }
+        if(floor == WHBlocksEnvironment.cobaltStone
+        || floor == WHBlocksEnvironment.cobaltFloor){
+            return WHBlocksEnvironment.cobaltVent;
+        }
         if(floor == WHBlocksEnvironment.darkRock
-        || floor == WHBlocksEnvironment.manganeseStone
-        || floor == WHBlocksEnvironment.chromiteStone
-        || floor == WHBlocksEnvironment.cobaltStone
         || floor == WHBlocksEnvironment.darkHotRock
         || floor == WHBlocksEnvironment.darkMagmaRock){
             return WHBlocksEnvironment.darkRockVent;

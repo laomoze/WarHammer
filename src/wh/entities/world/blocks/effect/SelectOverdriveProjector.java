@@ -142,7 +142,7 @@ public class SelectOverdriveProjector extends Block {
                     stats.timePeriod,
                     phaseRangeBoost,
             speedBoostPhase * 100f,
-            Math.max(maxLink - 1, 0),
+            Math.max(maxLink, 0),
             cons.items, boostReplace, this::consumesItem
             ));
         }
@@ -194,9 +194,11 @@ public class SelectOverdriveProjector extends Block {
 
             if (charge >= reload) {
                 charge = 0f;
-                indexer.eachBlock(team, Tmp.r1.setCentered(x, y, realRange), other -> other.block.canOverdrive, other -> other.applyBoost(realBoost(), reload + 1f));
+                float base = baseBoost();
+                float selected = realBoost();
+                indexer.eachBlock(team, Tmp.r1.setCentered(x, y, realRange), other -> other.block.canOverdrive, other -> other.applyBoost(base, reload + 1f));
                 if (hasBoost) {
-                    linkBuilds().each(other -> other.applyBoost(realBoost(), reload + 1f));
+                    linkBuilds().each(other -> other.applyBoost(selected, reload + 1f));
                 }
             }
 
@@ -231,8 +233,9 @@ public class SelectOverdriveProjector extends Block {
 
         public void linkPos(int value) {
             Building other = world.build(value);
+            float linkRange = range + phaseHeat * phaseRangeBoost;
 
-            if (other != null && !targets.removeValue(value) && targets.size < maxLink - 1 && within(other, range()))
+            if(other != null && !targets.removeValue(value) && targets.size < maxLink && within(other, linkRange))
                 targets.add(value);
         }
 
@@ -259,6 +262,10 @@ public class SelectOverdriveProjector extends Block {
 
         public float realBoost() {
             return (speedBoost + phaseHeat * speedBoostPhase) * efficiency;
+        }
+
+        public float baseBoost(){
+            return speedBoost * efficiency;
         }
 
         @Override
@@ -427,7 +434,7 @@ public class SelectOverdriveProjector extends Block {
 
         @Override
         public boolean onConfigureBuildTapped(Building other) {
-            if (other != null && within(other, range())) {
+            if(other != null && within(other, range + phaseHeat * phaseRangeBoost)){
                 configure(other.pos());
                 return false;
             }

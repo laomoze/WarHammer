@@ -41,7 +41,7 @@ public class StackBridge extends Block{
     public Effect loadEffect = Fx.conveyorPoof;
     public Effect unloadEffect = Fx.conveyorPoof;
 
-    //for autolink
+    // 自动连桥：记录最近放下的同类桥
     public @Nullable StackBridgeBuild lastBuild;
 
     public StackBridge(String name){
@@ -261,7 +261,7 @@ public class StackBridge extends Block{
             Tile otherLink = linked ? other : tile;
             int rel = (linked ? tile : other).absoluteRelativeTo(otherLink.x, otherLink.y);
 
-            //draw "background"
+            // 先画灰色底线
             Draw.color(Pal.gray);
             Lines.stroke(2.5f);
             Lines.square(ox, oy, 2f, 45f);
@@ -270,7 +270,7 @@ public class StackBridge extends Block{
 
             float color = (linked ? Pal.place : Pal.accent).toFloatBits();
 
-            //draw foreground colors
+            // 再画高亮前景线
             Draw.color(color);
             Lines.stroke(1f);
             Lines.line(tx + Tmp.v2.x, ty + Tmp.v2.y, ox - Tmp.v2.x, oy - Tmp.v2.y);
@@ -334,19 +334,19 @@ public class StackBridge extends Block{
         }
 
         public void caculateBridgeDst(Building other){
-           /* Tmp.v1.trns(rotdeg(), tilesize / 2f).add(x, y);
-            Tmp.v2.trns(other.rotdeg(), -tilesize / 2f).add(other);*/
             bridgeDst = this.dst(other);
             bridgeSeg = bridgeDst / tilesize;
         }
 
 
         public void checkIncoming(){
+            // incoming 只保留“仍然有效且确实指向本桥”的上游，避免脏引用长期残留。
+            int selfPos = tile.pos();
             int idx = 0;
             while(idx < incoming.size){
                 int i = incoming.items[idx];
                 Tile other = world.tile(i);
-                if(!linkValid(tile, other, false) || ((StackBridgeBuild)other.build).link != tile.pos()){
+                if(!linkValid(tile, other, false) || ((StackBridgeBuild)other.build).link != selfPos){
                     incoming.removeIndex(idx);
                     idx--;
                 }
@@ -361,6 +361,8 @@ public class StackBridge extends Block{
         @Override
         public void updateTile(){
             float eff = enabled ? (efficiency + baseEfficiency) : 1f;
+            float frame = framePeriod();
+            float moveDelta = edelta() * eff;
 
             checkIncoming();
 
@@ -368,7 +370,7 @@ public class StackBridge extends Block{
                 lastItem = items.first();
             }
 
-            if(progress <= framePeriod()) progress += edelta() * eff * warmup;
+            if(progress <= frame) progress += moveDelta * warmup;
 
             if(timer(timerCheckMoved, 30f)){
                 wasMoved = moved;
@@ -385,35 +387,42 @@ public class StackBridge extends Block{
                 caculateBridgeDst(b);
             }
 
-            int stateLoad = 1;
             if(!linkValid(tile, other)){
-                for(var p : proximity){
-                    if(!(back() instanceof StackBridgeBuild) && p instanceof StackConveyorBuild e && e.team == team
-                    && e.link == -1){
-                        e.items.add(items);
-                        e.lastItem = lastItem;
-                        e.link = tile.pos();
-                        e.cooldown = 1;
-
-                        //▲ to | from ▼
-                        items.clear();
-                        link = -1;
-                        poofOut();
-                    }else{
-                        link = -1;
-                        warmup = 0f;
-                        dump(lastItem);
+                boolean forwarded = false;
+                if(!(back() instanceof StackBridgeBuild)){
+                    for(var p : proximity){
+                        if(p instanceof StackConveyorBuild e && e.team == team && e.link == -1){
+                            e.items.add(items);
+                            e.lastItem = lastItem;
+                            e.link = tile.pos();
+                            e.cooldown = 1f;
+                            forwarded = true;
+                            break;
+                        }
                     }
+                }
+
+                link = -1;
+                warmup = 0f;
+
+                if(forwarded){
+                    items.clear();
+                    poofOut();
+                }else{
+                    dump(lastItem);
                 }
             }else{
                 warmup = Mathf.approachDelta(warmup, efficiency, 1f / 30f);
 
-                if(progress >= framePeriod() && bridgeCanInsert()){
+                if(progress >= frame && bridgeCanInsert(frame)){
                     if(lastItem != null){
-                        bridgeQueueItem(lastItem, stackCount());
-                        items.remove(lastItem, stackCount());
+                        int count = stackCount();
+                        if(count > 0){
+                            bridgeQueueItem(lastItem, count);
+                            items.remove(lastItem, count);
+                        }
                     }
-                    progress %= framePeriod();
+                    progress %= frame;
                 }
 
                 Building target = other.build;
@@ -424,51 +433,113 @@ public class StackBridge extends Block{
                     if(!inc.contains(pos)){
                         inc.add(pos);
                     }
-                    updateBridge(bridge, eff);
+                    updateBridge(bridge, frame, moveDelta);
                 }
             }
         }
 
-        public boolean bridgeCanInsert(){
+        public boolean bridgeCanInsert(float frame){
             if(bridgeItems.isEmpty()){
                 return bridgeSeg > 0;
             }else{
-                return bridgeItems.last().progress > framePeriod();
+                return bridgeItems.last().progress > frame;
             }
         }
 
 
         public void bridgeQueueItem(Item item, int count){
-            bridgeItems.addLast(new ItemStacker(item, count));
+            bridgeQueueItem(item, count, 0f);
         }
 
-        public void updateBridge(StackBridgeBuild other, float eff){
+        public void bridgeQueueItem(Item item, int count, float initialProgress){
+            if(count <= 0) return;
+            float frame = framePeriod();
+
+            if(!bridgeItems.isEmpty()){
+                ItemStacker tail = bridgeItems.last();
+                if(tail.itemStack.item == item && tail.progress <= frame){
+                    tail.itemStack.amount += count;
+                    return;
+                }
+            }
+
+            ItemStacker stack = new ItemStacker(item, count);
+            stack.progress = Math.max(0f, initialProgress);
+            bridgeItems.addLast(stack);
+        }
+
+        public boolean transitMode(){
+            Tile next = world.tile(link);
+            // 仅中间桥启用“直通队列模式”：有上游输入且下游仍是桥。
+            return !incoming.isEmpty() && linkValid(tile, next) && next.build instanceof StackBridgeBuild;
+        }
+
+        public void updateBridge(StackBridgeBuild other, float frame, float moveDelta){
             if(bridgeItems.isEmpty()) return;
+            float bridgeTime = bridgeSeg * frame;
 
             for(int i = 0; i < bridgeItems.size; i++){
-                float maxProgressLimit = (bridgeSeg - i) * framePeriod();
+                // 每个包保持最小间距，形成稳定流水线，避免尾包追头包。
+                float maxProgressLimit = bridgeTime - i * frame;
                 float progress = bridgeItems.get(i).progress;
                 if(progress < maxProgressLimit){
                     moved = true;
-                    bridgeItems.get(i).addProgress(edelta() * eff);
+                    bridgeItems.get(i).addProgress(moveDelta);
                 }
             }
 
             ItemStacker first = bridgeItems.first();
-            if(first.progress > bridgeSeg * framePeriod()
-            && other.acceptBridge()/*other.items.get(first.itemStack.item) < other.getMaximumAccepted(first.itemStack.item)*/){
-                other.handleBridge(first.itemStack.item, first.itemStack.amount);
-                other.progress = framePeriod();
-                bridgeItems.removeFirst();
+            if(first.progress > bridgeTime){
+                // 超出的进度带到下一个桥，连接处不会突然停顿。
+                float carry = first.progress - bridgeTime;
+                int accepted = other.acceptBridge(first.itemStack.item, first.itemStack.amount);
+                if(accepted > 0){
+                    other.handleBridge(first.itemStack.item, accepted, carry);
+                    other.progress = frame;
+
+                    if(accepted >= first.itemStack.amount){
+                        bridgeItems.removeFirst();
+                    }else{
+                        first.itemStack.amount -= accepted;
+                    }
+                }
             }
         }
 
-        public boolean acceptBridge(){
-            return items.empty();
+        public int acceptBridge(Item item, int count){
+            if(count <= 0) return 0;
+            if(items.any() && !items.has(item)) return 0;
+            if(!bridgeItems.isEmpty() && bridgeItems.last().itemStack.item != item) return 0;
+
+            if(transitMode()){
+                // 中继桥按“在途包数量”限流，避免中间桥堆太多缓存。
+                int maxPacketsInFlight = Math.max(1, Mathf.ceil(bridgeSeg));
+                if(bridgeItems.size >= maxPacketsInFlight) return 0;
+                return count;
+            }
+
+            int used = items.total();
+            int space = getMaximumAccepted(item) - used;
+            return Math.max(0, Math.min(space, count));
         }
 
         public void handleBridge(Item item, int count){
+            handleBridge(item, count, 0f);
+        }
+
+        public void handleBridge(Item item, int count, float initialProgress){
+            if(count <= 0) return;
+
+            // 中间桥走直通模式：尽量不落地到本地仓。
+            if(transitMode()){
+                bridgeQueueItem(item, count, initialProgress);
+                lastItem = item;
+                return;
+            }
+
+            // 终点桥直接入仓，避免交接时出现“闪一下”。
             items.add(item, count);
+            lastItem = item;
         }
 
         protected void poofIn(){
@@ -491,6 +562,18 @@ public class StackBridge extends Block{
             if(Mathf.zero(Renderer.bridgeOpacity)) return;
 
             int i = relativeTo(other.x, other.y);
+            float otherX = other.worldx(), otherY = other.worldy();
+            float frame = framePeriod();
+            float bridgeTime = bridgeSeg * frame;
+            int thisRotation = (int)this.angleTo(other);
+            int nextRotation = thisRotation;
+            if(other.build instanceof StackBridgeBuild nextBridge){
+                Tile other2 = world.tile(nextBridge.link);
+                if(other2 != null){
+                    nextRotation = (int)other.angleTo(other2);
+                }
+            }
+            boolean sameRotation = thisRotation == nextRotation;
 
             if(pulse){
                 Draw.color(Color.white, Color.black, Mathf.absin(Time.time, 6f, 0.07f));
@@ -505,13 +588,13 @@ public class StackBridge extends Block{
 
             Lines.stroke(bridgeWidth);
 
-            Tmp.v1.set(x, y).sub(other.worldx(), other.worldy()).setLength(tilesize / 2f).scl(-1f);
+            Tmp.v1.set(x, y).sub(otherX, otherY).setLength(tilesize / 2f).scl(-1f);
 
             Lines.line(bridgeRegion,
             x + Tmp.v1.x,
             y + Tmp.v1.y,
-            other.worldx() - Tmp.v1.x,
-            other.worldy() - Tmp.v1.y, false);
+            otherX - Tmp.v1.x,
+            otherY - Tmp.v1.y, false);
 
             int dist = Math.max(Math.abs(other.x - tile.x), Math.abs(other.y - tile.y)) - 1;
 
@@ -531,39 +614,26 @@ public class StackBridge extends Block{
 
             Draw.z(Layer.power + 0.001f);
 
+            // 绘制在途包：这里是高频路径，尽量复用上面缓存值减少重复计算。
             for(int a = 0; a < bridgeItems.size; a++){
                 ItemStacker stack = bridgeItems.get(a);
-                float progressRatio = stack.progress / (bridgeSeg * framePeriod());
+                float progressRatio = bridgeTime <= 0.0001f ? 1f : stack.progress / bridgeTime;
                 progressRatio = Mathf.clamp(progressRatio, 0f, 1f);
 
-                Interp slightSmooth = a1 -> a1 * a1 * (2 - a1);
+                // 角度平滑过渡：直线保持原角度，拐弯用曲线插值。
+                float drawRot = sameRotation ? thisRotation : Mathf.slerp(thisRotation, nextRotation,
+                Mathf.curve(Interp.smooth.apply(progressRatio), 0.9f, 1f));
 
-                int thisRotation = (int)this.angleTo(other);
-                int nextRotation;
-                if(other.build instanceof StackBridgeBuild nextBridge){
-                    Tile other2 = world.tile(nextBridge.link);
-                    if(other2 != null){
-                        nextRotation = (int)other.angleTo(other2);
-                    }else{
-                        nextRotation = thisRotation;
-                    }
-                }else{
-                    nextRotation = thisRotation;
-                }
-
-                float rot = Mathf.slerp(thisRotation, nextRotation,
-                Mathf.curve(Interp.smooth.apply(slightSmooth.apply(progressRatio)), 0.9f, 1f));
-
-                Tmp.v3.set(x, y).lerp(other.worldx(), other.worldy(), slightSmooth.apply(progressRatio));
+                Tmp.v3.set(x, y).lerp(otherX, otherY, progressRatio);
 
                 ItemStack item = stack.itemStack;
 
                 Drawf.shadow(Tmp.v3.x, Tmp.v3.y, size * 1.2f);
 
-                Draw.rect(stackRegion, Tmp.v3.x, Tmp.v3.y, thisRotation == nextRotation ? thisRotation : rot);
+                Draw.rect(stackRegion, Tmp.v3.x, Tmp.v3.y, drawRot);
 
-                float size = itemSize * Mathf.lerp(Math.min((float)item.amount / itemCapacity, 1), 1f, 0.4f);
-                Draw.rect(item.item.fullIcon, Tmp.v3.x, Tmp.v3.y, size, size, 0);
+                float iconSize = itemSize * Mathf.lerp(Math.min((float)item.amount / itemCapacity, 1), 1f, 0.4f);
+                Draw.rect(item.item.fullIcon, Tmp.v3.x, Tmp.v3.y, iconSize, iconSize, 0);
             }
             Draw.reset();
         }
@@ -591,9 +661,12 @@ public class StackBridge extends Block{
 
         @Override
         public boolean acceptItem(Building source, Item item){
-            if(this == source) return items.total() < itemCapacity && (!items.any() || items.has(item)); //player threw items
-            return !((items.any() && !items.has(item)) //incompatible items
-            || (items.total() >= getMaximumAccepted(item)) //filled to capacity
+            if(this == source) return items.total() < itemCapacity && (!items.any() || items.has(item)); // 玩家手动丢物品
+            if(source.team != team) return false;
+            if(transitMode() && !linked(source)) return false;
+            if(!checkAccept(source, world.tile(link))) return false;
+            return !((items.any() && !items.has(item)) // 物品类型不一致
+            || (items.total() >= getMaximumAccepted(item)) // 仓已满
             || (progress >= framePeriod()));
         }
 
@@ -618,6 +691,9 @@ public class StackBridge extends Block{
         @Override
         public int acceptStack(Item item, int amount, Teamc source){
             if(items.any() && !items.has(item)) return 0;
+            if(source != null && source.team() != team) return 0;
+            if(transitMode() && source instanceof Building build && !linked(build)) return 0;
+            if(source instanceof Building build && !checkAccept(build, world.tile(link))) return 0;
             return super.acceptStack(item, amount, source);
         }
 
@@ -656,18 +732,6 @@ public class StackBridge extends Block{
             }
 
             write.bool(wasMoved || moved);
-
-          /*  Log.info("write");
-            Log.info("link: " + link);
-            Log.info("warmup: " + warmup);
-            Log.info("progress: " + progress);
-            Log.info("bridgeDst: " + bridgeDst);
-            Log.info("bridgeSeg: " + bridgeSeg);
-            Log.info("bridgeItems: " + bridgeItems.size);
-            Log.info("incoming: " + incoming.size);
-            Log.info("wasMoved: " + wasMoved);
-            Log.info("moved: " + moved);
-            Log.info("-------------------");*/
         }
 
         @Override
@@ -692,19 +756,6 @@ public class StackBridge extends Block{
                 incoming.add(read.i());
             }
             wasMoved = moved = read.bool();
-
-
-            /*Log.info("read");
-            Log.info("link: " + link);
-            Log.info("warmup: " + warmup);
-            Log.info("progress: " + progress);
-            Log.info("bridgeDst: " + bridgeDst);
-            Log.info("bridgeSeg: " + bridgeSeg);
-            Log.info("bridgeItems: " + bridgeItems.size);
-            Log.info("incoming: " + incoming.size);
-            Log.info("wasMoved: " + wasMoved);
-            Log.info("moved: " + moved);
-            Log.info("-------------------");*/
         }
     }
 

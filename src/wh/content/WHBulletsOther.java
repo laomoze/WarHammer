@@ -588,19 +588,20 @@ public class WHBulletsOther{
 
                 reloadMultiplier = 1 / 3f;
                 pierceArmor = true;
-                damage = 3000f / (240 / 10f);
+                damage = 4000 / (240 / 10f);
                 damageInterval = 10;
 
-                splashDamage = 1200;
+                splashDamage = 2000;
                 splashDamageRadius = 150;
 
                 buildingDamageMultiplier = 0.1f;
                 inRad = 40;
                 outRad = 150;
                 despawnEffect = new MultiEffect(
-                WHFx.square(60, WHItems.sealedPromethium.color.cpy(), 30, 100, 4),
-                WHFx.circleOut(WHItems.sealedPromethium.color.cpy(), 130),
-                WHFx.hitSpark(60, WHItems.sealedPromethium.color.cpy(), 30, 100, 1.5f, 9f),
+                WHFx.square(60, hitColor, 30, 100, 4),
+                WHFx.circleOut(hitColor, 130),
+                WHFx.trailCircleHitSpark(150, hitColor, 30, 100, 1.5f, 9f),
+                WHFx.hitSpark(150, hitColor, 30, 100, 1.5f, 15f),
                 WHFx.subEffect(180, 100, 8, 45f, Interp.pow2Out, ((i, x, y, rot, fin) -> {
                     Draw.color(hitColor);
                     float fout = Interp.pow2Out.apply(1 - fin);
@@ -622,7 +623,7 @@ public class WHBulletsOther{
                 fragLifeMin = 1f;
                 fragVelocityMax = 1.4f;
 
-                fragBullet = intervalBullet = new FlakBulletType(3f, 70f){{
+                fragBullet = intervalBullet = new FlakBulletType(3f, 150){{
                     sprite = "missile-large";
 
                     lifetime = 60f;
@@ -644,8 +645,8 @@ public class WHBulletsOther{
                     trailRotation = true;
                     trailInterval = 3f;
 
-                    homingPower = 0.1f;
-                    homingDelay = 19f;
+                    homingPower = 0.2f;
+                    homingDelay = 30;
                     homingRange = 160f;
 
                     explodeRange = 50;
@@ -654,7 +655,7 @@ public class WHBulletsOther{
                     flakInterval = 20f;
                     despawnShake = 3f;
 
-                    fragBullet = new LaserBulletType(120){{
+                    fragBullet = new LaserBulletType(200){{
                         colors = new Color[]{WHItems.sealedPromethium.color.cpy().a(0.4f), WHItems.sealedPromethium.color.cpy(), Color.white};
                         buildingDamageMultiplier = 0.1f;
                         width = 19f;
