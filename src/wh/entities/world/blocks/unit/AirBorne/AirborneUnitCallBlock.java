@@ -576,7 +576,7 @@ public class AirborneUnitCallBlock extends Block{
         }
 
         private void ensurePendingDraft(){
-            // pending ??????????????? active ?????
+            // Initialize pending draft from active groups only when pending is empty.
             if(pendingGroups.isEmpty()){
                 copyGroups(activeGroups, pendingGroups);
             }
@@ -597,7 +597,7 @@ public class AirborneUnitCallBlock extends Block{
 
         private void updateDisplayedCapacity(){
             updatePendingCapacity();
-            // ??????????????????????????????
+            // Capacity display follows the pending draft while editing.
             activeCapacity = 0;
             usedCapacity = configuredCapacity(pendingGroups, pendingSpawnAmount);
         }
@@ -609,7 +609,7 @@ public class AirborneUnitCallBlock extends Block{
                 buildProgress = 0f;
                 return;
             }
-            // ??????????????????? 100%?
+            // When waiting for deploy confirmation, keep progress at 100%.
             if(needConfirmDeploy){
                 buildProgress = 1f;
                 return;
@@ -617,7 +617,7 @@ public class AirborneUnitCallBlock extends Block{
             if(warmup > 0.999f){
                 buildProgress += edelta() / Math.max(1f, reload);
             }
-            // ?? 100% ????????????????
+            // Clamp at 100%, then switch to confirm-deploy state.
             if(buildProgress >= 1f){
                 buildProgress = 1f;
                 needConfirmDeploy = true;
@@ -1940,7 +1940,7 @@ public class AirborneUnitCallBlock extends Block{
             pendingBoostItemsPerUnit = boostItemsPerUnit;
             editingGroup = Mathf.clamp(editingGroup, 0, Math.max(0, pendingSpawnAmount - 1));
             clampSpawnPos();
-            // ????????????????????????????
+            // Loaded saves may keep confirm flag; reset progress to rebuild safely.
             if(needConfirmDeploy){
                 buildProgress = 0f;
             }

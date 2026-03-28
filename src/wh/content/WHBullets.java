@@ -134,6 +134,7 @@ public class WHBullets{
 
     public static BulletType SacramentSealedPromethium;
     public static BulletType SacramentMolybdenumAlloy;
+    public static BulletType SacramentCulverCrystal;
     public static BulletType SacramentRefineCeramite;
 
     public static BulletType ColossusCeramite;
@@ -3541,9 +3542,9 @@ public class WHBullets{
                 trailRotation = true;
 
                 trailInterval = 5f;
-                trailChance = 0.1f;
+                trailChance = 0.03f;
                 trailEffect = new MultiEffect(
-                WHFx.hitPoly(60, frontColor, backColor, 2, 20, 5, 5, 360)).rotWithParent(true);
+                WHFx.hitPoly(60, frontColor, backColor, 2, 20, 5, 5, 60)).rotWithParent(true);
 
                 hitEffect = new MultiEffect(
                 WHFx.trailHitSpark(30, hitColor, 10, splashDamageRadius, 1.5f, 12f),
@@ -3915,20 +3916,21 @@ public class WHBullets{
                 smokeEffect = Fx.smokeCloud;
 
                 damage = 1500;
-                splashDamage = damage * 0.3f;
+                splashDamage = damage * 0.4f;
                 splashDamageRadius = 40;
                 buildingDamageMultiplier = 0.2f;
                 pierceDamageFactor = 1f;
                 despawnEffect = new MultiEffect(
-                WHFx.trailCircleHitSpark(60, hitColor, 10, 100, 1.5f, 20),
+                WHFx.trailHitSpark(60, hitColor, 10, 100, 1.5f, 20),
                 WHFx.instRotation(60, hitColor, splashDamageRadius * 2, 45, false),
-                WHFx.generalExplosion(60, hitColor, splashDamageRadius, 0, true));
+                WHFx.square(60, hitColor, 10, splashDamageRadius, 6),
+                WHFx.lineCircleOut(30, hitColor, splashDamageRadius * 1.5f, 2),
+                WHFx.generalExplosion(30, hitColor, splashDamageRadius, 5, true));
 
                 pointEffectSpace = 20;
 
                 length = 700;
                 hitShake = 6f;
-
 
                 lineEffect = new MultiEffect(
                 new Effect(120, e -> {
@@ -4051,6 +4053,165 @@ public class WHBullets{
 
             @Override
             public void despawned(Bullet b){
+            }
+        };
+
+        SacramentCulverCrystal = new CritBulletType(8, 1200){
+            {
+                ammoMultiplier = 4f;
+
+                critChance = 0.3f;
+                critMultiplier = 1.5f;
+                armorMultiplier = 0.5f;
+                pierceCap = 5;
+
+                knockback = 0.2f;
+                width = 15;
+                height = width * 1.2f;
+
+                Color c = hitColor = backColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
+                frontColor = backColor.cpy().lerp(Color.white, 0.5f);
+
+                shootEffect = new MultiEffect(
+                new Effect(60, e -> {
+                    float rad = 40 * e.fin(Interp.pow2Out);
+                    float w = 8 * e.fout(Interp.pow3Out);
+                    Drawn.pseudo3dRing(e.x, e.y, rad, w, 0.28f, e.rotation + 90f, Tmp.c1.set(frontColor).a(0.75f));
+                }),
+                WHFx.instShoot(hitColor, frontColor),
+                WHFx.shootLine(50, 30),
+                Fx.shootBigColor
+                );
+                smokeEffect = Fx.shootSmokeDisperse;
+
+                trailLength = -1;
+                lightning = 3;
+                lightningDamage = 35;
+                lightningLength = lightningLengthRand = 12;
+                splashDamageRadius = 60;
+
+                lifetime = 700 / speed;
+                trailRotation = true;
+
+                trailInterval = 5f;
+                trailChance = 0.03f;
+                trailEffect = new MultiEffect(
+                new Effect(30, e -> {
+                    for(int i = 0; i < 2; i++){
+                        color(i == 0 ? backColor : frontColor);
+
+                        float m = i == 0 ? 1f : 0.5f;
+
+                        float rot = e.rotation + 180f;
+                        float w = 15f * e.fout() * m;
+                        Drawf.tri(e.x, e.y, w, (30f + Mathf.randomSeedRange(e.id, 15f)) * m, rot);
+                        Drawf.tri(e.x, e.y, w, 10f * m, rot + 180f);
+                    }
+
+                    Drawf.light(e.x, e.y, 60f, frontColor, 0.6f * e.fout());
+                }),
+                WHFx.hitPoly(60, frontColor, backColor, 1, 20, 5, 5, 20)).rotWithParent(true);
+
+                hitEffect = new MultiEffect(
+                WHFx.instHit(hitColor, false, 3, 40),
+                WHFx.trailHitSpark(30, hitColor, 10, splashDamageRadius, 1.5f, 12f),
+                WHFx.square(30, hitColor, 8, splashDamageRadius, 5)
+                );
+                despawnEffect = new MultiEffect(
+                WHFx.sharpBlast(30, hitColor, frontColor, splashDamageRadius),
+                WHFx.linePolyOut(30, hitColor, splashDamageRadius, 2, 4, 0),
+                WHFx.linePolyOut(30, hitColor, splashDamageRadius / 2, 2, 4, 0)
+                );
+
+                fragBullets = 3;
+                fragBullet = new CritBulletType(3.4f, 120){
+                    {
+                        critMultiplier = 1.5f;
+                        buildingDamageMultiplier = 0.1f;
+                        drag = 0.02f;
+
+                        knockback = 0.8f;
+                        lifetime = 23f;
+                        width = 10f;
+                        height = width * 2f;
+                        splashDamageRadius = 24f;
+                        splashDamage = damage;
+                        backColor = trailColor = hitColor = c;
+                        frontColor = backColor.cpy().lerp(Color.white, 0.5f);
+
+                        hitEffect = despawnEffect = new MultiEffect(
+                        WHFx.linePolyOut(30, hitColor, splashDamageRadius, 2, 4, 0),
+                        WHFx.square(30, hitColor, 8, splashDamageRadius, 5)
+                        );
+
+                        lightRadius = 30f;
+                        lightColor = hitColor;
+                        lightOpacity = 0.5f;
+
+                        trailLength = 0;
+                    }
+
+                    @Override
+                    public void draw(Bullet b){
+                        Draw.color(hitColor);
+                        Draw.z(Layer.bullet);
+                        rand.setSeed(b.id);
+                        var rot = b.fin() * 300 * rand.random(1f, 2f);
+                        Drawn.drawCrystal(
+                        b.x, b.y, 12 * b.fout(), 6 * b.fout(), 8f, 0f, 0f, 0.4f, EFFECT_MASK,
+                        Layer.bullet, rot, b.rotation(), Tmp.c1.set(hitColor).a(0.6f), hitColor
+                        );
+                    }
+                };
+            }
+
+            @Override
+            public void update(Bullet b){
+                super.update(b);
+                Vec2 v = new Vec2().set(b);
+                if(b.timer(1, 20)){
+                    for(int j = 0; j < 3; ++j){
+                        rand.setSeed(b.id);
+                        Drawn.randFadeLightningEffect(v.x, v.y, rand.random(40, 80), Mathf.random(7, 12), hitColor, Mathf.chance(0.5));
+                    }
+                }
+            }
+
+            @Override
+            public void despawned(Bullet b){
+                super.despawned(b);
+                Vec2 v = new Vec2().set(b);
+                for(int j = 0; j < 6; ++j){
+                    rand.setSeed(b.id);
+                    Drawn.randFadeLightningEffect(v.x, v.y, rand.random(30, 80), Mathf.random(7, 12), hitColor, Mathf.chance(0.5));
+                }
+            }
+
+            @Override
+            public void createSplashDamage(Bullet b, float x, float y){
+                super.createSplashDamage(b, x, y);
+            }
+
+            @Override
+            public void draw(Bullet b){
+                Draw.color(hitColor);
+                Draw.z(Layer.bullet);
+                rand.setSeed(b.id);
+                var rot = b.fin() * 600 * rand.random(1f, 2f);
+                Drawn.drawCrystal(
+                b.x, b.y, 40, 20, 5f, 0f, 0f, 0.8f, EFFECT_MASK,
+                Layer.bullet, rot, b.rotation(), Tmp.c1.set(hitColor).a(0.6f), hitColor
+                );
+            }
+
+            @Override
+            public void hitEntity(Bullet b, Hitboxc entity, float health){
+                super.hitEntity(b, entity, health);
+                if(entity instanceof Unit h){
+                    float shield = Math.max(h.shield() * 0.05f, b.damage);
+                    h.shield(h.shield() - shield);
+                    b.damage(b.damage - damage / pierceCap);
+                }
             }
         };
 

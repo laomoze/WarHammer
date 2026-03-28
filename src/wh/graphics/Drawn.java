@@ -196,7 +196,7 @@ public final class Drawn{
         circlePercent(x, y, rad, f > 0.0F ? f : -f, in + (float)(-90 * Mathf.sign(f)));
     }
 
-    //arc鍔犱釜progress
+    // arc 加个 progress（按比例绘制）
     public static void arcProcess(float x, float y, float radius, float fraction, float rotation, int sides, float progress){
         int max = Mathf.ceil(sides * fraction);
         points.clear();
@@ -341,8 +341,8 @@ public final class Drawn{
     }
 
     /**
-     * 浼?D鍦嗙幆锛氬皢鍦嗙幆鍦╕杞存柟鍚戝帇缂╂垚妞渾锛屽苟鍒嗗墠鍚庡崐鐜垎灞傜粯鍒躲€?
-     * yScale瓒婂皬瓒娾€滄墎鈥濓紝寤鸿鍙栧€?0.2~0.9銆?
+     * 伪 3D 圆环：将圆环在 y 轴方向压缩成椭圆，并按前后半环分层绘制。
+     * yScale 越小越“扁”，建议取值 0.2~0.9。
      */
     public static void pseudo3dRing(float x, float y, float radius, float width, float yScale, float rotation, Color nearColor, Color farColor){
         if(radius <= 0f || width <= 0f) return;
@@ -356,7 +356,7 @@ public final class Drawn{
         int sides = Math.max(24, Lines.circleVertices(outer));
         float step = 360f / sides;
 
-        // 杩炵画娣卞害鎻掑€?+ 瀹藉害閫忚锛岄伩鍏嶅墠鍚庡崐鐜鑹测€滅‖鍒団€濅笖澧炲己浼?D浣撶Н鎰熴€?
+        // 连续深度插值 + 宽度透视，避免前后半环颜色“硬切”，并增强伪 3D 体积感。
         for(int i = 0; i < sides; i++){
             float angle = i * step;
             float mid = angle + step * 0.5f;
@@ -369,7 +369,7 @@ public final class Drawn{
 
             ringSegment(x, y, segInner, segOuter, sclY, angle, step, rotation, blended, blended);
 
-            // 杩戠澶栧湀楂樺厜锛氳鐜洿鍍忔湁鈥滃帤搴︹€濈殑浣擄紝涓嶆槸骞抽潰鎻忚竟銆?
+            // 近端外圈高光：让环更像有“厚度”的物体，而不是平面描边。
             if(smooth > 0.62f){
                 float h = Interp.smoother.apply(Mathf.curve(smooth, 0.62f, 1f));
                 float hi = Color.toFloatBits(
@@ -386,7 +386,7 @@ public final class Drawn{
     }
 
     public static void pseudo3dRing(float x, float y, float radius, float width, float yScale, float rotation, Color color){
-        // 鍗曡壊鐗堟湰锛氬墠鍗婄幆淇濇寔鍘熻壊锛屽悗鍗婄幆浠呴檷浣庨€忔槑搴﹀仛灞傛锛屼笉闇€瑕佷紶涓ょ棰滆壊銆?
+        // 单色版本：前半环保持原色，后半环仅降低透明度做层次，不需要传两种颜色。
         pseudo3dRing(x, y, radius, width, yScale, rotation, Tmp.c1.set(color), Tmp.c2.set(color).cpy().lerp(Pal.coalBlack, 0.3f));
     }
 
@@ -510,7 +510,7 @@ public final class Drawn{
         overlayText(Fonts.outline, text, x, y, offset, 1.0F, 0.25F, color, underline, false);
     }
 
-    //Block锛宒rawPlaceText鍘熷瀷
+    // Block.drawPlaceText 原型
     public static void overlayText(Font font, String text, float x, float y, float offset, float offsetScl, float size, Color color, boolean underline, boolean align){
         GlyphLayout layout = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
         boolean ints = font.usesIntegerPositions();

@@ -50,10 +50,6 @@ public class TankEn2Unit extends HoverPayloadUnit{
     @Override
     public void draw(){
         super.draw();
-        if(m != null){
-            m.weapon.draw(this, m);
-            m.weapon.drawOutline(this, m);
-        }
     }
 
 

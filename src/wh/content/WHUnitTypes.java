@@ -9219,7 +9219,7 @@ public final class WHUnitTypes{
                 weapons.addAll(
                 new Weapon(name("tankEn2-weapon1")){
                     {
-                        layerOffset = 0.1f;
+                        layerOffset = 0.05f;
                         y = -12 / 4f;
                         x = 0;
                         reload = 150;

@@ -5309,7 +5309,7 @@ public final class WHBlocks{
                 cooldownTime = 180;
                 recoil = 3;
                 recoilTime = 180;
-                maxAmmo = 45;
+                maxAmmo = 40;
                 ammoPerShot = 8;
 
                 fogRadiusMultiplier = 0.4f;
@@ -5348,8 +5348,8 @@ public final class WHBlocks{
                 ammo(
                 WHItems.sealedPromethium, WHBullets.SacramentSealedPromethium,
                 WHItems.molybdenumAlloy, WHBullets.SacramentMolybdenumAlloy,
+                WHItems.culverCrystal, WHBullets.SacramentCulverCrystal,
                 WHItems.refineCeramite, WHBullets.SacramentRefineCeramite);
-
             }
         };
 

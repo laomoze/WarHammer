@@ -5,6 +5,7 @@ import arc.struct.*;
 import mindustry.content.*;
 import mindustry.entities.effect.*;
 import mindustry.entities.pattern.*;
+import mindustry.entities.units.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
@@ -22,7 +23,7 @@ public class TankEn2UnitType extends WHUnitType{
     }
 
     public Weapon coaxialWeapon = new Weapon(name("tankEn2-weapon2")){{
-        layerOffset = 1.1f;//shit
+        layerOffset = 0.04f;//shit
         y = -12 / 4f;
         x = 0;
         reload = 6;
@@ -119,8 +120,49 @@ public class TankEn2UnitType extends WHUnitType{
 
     @Override
     public void getRegionsToOutline(Seq<TextureRegion> out){
-        coaxialWeapon.parts.forEach(part -> part.getOutlines(out));
+        for(int i = 0; i < coaxialWeapon.parts.size; i++){
+            var part = coaxialWeapon.parts.get(i);
+            part.getOutlines(out);
+        }
         super.getRegionsToOutline(out);
+    }
+
+    @Override
+    public void drawWeapons(Unit unit){
+
+        applyColor(unit);
+
+        for(WeaponMount mount : unit.mounts){
+            mount.weapon.draw(unit, mount);
+        }
+
+        if(unit instanceof TankEn2Unit tank){
+            WeaponMount mount = tank.m;
+            if(mount != null && mount.weapon != null){
+                mount.weapon.draw(unit, mount);
+            }
+        }
+
+        Draw.reset();
+    }
+
+    @Override
+    public void drawWeaponOutlines(Unit unit){
+        super.drawWeaponOutlines(unit);
+
+        if(unit instanceof TankEn2Unit){
+            TankEn2Unit tank = (TankEn2Unit)unit;
+            WeaponMount mount = tank.m;
+            if(mount != null && mount.weapon != null && !mount.weapon.top){
+                float z = Draw.z();
+                applyColor(unit);
+                applyOutlineColor(unit);
+                Draw.z(z + mount.weapon.layerOffset);
+                mount.weapon.drawOutline(unit, mount);
+                Draw.z(z);
+                Draw.reset();
+            }
+        }
     }
 
     @Override

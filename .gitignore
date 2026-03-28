@@ -182,3 +182,6 @@ core/assets/logicids.dat
 
 # project files for the sectors
 core/assets-raw/sprites/ui/sectors/*.json
+
+# decompiler outputs / local reverse-engineering artifacts
+tools/decompiled/
