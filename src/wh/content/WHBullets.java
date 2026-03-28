@@ -3806,7 +3806,7 @@ public class WHBullets{
                 pierceEffect = hitEffect = WHFx.instHit(hitColor, false, 3, 40);
                 smokeEffect = Fx.smokeCloud;
 
-                damage = 600;
+                damage = 1000;
                 splashDamage = damage;
                 splashDamageRadius = 80;
                 buildingDamageMultiplier = 0.2f;
@@ -3907,13 +3907,14 @@ public class WHBullets{
         SacramentMolybdenumAlloy = new RailBulletType(){
             {
                 ammoMultiplier = 2f;
+                rangeChange = 48;
 
                 hitColor = trailColor = WHItems.molybdenumAlloy.color.cpy().lerp(Pal.techBlue, 0.2f).lerp(Color.white, 0.2f);
                 shootEffect = WHFx.instShoot(hitColor, Color.white);
                 pierceEffect = hitEffect = WHFx.instHit(hitColor, false, 3, 40);
                 smokeEffect = Fx.smokeCloud;
 
-                damage = 1000;
+                damage = 1500;
                 splashDamage = damage * 0.3f;
                 splashDamageRadius = 40;
                 buildingDamageMultiplier = 0.2f;
@@ -4057,13 +4058,14 @@ public class WHBullets{
         SacramentRefineCeramite = new RailBulletType(){
             {
                 ammoMultiplier = 2f;
+                rangeChange = 16;
 
                 hitColor = trailColor = WHItems.refineCeramite.color.cpy().lerp(Pal.techBlue, 0.2f).lerp(Color.white, 0.2f);
                 shootEffect = WHFx.instShoot(hitColor, Color.white);
                 pierceEffect = hitEffect = WHFx.instHit(hitColor, false, 3, 40);
                 smokeEffect = Fx.smokeCloud;
 
-                damage = 2000;
+                damage = 3800;
                 splashDamage = damage * 0.2f;
                 splashDamageRadius = 50;
                 buildingDamageMultiplier = 0.2f;

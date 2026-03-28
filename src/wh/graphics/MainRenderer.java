@@ -28,6 +28,7 @@ public class MainRenderer{
     private static final float[][] initStrength = new float[512][];
     private static final Pool<BlackHole> holePool = Pools.get(BlackHole.class, BlackHole::new);
     private static boolean warnedConvexMissing = false;
+    private static boolean warnedHoleMissing = false;
 
     protected MainRenderer(){
         if(!Vars.headless){
@@ -112,7 +113,9 @@ public class MainRenderer{
     }
 
     public static void addBlackHole(float x, float y, float inRadius, float outRadius, float alpha, float strength){
-        if(!Vars.headless) renderer.addHole(x, y, inRadius, outRadius, alpha, strength);
+        if(!Vars.headless && renderer != null){
+            renderer.addHole(x, y, inRadius, outRadius, alpha, strength);
+        }
     }
 
     private void advancedDraw(){
@@ -129,30 +132,36 @@ public class MainRenderer{
             int holeCount = holes.size;
             if(holeCount >= WHShaders.MaxCont) WHShaders.createHoleShader();
 
-            float[] blackholes = initFloat[holeCount];
-            float[] strengths = initStrength[holeCount];
-
             //Keep black core circles inside the source buffer so post effects don't overwrite them.
             if(!buffer.isBound()) buffer.begin();
-
-            for(int i = 0; i < holeCount; i++){
-                var hole = holes.get(i);
-                blackholes[i * 4] = hole.x;
-                blackholes[i * 4 + 1] = hole.y;
-                blackholes[i * 4 + 2] = hole.inRadius;
-                blackholes[i * 4 + 3] = hole.outRadius;
-                strengths[i * 4] = hole.strength;
-            }
-
             if(buffer.isBound()) buffer.end();
 
-            WHShaders.holeShader.blackHoles = blackholes;
-            WHShaders.holeShader.blackHoleStrengths = strengths;
-
-            //Compose blackhole pass into buffer2 first, so convex can sample the already-distorted image.
             buffer2.resize(graphics.getWidth(), graphics.getHeight());
             buffer2.begin(Color.clear);
-            buffer.blit(WHShaders.holeShader);
+            if(WHShaders.holeShader != null){
+                float[] blackholes = initFloat[holeCount];
+                float[] strengths = initStrength[holeCount];
+
+                for(int i = 0; i < holeCount; i++){
+                    var hole = holes.get(i);
+                    blackholes[i * 4] = hole.x;
+                    blackholes[i * 4 + 1] = hole.y;
+                    blackholes[i * 4 + 2] = hole.inRadius;
+                    blackholes[i * 4 + 3] = hole.outRadius;
+                    strengths[i * 4] = hole.strength;
+                }
+
+                WHShaders.holeShader.blackHoles = blackholes;
+                WHShaders.holeShader.blackHoleStrengths = strengths;
+                //Compose blackhole pass into buffer2 first, so convex can sample the already-distorted image.
+                buffer.blit(WHShaders.holeShader);
+            }else{
+                if(!warnedHoleMissing){
+                    warnedHoleMissing = true;
+                    Log.warn("Black hole shader is null; falling back to screenspace pass.");
+                }
+                buffer.blit(Shaders.screenspace);
+            }
             buffer2.end();
 
             if(convex != null && convex.hasAny()){

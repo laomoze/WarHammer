@@ -3,7 +3,7 @@ package wh.content;
 import arc.audio.*;
 import arc.files.*;
 import arc.util.*;
-import wh.*;
+import mindustry.*;
 
 public final class WHSounds{
     public static Sound
@@ -55,14 +55,14 @@ public final class WHSounds{
     }
 
     static Fi ogg(String name){
-        return WHVars.internalTree.child("sounds/" + name + ".ogg");
+        return Vars.tree.get("sounds/" + name + ".ogg");
     }
 
     static Fi wav(String name){
-        return WHVars.internalTree.child("sounds/" + name + ".wav");
+        return Vars.tree.get("sounds/" + name + ".wav");
     }
 
     static Fi mp3(String name){
-        return WHVars.internalTree.child("sounds/" + name + ".mp3");
+        return Vars.tree.get("sounds/" + name + ".mp3");
     }
 }

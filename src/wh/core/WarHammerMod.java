@@ -6,12 +6,16 @@
 package wh.core;
 
 import arc.*;
+import arc.scene.ui.*;
 import arc.util.*;
 import mindustry.*;
 import mindustry.game.*;
 import mindustry.game.EventType.*;
+import mindustry.gen.*;
 import mindustry.mod.*;
 import mindustry.net.*;
+import mindustry.ui.*;
+import mindustry.ui.dialogs.*;
 import wh.content.*;
 import wh.entities.*;
 import wh.entities.event.logic.*;
@@ -23,6 +27,13 @@ import wh.net.packet.*;
 
 public class WarHammerMod extends Mod {
     public static String ModName = "wh";
+    private static final String qqGroupId = "316481519";
+    private static final String qqGroupWebLink = "https://qun.qq.com/";
+    private static final String qqButtonName = "wh-moddetail-qq-button";
+    private static final String settingsButtonName = "wh-moddetail-settings-button";
+    private static final long modDetailPollIntervalMs = 160L;
+    private static long nextModDetailPollMs = 0L;
+    private static BaseDialog lastSeenDialog = null;
 
     public WarHammerMod() {
         Net.registerPacket(WarnHUDPacket::new);
@@ -53,6 +64,7 @@ public class WarHammerMod extends Mod {
             if(!Vars.headless){
                 ActionContext.cutsceneUI.update();
                 WHObjectiveUI.ensureMounted();
+                pollModDetailInjection();
             }
         });
 
@@ -71,6 +83,103 @@ public class WarHammerMod extends Mod {
         if(Vars.ui != null && Vars.ui.hudfrag != null){
             Vars.ui.hudfrag.shown = true;
         }
+    }
+
+    private static void pollModDetailInjection(){
+        if(Vars.ui == null || Core.scene == null) return;
+
+        long now = Time.millis();
+        if(now < nextModDetailPollMs) return;
+        nextModDetailPollMs = now + modDetailPollIntervalMs;
+
+        if(!(Core.scene.getDialog() instanceof BaseDialog dialog)){
+            lastSeenDialog = null;
+            return;
+        }
+
+        if(dialog == lastSeenDialog) return;
+        lastSeenDialog = dialog;
+        injectModDetailButtons(dialog);
+    }
+
+    private static void injectModDetailButtons(BaseDialog dialog){
+        if(dialog.buttons == null || dialog.title == null) return;
+
+        String title = Strings.stripColors(String.valueOf(dialog.title.getText())).trim();
+        if(title.isEmpty()) return;
+        if(!title.equalsIgnoreCase("WarHammer") && !title.equalsIgnoreCase("wh")) return;
+
+        if(dialog.buttons.find(qqButtonName) == null){
+            Button button = dialog.buttons.button(bundle("wh.moddetail.button.qq", "QQ群"), Icon.link, WarHammerMod::openQQGroup).size(210f, 64f).get();
+            button.name = qqButtonName;
+        }
+
+        if(dialog.buttons.find(settingsButtonName) == null){
+            Button button = dialog.buttons.button(bundle("wh.moddetail.button.settings", "模组设定"), Icon.settings, WarHammerMod::openModSettings).size(210f, 64f).get();
+            button.name = settingsButtonName;
+        }
+    }
+
+    private static void openQQGroup(){
+        if(Vars.ui == null) return;
+        Core.app.setClipboardText(qqGroupId);
+        if(!Core.app.openURI(bundle("wh.moddetail.qq.link", qqGroupWebLink))){
+            Core.app.setClipboardText(qqGroupId);
+            Vars.ui.showInfoFade(bundleFormat("wh.moddetail.qq.copied", "无法直接打开QQ群链接，已复制群号: {0}", qqGroupId));
+            return;
+        }
+        Vars.ui.showInfoFade(bundleFormat("wh.moddetail.qq.opened", "已打开QQ群链接，并复制群号: {0}", qqGroupId));
+    }
+
+    private static void openModSettings(){
+        if(Vars.ui == null) return;
+
+        BaseDialog dialog = new BaseDialog(bundle("wh.moddetail.settings.dialogTitle", "模组设定"));
+        dialog.addCloseButton();
+
+        dialog.cont.margin(16f);
+        dialog.cont.table(head -> {
+            head.top();
+            head.add(new WarningBar()).growX().height(18f).row();
+            Label titleLabel = head.add(bundle("wh.moddetail.settings.title", "[[ HUD::MOD SETTINGS ]]"))
+            .style(Styles.techLabel).growX().center().padTop(2f).get();
+            titleLabel.setFontScale(2f);
+            titleLabel.setAlignment(Align.center);
+            head.row();
+            head.add(bundle("wh.moddetail.settings.subtitle", "滚木"))
+            .style(Styles.outlineLabel).growX().center().padBottom(2f).row();
+            head.add(new WarningBar()).growX().height(18f).row();
+        }).growX().maxWidth(980f).padBottom(8f).row();
+
+        dialog.cont.pane(Styles.smallPane, t -> {
+            t.top().left();
+            t.defaults().growX().left();
+
+            t.add(bundle("wh.moddetail.settings.text", "[lightgray]设定内容加载中...[]"))
+            .wrap()
+            .left();
+        }).grow().maxWidth(980f).maxHeight(640f);
+
+        dialog.show();
+        Vars.ui.showInfoFade(bundle("wh.moddetail.settings.hint", "已打开模组设定"));
+    }
+
+    private static String bundle(String key, String fallback){
+        if(Core.bundle != null && Core.bundle.has(key)){
+            return Core.bundle.get(key);
+        }
+        return fallback;
+    }
+
+    private static String bundleFormat(String key, String fallback, Object... args){
+        if(Core.bundle != null && Core.bundle.has(key)){
+            return Core.bundle.format(key, args);
+        }
+        String out = fallback;
+        for(int i = 0; i < args.length; i++){
+            out = out.replace("{" + i + "}", String.valueOf(args[i]));
+        }
+        return out;
     }
 
     @Override

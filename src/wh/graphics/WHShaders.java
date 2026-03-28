@@ -32,24 +32,42 @@ public class WHShaders{
     }
 
     public static void init(){
-        powerArea = new OutlineShader() {
-            @Override
-            public float thick() {
-                return 2f;
-            }
-        };
-        powerDynamicArea = new OutlineShader() {
-            public float thick() {
-                return 2f * Interp.slope.apply(Time.time / 240f % 1f);
-            }
-        };
-        convex = new ConvexLensShader();
+        try{
+            powerArea = new OutlineShader(){
+                @Override
+                public float thick(){
+                    return 2f;
+                }
+            };
+        }catch(Throwable t){
+            powerArea = null;
+            Log.err("Failed to load power area shader.", t);
+        }
+
+        try{
+            powerDynamicArea = new OutlineShader(){
+                public float thick(){
+                    return 2f * Interp.slope.apply(Time.time / 240f % 1f);
+                }
+            };
+        }catch(Throwable t){
+            powerDynamicArea = null;
+            Log.err("Failed to load dynamic power area shader.", t);
+        }
+
+        try{
+            convex = new ConvexLensShader();
+        }catch(Throwable t){
+            convex = null;
+            Log.err("Failed to load convex lens shader.", t);
+        }
+
         try{
             hexagonalShield = new HexagonalTextureShieldShader();
         }catch(Throwable t){
             //don't load shield shader
             hexagonalShield = null;
-            t.printStackTrace();
+            Log.err("Failed to load hexagonal shield shader.", t);
         }
     }
 
@@ -430,9 +448,15 @@ public class WHShaders{
 
         MaxCont = Math.min(MaxCont * 2, 512);
         if(holeShader != null) holeShader.dispose();
-        Shader.prependFragmentCode = "#define MAX_COUNT " + MaxCont + "\n";
-        holeShader = new HoleShader();
-        Shader.prependFragmentCode = "";
+        try{
+            Shader.prependFragmentCode = "#define MAX_COUNT " + MaxCont + "\n";
+            holeShader = new HoleShader();
+        }catch(Throwable t){
+            holeShader = null;
+            Log.err("Failed to load black hole shader.", t);
+        }finally{
+            Shader.prependFragmentCode = "";
+        }
     }
 
     public static class HoleShader extends Shader{
