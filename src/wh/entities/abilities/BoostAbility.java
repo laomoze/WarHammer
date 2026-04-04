@@ -1,21 +1,19 @@
 package wh.entities.abilities;
 
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.math.Angles;
-import arc.math.Mathf;
-import arc.math.geom.Vec2;
-import arc.struct.Queue;
-import arc.struct.Seq;
-import arc.util.Interval;
-import mindustry.Vars;
-import mindustry.entities.abilities.Ability;
-import mindustry.gen.Unit;
-import mindustry.graphics.Layer;
-import mindustry.graphics.Trail;
-import mindustry.type.UnitType;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.math.geom.*;
+import arc.struct.*;
+import arc.util.*;
+import mindustry.*;
+import mindustry.entities.abilities.*;
+import mindustry.gen.*;
+import mindustry.graphics.*;
+import mindustry.type.*;
 
 
+/** 根据单位近期朝向记录生成推进尾迹和额外加速表现。 */
 public class BoostAbility extends Ability{
     public static final int maxSize = 8;
 
@@ -28,6 +26,7 @@ public class BoostAbility extends Ability{
 
     public float angleCone = 5f;
     protected Seq<Trail> trails;
+    // 记录最近几次移动朝向，用来判断是否持续直线推进。
     protected Queue<Float> seq = new Queue<>(maxSize + 1);
     protected Interval timer = new Interval();
 
@@ -81,6 +80,7 @@ public class BoostAbility extends Ability{
     }
 
     public boolean allSame(float angle, float lookAng){
+        // 近期朝向足够稳定且和当前面朝方向接近时，视为进入推进状态。
         if(seq.size < maxSize - 1 || !Angles.within(angle, lookAng, angleMaxDst)) return false;
         for(float f : seq){
             if(!Angles.within(angle, f, angleCone)){

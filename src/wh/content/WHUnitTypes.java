@@ -68,8 +68,9 @@ public final class WHUnitTypes{
     airB6, airB5, airB4, airB3, airB2, airB1,
     //坦克
     tankAG,
-    tank3s, tank2s, tank1s,
-    tank3, tank2, tank1,
+    tankB3, tankB2, tankB1,
+    tankA3, tankA2, tankA1,
+    tankC3, tankC2, tankC1,
     //机甲
     Mecha7, Mecha6, Mecha5, Mecha4, Mecha3, Mecha2,
     //陆军
@@ -78,7 +79,6 @@ public final class WHUnitTypes{
     M3, M2, M1,
     //特种
     MEn1,
-    tankEn2, tankEn1,
     airEn1, airEn2;
     //核心机
     public static UnitType t6AssemblyDrone, reborn, recovery, restore;
@@ -1317,9 +1317,9 @@ public final class WHUnitTypes{
                 flying = true;
                 speed = 0.85f;
                 rotateSpeed = 0.5f;
-                hitSize = 100;
+                hitSize = 75;
                 health = 190 * 1000;
-                armor = 40;
+                armor = 70;
 
                 engineOffset = 310 / 4f;
                 engineSize = 14;
@@ -1761,11 +1761,11 @@ public final class WHUnitTypes{
                                 despawnHit = true;
                                 keepVelocity = false;
 
-                                splashDamageRadius = 300;
-                                splashDamage = 350;
+                                splashDamageRadius = 345;
+                                splashDamage = 400;
 
-                                lightningDamage = 120;
-                                lightning = 36;
+                                lightningDamage = 200;
+                                lightning = 10;
                                 lightningLength = 20;
                                 lightningLengthRand = 20;
 
@@ -4046,8 +4046,8 @@ public final class WHUnitTypes{
 
                 health = 210 * 1000f;
                 speed = 0.8f;
-                hitSize = 80;
-                armor = 40;
+                hitSize = 70;
+                armor = 80;
                 rotateSpeed = 0.6f;
 
                 engineOffset = 18;
@@ -4151,6 +4151,7 @@ public final class WHUnitTypes{
                         reload = 2000;
                         x = y = 0;
                         rotate = true;
+                        predictTarget = false;
                         mirror = false;
                         inaccuracy = 0.0F;
 
@@ -4562,7 +4563,7 @@ public final class WHUnitTypes{
                                 progress = heatProgress = PartProgress.recoil;
                             }
                         });
-                        bullet = new TrailFadeBulletType(20, 600, name("pierce")){
+                        bullet = new TrailFadeBulletType(20, 800, name("pierce")){
                             {
                                 tracerUpdateSpacing = 0.3f;
                                 hitBlinkTrail = false;
@@ -4589,7 +4590,7 @@ public final class WHUnitTypes{
                                 pierceCap = 3;
 
                                 splashDamageRadius = 56;
-                                splashDamage = damage / 3;
+                                splashDamage = damage / 2;
 
                                 shootEffect = WHFx.instShoot(hitColor, hitColor);
 
@@ -4609,15 +4610,15 @@ public final class WHUnitTypes{
             }
         };
 
-        tank3s = new WHTankUnitType("tank3s"){
+        tankB3 = new WHTankUnitType("tankB3"){
             {
                 constructor = TankUnit::create;
 
-                hitSize = 72;
+                hitSize = 64;
                 speed = 0.9f;
                 rotateSpeed = 1f;
-                health = 90000;
-                armor = 44;
+                health = 100000;
+                armor = 50;
                 itemCapacity = 0;
                 floorMultiplier = 0.6f;
 
@@ -4638,16 +4639,17 @@ public final class WHUnitTypes{
 
                 immunities.addAll(StatusEffects.melting, StatusEffects.burning, slow, unmoving, WHStatusEffects.rust);
 
-                weapons.add(new Weapon(name("tank3s-weapon1")){
-
+                weapons.add(new Weapon(name("tankB3-weapon1")){
                     {
+
                         mirror = false;
                         shake = 4;
-                        shootY = 40;
+                        shootY = (215 - 20) / 4f;
                         rotate = true;
                         rotateSpeed = 1.2f;
+                        layerOffset = 0.005f;
                         x = 0;
-                        y = 0;
+                        y = -26 / 4f;
                         reload = 300;
                         shootStatusDuration = shoot.firstShotDelay = 60;
                         shootStatus = WHStatusEffects.powerReduce2;
@@ -4656,8 +4658,37 @@ public final class WHUnitTypes{
                         continuous = true;
                         cooldownTime = 200;
                         heatColor = WHPal.Heat;
+                        recoilTime = 120f;
 
                         parentizeEffects = true;
+
+                        parts.addAll(
+                        new RegionPart("-barrel"){
+                            {
+                                under = true;
+                                mirror = false;
+                                heatProgress = PartProgress.recoil;
+                                progress = PartProgress.recoil;
+                                moveY = -26 / 4f;
+
+                                for(int i = 0; i < 6; i++){
+                                    int finalI = i;
+                                    children.addAll(
+                                    new RegionPart("-barrel-heat1"){{
+                                        outline = false;
+                                        y = 13 * finalI / 4f;
+                                        layer = Layer.effect;
+                                        color = WHPal.ShootOrange.cpy().a(0.5f);
+                                        colorTo = WHPal.ShootOrangeLight;
+                                        blending = Blending.additive;
+                                        heatProgress = progress = PartProgress.recoil.curve(Interp.pow5Out).apply(PartProgress.recoil,
+                                        (a, b) -> Mathf.absin(b + Time.time + finalI * 10f, 10, 1) * b + 0.5f * b);
+                                    }});
+                                }
+                                ;
+                            }
+                        }
+                        );
 
                         bullet = new LaserBeamBulletType(){{
                             damage = 175;
@@ -4683,10 +4714,10 @@ public final class WHUnitTypes{
                             colors = new Color[]{c.a(0.2f), c.a(0.5f), c.a(0.7f), c, Color.white};
 
                             chargeEffect = new MultiEffect(
-                            WHFx.genericChargeCircle(shoot.firstShotDelay + 1 - 20, hitColor, 8, 90).startDelay(20).followParent(true),
-                            WHFx.lineCircleIn(shoot.firstShotDelay + 1 - 20, hitColor, 40, 2).startDelay(20).followParent(true),
-                            WHFx.genericCharge(shoot.firstShotDelay + 1, hitColor, 8, 40).followParent(true)
-                            ).followParent(true);
+                            WHFx.genericChargeCircle(shoot.firstShotDelay + 1 - 20, hitColor, 8, 90).startDelay(20),
+                            WHFx.lineCircleIn(shoot.firstShotDelay + 1 - 20, hitColor, 40, 2).startDelay(20),
+                            WHFx.genericCharge(shoot.firstShotDelay + 1, hitColor, 8, 40)
+                            ).followParent(true).rotWithParent(true);
 
                             hitEffect = new MultiEffect(
                             WHFx.hitCircle(15, hitColor, Color.lightGray, 6, 40, 8),
@@ -4698,7 +4729,7 @@ public final class WHUnitTypes{
             }
         };
 
-        tank2s = new WHTankUnitType("tank2s"){
+        tankB2 = new WHTankUnitType("tankB2"){
             {
 
                 constructor = TankUnit::create;
@@ -4795,7 +4826,7 @@ public final class WHUnitTypes{
                 }});
 
 
-                weapons.add(new Weapon(name("tank2s-weapon1")){
+                weapons.add(new Weapon(name("tankB2-weapon1")){
                     {
                         shootSound = shootTank;
                         shake = 4;
@@ -4961,7 +4992,7 @@ public final class WHUnitTypes{
         };
 
 
-        tank1s = new WHTankUnitType("tank1s"){
+        tankB1 = new WHTankUnitType("tankB1"){
             {
                 constructor = TankUnit::create;
 
@@ -5168,15 +5199,15 @@ public final class WHUnitTypes{
             }
         };
 
-        tank3 = new WHTankUnitType("tank3"){
+        tankA3 = new WHTankUnitType("tankA3"){
             {
                 constructor = TankUnit::create;
 
-                hitSize = 72;
+                hitSize = 64;
                 speed = 0.8f;
                 rotateSpeed = 1f;
-                health = 100000;
-                armor = 40;
+                health = 120000;
+                armor = 70;
                 itemCapacity = 0;
                 floorMultiplier = 0.6f;
 
@@ -5193,7 +5224,8 @@ public final class WHUnitTypes{
 
                 treadFrames = 20;
                 treadPullOffset = 20;
-                treadRects = new Rect[]{new Rect(19 - lx, 20 - treadPullOffset / 2f - ly, 69, 380)};
+                treadRects = new Rect[]{new Rect(19 - lx, 34 - treadPullOffset / 2f - ly, 79, 360)};
+                /*   treadRects = new Rect[]{new Rect(19 - lx, 20 - treadPullOffset / 2f - ly, 69, 380)};*/
 
                 researchCostMultiplier = 0.5f;
 
@@ -5201,7 +5233,7 @@ public final class WHUnitTypes{
 
                 range = 430;
 
-                weapons.add(new Weapon(name("tank3-weapon1")){
+                weapons.add(new Weapon(name("tankA3-weapon1")){
                     {
                         reload = 300;
                         x = 0;
@@ -5209,7 +5241,7 @@ public final class WHUnitTypes{
                         shootY = 200 / 4f;
                         cooldownTime = 180;
                         heatColor = WHPal.Heat;
-                        layerOffset = 0.002f;
+                        layerOffset = 0.006f;
                         rotate = true;
                         rotateSpeed = 1;
                         recoil = 6;
@@ -5256,9 +5288,16 @@ public final class WHUnitTypes{
                                 trailChance = 0.8f;
                                 trailInterval = 3;
                                 trailEffect = WHFx.square(30, hitColor, 3, 45, 8);
-                                hitEffect = WHFx.instHit(hitColor, true, 3, 40);
-                                despawnEffect = new MultiEffect(WHFx.hitSpark(30f, hitColor, 20, 60f, 2f, 10f),
+                                hitEffect = new MultiEffect(
+                                WHFx.instHit(hitColor, true, 3, 40),
+                                WHFx.trailHitSpark(60f, hitColor, 12, splashDamageRadius, 1.6f, 13f),
+                                WHFx.hitSparkAng(60, Pal.bulletYellowBack, hitColor, 12, splashDamageRadius,
+                                35, 2, 12f)
+                                );
+                                despawnEffect = new MultiEffect(
+                                WHFx.hitSpark(60f, hitColor, 20, 60f, 2f, 10f),
                                 WHFx.circleOut(70, hitColor, 70),
+                                WHFx.generalExplosion(70, hitColor, splashDamageRadius, 5, false),
                                 WHFx.sharpBlast(100f, hitColor, hitColor, 50f),
                                 WHFx.subEffect(70, 70, 11, 30f, Interp.pow2Out, ((i, x, y, rot, fin) -> {
                                     float fout = Interp.pow2Out.apply(1 - fin);
@@ -5276,12 +5315,13 @@ public final class WHUnitTypes{
                         };
                     }
                 });
-                weapons.add(new Weapon(name("tank3-weapon2")){
+                weapons.add(new Weapon(name("tankA3-weapon2")){
                     {
-                        x = 108 / 4f;
-                        y = 64 / 4f;
+                        x = -99 / 4f;
+                        y = 37 / 4f;
+                        layerOffset = 0.003f;
                         inaccuracy = 3;
-                        shootY = 57 / 4f;
+                        shootY = 62 / 4f;
                         reload = 90;
                         rotate = true;
                         rotateSpeed = 2;
@@ -5290,6 +5330,18 @@ public final class WHUnitTypes{
                         shoot.firstShotDelay = 30;
                         shoot.shots = 3;
                         shoot.shotDelay = 12;
+
+                        parts.add(
+                        new RegionPart("-barrel"){
+                            {
+                                under = true;
+                                mirror = false;
+                                heatProgress = PartProgress.recoil;
+                                progress = PartProgress.recoil;
+                                moveY = -10 / 4f;
+                            }
+                        });
+
                         bullet = new PositionLightningBulletType(100){
                             {
                                 maxRange = 400;
@@ -5304,7 +5356,7 @@ public final class WHUnitTypes{
                                         sideLength = 20;
                                         Color c = hitColor = lightColor = lightningColor = WHPal.ShootOrange.cpy();
                                         colors = new Color[]{c.a(0.3f), c.a(0.5f), c.a(0.7f), WHPal.ShootOrangeLight};
-                                        width = 14;
+                                        width = 18;
                                         length = 400;
                                     }
                                 });
@@ -5322,6 +5374,7 @@ public final class WHUnitTypes{
                         mirror = false;
                         rotateSpeed = 1f;
                         rotationLimit = 60;
+                        layerOffset = 0.002f;
                         recoil = 2;
 
                         inaccuracy = 3.5f;
@@ -5377,6 +5430,7 @@ public final class WHUnitTypes{
                         rotate = true;
                         rotateSpeed = 0.8f;
                         rotationLimit = 60;
+                        layerOffset = 0.002f;
                         mirror = false;
                         recoil = 2;
                         inaccuracy = 3;
@@ -5410,7 +5464,7 @@ public final class WHUnitTypes{
             }
         };
 
-        tank2 = new WHTankUnitType("tank2"){
+        tankA2 = new WHTankUnitType("tankA2"){
             {
                 constructor = TankUnit::create;
 
@@ -5435,7 +5489,7 @@ public final class WHUnitTypes{
 
                 researchCostMultiplier = 0.6f;
 
-                weapons.add(new Weapon(name("tank2-weapon1")){
+                weapons.add(new Weapon(name("tankA2-weapon1")){
                     {
                         layerOffset = 0.011f;
                         reload = 200;
@@ -5662,7 +5716,7 @@ public final class WHUnitTypes{
             }
         };
 
-        tank1 = new WHTankUnitType("tank1"){
+        tankA1 = new WHTankUnitType("tankA1"){
 
             {
                 constructor = TankUnit::create;
@@ -5690,7 +5744,7 @@ public final class WHUnitTypes{
                 abilities.add(
                 new ShieldRegenFieldAbility(100, 500, 60f * 3, 90));
 
-                weapons.add(new Weapon(name("tank1-weapon1")){
+                weapons.add(new Weapon(name("tankA1-weapon1")){
                     {
                         x = 0;
                         y = -10 / 4f;
@@ -5737,7 +5791,7 @@ public final class WHUnitTypes{
                         };
                     }
                 });
-                weapons.add(new Weapon(name("tank1-weapon")){
+                weapons.add(new Weapon(name("tankA1-weapon")){
                     {
                         reload = 10;
                         velocityRnd = 0.15f;
@@ -5974,8 +6028,8 @@ public final class WHUnitTypes{
                 weapons.add(new Weapon(name("small-cannon-3")){
                     {
                         reload = 90;
-                        x = 80 / 4f;
-                        y = 22 / 4f;
+                        x = -76 / 4f;
+                        y = -16 / 4f;
                         rotate = true;
                         rotateSpeed = 1.2f;
                         recoil = 2;
@@ -8617,6 +8671,15 @@ public final class WHUnitTypes{
                 outlineRadius = 3;
                 mechLegColor = outlineColor = WHPal.Outline;
 
+                abilities.addAll(
+                new BulletKillHealAbility(),
+                new CloseCombatAbility(),
+                new FortifiedArmorAbility(),
+                new LastStandAbility(),
+                new TeamCombatAbility(),
+                new SupportSpawnAbility()
+                );
+
                 weapons.add(
                 new Weapon(""){{
                     y = 0f;
@@ -9142,7 +9205,7 @@ public final class WHUnitTypes{
             }
         };
 
-        tankEn2 = new TankEn2UnitType("tankEn2"){
+        tankC2 = new TankEn2UnitType("tankC2"){
             @Override
             public void init(){
                 super.init();
@@ -9217,7 +9280,7 @@ public final class WHUnitTypes{
                 }});
 
                 weapons.addAll(
-                new Weapon(name("tankEn2-weapon1")){
+                new Weapon(name("tankC2-weapon1")){
                     {
                         layerOffset = 0.05f;
                         y = -12 / 4f;
@@ -9370,7 +9433,7 @@ public final class WHUnitTypes{
             }
         };
 
-        tankEn1 = new WHTankUnitType("tankEn1"){
+        tankC1 = new WHTankUnitType("tankC1"){
             {
                 constructor = TankUnit::create;
 
@@ -9401,7 +9464,7 @@ public final class WHUnitTypes{
                 abilities.addAll(new AccelerateReload(300, 60, 5, 150));
 
                 weapons.addAll(
-                new Weapon(name("tankEn1-weapon1")){{
+                new Weapon(name("tankC1-weapon1")){{
                     layerOffset = 0.04f;
                     y = -19 / 4f;
                     x = 0;

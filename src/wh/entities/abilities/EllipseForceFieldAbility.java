@@ -20,10 +20,13 @@ import wh.graphics.*;
 import static mindustry.Vars.tilesize;
 import static wh.core.WarHammerMod.name;
 
+/** 自定义椭圆力场护盾，负责拦截弹体并绘制对应护盾表现。 */
 public class EllipseForceFieldAbility extends Ability{
 
+    // 椭圆护盾的长短轴。
     public float longAxis, minorAxis;
     public float radius = 60f;
+    // regen/max/cooldown/restartRatio 分别对应回复、容量、破盾惩罚和重启阈值。
     public float regen, max, cooldown, restartRatio;
     public float rotation = 0f;
     public float armor = 1f;
@@ -41,9 +44,11 @@ public class EllipseForceFieldAbility extends Ability{
 
     public boolean Regen = false;
     public float regenThreshold = 0.1f;
+    // shouldRegen 表示是否进入额外再生阶段，start 表示护盾是否已经正常启动。
     protected boolean shouldRegen = false;
     protected boolean start = false;
 
+    // alpha/size 控制绘制表现，lastShield/cooldownTimer 用于破盾与恢复判定。
     protected float alpha, size, lastShield, cooldownTimer = 0f;
     protected boolean wasBroken = true;
 
@@ -91,6 +96,7 @@ public class EllipseForceFieldAbility extends Ability{
     }*/
 
     public static float calculateInEllipse(Bullet bullet, Unit unit, float a, float b, float XY){
+        // 先转到单位局部坐标，再判断点是否落在椭圆内部。
         float realX = bullet.x() - unit.x, realY = bullet.y() - unit.y;
 
         float unitRotation = unit.rotation - 90;

@@ -79,12 +79,21 @@ public class SizeDamageBullet extends EffectBulletType{
 
         @Override
         public void hit(Bullet b, float x, float y){
+            hit(b, x, y, true);
+        }
+
+        @Override
+        public void hit(Bullet b, float x, float y, boolean createFrags){
             hitEffect.at(x, y, b.rotation(), this.hitColor);
             hitSound.at(x, y, hitSoundPitch, hitSoundVolume);
             Effect.shake(hitShake, hitShake, b);
 
-            if(fragOnHit){
-                createFrags(b, x, y);
+            if(createFrags && fragOnHit){
+                if(delayFrags && fragBullet != null && fragBullet.delayFrags){
+                    Time.run(0f, () -> createFrags(b, x, y));
+                }else{
+                    createFrags(b, x, y);
+                }
             }
             createSplashDamage(b, x, y);
 
@@ -97,13 +106,6 @@ public class SizeDamageBullet extends EffectBulletType{
                 lightningLength + Mathf.random(lightningLengthRand));
             }
 
-            if(fragOnHit){
-                if(delayFrags && fragBullet != null && fragBullet.delayFrags){
-                    Time.run(0f, () -> createFrags(b, x, y));
-                }else{
-                    createFrags(b, x, y);
-                }
-            }
             createPuddles(b, x, y);
             createIncend(b, x, y);
             createUnits(b, x, y);
@@ -155,7 +157,12 @@ public class SizeDamageBullet extends EffectBulletType{
 
     @Override
     public void hit(Bullet b, float x, float y){
-        super.hit(b, x, y);
+        hit(b, x, y, true);
+    }
+
+    @Override
+    public void hit(Bullet b, float x, float y, boolean createFrags){
+        super.hit(b, x, y, createFrags);
 
         if(!(b instanceof SizeDamage sizeDamage)) return;
         Seq<Sized> data = sizeDamage.hitSizes;

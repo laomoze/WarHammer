@@ -8,16 +8,23 @@ import mindustry.gen.*;
 import mindustry.world.meta.*;
 import wh.content.*;
 
+/** 持续射击时逐步提高装填倍率，停火足够久后再缓慢回落。 */
 public class AccelerateReload extends Ability{
 
+    // 最终可达到的装填倍率上限。
     public float maxMultiplier = 2f;
+    // 停火后维持满增益的时间。
     public float resetTime = 120;
 
+    // 射击时升到上限需要的时间。
     public float increaseTime = 300;
+    // 增益开始回落后，退回 1 倍所需时间。
     public float decreaseTime = 60;
     public boolean liner = true;
 
+    // 记录停火后的维持时间。
     protected float timer = 0;
+    // 当前累积出的装填倍率。
     protected float reloadMultiplier = 1f;
 
     public AccelerateReload(){
@@ -47,13 +54,16 @@ public class AccelerateReload extends Ability{
 
         float re = Mathf.clamp(reloadMultiplier, 1, maxMultiplier);
         if(timer <= resetTime){
+            // 射击中持续叠加增益。
             if(unit.isShooting){
                 reloadMultiplier = Mathf.approachDelta(re, maxMultiplier, (liner ? 1 : re) / increaseTime);
                 timer = 0;
+                // 到达上限后开始计入“维持时间”。
             }else if(reloadMultiplier >= maxMultiplier){
                 timer += Time.delta;
             }
         }else{
+            // 维持时间结束后，增益才开始衰减。
             reloadMultiplier = Mathf.approachDelta(reloadMultiplier, 1, (liner ? 1 : re) / decreaseTime);
             if(Mathf.equal(reloadMultiplier, 1, 0.01f)){
                 timer = 0;

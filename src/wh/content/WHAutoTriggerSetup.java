@@ -40,8 +40,8 @@ public class WHAutoTriggerSetup{
         .spawn(WHUnitTypes.air4, 2, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
         .spawn(WHUnitTypes.air3, 5, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
         .spawn(WHUnitTypes.air2, 10, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
-        .spawn(WHUnitTypes.tank1, 2, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
-        .spawn(WHUnitTypes.tank1s, 2, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        .spawn(WHUnitTypes.tankA1, 2, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        .spawn(WHUnitTypes.tankB1, 2, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
         // Fallback: even if per-unit invoker mappings are lost after load, keep custom spawn path.
         .spawnerInvoker(WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
         .spawnShape(200, 180, 90, 180f)
@@ -61,9 +61,9 @@ public class WHAutoTriggerSetup{
         .minWave(0)
         .spawn(WHUnitTypes.mechaS6, 1, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
         .spawn(WHUnitTypes.Mecha6, 1, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
-        .spawn(WHUnitTypes.tank2, 3, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
-        .spawn(WHUnitTypes.tank1, 3, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
-        .spawn(WHUnitTypes.tank1s, 3, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        .spawn(WHUnitTypes.tankA2, 3, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        .spawn(WHUnitTypes.tankA1, 3, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
+        .spawn(WHUnitTypes.tankB1, 3, WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
         // Fallback: even if per-unit invoker mappings are lost after load, keep custom spawn path.
         .spawnerInvoker(WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
         .spawnShape(200, 180, 90, 180f)

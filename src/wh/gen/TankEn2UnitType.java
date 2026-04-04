@@ -22,7 +22,7 @@ public class TankEn2UnitType extends WHUnitType{
         super(name);
     }
 
-    public Weapon coaxialWeapon = new Weapon(name("tankEn2-weapon2")){{
+    public Weapon coaxialWeapon = new Weapon(name("tankC2-weapon2")){{
         layerOffset = 0.04f;//shit
         y = -12 / 4f;
         x = 0;

@@ -1,14 +1,12 @@
 package wh.entities.bullet;
 
-import arc.math.Mathf;
-import arc.math.Rand;
-import arc.util.Time;
-import arc.util.Tmp;
-import mindustry.content.Fx;
+import arc.math.*;
+import arc.util.*;
+import mindustry.content.*;
 import mindustry.entities.bullet.*;
-import mindustry.gen.Bullet;
-import mindustry.graphics.Drawf;
-import mindustry.graphics.Trail;
+import mindustry.gen.*;
+import mindustry.graphics.*;
+import wh.core.*;
 
 public class MultiTrailBulletType extends BasicBulletType{
     private static final Rand rand = new Rand();
@@ -47,6 +45,7 @@ public class MultiTrailBulletType extends BasicBulletType{
     @Override
     public void removed(Bullet b){
         super.removed(b);
+        if(!WHSettings.effectEnabled()) return;
         if(b.data instanceof Trail[] trails){
             for(Trail trail : trails){
                 Fx.trailFade.at(b.x, b.y, 2, trailColor, trail.copy());
@@ -68,9 +67,8 @@ public class MultiTrailBulletType extends BasicBulletType{
         }
     }
 
-    @Override
-    public void drawTrail(Bullet b){
-        super.drawTrail(b);
+    public void drawTrails(Bullet b){
+        if(!WHSettings.effectEnabled()) return;
         if(b.data instanceof Trail[] trails){
             float step = 360f / trails.length;
             Tmp.v1.set(4 + offset * (offsetMove ? b.fslope() : 1), 0).setAngle(b.rotation() + 90);
@@ -84,5 +82,11 @@ public class MultiTrailBulletType extends BasicBulletType{
                 trails[i].drawCap(trailColor, subTrailWidth);
             }
         }
+    }
+
+    @Override
+    public void drawTrail(Bullet b){
+        super.drawTrail(b);
+        drawTrails(b);
     }
 }

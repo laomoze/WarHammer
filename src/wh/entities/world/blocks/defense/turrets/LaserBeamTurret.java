@@ -17,7 +17,7 @@ public class LaserBeamTurret extends PowerTurret{
     public float firingMoveFract = 0.5f;
     public float shootDuration = 300;
     public Liquid cost = WHLiquids.refinePromethium;
-    public float costMount = 60 / 45f;
+    public float costMount = 90 / 60f;
     public LaserBeamTurret(String name){
         super(name);
         coolantMultiplier=2;

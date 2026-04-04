@@ -7,6 +7,7 @@ import mindustry.content.*;
 import mindustry.entities.*;
 import mindustry.gen.*;
 import mindustry.world.draw.*;
+import wh.core.*;
 
 import static arc.math.Mathf.random;
 import static arc.util.Tmp.*;
@@ -24,6 +25,7 @@ public class EffectSpawner extends DrawBlock{
     public void draw(Building build){
 
         if(Vars.state.isPaused()) return;
+        if(!WHSettings.effectEnabled()) return;
 
         for(int i = 0; i < (mirror ? 2 : 1); i++){
             if(!Vars.state.isPaused() && Mathf.chanceDelta(effectChance * build.warmup())){

@@ -1,17 +1,12 @@
 package wh.entities.world.drawer.factory;
 
-import arc.graphics.Blending;
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Fill;
-import arc.graphics.g2d.Lines;
-import arc.math.Interp;
-import arc.math.Mathf;
-import arc.math.Rand;
-import arc.util.Time;
-import arc.util.Tmp;
-import mindustry.gen.Building;
-import mindustry.world.draw.DrawBlock;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.util.*;
+import mindustry.gen.*;
+import mindustry.world.draw.*;
+import wh.core.*;
 
 public class DrawArcs extends DrawBlock {
     public Rand rand2 = new Rand();
@@ -40,32 +35,34 @@ public class DrawArcs extends DrawBlock {
 
             Lines.stroke(arcStroke * build.warmup());
 
-            float base = (Time.time / arcLife / 2);
-            rand.setSeed(build.id + Mathf.floor((Time.time % arcLife) / arcLife));
-            for(int i = 0; i < arcs; i++) {
-                float fin = Interp.pow5In.apply(1 - (rand.random(1f) + base) % 1f);
-                float angle = rand.random(360f);
-                float nx, ny;
-                float tx, ty;
-                Lines.beginLine();
-                for (int j = 0; j < arcPoints; j++) {
-                    Tmp.v1.trns(angle, (float) j / arcPoints * arcRad).add(build);
-                    tx = Tmp.v1.x;
-                    ty = Tmp.v1.y;
-                    rand2.setSeed((long) i * j);
-                    if (j == 0) {
-                        nx = build.x;
-                        ny = build.y;
-                    } else {
-                        Tmp.v1.setToRandomDirection(rand2).scl(arcRange / 2f);
-                        nx = tx + Tmp.v1.x;
-                        ny = ty + Tmp.v1.y;
+            if(WHSettings.effectEnabled()){
+                float base = (Time.time / arcLife / 2);
+                rand.setSeed(build.id + Mathf.floor((Time.time % arcLife) / arcLife));
+                for(int i = 0; i < arcs; i++){
+                    float fin = Interp.pow5In.apply(1 - (rand.random(1f) + base) % 1f);
+                    float angle = rand.random(360f);
+                    float nx, ny;
+                    float tx, ty;
+                    Lines.beginLine();
+                    for(int j = 0; j < arcPoints; j++){
+                        Tmp.v1.trns(angle, (float)j / arcPoints * arcRad).add(build);
+                        tx = Tmp.v1.x;
+                        ty = Tmp.v1.y;
+                        rand2.setSeed((long)i * j);
+                        if(j == 0){
+                            nx = build.x;
+                            ny = build.y;
+                        }else{
+                            Tmp.v1.setToRandomDirection(rand2).scl(arcRange / 2f);
+                            nx = tx + Tmp.v1.x;
+                            ny = ty + Tmp.v1.y;
+                        }
+                        //Draw.alpha((1f - 5 * Mathf.pow(j - fin, 2f))*(1f - Mathf.pow(1f - 2f * fin, 2f)));
+                        Lines.linePoint(nx, ny);
                     }
-                    //Draw.alpha((1f - 5 * Mathf.pow(j - fin, 2f))*(1f - Mathf.pow(1f - 2f * fin, 2f)));
-                    Lines.linePoint(nx, ny);
+                    Draw.alpha(fin);
+                    Lines.endLine();
                 }
-                Draw.alpha(fin);
-                Lines.endLine();
             }
 
             Draw.blend();

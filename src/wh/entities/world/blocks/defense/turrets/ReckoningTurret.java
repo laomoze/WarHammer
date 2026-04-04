@@ -15,6 +15,7 @@ import mindustry.world.*;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.consumers.*;
 import mindustry.world.draw.*;
+import mindustry.world.meta.*;
 import wh.core.*;
 import wh.graphics.*;
 
@@ -22,9 +23,9 @@ import static arc.math.Angles.randLenVectors;
 import static mindustry.Vars.*;
 import static wh.content.WHFx.rand;
 
-public class ReckoningTurret extends ItemTurret{
-    public float windupSpeed = 0.55f / 60f, windDownSpeed = 0.75f / 60f;
-    public float minFiringWarmup = 0.6f, logicSpeedScl = 0.25f, maxReloadMultiple = 10;
+public class ReckoningTurret extends WHItemTurret{
+    public float windupSpeed = 0.5f / 60f, windDownSpeed = 0.75f / 60f;
+    public float minFiringWarmup = 0.5f, logicSpeedScl = 0.2f, maxReloadMultiple = 5;
     public float barrelWidth = 12 / 4f;
     public TextureRegion barrel;
 
@@ -50,6 +51,14 @@ public class ReckoningTurret extends ItemTurret{
     public void init(){
         WHItemTurret.intTurret(this);
         super.init();
+    }
+
+    @Override
+    public void setStats(){
+        super.setStats();
+        stats.add(Stat.speedIncrease, Core.bundle.get("stat.wh-block-boost") + "+" + Mathf.round(speedBoost * 100f) + "%");
+        stats.add(Stat.range, effectRange, StatUnit.blocks);
+        stats.add(Stat.productionTime, reload / 60f, StatUnit.seconds);
     }
 
     public ReckoningTurret(String name){
@@ -187,14 +196,14 @@ public class ReckoningTurret extends ItemTurret{
 
             spinSpeed = Mathf.approachDelta(spinSpeed, getMaxSpeed(), windupSpeed * 1.3f * peekAmmo().reloadMultiplier * timeScale());
 
-            if(reloadCounter >= reload && spinSpeed > minFiringWarmup){
+            if(reloadCounter >= reload && spinSpeed > getMaxSpeed() * minFiringWarmup){
                 BulletType type = peekAmmo();
 
                 shoot(type);
 
                 reloadCounter %= reload;
 
-                heats[(int)(Mathf.floor(spin - reload) % 360f / reload) % 5] = 1f;
+                heats[(int)(Mathf.floor(Math.max(spin - reload, 0)) % 360f / reload) % 5] = 1f;
             }
         }
 
@@ -237,7 +246,7 @@ public class ReckoningTurret extends ItemTurret{
 
 
         protected float getMaxSpeed(){
-            return maxReloadMultiple * reload / 360f * (!isControlled() && logicControlled() && logicShooting ? logicSpeedScl : 1f);
+            return maxReloadMultiple * reloadMultiple * reload / 360f * (!isControlled() && logicControlled() && logicShooting ? logicSpeedScl : 1f);
         }
 
 

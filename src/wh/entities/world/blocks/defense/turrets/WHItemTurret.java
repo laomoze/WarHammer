@@ -26,7 +26,12 @@ public class WHItemTurret extends ItemTurret{
         turret.researchCostMultiplier = Mathf.clamp(1.4f - 0.04f * turret.size * turret.size, 0.2f, 1.5f);
         turret.depositCooldown = turret.size * 0.5f + 1;
         turret.buildCostMultiplier = Mathf.clamp(4.5f - turret.size * 0.7f, 0.7f, 4);
-        turret.scaledHealth = 10 * turret.size * turret.size + 20 * turret.size;
+        turret.scaledHealth = 10 * turret.size + 40;
+        float scaling = 1f;
+        for(var stack : turret.requirements){
+            scaling += stack.item.healthScaling;
+        }
+        turret.scaledHealth *= scaling;
     }
 
     @Override

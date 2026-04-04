@@ -20,12 +20,15 @@ import wh.graphics.*;
 import static mindustry.Vars.tilesize;
 
 
+/** 发出冲击波，对范围内目标造成伤害、击退和状态效果。 */
 public class ShockWaveAbility extends Ability{
     protected static final Seq<Unit> all = new Seq<>();
 
+    // 本次命中后附加的状态及持续时间。
     public ObjectFloatMap<StatusEffect> status = new ObjectFloatMap<>();
 
     public boolean targetGround = true, targetAir = true;
+    // 冲击波相对单位中心的偏移。
     public float x, y;
 
     public float reload = 500f;
@@ -42,6 +45,7 @@ public class ShockWaveAbility extends Ability{
     public Effect shootEffect = WHFx.lineCircleOut(30, 30, 3);
     public Effect hitEffect = WHFx.hitSparkLarge;
 
+    // 大于 0 时，单位移动过快会重置冷却。
     public float maxSpeed = -1;
 
     public int boltNum = 2;
@@ -65,6 +69,7 @@ public class ShockWaveAbility extends Ability{
     }
 
     public ShockWaveAbility status(Object... values){
+        // 允许用成对参数快速添加多个状态。
         for(int i = 0; i < values.length / 2; i++){
             status.put((StatusEffect)values[i * 2], (Float)values[i * 2 + 1]);
         }
@@ -78,17 +83,16 @@ public class ShockWaveAbility extends Ability{
         if(maxSpeed > 0)maxSpeed = maxSpeed * maxSpeed;
     }
 
-    protected float timer = 0;
-
     @Override
     public void update(Unit unit){
         if(unit.disarmed)return;
 
-        timer += Time.delta * unit.reloadMultiplier;
+        // data 在这里是冲击波冷却。
+        data += Time.delta * unit.reloadMultiplier;
 
         if(maxSpeed > 0 && unit.vel().len2() > maxSpeed){
-            timer = 0;
-        }else if(timer > reload){
+            data = 0f;
+        }else if(data > reload){
             all.clear();
 
             Tmp.v1.trns(unit.rotation - 90, x, y).add(unit.x, unit.y);
@@ -101,7 +105,7 @@ public class ShockWaveAbility extends Ability{
             });
 
             if(all.any()){
-                timer = 0;
+                data = 0f;
                 shootSound.at(rx, ry, 1 + Mathf.range(0.15f), 3);
 
                 shootEffect.at(rx, ry, range, hitColor);

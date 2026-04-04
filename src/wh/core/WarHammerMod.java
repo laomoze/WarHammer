@@ -38,7 +38,7 @@ public class WarHammerMod extends Mod {
     public WarHammerMod() {
         Net.registerPacket(WarnHUDPacket::new);
         Net.registerPacket(AlertToastPacket::new);
-        WHClassMap.load();
+        /* WHClassMap.load();*/
         WHSettings.load();
         Events.on(EventType.FileTreeInitEvent.class, (e) -> {
             if (!Vars.headless) {

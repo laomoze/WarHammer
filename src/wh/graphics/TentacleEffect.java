@@ -1,19 +1,13 @@
 package wh.graphics;
 
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.math.Angles;
-import arc.math.Interp;
-import arc.math.Mathf;
-import arc.math.Rand;
-import arc.util.Nullable;
-import arc.util.Time;
-import mindustry.entities.Effect;
-import mindustry.gen.Bullet;
-import mindustry.gen.EffectState;
-import mindustry.gen.Posc;
-import mindustry.gen.Rotc;
-import mindustry.world.blocks.RotBlock;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.util.*;
+import mindustry.entities.*;
+import mindustry.gen.*;
+import mindustry.world.blocks.*;
+import wh.core.*;
 
 import static mindustry.Vars.state;
 
@@ -208,6 +202,7 @@ public class TentacleEffect extends Effect{
 
     @Override
     public void render(EffectContainer effect){
+        if(!WHSettings.effectEnabled()) return;
         if(!(effect.data instanceof TentacleData data)) return;
         ensureInitialized(effect, data);
 
@@ -274,6 +269,7 @@ public class TentacleEffect extends Effect{
 
     @Override
     protected void add(float x, float y, float rotation, Color color, Object data){
+        if(!WHSettings.effectEnabled()) return;
         EffectState effectState = EffectState.create();
         effectState.effect = this;
         effectState.rotation = baseRotation + rotation;

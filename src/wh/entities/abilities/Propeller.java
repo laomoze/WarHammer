@@ -15,6 +15,7 @@ import mindustry.world.blocks.environment.*;
 
 import static wh.core.WarHammerMod.name;
 
+/** 负责绘制螺旋桨部件，并在悬停时生成气流特效。 */
 public class Propeller extends Ability{
     public float px, py, length, speed;
     public String sprite;

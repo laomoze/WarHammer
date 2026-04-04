@@ -13,6 +13,7 @@ import mindustry.*;
 import mindustry.entities.bullet.*;
 import mindustry.gen.*;
 import wh.content.*;
+import wh.core.*;
 import wh.graphics.*;
 import wh.util.struct.*;
 
@@ -154,7 +155,7 @@ public class TrailFadeBulletType extends BasicBulletType{
     @Override
     public void drawTrail(Bullet b){
         super.drawTrail(b);
-
+        if(!WHSettings.effectEnabled()) return;
         if((b.data instanceof Vec2Seq[])){
             Vec2Seq[] pointsArr = (Vec2Seq[])b.data();
             for(Vec2Seq points : pointsArr){

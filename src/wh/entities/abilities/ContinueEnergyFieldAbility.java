@@ -18,22 +18,29 @@ import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
 import mindustry.world.meta.*;
+import wh.core.*;
 import wh.graphics.*;
 
 import static mindustry.Vars.*;
 import static wh.core.WarHammerMod.name;
 
+/** 连续能量场，可持续放电、附加状态，并在需要时转为治疗友军。 */
 public class ContinueEnergyFieldAbility extends EnergyFieldAbility{
     private static final Seq<Healthc> all = new Seq<>();
+    // shots 是一次完整触发内的放电次数，pierceCap 控制每次最多穿透多少目标。
     public int shots, buildPierceCap = 4, unitPierceCap = 2;
+    // shotsDelay 是单次连锁之间的间隔，delay 用于控制额外表现节奏。
     public float shotsDelay, delay = 20;
     public float stroke = 1.3f;
     public float unitDamage;
     public float healAmount = 50f;
     public Color color = Pal.heal;
 
-    protected float timer, curStroke;
-    protected boolean anyNearby = false, pierceCap;
+    // curStroke 控制当前描边强度，anyNearby 用于判断本轮是否有有效目标。
+    private float curStroke;
+    private boolean anyNearby = false, pierceCap;
+
+    public boolean drawCube = true;
 
     public ContinueEnergyFieldAbility(float damage, float unitDamage, float reload, float range, int shots, float shotsDelay){
         super(damage, reload, range);
@@ -111,19 +118,27 @@ public class ContinueEnergyFieldAbility extends EnergyFieldAbility{
                 Lines.arc(rx, ry, range, sectorRad, rot);
             }
         }
-
         Drawf.light(rx, ry, range * 1.5f, color, curStroke * 0.8f);
 
+        Draw.reset();
+
+        Draw.z(Layer.buildBeam);
+        Draw.color(color);
+
+        if(drawCube && WHSettings.effectEnabled()){
+            Drawn.wireCube(rx, ry, orbRadius * 2.5f, Time.time + 10f * effectRadius, Lines.getStroke() * curStroke, color);
+            Drawn.wireCube(rx, ry, orbRadius * 1.7f, -Time.time / 3 + 10f * effectRadius, Lines.getStroke() * curStroke, color);
+        }
         Draw.reset();
     }
 
     @Override
     public void update(Unit unit){
-        timer += Time.delta;
+        data += Time.delta;
 
         curStroke = Mathf.lerpDelta(curStroke, anyNearby ? 1 : 0, 0.09f);
 
-        if(timer >= reload && (!useAmmo || unit.ammo > 0 || !state.rules.unitAmmo)){
+        if(data >= reload && (!useAmmo || unit.ammo > 0 || !state.rules.unitAmmo)){
             Tmp.v1.trns(unit.rotation - 90, x, y).add(unit.x, unit.y);
             float rx = Tmp.v1.x, ry = Tmp.v1.y;
             anyNearby = false;
@@ -172,7 +187,7 @@ public class ContinueEnergyFieldAbility extends EnergyFieldAbility{
                 Time.run(delay * i, () -> {
                     for(int a = 0; a < shots; a++){
                         if(unit.dead()){
-                            timer = 0;
+                            data = 0f;
                             return;
                         }
                         Time.run(shotsDelay * a, () -> {
@@ -180,7 +195,7 @@ public class ContinueEnergyFieldAbility extends EnergyFieldAbility{
 
                             Tmp.v1.trns(unit.rotation - 90, x, y).add(unit.x, unit.y);
 
-                            //lightning gets absorbed by plastanium
+                            // 若路径上有塑钢墙，闪电会被吸收，不再继续穿透。
                             var absorber = Damage.findAbsorber(unit.team, rx, ry, other.getX(), other.getY());
                             if(absorber != null){
                                 other = absorber;
@@ -253,7 +268,7 @@ public class ContinueEnergyFieldAbility extends EnergyFieldAbility{
                     unit.ammo--;
                 }
             }
-            timer = 0;
+            data = 0f;
         }
     }
 

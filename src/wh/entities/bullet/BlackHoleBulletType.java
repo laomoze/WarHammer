@@ -16,6 +16,7 @@ import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.unit.*;
 import wh.content.*;
+import wh.core.*;
 import wh.graphics.*;
 import wh.util.*;
 
@@ -107,8 +108,9 @@ public class BlackHoleBulletType extends BulletType{
             }
         });*/
 
-
-        if(!Vars.headless && (Core.settings != null) && b.time <= b.lifetime - fadeTime && Mathf.randomBoolean(0.5f))
+        boolean c = WHSettings.effectEnabled() || Mathf.chanceDelta(0.1f);
+        if(!Vars.headless && (Core.settings != null) && b.time <= b.lifetime - fadeTime && Mathf.randomBoolean(0.5f)
+        && c)
             for(int i = 0; i < amount; i++){
                 ateData data = ateData.create();
                 float outRDI = i % 2 == 0 ? outRad * 1.2f : outRad;

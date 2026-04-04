@@ -8,6 +8,7 @@ import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
 import wh.content.*;
+import wh.core.*;
 import wh.util.*;
 
 public class WHUnitEngine extends UnitType.UnitEngine{
@@ -72,7 +73,7 @@ public class WHUnitEngine extends UnitType.UnitEngine{
 
         if(!unit.moving()) return;
 
-        if(line){
+        if(line && WHSettings.effectEnabled()){
             float particleLife = 74f;
             float particleLen = 7.5f;
             Rand rand = WHUtils.rand((long)(unit.id+99999+x+y));

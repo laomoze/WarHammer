@@ -21,8 +21,10 @@ import wh.graphics.*;
 import static mindustry.Vars.*;
 import static wh.core.WarHammerMod.name;
 
+/** 扫描周围友军后释放一次大范围治疗/修复效果。 */
 public class RepairBomb extends Ability{
     public BulletType deathBullet;
+    // 传给 deathBullet 的自定义附带数据，不是 Ability.data。
     public Object data;
     public float x, y;
     public boolean withRotate = false;
@@ -73,7 +75,8 @@ public class RepairBomb extends Ability{
         Drawf.light(e.x, e.y, e.rotation * f * 1.35f * e.fout(0.15f), e.color, 0.6f);
     });
 
-    protected float timer = 0, damageTimer = 0;
+    // damageTimer 用来低频扫描是否存在可修复目标。
+    protected float damageTimer = 0;
     protected boolean healing = false, wasHeal = false;
 
     protected UnitType statUnit;
@@ -94,7 +97,7 @@ public class RepairBomb extends Ability{
         super.draw(unit);
         Tmp.v1.trns(unit.rotation - 90, x, y).add(unit.x, unit.y);
         float rx = Tmp.v1.x, ry = Tmp.v1.y;
-        float fin = Mathf.clamp(timer / reload, 0, 1);
+        float fin = Mathf.clamp(super.data / reload, 0, 1);
         float orbRadius = effectRadius * (1f + Mathf.absin(blinkScl, blinkSize) * fin);
         float scale = 0.6f;
         Draw.z(layer);
@@ -122,15 +125,15 @@ public class RepairBomb extends Ability{
         healing = false;
         Tmp.v1.trns(unit.rotation - 90, x, y).add(unit.x, unit.y);
         float rx = Tmp.v1.x, ry = Tmp.v1.y;
-        timer += Time.delta;
+        // super.data 才是能力自己的装填进度。
+        super.data += Time.delta;
         damageTimer += Time.delta;
         if(damageTimer >= 10){
             damageTimer = 0;
             indexer.eachBlock(unit, range, Building::damaged, other -> healing = true);
         }
-        timer += Time.delta;
-        if(timer >= reload && healing){
-            timer = 0;
+        if(super.data >= reload && healing){
+            super.data = 0f;
             indexer.eachBlock(unit, range, Building::damaged, other -> {
                 other.heal(other.maxHealth() * healPercent / 100f + amount);
                 other.recentlyHealed();

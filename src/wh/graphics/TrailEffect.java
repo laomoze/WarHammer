@@ -7,8 +7,9 @@ import arc.util.*;
 import mindustry.entities.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
-import mindustry.world.blocks.RotBlock;
+import mindustry.world.blocks.*;
 import wh.content.*;
+import wh.core.*;
 
 import java.util.*;
 
@@ -90,6 +91,7 @@ public class TrailEffect extends Effect{
 
     @Override
     public void render(EffectContainer e){
+        if(!WHSettings.effectEnabled()) return;
         if(length <= 0 || width <= 0) return;
         Trail[] trails = new Trail[0];
         float followX = e.x;
@@ -112,7 +114,6 @@ public class TrailEffect extends Effect{
         }
 
         float width = Mathf.curve(e.fin(), 0, 0.1f) * this.width;
-
         if(!state.isPaused()){
             float f = e.fout();
             if(f > 0f){
@@ -146,6 +147,7 @@ public class TrailEffect extends Effect{
 
     @Override
     protected void add(float x, float y, float rotation, Color color, Object data){
+        if(!WHSettings.effectEnabled()) return;
         EffectState entity = EffectState.create();
         entity.effect = this;
         entity.rotation = baseRotation + rotation;

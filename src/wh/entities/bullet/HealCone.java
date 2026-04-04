@@ -12,6 +12,7 @@ import mindustry.entities.bullet.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import wh.entities.world.blocks.defense.turrets.*;
+import wh.graphics.*;
 
 
 public class HealCone extends BulletType{
@@ -83,6 +84,8 @@ public class HealCone extends BulletType{
         });
     }
 
+    private static final Blending noStackBlend = new Blending(Gl.one, Gl.one, Gl.one, Gl.one);
+
     @Override
     public void draw(Bullet b){
         float in = b.time < b.lifetime - 10 ? Math.min(1, b.time / 10) : (b.lifetime - b.time) / 10;
@@ -90,11 +93,17 @@ public class HealCone extends BulletType{
         float angleMt = b.data instanceof Float f ? f : 1;
         float range = findRange * in;
         float angle = findAngle * angleMt * in;
+
         Draw.color(healColor);
         Draw.z(Layer.buildBeam);
-        Draw.alpha(0.8f);
+        Draw.reset();
+        Draw.alpha(0.7f);
+        Draw.blend(Blending.disabled);
+        Draw.color(healColor);
         Fill.circle(b.x, b.y, 4 * in);
         Fill.arc(b.x, b.y, range, angle / 360, b.rotation() - angle / 2);
+        Draw.blend();
+        Drawn.wireCube(b.x, b.y, 10f * in, Time.time + 10f * in, 1.8f, healColor);
         Draw.alpha(1);
     }
 }

@@ -35,8 +35,13 @@ public class WHOverride{
         reignWeapon1.shoot.shots = 3;
         reignWeapon1.shoot.shotDelay = 4f;
         reignWeapon1.reload = 15f;
-        UnitTypes.fortress.weapons.get(0).layerOffset = -0.001f;
 
+        Weapon fortressWeapon1 = UnitTypes.fortress.weapons.get(0);
+        fortressWeapon1.x = 37 / 4f;
+        fortressWeapon1.y = 3 / 4f;
 
+        Weapon quasarWeapon1 = UnitTypes.quasar.weapons.get(0);
+        quasarWeapon1.x = 29 / 4f;
+        quasarWeapon1.y = -4 / 4f;
     }
 }

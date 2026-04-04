@@ -1,6 +1,9 @@
 package wh.content;
 
 import arc.graphics.*;
+import arc.math.*;
+import arc.math.geom.*;
+import arc.struct.*;
 import mindustry.graphics.g3d.*;
 import mindustry.type.*;
 import mindustry.world.*;
@@ -22,8 +25,44 @@ public final class WHPlanets{
             Color toxicYellow = Color.valueOf("d8c86e");
             Color toxicGreen = Color.valueOf("8da85f");
             Color hazeYellow = Color.valueOf("e2d882");
+            Color beltRock = darkRock.cpy();
+            Color beltTint = chromite.cpy().a(0.38f);
 
-            meshLoader = () -> new HexMesh(this, 6);
+            meshLoader = () -> {
+                Seq<GenericMesh> meshes = new Seq<>();
+                meshes.add(new HexMesh(this, 6));
+
+                // Single visual asteroid belt around Karvex (no extra planets in the sidebar).
+                int beltPieces = 28;
+                float beltRadius = this.radius + 0.82f;
+                float beltThickness = 0.14f;
+                float beltHeight = 0.12f;
+                int seedBase = 4177;
+
+                for(int i = 0; i < beltPieces; i++){
+                    int seed = seedBase + i * 37;
+                    float angle = i * (360f / beltPieces) + Mathf.randomSeed(seed + 1, -5f, 5f);
+                    float dist = beltRadius + Mathf.randomSeed(seed + 2, -beltThickness, beltThickness);
+                    float rockRadius = Mathf.randomSeed(seed + 3, 0.030f, 0.068f);
+                    Vec3 pos = new Vec3(
+                    Angles.trnsx(angle, dist),
+                    Mathf.randomSeed(seed + 4, -beltHeight, beltHeight),
+                    Angles.trnsy(angle, dist)
+                    );
+
+                    // Break the "single-axis ring" look: each rock gets a deterministic random inclination.
+                    pos.rotate(Vec3.X, Mathf.randomSeed(seed + 5, -20f, 20f));
+                    pos.rotate(Vec3.Z, Mathf.randomSeed(seed + 6, -20f, 20f));
+                    pos.rotate(Vec3.Y, Mathf.randomSeed(seed + 7, -8f, 8f));
+
+                    meshes.add(new MatMesh(
+                    new NoiseMesh(this, seed, 1, rockRadius, 2, 0.58f, 0.42f, 18f,
+                    beltRock, beltTint, 3, 0.6f, 0.38f, 0.54f),
+                    new Mat3D().setToTranslation(pos.x, pos.y, pos.z)));
+                }
+
+                return new MultiMesh(meshes.toArray(GenericMesh.class));
+            };
 
             cloudMeshLoader = () -> new MultiMesh(
             new HexSkyMesh(this, 6, 0.20f, 0.13f, 5, chromite.cpy().lerp(radiation, 0.24f).lerp(toxicGreen, 0.34f).a(0.30f), 2, 0.45f, 1.00f, 0.36f),

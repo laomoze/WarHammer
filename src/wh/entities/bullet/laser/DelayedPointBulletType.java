@@ -21,9 +21,9 @@ public class DelayedPointBulletType extends BulletType{
     protected static float lengthFalloff = 0.5f;
     public boolean square = false;
     public static Effect laser = new Effect(60f, 2000f, b -> {
-        if(!(b.data instanceof DPBData data)) return;
+        if(!(b.data instanceof DelayedPointBulletData data)) return;
         Position target = data.target;
-        Color[] colors = data.c;
+        Color[] colors = data.colors;
         boolean square = data.square;
 
         float tX = target.getX();
@@ -111,9 +111,9 @@ public class DelayedPointBulletType extends BulletType{
         }
         if(result == null) result = new Vec2(px, py);
 
-        DPBData data = Pools.obtain(DPBData.class, DPBData::new);
+        DelayedPointBulletData data = Pools.obtain(DelayedPointBulletData.class, DelayedPointBulletData::new);
         data.target = result;
-        data.c = colors;
+        data.colors = colors;
         data.square = square;
 
         b.data = data;
@@ -127,7 +127,7 @@ public class DelayedPointBulletType extends BulletType{
         super.init(b);
     }
 
-    private void addRectPathDistortion(Bullet b, DPBData data, float rot){
+    private void addRectPathDistortion(Bullet b, DelayedPointBulletData data, float rot){
         if(renderingDistortion){
             Position target = data.target;
 
@@ -146,7 +146,7 @@ public class DelayedPointBulletType extends BulletType{
 
     @Override
     public void draw(Bullet b){
-        if(!(b.data instanceof DPBData data)) return;
+        if(!(b.data instanceof DelayedPointBulletData data)) return;
         Position target = data.target;
 
         float tX = target.getX();
@@ -184,7 +184,7 @@ public class DelayedPointBulletType extends BulletType{
 
     @Override
     public void despawned(Bullet b){
-        if(!(b.data instanceof DPBData data) || !b.isAdded()) return;
+        if(!(b.data instanceof DelayedPointBulletData data) || !b.isAdded()) return;
         Position target = data.target;
 
         float tX = target.getX();
@@ -213,16 +213,17 @@ public class DelayedPointBulletType extends BulletType{
         super.despawned(b);
     }
 
-    public static class DPBData implements Poolable{
-        Position target;
-        Color[] c;
-        boolean square;
+}
 
-        @Override
-        public void reset(){
-            target = null;
-            c = null;
-            square = false;
-        }
+class DelayedPointBulletData implements Poolable{
+    Position target;
+    Color[] colors;
+    boolean square;
+
+    @Override
+    public void reset(){
+        target = null;
+        colors = null;
+        square = false;
     }
 }

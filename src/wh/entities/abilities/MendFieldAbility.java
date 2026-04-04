@@ -1,17 +1,16 @@
 package wh.entities.abilities;
 
-import arc.graphics.Color;
-import arc.math.Mathf;
-import arc.util.Time;
-import arc.util.Tmp;
-import mindustry.content.Fx;
-import mindustry.entities.abilities.Ability;
-import mindustry.gen.Building;
-import mindustry.gen.Unit;
-import mindustry.graphics.Drawf;
+import arc.graphics.*;
+import arc.math.*;
+import arc.util.*;
+import mindustry.content.*;
+import mindustry.entities.abilities.*;
+import mindustry.gen.*;
+import mindustry.graphics.*;
 
 import static mindustry.Vars.indexer;
 
+/** 周期性修复附近受损建筑，并绘制修复高亮。 */
 public class MendFieldAbility extends Ability {
     public Color baseColor = Color.valueOf("84f491");
     public Color phaseColor = Color.valueOf("ffd59e");
@@ -19,8 +18,6 @@ public class MendFieldAbility extends Ability {
     public float range = 180f;
     public float reload = 60f;
     public float healPercent = 10f;
-
-    protected float timer = 0f;
 
     public MendFieldAbility() {}
 
@@ -33,9 +30,10 @@ public class MendFieldAbility extends Ability {
     @Override
     public void update(Unit unit) {
         indexer.eachBlock(unit, range, Building::damaged, other -> {
-            timer += Time.delta;
-            if (timer >= reload) {
-                timer = 0f;
+            // data 在这里是公共冷却，范围内任意受损建筑都共用这次触发。
+            data += Time.delta;
+            if(data >= reload){
+                data = 0f;
                 other.heal((healPercent / 100) * other.block.health);
                 Fx.healBlockFull.at(other.x, other.y, other.block.size, Tmp.c1.set(baseColor).lerp(phaseColor, 0.3f));
             }

@@ -635,16 +635,16 @@ public final class KarvexTeachTree{
             node(WHBlocks.t2Module, () -> {
                 node(WHBlocks.t3Module, () -> {
                     node(WHBlocks.tankFactory, () -> {
-                        node(WHUnitTypes.tank1, () -> {
-                            node(WHUnitTypes.tank2, () -> {
-                                node(WHUnitTypes.tank3, () -> {
+                        node(WHUnitTypes.tankA1, () -> {
+                            node(WHUnitTypes.tankA2, () -> {
+                                node(WHUnitTypes.tankA3, () -> {
                                 });
                             });
                         });
 
-                        node(WHUnitTypes.tank1s, () -> {
-                            node(WHUnitTypes.tank2s, () -> {
-                                node(WHUnitTypes.tank3s, () -> {
+                        node(WHUnitTypes.tankB1, () -> {
+                            node(WHUnitTypes.tankB2, () -> {
+                                node(WHUnitTypes.tankB3, () -> {
                                 });
                             });
                         });
@@ -652,8 +652,8 @@ public final class KarvexTeachTree{
                     node(WHBlocks.t4Module, () -> {
                         node(WHBlocks.t5Module, () -> {
                             node(WHBlocks.jumpBeacon, () -> {
-                                node(WHUnitTypes.tankEn1, () -> {
-                                    node(WHUnitTypes.tankEn2, () -> {
+                                node(WHUnitTypes.tankC1, () -> {
+                                    node(WHUnitTypes.tankC2, () -> {
                                     });
                                 });
                             });

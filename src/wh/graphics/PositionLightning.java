@@ -18,6 +18,7 @@ import mindustry.entities.bullet.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import wh.content.*;
+import wh.core.*;
 import wh.entities.bullet.*;
 import wh.util.struct.*;
 
@@ -143,7 +144,7 @@ public final class PositionLightning{
     public static void createEffect(Position from, Position to, Color color, int lightningNum, float width){
         if(headless) return;
 
-        if(lightningNum < 1){
+        if(lightningNum < 1 || !WHSettings.effectEnabled()){
             Fx.chainLightning.at(from.getX(), from.getY(), 0, color, new Vec2().set(to));
         }else{
             float dst = from.dst(to);
@@ -193,8 +194,9 @@ public final class PositionLightning{
 
     /** create lightning effect. */
     public static void createBoltEffect(Color color, float width, Vec2Seq vets) {
+        if(!WHSettings.effectEnabled()) return;
         vets.each(((x, y) -> {
-            if (Mathf.chance(0.0855)) WHFx.lightningSpark.at(x, y, rand.random(2f + width, 4f + width), color);
+            if(Mathf.chance(0.0855f)) WHFx.lightningSpark.at(x, y, rand.random(2f + width, 4f + width), color);
         }));
         WHFx.posLightning.at((vets.firstTmp().x + vets.peekTmp().x) / 2f, (vets.firstTmp().y + vets.peekTmp().y) / 2f, width, color, vets);
     }

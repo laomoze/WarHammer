@@ -24,8 +24,16 @@ final class WHClassMap {
 
     static void load() {
         ClassMap.classes.put("AdaptedHealAbility", AdaptedHealAbility.class);
+        ClassMap.classes.put("BulletKillHealAbility", BulletKillHealAbility.class);
+        ClassMap.classes.put("BerserkOnAllyDeathAbility", BerserkOnAllyDeathAbility.class);
+        ClassMap.classes.put("CloseCombatAbility", CloseCombatAbility.class);
+        ClassMap.classes.put("EscortShieldAbility", EscortShieldAbility.class);
+        ClassMap.classes.put("FortifiedArmorAbility", FortifiedArmorAbility.class);
+        ClassMap.classes.put("LastStandAbility", LastStandAbility.class);
         ClassMap.classes.put("MendFieldAbility", MendFieldAbility.class);
         ClassMap.classes.put("ShockWaveAbility", ShockWaveAbility.class);
+        ClassMap.classes.put("SupportSpawnAbility", SupportSpawnAbility.class);
+        ClassMap.classes.put("TeamCombatAbility", TeamCombatAbility.class);
         ClassMap.classes.put("EffectBulletType", EffectBulletType.class);
         ClassMap.classes.put("BlackHoleBulletType", BlackHoleBulletType.class);
         ClassMap.classes.put("LightningLinkerBulletType", LightningLinkerBulletType.class);

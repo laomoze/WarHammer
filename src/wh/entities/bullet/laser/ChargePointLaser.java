@@ -14,6 +14,7 @@ import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import wh.content.*;
+import wh.core.*;
 import wh.graphics.*;
 import wh.util.*;
 
@@ -209,6 +210,7 @@ public class ChargePointLaser extends PointLaserBulletType{
         float phaseOffset = 360 / num;
 
         for(int i = 0; i < num; i++){
+            if(!WHSettings.effectEnabled()) return;
             float a = phaseOffset * i + Time.time * 0.5f;
             Lines.stroke(1.5f * (1 + Mathf.sin(Time.time, 12, 0.3f)));
             Tmp.v1.trns(a, width / 2);

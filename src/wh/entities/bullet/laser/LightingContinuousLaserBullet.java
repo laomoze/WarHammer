@@ -10,6 +10,7 @@ import mindustry.entities.bullet.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
+import wh.core.*;
 import wh.graphics.*;
 import wh.util.*;
 
@@ -88,27 +89,30 @@ public class LightingContinuousLaserBullet extends ContinuousLaserBulletType{
         Draw.reset();
 
         Rand rand = WHUtils.rand(b.id);
+
         float base = (Time.time / particleLife);
-        for(int i = 0; i < particles; i++){
-            Draw.z(Layer.bullet + 1f);
-            float fin1 = (rand.random(1f) + base) % 1f, fout1 = 1f - fin1;
-            float len = rand.random(particleLen * 0.7f, particleLen * 1.3f);
-            float centerDeg = rand.random(Mathf.pi);
+        if(WHSettings.effectEnabled()){
+            for(int i = 0; i < particles; i++){
+                Draw.z(Layer.bullet + 1f);
+                float fin1 = (rand.random(1f) + base) % 1f, fout1 = 1f - fin1;
+                float len = rand.random(particleLen * 0.7f, particleLen * 1.3f);
+                float centerDeg = rand.random(Mathf.pi);
 
-            float progress = Interp.pow2In.apply(fin1);
-            float offset = rand.random(-width, width) * Mathf.cos(centerDeg) * fade;
+                float progress = Interp.pow2In.apply(fin1);
+                float offset = rand.random(-width, width) * Mathf.cos(centerDeg) * fade;
 
-            Tmp.v1.trns(rot, backLength).add(offset, offset).add(b.x, b.y);
+                Tmp.v1.trns(rot, backLength).add(offset, offset).add(b.x, b.y);
 
-            Tmp.v2.trns(rot, realLength).add(Tmp.v1);
+                Tmp.v2.trns(rot, realLength).add(Tmp.v1);
 
-            float moveAngle = Angles.angle(Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y);
+                float moveAngle = Angles.angle(Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y);
 
-            Tmp.v3.trns(moveAngle, Math.max(0, realLength - frontLength) * progress).add(Tmp.v1);
+                Tmp.v3.trns(moveAngle, Math.max(0, realLength - frontLength) * progress).add(Tmp.v1);
 
-            Draw.color(hitColor);
-            Lines.stroke(Interp.pow2Out.apply(fout1) * Mathf.curve(fin1, 0, 0.3f) * particleWidth * fade);
-            Lines.lineAngleCenter(Tmp.v3.x, Tmp.v3.y, moveAngle, len * Mathf.curve(fin1, 0, 0.3f) * Interp.pow3Out.apply(fout1) * fade);
+                Draw.color(hitColor);
+                Lines.stroke(Interp.pow2Out.apply(fout1) * Mathf.curve(fin1, 0, 0.3f) * particleWidth * fade);
+                Lines.lineAngleCenter(Tmp.v3.x, Tmp.v3.y, moveAngle, len * Mathf.curve(fin1, 0, 0.3f) * Interp.pow3Out.apply(fout1) * fade);
+            }
         }
 
         for(int i = 0; i < rings; i++){

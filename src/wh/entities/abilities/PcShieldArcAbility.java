@@ -1,28 +1,24 @@
 package wh.entities.abilities;
 
-import arc.Core;
-import arc.func.Cons;
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Lines;
-import arc.math.Angles;
-import arc.math.Mathf;
-import arc.math.geom.Vec2;
-import arc.util.Time;
-import arc.util.Tmp;
-import mindustry.Vars;
-import mindustry.content.Fx;
+import arc.*;
+import arc.func.*;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.math.*;
+import arc.math.geom.*;
+import arc.util.*;
+import mindustry.*;
+import mindustry.content.*;
 import mindustry.entities.*;
-import mindustry.entities.abilities.ShieldArcAbility;
-import mindustry.gen.Bullet;
-import mindustry.gen.Groups;
-import mindustry.gen.Unit;
-import mindustry.graphics.Layer;
-import wh.content.WHFx;
+import mindustry.entities.abilities.*;
+import mindustry.gen.*;
+import mindustry.graphics.*;
+import wh.content.*;
 import wh.graphics.*;
 
 import static wh.core.WarHammerMod.name;
 
+/** 改造版弧形护盾，可吸收或反射子弹，并可阻挡近身敌军。 */
 public class PcShieldArcAbility extends ShieldArcAbility{
     private static Unit paramUnit;
     private static PcShieldArcAbility paramField;
@@ -39,10 +35,10 @@ public class PcShieldArcAbility extends ShieldArcAbility{
             && b.type.reflectable && Mathf.chance(paramField.chanceDeflect)
             && b.damage < paramField.max && b.damage < paramUnit.maxHealth * 0.5f){
 
-                //make sound
+                // 成功偏转时先播放一次弹开音效。
                 paramField.deflectSound.at(paramPos, Mathf.random(0.9f, 1.1f));
 
-                //translate bullet back to where it was upon collision
+                // 把子弹回退到碰撞前的位置，再做反弹，避免留在盾内重复判定。
                 b.trns(-b.vel.x, -b.vel.y);
 
                 float penX = Math.abs(paramPos.x - b.x), penY = Math.abs(paramPos.y - b.y);
@@ -62,7 +58,7 @@ public class PcShieldArcAbility extends ShieldArcAbility{
                 Fx.absorb.at(b);
             }
 
-            // break shield
+            // 护盾值不够时直接击破，并扣掉额外冷却惩罚。
             if(paramField.data <= b.damage()){
                 paramField.data = -1;
                 paramField.data -= paramField.cooldown * paramField.regen;
@@ -70,7 +66,7 @@ public class PcShieldArcAbility extends ShieldArcAbility{
                 WHFx.arcShieldBreak.at(paramPos.x, paramPos.y, 0, paramField.color == null ? paramUnit.type.shieldColor(paramUnit) : paramField.color, paramUnit);
             }
 
-            // shieldDamage for consistency
+            // 统一使用子弹自己的护盾伤害计算。
             paramField.data -= b.type.shieldDamage(b);
             paramField.alpha = 1f;
         }
@@ -78,7 +74,7 @@ public class PcShieldArcAbility extends ShieldArcAbility{
 
 
     protected static final Cons<Unit> unitConsumer = unit -> {
-        // ignore core units
+        // 核心单位不参与这里的近身阻挡。
         if(!unit.isMissile() && paramField.data > 0 && unit.targetable(paramUnit.team) &&
         !unit.within(paramPos, paramField.radius - paramField.width) &&
         (Tmp.v1.set(unit).add(unit.vel).within(paramPos, paramField.radius + paramField.width / 2f) || unit.within(paramPos, paramField.radius + paramField.width)) &&
@@ -89,9 +85,9 @@ public class PcShieldArcAbility extends ShieldArcAbility{
                 float overlapDst = reach - unit.dst(paramPos.x, paramPos.y);
 
                 if(overlapDst > 0){
-                    //stop
+                    // 进入护盾扇区的敌军会被强制减速/停住。
                     unit.vel.setZero();
-                    // get out
+                    // 给一个朝外的位移，把敌军从护盾边缘顶出去。
                     unit.move(Tmp.v1.set(unit).sub(paramUnit).setLength(overlapDst + 0.01f));
 
                     if(Mathf.chanceDelta(0.5f * Time.delta)){

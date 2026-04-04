@@ -28,7 +28,7 @@ import static arc.graphics.g2d.Lines.polyline;
 import static mindustry.Vars.tilesize;
 
 public final class Drawn{
-    private static final FloatSeq points = new FloatSeq();
+    private static final FloatSeq points = new FloatSeq(2 * 4);
     public static final int[] oneArr = new int[]{1};
     public static final float sinScl = 1.0F;
     public static final float[] v = new float[6];
@@ -48,6 +48,22 @@ public final class Drawn{
     public static final Vec3 v33 = new Vec3();
     public static final Vec3 v34 = new Vec3();
     public static final Vec3 v35 = new Vec3();
+
+
+    private static final Vec3[] cubeVerts = {
+    new Vec3(-1f, -1f, -1f), new Vec3(1f, -1f, -1f), new Vec3(1f, 1f, -1f), new Vec3(-1f, 1f, -1f),
+    new Vec3(-1f, -1f, 1f), new Vec3(1f, -1f, 1f), new Vec3(1f, 1f, 1f), new Vec3(-1f, 1f, 1f)
+    };
+    private static final int[] cubeEdges = {
+    0, 1, 1, 2, 2, 3, 3, 0,
+    4, 5, 5, 6, 6, 7, 7, 4,
+    0, 4, 1, 5, 2, 6, 3, 7
+    };
+    private static final float[] cubeProjX = new float[8], cubeProjY = new float[8];
+    private static final Vec3 cubeTmp = new Vec3();
+    private static final Mat3D cubeMat = new Mat3D();
+    private static final float[] cubeMul = new float[16];
+
 
     static final Color c1 = new Color();
     static final Color c2 = new Color();
@@ -487,6 +503,84 @@ public final class Drawn{
         x - v.x, y - v.y,
         x - v31.x, y - v31.y
         );
+    }
+
+    /** 线框立方体：将 3D 顶点变换后投影到 2D 再连线绘制。 */
+    public static void wireCube(float x, float y, float size, float rotation, float stroke, Color color){
+        wireCube(
+        x, y, size,
+        cubeMat.idt().rotate(Vec3.Y, rotation).rotate(Vec3.X, rotation * 0.55f),
+        size * 3.2f, size * 2.4f,
+        color, stroke
+        );
+    }
+
+    /**
+     * 线框立方体：将 3D 顶点做矩阵变换，再透视投影到 2D。
+     * `cameraZ` 需要大于变换后点的最大 z，避免分母接近 0 导致投影爆炸。
+     */
+    public static void wireCube(float x, float y, float size, Mat3D transform, float cameraZ, float focal, Color color, float stroke){
+        float half = size / 2f;
+        System.arraycopy(transform.val, 0, cubeMul, 0, cubeMul.length);
+
+        for(int i = 0; i < cubeVerts.length; i++){
+            float vx = cubeVerts[i].x * half, vy = cubeVerts[i].y * half, vz = cubeVerts[i].z * half;
+            cubeTmp.set(
+            cubeMul[0] * vx + cubeMul[4] * vy + cubeMul[8] * vz + cubeMul[12],
+            cubeMul[1] * vx + cubeMul[5] * vy + cubeMul[9] * vz + cubeMul[13],
+            cubeMul[2] * vx + cubeMul[6] * vy + cubeMul[10] * vz + cubeMul[14]
+            );
+
+            float denom = Math.max(0.0001f, cameraZ - cubeTmp.z);
+            float scl = focal / denom;
+            cubeProjX[i] = x + cubeTmp.x * scl;
+            cubeProjY[i] = y + cubeTmp.y * scl;
+        }
+
+        Lines.stroke(stroke, color);
+        for(int i = 0; i < cubeEdges.length; i += 2){
+            int a = cubeEdges[i], b = cubeEdges[i + 1];
+            Lines.line(cubeProjX[a], cubeProjY[a], cubeProjX[b], cubeProjY[b]);
+        }
+        Draw.reset();
+    }
+
+
+    /**
+     * 伪 3D 多边形：输入 2D 点，提升到 z=0 平面后做旋转和透视。
+     * `drawer` 需按面写入扁平 XY 数据：每个面 4 个顶点，共 8 个 float。
+     */
+    public static void draw3D(float x, float y, float rx, float ry, float rz, Cons<FloatSeq> drawer){
+        points.clear();
+        drawer.get(points);
+        int size = points.size;
+        float[] items = points.items;
+
+        // 透视相机距离：值越大，透视形变越弱。
+        final float cameraZ = 700f;
+
+        // 每个面 8 个 float：(x1,y1,x2,y2,x3,y3,x4,y4)。
+        for(int i = 0; i < size; i += 8){
+            Fill.polyBegin();
+            // 每次读取一个顶点的 XY。
+            for(int j = 0; j < 8; j += 2){
+                int idx = i + j;
+                float wx = items[idx];
+                float wy = items[idx + 1];
+
+                // 2D 点先提升到 3D（z=0），再按 Y -> X -> Z 顺序旋转。
+                v31.set(wx, wy, 0f).rotate(Vec3.Y, ry).rotate(Vec3.X, rx).rotate(Vec3.Z, rz);
+
+                // 简单透视：点越靠近 cameraZ，缩放越大。
+                float sz = cameraZ / (cameraZ - v31.z);
+                v31.x *= sz;
+                v31.y *= sz;
+
+                // 投影后平移到目标中心点。
+                Fill.polyPoint(v31.x + x, v31.y + y);
+            }
+            Fill.polyEnd();
+        }
     }
 
 
