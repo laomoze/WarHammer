@@ -71,7 +71,8 @@ public class ApproachBullet extends BulletType{
         float radius = 10f * fadeOut * fadeIn;
 
         Draw.z(Layer.bullet + b.layer);
-        Draw.color(b.team.color.cpy());
+        /* Draw.color(b.team.color.cpy());*/
+        Draw.color(Team.crux.color.cpy());
 
         Tmp.v1.set(b);
         float ex = Tmp.v1.x, ey = Tmp.v1.y;

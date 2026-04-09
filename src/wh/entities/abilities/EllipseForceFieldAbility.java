@@ -49,7 +49,7 @@ public class EllipseForceFieldAbility extends Ability{
     protected boolean start = false;
 
     // alpha/size 控制绘制表现，lastShield/cooldownTimer 用于破盾与恢复判定。
-    protected float alpha, size, lastShield, cooldownTimer = 0f;
+    protected float alpha, size, cooldownTimer = 0f;
     protected boolean wasBroken = true;
 
     private static Unit paramUnit;
@@ -68,6 +68,7 @@ public class EllipseForceFieldAbility extends Ability{
     public EllipseForceFieldAbility(float width, float length, float regen, float max, float cooldown, float restartRatio){
         this.longAxis = width;
         this.minorAxis = length;
+        this.radius = Math.max(width, length);
         this.regen = regen;
         this.max = max;
         this.cooldown = cooldown;
@@ -77,6 +78,7 @@ public class EllipseForceFieldAbility extends Ability{
     public EllipseForceFieldAbility(float width, float length, float regen, float max, float cooldown, float restartRatio, float armor){
         this.longAxis = width;
         this.minorAxis = length;
+        this.radius = Math.max(width, length);
         this.regen = regen;
         this.max = max;
         this.cooldown = cooldown;
@@ -95,11 +97,11 @@ public class EllipseForceFieldAbility extends Ability{
         return XY == 1 ? dx : dy;
     }*/
 
-    public static float calculateInEllipse(Bullet bullet, Unit unit, float a, float b, float XY){
+    public static float calculateInEllipse(Bullet bullet, Unit unit, float a, float b, float rotation, float XY){
         // 先转到单位局部坐标，再判断点是否落在椭圆内部。
         float realX = bullet.x() - unit.x, realY = bullet.y() - unit.y;
 
-        float unitRotation = unit.rotation - 90;
+        float unitRotation = unit.rotation + rotation - 90f;
         float cosRot = Mathf.cosDeg(unitRotation);
         float sinRot = Mathf.sinDeg(unitRotation);
 
@@ -111,12 +113,38 @@ public class EllipseForceFieldAbility extends Ability{
         return XY == 1 ? dx : dy;
     }
 
+    private static boolean insideEllipse(Bullet bullet, Unit unit, EllipseForceFieldAbility field){
+        float realX = bullet.x() - unit.x, realY = bullet.y() - unit.y;
+
+        float shieldRotation = unit.rotation + field.rotation - 90f;
+        float cosRot = Mathf.cosDeg(shieldRotation);
+        float sinRot = Mathf.sinDeg(shieldRotation);
+
+        float rotX = realX * cosRot - realY * sinRot;
+        float rotY = realX * sinRot + realY * cosRot;
+
+        float dx = rotX / field.longAxis;
+        float dy = rotY / field.minorAxis;
+        return dx * dx + dy * dy <= 1f;
+    }
+
+    private static float ellipseHalfWidth(float longAxis, float minorAxis, float rotation, float size){
+        float angle = rotation - 90f;
+        float cos = Mathf.cosDeg(angle);
+        float sin = Mathf.sinDeg(angle);
+        return Mathf.sqrt(longAxis * longAxis * cos * cos + minorAxis * minorAxis * sin * sin) * size;
+    }
+
+    private static float ellipseHalfHeight(float longAxis, float minorAxis, float rotation, float size){
+        float angle = rotation - 90f;
+        float cos = Mathf.cosDeg(angle);
+        float sin = Mathf.sinDeg(angle);
+        return Mathf.sqrt(longAxis * longAxis * sin * sin + minorAxis * minorAxis * cos * cos) * size;
+    }
+
     private static final Cons<Bullet> ellipseShieldConsumer = bullet -> {
         if(bullet.team != paramUnit.team && (paramField.ignoreBulletAbsorb || bullet.type.absorbable) && paramUnit.shield > 0){
-            float tx = calculateInEllipse(bullet, paramUnit, paramField.longAxis, paramField.minorAxis, 1);
-            float ty = calculateInEllipse(bullet, paramUnit, paramField.longAxis, paramField.minorAxis, 0);
-
-            if(tx * tx + ty * ty <= 1f){
+            if(insideEllipse(bullet, paramUnit, paramField)){
                 if(Mathf.chance(paramField.reflectChance)){
                     reflectBullet(bullet, paramUnit);
                 }else{
@@ -127,9 +155,10 @@ public class EllipseForceFieldAbility extends Ability{
     };
 
     protected static void absorbBullet(Bullet bullet, Unit unit){
+        float shieldDamage = bullet.type().shieldDamage(bullet);
+        float reducedDamage = Math.max(shieldDamage - (bullet.type().pierceArmor ? 0f : paramField.armor), shieldDamage * 0.1f);
         absorbEffect.at(bullet);
-        unit.shield -= (paramField.damageReduction ? 1 - paramField.damageReductionAmount : 1) *
-        (Math.max(bullet.type().shieldDamage(bullet) - (bullet.type().pierceArmor ? 0 : paramField.armor), bullet.type().shieldDamage(bullet) * 0.1f));
+        unit.shield -= (paramField.damageReduction ? 1f - paramField.damageReductionAmount : 1f) * reducedDamage;
         paramField.alpha = 1f;
         bullet.absorb();
     }
@@ -192,14 +221,17 @@ public class EllipseForceFieldAbility extends Ability{
             checkRadius(unit);
             if(Regen) regenShield(unit);
         }
-
-        lastShield = Mathf.clamp(unit.shield, 0, max);
     }
 
     public void checkRadius(Unit unit){
         paramUnit = unit;
         paramField = this;
-        Groups.bullet.intersect(unit.x - longAxis, unit.y - minorAxis, longAxis * 2f * size, minorAxis * 2f * size, ellipseShieldConsumer);
+        if(size <= 0.001f) return;
+
+        float shieldRotation = unit.rotation + rotation;
+        float halfWidth = ellipseHalfWidth(longAxis, minorAxis, shieldRotation, size);
+        float halfHeight = ellipseHalfHeight(longAxis, minorAxis, shieldRotation, size);
+        Groups.bullet.intersect(unit.x - halfWidth, unit.y - halfHeight, halfWidth * 2f, halfHeight * 2f, ellipseShieldConsumer);
     }
 
     @Override

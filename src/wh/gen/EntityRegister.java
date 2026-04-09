@@ -44,6 +44,7 @@ public final class EntityRegister{
         /*  register("StarrySkyUnit", StarrySkyEntity.class, StarrySkyEntity::new);*/
 
         register("HoverPayloadUnit", HoverPayloadUnit.class, HoverPayloadUnit::new);
+        register("CarrierPayloadUnit", CarrierPayloadUnit.class, CarrierPayloadUnit::new);
         register("TankEn2Unit", TankEn2Unit.class, TankEn2Unit::new);
 
         register("TitanUnit", TitanUnit.class, TitanUnit::create);

@@ -11,6 +11,7 @@ public final class WHSettings{
     public static final String regularEffectScaleKey = "wh-regular-effect-scale";
     public static final String distortionEnabledKey = "wh-distortion-enabled";
     public static final String distortionStrengthKey = "wh-distortion-strength";
+    public static final String carrierDebugHudKey = "wh-carrier-debug-hud";
     private static final String categoryName = "WarHammer设置";
 
     private WHSettings(){
@@ -28,6 +29,7 @@ public final class WHSettings{
             table.sliderPref(regularEffectScaleKey, 100, 25, 100, 5, i -> i + "%");
             table.checkPref(distortionEnabledKey, true);
             table.sliderPref(distortionStrengthKey, 100, 0, 100, 5, i -> i + "%");
+            table.checkPref(carrierDebugHudKey, false);
         });
     }
 
@@ -54,5 +56,9 @@ public final class WHSettings{
 
     public static float distortionStrengthScale(){
         return Core.settings.getInt(distortionStrengthKey, 100) / 100f;
+    }
+
+    public static boolean carrierDebugHud(){
+        return Core.settings.getBool(carrierDebugHudKey, false);
     }
 }

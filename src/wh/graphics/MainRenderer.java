@@ -4,20 +4,28 @@ import arc.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.graphics.gl.*;
+import arc.math.geom.*;
 import arc.struct.*;
 import arc.util.*;
 import arc.util.pooling.*;
 import mindustry.*;
 import mindustry.game.*;
+import mindustry.gen.*;
 import mindustry.graphics.*;
 import wh.content.*;
 import wh.core.*;
+import wh.entities.world.entities.*;
+import wh.gen.CarrierUnit.*;
+import wh.gen.CarrierUnit.UnitAI.*;
 
 import static arc.Core.*;
-import static wh.graphics.WHShaders.convex;
 
 public class MainRenderer{
     private final Seq<BlackHole> holes = new Seq<>();
+    private final Vec2 hudQueue = new Vec2();
+    private final Vec2 hudReverse = new Vec2();
+    private final Vec2 hudVel = new Vec2();
+    private final Vec2 hudNose = new Vec2();
     public static MainRenderer renderer;
 
     public FrameBuffer buffer = new FrameBuffer();
@@ -28,6 +36,7 @@ public class MainRenderer{
     private static final float[][] initStrength = new float[512][];
     private static final Pool<BlackHole> holePool = Pools.get(BlackHole.class, BlackHole::new);
     private static boolean warnedConvexMissing = false;
+    private static boolean warnedRectMissing = false;
     private static boolean warnedHoleMissing = false;
 
     protected MainRenderer(){
@@ -48,6 +57,55 @@ public class MainRenderer{
             drawShader(WHShaders.hexagonalShield, WHContent.HEXAGONAL_SHIELD, 1);
         }
         advancedDraw();
+        drawCarrierDebugHud();
+    }
+
+    private void drawCarrierDebugHud(){
+        if(Vars.headless || !WHSettings.carrierDebugHud()) return;
+        if(Vars.state == null || !Vars.state.isGame()) return;
+
+        Draw.z(Layer.flyingUnit + 2f);
+
+        Groups.unit.each(fighter -> {
+            if(!(fighter.controller() instanceof CarrierFighterAI ai)) return;
+            if(!ai.isReturning()) return;
+
+            CarrierHostc carrier = ai.carrierDebug();
+            if(carrier == null) return;
+            CarrierUnitType type = carrier.carrierType();
+            if(type == null) return;
+
+            int runway = carrier.clampRunway(ai.runwayIndex());
+            carrier.recoveryPoint(runway, Tmp.v1);
+            carrier.runwayFrontPoint(runway, Tmp.v2);
+            carrier.runwayQueueInsertPoint(runway, hudQueue);
+            boolean showReverse = false;
+            if(carrier instanceof CarrierRuntime runtime){
+                runtime.recoveryReversePoint(runway, hudReverse);
+                showReverse = Float.isFinite(hudReverse.x) && Float.isFinite(hudReverse.y);
+            }
+
+            float distTail = fighter.dst(Tmp.v1);
+            float velLen = fighter.vel.len();
+            float orbitAngleErr = ai.debugOrbitAngleError();
+            String stage = ai.debugStage();
+            String flags = "o" + (ai.debugInOrbitBand() ? "1" : "0") + " e" + (ai.debugInEntryWindow() ? "1" : "0") + " c" + (ai.debugClaimBlocked() ? "1" : "0");
+
+            Color stateColor = ai.isLanding() ? Pal.accent : Pal.power;
+            Drawn.overlayText("r" + runway + " " + stage + " dT " + Strings.fixed(distTail, 0) + " p " + Strings.fixed(orbitAngleErr, 0) + " " + flags, fighter.x, fighter.y + fighter.hitSize + 12f, 0f, stateColor, false);
+            Drawn.overlayText("v " + Strings.fixed(velLen, 2) + " rot " + Strings.fixed(fighter.rotation, 0), fighter.x, fighter.y + fighter.hitSize + 4f, 0f, Color.white, false);
+
+            Lines.stroke(1.2f, stateColor);
+            Lines.line(fighter.x, fighter.y, Tmp.v1.x, Tmp.v1.y);
+            if(ai.isReturning() && showReverse){
+                Drawf.dashLine(Pal.place, Tmp.v1.x, Tmp.v1.y, hudReverse.x, hudReverse.y);
+                Draw.color(Pal.place);
+                Fill.circle(hudReverse.x, hudReverse.y, 1.8f);
+            }
+            Draw.color(Color.scarlet);
+            Fill.circle(Tmp.v1.x, Tmp.v1.y, 2.2f);
+            Draw.reset();
+        });
     }
 
     public static void init(){
@@ -68,34 +126,37 @@ public class MainRenderer{
     }
 
     public static void addShockCircle(float x, float y, float r, float lifetime){
-        addShockCircle(x, y, r, lifetime, convex == null ? 0f : convex.strength);
+        addShockCircle(x, y, r, lifetime, WHShaders.convex == null ? 0f : WHShaders.convex.strength);
     }
 
     public static void addShockCircle(float x, float y, float r, float lifetime, float strength){
-        float scaledStrength = resolveDistortionStrength(strength);
-        if(scaledStrength <= 0.0001f || convex == null) return;
-        convex.add(x, y, r, lifetime, scaledStrength);
+        float scaledStrength = resolveDistortionStrength(strength, WHShaders.convex != null, true);
+        if(scaledStrength <= 0.0001f || WHShaders.convex == null) return;
+        WHShaders.convex.add(x, y, r, lifetime, scaledStrength);
     }
 
     public static void addShockRect(float x, float y, float length, float width, float angle, float lifetime){
-        addShockRect(x, y, length, width, angle, lifetime, convex == null ? 0f : convex.strength);
+        addShockRect(x, y, length, width, angle, lifetime, WHShaders.convexRect == null ? 0f : WHShaders.convexRect.strength);
     }
 
     public static void addShockRect(float x, float y, float length, float width, float angle, float lifetime, float strength){
-        float scaledStrength = resolveDistortionStrength(strength);
-        if(scaledStrength <= 0.0001f || convex == null) return;
-        convex.addRect(x, y, length, width, angle, lifetime, scaledStrength);
+        float scaledStrength = resolveDistortionStrength(strength, WHShaders.convexRect != null, false);
+        if(scaledStrength <= 0.0001f || WHShaders.convexRect == null) return;
+        WHShaders.convexRect.addRect(x, y, length, width, angle, lifetime, scaledStrength);
     }
 
-    private static float resolveDistortionStrength(float baseStrength){
+    private static float resolveDistortionStrength(float baseStrength, boolean shaderReady, boolean circle){
         if(Vars.headless || !WHSettings.distortionEnabled()) return 0f;
         float scale = WHSettings.distortionStrengthScale();
         if(scale <= 0.0001f) return 0f;
 
-        if(convex == null){
-            if(!warnedConvexMissing){
+        if(!shaderReady){
+            if(circle && !warnedConvexMissing){
                 warnedConvexMissing = true;
                 Log.warn("Convex lens shader is null; WHShaders.init() may have failed.");
+            }else if(!circle && !warnedRectMissing){
+                warnedRectMissing = true;
+                Log.warn("Rect lens shader is null; WHShaders.init() may have failed.");
             }
             return 0f;
         }
@@ -156,16 +217,23 @@ public class MainRenderer{
                 //Compose blackhole pass into buffer2 first, so convex can sample the already-distorted image.
                 buffer.blit(WHShaders.holeShader);
             }else{
-                if(!warnedHoleMissing){
-                    warnedHoleMissing = true;
-                    Log.warn("Black hole shader is null; falling back to screenspace pass.");
-                }
                 buffer.blit(Shaders.screenspace);
             }
             buffer2.end();
 
-            if(convex != null && convex.hasAny()){
-                convex.blitFrom(buffer2);
+            boolean hasCircleDistortion = WHShaders.convex != null && WHShaders.convex.hasAny();
+            boolean hasRectDistortion = WHShaders.convexRect != null && WHShaders.convexRect.hasAny();
+
+            if(hasCircleDistortion && hasRectDistortion){
+                buffer.resize(graphics.getWidth(), graphics.getHeight());
+                buffer.begin(Color.clear);
+                WHShaders.convex.blitFrom(buffer2);
+                buffer.end();
+                WHShaders.convexRect.blitFrom(buffer);
+            }else if(hasCircleDistortion){
+                WHShaders.convex.blitFrom(buffer2);
+            }else if(hasRectDistortion){
+                WHShaders.convexRect.blitFrom(buffer2);
             }else{
                 buffer2.blit(Shaders.screenspace);
             }

@@ -40,6 +40,20 @@ ext{
     jabelVersion = (project.findProperty('jabelVersion') ?: '93fde537c7').toString()
     isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
     sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+    mindustryModsDir = file((project.findProperty('mindustryModsDir') ?: "${System.properties['user.home']}/AppData/Roaming/Mindustry/mods").toString())
+}
+
+def copyArtifactToMindustryMods = { File artifact ->
+    if(!mindustryModsDir.exists() && !mindustryModsDir.mkdirs()){
+        throw new GradleException("Failed to create Mindustry mods directory: $mindustryModsDir")
+    }
+
+    copy{
+        from artifact
+        into mindustryModsDir
+    }
+
+    logger.lifecycle("Copied ${artifact.name} to ${mindustryModsDir}")
 }
 
 //java 8 backwards compatibility flag
@@ -94,6 +108,10 @@ jar{
 
     from("assets/"){
         include "**"
+    }
+
+    doLast{
+        copyArtifactToMindustryMods(archiveFile.get().asFile)
     }
 }
 

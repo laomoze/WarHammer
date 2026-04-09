@@ -19,6 +19,7 @@ public class TitanUnitType extends UnitType{
     public float regen = 1200 / 60f, max = 15000, cooldown = 60 * 60f, restartRatio = 0.4f;
 
     public float reflectChance = 0.15f;
+    public boolean shader = true;
     public boolean ignoreBulletAbsorb = false;
 
     public boolean percentRegen = false;

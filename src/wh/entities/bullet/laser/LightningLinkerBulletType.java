@@ -172,21 +172,26 @@ public class LightningLinkerBulletType extends BasicBulletType{
         Drawf.light(b.x, b.y, size * 1.85f, backColor, 0.7f);
     }
 
-    @Override
-    public void despawned(Bullet b) {
-        PositionLightning.createRandomRange(b, b.team, b, randomGenerateRange, backColor, Mathf.chanceDelta(randomLightningChance), 0, 0, boltWidth, boltNum, randomLightningNum, hitPos -> {
+
+    public void despawnedHit(Bullet b){
+        if(randomGenerateRange > 0f) PositionLightning.createRandomRange(b, b.team, b, randomGenerateRange, backColor, Mathf.chanceDelta(randomLightningChance), 0,
+        0, boltWidth, boltNum, randomLightningNum, hitPos -> {
             Damage.damage(b.team, hitPos.getX(), hitPos.getY(), splashDamageRadius, splashDamage * b.damageMultiplier(), collidesAir, collidesGround);
             WHFx.lightningHitLarge.at(hitPos.getX(), hitPos.getY(), lightningColor);
             liHitEffect.at(hitPos);
             for (int j = 0; j < lightning; j++) {
                 Lightning.create(b, lightningColor, lightningDamage < 0.0F ? damage : lightningDamage, b.x, b.y,
-                        b.rotation() + Mathf.range(lightningCone / 2.0F) + lightningAngle, lightningLength + Mathf.random(lightningLengthRand));
+                b.rotation() + Mathf.range(lightningCone / 2.0F) + lightningAngle, lightningLength + Mathf.random(lightningLengthRand));
             }
             hitSound.at(hitPos, Mathf.random(0.9f, 1.1f));
 
             hitModifier.get(hitPos);
         });
+    }
 
+    @Override
+    public void despawned(Bullet b){
         super.despawned(b);
+        despawnedHit(b);
     }
 }

@@ -27,6 +27,7 @@ public class WHShaders{
     public static @Nullable HexagonalTextureShieldShader hexagonalShield;
     public static OutlineShader powerArea, powerDynamicArea;
     public static ConvexLensShader convex;
+    public static RectLensShader convexRect;
 
     private WHShaders(){
     }
@@ -40,35 +41,17 @@ public class WHShaders{
                 }
             };
         }catch(Throwable t){
-            powerArea = null;
             Log.err("Failed to load power area shader.", t);
         }
 
-        try{
-            powerDynamicArea = new OutlineShader(){
-                public float thick(){
-                    return 2f * Interp.slope.apply(Time.time / 240f % 1f);
-                }
-            };
-        }catch(Throwable t){
-            powerDynamicArea = null;
-            Log.err("Failed to load dynamic power area shader.", t);
-        }
-
-        try{
-            convex = new ConvexLensShader();
-        }catch(Throwable t){
-            convex = null;
-            Log.err("Failed to load convex lens shader.", t);
-        }
-
-        try{
-            hexagonalShield = new HexagonalTextureShieldShader();
-        }catch(Throwable t){
-            //don't load shield shader
-            hexagonalShield = null;
-            Log.err("Failed to load hexagonal shield shader.", t);
-        }
+        powerDynamicArea = new OutlineShader(){
+            public float thick(){
+                return 2f * Interp.slope.apply(Time.time / 240f % 1f);
+            }
+        };
+        convex = new ConvexLensShader();
+        convexRect = new RectLensShader();
+        hexagonalShield = new HexagonalTextureShieldShader();
     }
 
 
@@ -149,21 +132,14 @@ public class WHShaders{
     public static class ConvexLensShader extends LoadShader{
         static final int max = 64;
         static final int size = 6;
-        static final int rectMax = 64;
-        static final int rectSize = 8;
 
         //x y radius life[1-0] lifetime strength
         protected FloatSeq data = new FloatSeq();
         protected FloatSeq uniforms = new FloatSeq();
-        //x y length width rotation life[1-0] lifetime strength
-        protected FloatSeq rectData = new FloatSeq();
-        protected FloatSeq rectUniformA = new FloatSeq();
-        protected FloatSeq rectUniformB = new FloatSeq();
         protected int lensesUniformLoc = Integer.MIN_VALUE;
-        protected int rectAUniformLoc = Integer.MIN_VALUE;
-        protected int rectBUniformLoc = Integer.MIN_VALUE;
         protected float snapLeft, snapBottom, snapWidth = 1f, snapHeight = 1f;
         protected boolean hasSnapshot = false;
+        protected int replaceCursor = 0;
 
         public float lifetime = 20f;
         public float strength = 0.9f;
@@ -181,7 +157,6 @@ public class WHShaders{
 
                 var items = data.items;
                 for(int i = 0; i < data.size; i += size){
-                    //decrease lifetime
                     items[i + 3] -= Time.delta / items[i + 4];
 
                     if(items[i + 3] <= 0f){
@@ -192,31 +167,12 @@ public class WHShaders{
                         i -= size;
                     }
                 }
-
-                var rectItems = rectData.items;
-                for(int i = 0; i < rectData.size; i += rectSize){
-                    rectItems[i + 5] -= Time.delta / rectItems[i + 6];
-
-                    if(rectItems[i + 5] <= 0f){
-                        if(rectData.size > rectSize){
-                            System.arraycopy(rectItems, rectData.size - rectSize, rectItems, i, rectSize);
-                        }
-                        rectData.size -= rectSize;
-                        i -= rectSize;
-                    }
-                }
             });
 
             Events.run(Trigger.draw, () -> {
                 if(data.size <= 0) return;
 
-                if(Core.camera != null){
-                    snapWidth = Math.max(Core.camera.width, 0.0001f);
-                    snapHeight = Math.max(Core.camera.height, 0.0001f);
-                    snapLeft = Core.camera.position.x - snapWidth / 2f;
-                    snapBottom = Core.camera.position.y - snapHeight / 2f;
-                    hasSnapshot = true;
-                }
+                refreshCameraSnapshot();
 
                 if(debugDraw){
                     Draw.proj(Core.camera);
@@ -244,8 +200,9 @@ public class WHShaders{
 
         @Override
         public void apply(){
+            refreshCameraSnapshot();
+
             int count = Math.min(data.size / size, max);
-            int rectCount = Math.min(rectData.size / rectSize, rectMax);
 
             float screenW = Core.graphics.getWidth();
             float screenH = Core.graphics.getHeight();
@@ -291,6 +248,9 @@ public class WHShaders{
             }
 
             setUniformi("u_lens_count", packed);
+            if(hasUniform("u_rect_count")){
+                setUniformi("u_rect_count", 0);
+            }
 
             if(packed > 0){
                 if(lensesUniformLoc == Integer.MIN_VALUE){
@@ -306,6 +266,122 @@ public class WHShaders{
                     setUniformi("u_lens_count", 0);
                 }
             }
+        }
+
+        private void refreshCameraSnapshot(){
+            if(Core.camera == null) return;
+
+            snapWidth = Math.max(Core.camera.width, 0.0001f);
+            snapHeight = Math.max(Core.camera.height, 0.0001f);
+            snapLeft = Core.camera.position.x - snapWidth / 2f;
+            snapBottom = Core.camera.position.y - snapHeight / 2f;
+            hasSnapshot = true;
+        }
+
+        public void add(float x, float y, float radius, float lifetime){
+            add(x, y, radius, lifetime, strength);
+        }
+
+        public void add(float x, float y, float radius, float lifetime, float strength){
+            float safeRadius = Math.max(radius, 0.001f);
+            float safeLifetime = Math.max(lifetime, 1f);
+            float safeStrength = Math.max(strength, 0f);
+
+            if(data.size / size >= max){
+                var items = data.items;
+                int offset = (replaceCursor++ % max) * size;
+                items[offset] = x;
+                items[offset + 1] = y;
+                items[offset + 2] = safeRadius;
+                items[offset + 3] = 1f;
+                items[offset + 4] = safeLifetime;
+                items[offset + 5] = safeStrength;
+            }else{
+                data.addAll(x, y, safeRadius, 1f, safeLifetime, safeStrength);
+            }
+        }
+
+        public void clear(){
+            data.size = 0;
+            replaceCursor = 0;
+        }
+
+        public boolean hasAny(){
+            return data.size > 0;
+        }
+
+        public void blitFrom(FrameBuffer source){
+            if(source == null || !hasAny()) return;
+            Draw.blend(Blending.disabled);
+            source.blit(this);
+            Draw.blend();
+        }
+    }
+
+    public static class RectLensShader extends LoadShader{
+        static final int rectMax = 64;
+        static final int rectSize = 8;
+
+        //x y length width rotation life[1-0] lifetime strength
+        protected FloatSeq rectData = new FloatSeq();
+        protected FloatSeq rectUniformA = new FloatSeq();
+        protected FloatSeq rectUniformB = new FloatSeq();
+        protected int rectAUniformLoc = Integer.MIN_VALUE;
+        protected int rectBUniformLoc = Integer.MIN_VALUE;
+        protected float snapLeft, snapBottom, snapWidth = 1f, snapHeight = 1f;
+        protected boolean hasSnapshot = false;
+        protected int replaceCursor = 0;
+
+        public float lifetime = 20f;
+        public float strength = 0.9f;
+
+        public RectLensShader(){
+            super("convexRect", "screenspace");
+
+            Events.run(Trigger.update, () -> {
+                if(state.isPaused()) return;
+                if(state.isMenu()){
+                    clear();
+                    return;
+                }
+
+                var rectItems = rectData.items;
+                for(int i = 0; i < rectData.size; i += rectSize){
+                    rectItems[i + 5] -= Time.delta / rectItems[i + 6];
+
+                    if(rectItems[i + 5] <= 0f){
+                        if(rectData.size > rectSize){
+                            System.arraycopy(rectItems, rectData.size - rectSize, rectItems, i, rectSize);
+                        }
+                        rectData.size -= rectSize;
+                        i -= rectSize;
+                    }
+                }
+            });
+
+            Events.run(Trigger.draw, () -> {
+                if(rectData.size <= 0) return;
+
+                refreshCameraSnapshot();
+            });
+        }
+
+        @Override
+        public void apply(){
+            refreshCameraSnapshot();
+
+            int rectCount = Math.min(rectData.size / rectSize, rectMax);
+
+            float screenW = Core.graphics.getWidth();
+            float screenH = Core.graphics.getHeight();
+            setUniformf("u_screen", screenW, screenH);
+
+            float camWidth = hasSnapshot ? snapWidth : Math.max(Core.camera.width, 0.0001f);
+            float camHeight = hasSnapshot ? snapHeight : Math.max(Core.camera.height, 0.0001f);
+            float camLeft = hasSnapshot ? snapLeft : (Core.camera.position.x - camWidth / 2f);
+            float camBottom = hasSnapshot ? snapBottom : (Core.camera.position.y - camHeight / 2f);
+            float invCamWidth = screenW / camWidth;
+            float invCamHeight = screenH / camHeight;
 
             rectUniformA.clear();
             rectUniformB.clear();
@@ -374,27 +450,14 @@ public class WHShaders{
             }
         }
 
-        public void add(float x, float y, float radius, float lifetime){
-            add(x, y, radius, lifetime, strength);
-        }
+        private void refreshCameraSnapshot(){
+            if(Core.camera == null) return;
 
-        public void add(float x, float y, float radius, float lifetime, float strength){
-            float safeRadius = Math.max(radius, 0.001f);
-            float safeLifetime = Math.max(lifetime, 1f);
-            float safeStrength = Math.max(strength, 0f);
-
-            //replace first entry
-            if(data.size / size >= max){
-                var items = data.items;
-                items[0] = x;
-                items[1] = y;
-                items[2] = safeRadius;
-                items[3] = 1f;
-                items[4] = safeLifetime;
-                items[5] = safeStrength;
-            }else{
-                data.addAll(x, y, safeRadius, 1f, safeLifetime, safeStrength);
-            }
+            snapWidth = Math.max(Core.camera.width, 0.0001f);
+            snapHeight = Math.max(Core.camera.height, 0.0001f);
+            snapLeft = Core.camera.position.x - snapWidth / 2f;
+            snapBottom = Core.camera.position.y - snapHeight / 2f;
+            hasSnapshot = true;
         }
 
         public void addRect(float x, float y, float length, float width, float rotation, float lifetime){
@@ -409,26 +472,27 @@ public class WHShaders{
 
             if(rectData.size / rectSize >= rectMax){
                 var items = rectData.items;
-                items[0] = x;
-                items[1] = y;
-                items[2] = safeLength;
-                items[3] = safeWidth;
-                items[4] = rotation;
-                items[5] = 1f;
-                items[6] = safeLifetime;
-                items[7] = safeStrength;
+                int offset = (replaceCursor++ % rectMax) * rectSize;
+                items[offset] = x;
+                items[offset + 1] = y;
+                items[offset + 2] = safeLength;
+                items[offset + 3] = safeWidth;
+                items[offset + 4] = rotation;
+                items[offset + 5] = 1f;
+                items[offset + 6] = safeLifetime;
+                items[offset + 7] = safeStrength;
             }else{
                 rectData.addAll(x, y, safeLength, safeWidth, rotation, 1f, safeLifetime, safeStrength);
             }
         }
 
         public void clear(){
-            data.size = 0;
             rectData.size = 0;
+            replaceCursor = 0;
         }
 
         public boolean hasAny(){
-            return data.size > 0 || rectData.size > 0;
+            return rectData.size > 0;
         }
 
         public void blitFrom(FrameBuffer source){

@@ -26,6 +26,7 @@ import java.util.*;
  * 负责参数解析、资源映射与过场 UI 辅助。
  */
 public final class ActionLogicSupport{
+    private static final int MAX_PARSE_DEPTH = 3;
     private static int overlayPulseToken = 0;
 
     private ActionLogicSupport(){
@@ -49,17 +50,23 @@ public final class ActionLogicSupport{
             return String.valueOf(raw).trim();
         }
 
+        // Numeric logic variables (e.g. x/y) must resolve to their current value,
+        // not the variable name, otherwise downstream parsers fall back unexpectedly.
+        if(!value.isobj){
+            return numericText(value.numf());
+        }
+
         String name = value.name == null ? "" : value.name.trim();
         if(name.isEmpty()) return "";
-        if(name.startsWith("___")){
-            float num = value.numf();
-            int asInt = Mathf.round(num);
-            if(Math.abs(num - asInt) < 0.0001f){
-                return String.valueOf(asInt);
-            }
-            return Strings.autoFixed(num, 3);
-        }
         return name;
+    }
+
+    private static String numericText(float num){
+        int asInt = Mathf.round(num);
+        if(Math.abs(num - asInt) < 0.0001f){
+            return String.valueOf(asInt);
+        }
+        return Strings.autoFixed(num, 3);
     }
 
     /** 支持脚本中的 `[n]` 转换为换行符。 */
@@ -68,35 +75,142 @@ public final class ActionLogicSupport{
         return raw.replace("[n]", "\n");
     }
 
-    /** 解析浮点数；支持 `@N` 从逻辑内存块读取。 */
+    /** 解析浮点数；支持常量、变量名、全局变量与 `@N` 逻辑内存索引。 */
     public static float parseFloat(String raw, float fallback, LExecutor exec){
+        return parseFloatInternal(raw, fallback, exec, 0);
+    }
+
+    /** Parse float directly from a logic variable to avoid text round-trip. */
+    public static float parseFloat(LVar value, float fallback, LExecutor exec){
+        return parseFloatVarInternal(value, fallback, exec, 0);
+    }
+
+    private static float parseFloatInternal(String raw, float fallback, LExecutor exec, int depth){
         if(raw == null) return fallback;
         String token = raw.trim();
         if(token.isEmpty()) return fallback;
+        if(depth > MAX_PARSE_DEPTH) return fallback;
 
-        if(token.startsWith("@") && exec != null && exec.build != null){
-            try{
-                int memoryIndex = Integer.parseInt(token.substring(1));
-                Building memoryBuild = Vars.world.build(exec.build.tileX(), exec.build.tileY() - 1);
-                if(memoryBuild instanceof MemoryBlock.MemoryBuild memory){
-                    if(memoryIndex >= 0 && memoryIndex < memory.memory.length){
-                        return (float)memory.memory[memoryIndex];
-                    }
+        Float direct = tryParseFloatToken(token);
+        if(direct != null) return direct;
+
+        Float memoryValue = tryReadMemoryToken(token, exec);
+        if(memoryValue != null) return memoryValue;
+
+        LVar ref = resolveVarToken(token, exec);
+        if(ref != null){
+            return parseFloatVarInternal(ref, fallback, exec, depth + 1);
+        }
+
+        if(token.startsWith("$") && token.length() > 1){
+            return parseFloatInternal(token.substring(1), fallback, exec, depth + 1);
+        }
+
+        return fallback;
+    }
+
+    private static float parseFloatVarInternal(LVar value, float fallback, LExecutor exec, int depth){
+        if(value == null) return fallback;
+        if(depth > MAX_PARSE_DEPTH) return fallback;
+
+        if(!value.isobj){
+            return value.numf();
+        }
+
+        Object obj = value.obj();
+        if(obj instanceof Number number){
+            return number.floatValue();
+        }
+        if(obj instanceof Boolean bool){
+            return bool ? 1f : 0f;
+        }
+        if(obj instanceof Team team){
+            return team.id;
+        }
+        if(obj instanceof String text){
+            return parseFloatInternal(text, fallback, exec, depth + 1);
+        }
+        if(obj != null){
+            Float parsedObj = tryParseFloatToken(String.valueOf(obj).trim());
+            if(parsedObj != null){
+                return parsedObj;
+            }
+            return fallback;
+        }
+
+        String name = value.name == null ? "" : value.name.trim();
+        if(name.isEmpty()) return fallback;
+        return parseFloatInternal(name, fallback, exec, depth + 1);
+    }
+
+    private static Float tryParseFloatToken(String token){
+        if(token == null) return null;
+        String t = token.trim();
+        if(t.isEmpty()) return null;
+        if(t.equalsIgnoreCase("true")) return 1f;
+        if(t.equalsIgnoreCase("false")) return 0f;
+        try{
+            return Float.parseFloat(t);
+        }catch(Exception ignored){
+            return null;
+        }
+    }
+
+    private static Float tryReadMemoryToken(String token, LExecutor exec){
+        if(token == null || !token.startsWith("@") || exec == null || exec.build == null) return null;
+        try{
+            int memoryIndex = Integer.parseInt(token.substring(1));
+            Building memoryBuild = Vars.world.build(exec.build.tileX(), exec.build.tileY() - 1);
+            if(memoryBuild instanceof MemoryBlock.MemoryBuild memory){
+                if(memoryIndex >= 0 && memoryIndex < memory.memory.length){
+                    return (float)memory.memory[memoryIndex];
                 }
-            }catch(Exception ignored){
+            }
+        }catch(Exception ignored){
+        }
+        return null;
+    }
+
+    private static LVar resolveVarToken(String token, LExecutor exec){
+        if(token == null) return null;
+        String key = token.trim();
+        if(key.isEmpty()) return null;
+
+        if(key.startsWith("$") && key.length() > 1){
+            key = key.substring(1).trim();
+        }
+        if(key.isEmpty()) return null;
+
+        if(exec != null){
+            LVar local = exec.optionalVar(key);
+            if(local != null) return local;
+            if(!key.startsWith("@")){
+                LVar localAt = exec.optionalVar("@" + key);
+                if(localAt != null) return localAt;
             }
         }
 
-        try{
-            return Float.parseFloat(token);
-        }catch(Exception ignored){
-            return fallback;
+        if(Vars.logicVars != null){
+            boolean privileged = exec != null && exec.privileged;
+            LVar global = Vars.logicVars.get(key, privileged);
+            if(global != null) return global;
+            if(!key.startsWith("@")){
+                LVar globalAt = Vars.logicVars.get("@" + key, privileged);
+                if(globalAt != null) return globalAt;
+            }
         }
+
+        return null;
     }
 
     /** Parse tile coordinate and convert to world coordinate via World.unconv(). */
     public static float parseWorldCoord(String raw, float fallbackTile, LExecutor exec){
         return World.unconv(parseFloat(raw, fallbackTile, exec));
+    }
+
+    /** Parse tile coordinate from a logic variable and convert to world coordinate. */
+    public static float parseWorldCoord(LVar value, float fallbackTile, LExecutor exec){
+        return World.unconv(parseFloat(value, fallbackTile, exec));
     }
 
     /** Parse color token. Supports #RRGGBB / RRGGBB and common color names. */
@@ -224,14 +338,38 @@ public final class ActionLogicSupport{
 
     /** 安全解析 `int`，失败时返回默认值。 */
     public static int parseInt(String raw, int fallback){
+        return parseInt(raw, fallback, null);
+    }
+
+    /** Parse int directly from a logic variable to avoid text round-trip. */
+    public static int parseInt(LVar value, int fallback, LExecutor exec){
+        float resolved = parseFloat(value, Float.NaN, exec);
+        if(Float.isNaN(resolved) || Float.isInfinite(resolved)){
+            return fallback;
+        }
+        return Mathf.round(resolved);
+    }
+
+    /** 安全解析 `int`，支持变量名/内存索引解析。 */
+    public static int parseInt(String raw, int fallback, LExecutor exec){
         if(raw == null) return fallback;
         String token = raw.trim();
         if(token.isEmpty()) return fallback;
         try{
             return Integer.parseInt(token);
         }catch(Exception ignored){
+        }
+
+        Float direct = tryParseFloatToken(token);
+        if(direct != null){
+            return Mathf.round(direct);
+        }
+
+        float resolved = parseFloat(token, Float.NaN, exec);
+        if(Float.isNaN(resolved) || Float.isInfinite(resolved)){
             return fallback;
         }
+        return Mathf.round(resolved);
     }
 
     /** 解析队伍标识（名称或数字 ID）。 */

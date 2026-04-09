@@ -14,8 +14,8 @@ import static wh.core.WarHammerMod.name;
 public class TeamCombatAbility extends Ability{
     public float range = 120f;
     public int minUnits = 3;
-    public int maxUnits = 10;
-    public float damageBoostPerUnit = 0.03f;
+    public int maxUnits = 15;
+    public float damageBoostPerUnit = 0.01f;
     public float interval = 15f;
 
     protected transient Interval timer = new Interval();

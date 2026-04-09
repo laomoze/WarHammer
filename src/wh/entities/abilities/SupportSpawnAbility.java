@@ -24,7 +24,7 @@ import static wh.core.WarHammerMod.name;
 /** 单位低血时触发一次支援召唤，回满血且冷却结束后才可再次触发。 */
 public class SupportSpawnAbility extends Ability{
     // 召唤出的支援单位类型与数量。
-    public UnitType unit = WHUnitTypes.air1;
+    public UnitType unit = WHUnitTypes.airA1;
     public int spawnCount = 3;
     public float healthTrigger = 0.3f;
     public float reload = 60f * 60;

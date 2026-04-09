@@ -3,6 +3,7 @@ package wh.entities.bullet.laser;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
+import arc.math.geom.*;
 import arc.util.*;
 import arc.util.pooling.*;
 import mindustry.content.*;
@@ -45,6 +46,9 @@ public class LaserBeamBulletType extends ContinuousBulletType{
     public float moveSpeed = 0.03f;
     public float absorbMoveSpeed = 3f;
     public float fadeTime = 10f;
+
+    private final Vec2 Tmp1 = new Vec2();
+    private final Vec2 Tmp2 = new Vec2();
 
     public LaserBeamBulletType(float damage){
         this.damage = damage;
@@ -279,10 +283,10 @@ public class LaserBeamBulletType extends ContinuousBulletType{
             float rectLength = Math.max(data.currentLength, 1f);
             float rectWidth = Math.max(width * pathDistortionRectWidthScale, 1f);
 
-            Tmp.v2.trns(rot, -width);
-            Tmp.v3.trns(rot, rectLength * 0.5f + width / 2);
+            Tmp1.trns(rot, -width);
+            Tmp2.trns(rot, rectLength * 0.5f + width / 2);
             MainRenderer.addShockRect(
-            b.x + Tmp.v2.x + Tmp.v3.x, b.y + Tmp.v2.y + Tmp.v3.y,
+            b.x + Tmp1.x + Tmp2.x, b.y + Tmp1.y + Tmp2.y,
             rectLength, rectWidth, rot, pathDistortionRectLife, pathDistortionRectStrength);
         }
     }

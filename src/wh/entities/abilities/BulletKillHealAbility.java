@@ -14,7 +14,7 @@ import static wh.core.WarHammerMod.name;
 /** 子弹击杀目标后，为发射者回复生命值。 */
 public class BulletKillHealAbility extends Ability implements BulletKillListener{
     public float healAmount = 200f;
-    public float healPercent = 0.1f;
+    public float healPercent = 0.05f;
     public float minTargetMaxHealth = 0f;
 
     public Effect healEffect = Fx.healWaveDynamic;

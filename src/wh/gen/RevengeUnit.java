@@ -29,7 +29,7 @@ public class RevengeUnit extends UnitEntity{
     public final float DAMAGE_REDUCE = 0.8f;
     public final float DAMAGE_REDUCE_Duration = 8 * 60f;
     public final float MAX_DAMAGE = 1000f;
-    public final float ACCUMULATE_DAMAGE = 4000;
+    public final float ACCUMULATE_DAMAGE = 5000;
 
     public final float ABILITY_RELOAD = 15 * 60f;
     public final float BULLET_RECOVERY_TIME = 2.5f * 60f;
@@ -162,14 +162,16 @@ public class RevengeUnit extends UnitEntity{
             e -> !e.dead() && !(e instanceof TimedKillc),
             b -> !b.block.underBullets && b.maxHealth > 1000 && !(b instanceof WallBuild), UnitSorts.closest);
 
-            Bullet c = surroundBullets.random();
             if(en != null){
-                if(c instanceof AB a){
-                    a.target = en;
-                    Healthc enemy = (Healthc)en;
-                    if(enemy.dead() || enemy.isValid()) a.find = true;
-                    a.initVel(c.angleTo(en), c.type.speed);
-                    surroundBullets.remove(c);
+                int shots = Math.min(Mathf.random(1, 3), surroundBullets.size);
+                for(int i = 0; i < shots && !surroundBullets.isEmpty(); i++){
+                    int index = Mathf.random(surroundBullets.size - 1);
+                    Bullet c = surroundBullets.remove(index);
+                    if(c instanceof AB a){
+                        a.target = en;
+                        if(!(en instanceof Healthc enemy) || enemy.dead() || !enemy.isValid()) a.find = true;
+                        a.initVel(c.angleTo(en), c.type.speed);
+                    }
                 }
             }
            /* Units.nearbyEnemies(team, x, y, CHECK_RANGE, other -> {
@@ -182,7 +184,7 @@ public class RevengeUnit extends UnitEntity{
             });*/
         }
 
-        if(accumulateDamage >= ACCUMULATE_DAMAGE){
+        if(accumulateDamage >= ACCUMULATE_DAMAGE && surroundBullets.size < MAX_BULLET * 3){
             accumulateDamage = 0;
             createBullet();
         }
@@ -230,12 +232,13 @@ public class RevengeUnit extends UnitEntity{
                     }
                 });*/
                 createBullet();
-                Bullet bu = surroundBullets.random();
+                if(surroundBullets.isEmpty()) continue;
+                int index = Mathf.random(surroundBullets.size - 1);
+                Bullet bu = surroundBullets.remove(index);
                 if(bu instanceof AB a){
                     a.target = (Teamc)e;
-                    if(e == null || e.dead()) a.find = true;
+                    if(e == null || e.dead() || !e.isValid()) a.find = true;
                     a.initVel(bu.angleTo(e), bu.type.speed);
-                    surroundBullets.remove(bu);
                 }
             }
             apply(WHStatusEffects.energyAmplification, DAMAGE_REDUCE_Duration);

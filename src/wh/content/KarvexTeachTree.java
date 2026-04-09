@@ -590,12 +590,12 @@ public final class KarvexTeachTree{
 
             node(WHBlocks.airFactory, () -> {
                 // air line A
-                node(WHUnitTypes.air1, () -> {
-                    node(WHUnitTypes.air2, () -> {
-                        node(WHUnitTypes.air3, () -> {
-                            node(WHUnitTypes.air4, () -> {
-                                node(WHUnitTypes.air5, () -> {
-                                    node(WHUnitTypes.air6, () -> {
+                node(WHUnitTypes.airA1, () -> {
+                    node(WHUnitTypes.airA2, () -> {
+                        node(WHUnitTypes.airA3, () -> {
+                            node(WHUnitTypes.airA4, () -> {
+                                node(WHUnitTypes.airA5, () -> {
+                                    node(WHUnitTypes.airA6, () -> {
                                     });
                                 });
                             });
@@ -664,7 +664,7 @@ public final class KarvexTeachTree{
                                 });
 
                                 node(WHBlocks.energyWarpGate, () -> {
-                                    node(WHUnitTypes.air7, () -> {
+                                    node(WHUnitTypes.airA7, () -> {
                                     });
                                     node(WHUnitTypes.tankAG, () -> {
                                     });

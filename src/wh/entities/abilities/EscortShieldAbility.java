@@ -64,7 +64,11 @@ public class EscortShieldAbility extends Ability{
         final boolean[] playedSound = {false};
 
         Units.nearby(unit.team, unit.x - range, unit.y - range, range * 2f, range * 2f, other -> {
-            if(unit.dead || other == unit || other.dead || !other.isValid() || other.type == unit.type || !other.within(unit, range)){
+            if(unit.dead || other.dead || !other.isValid()){
+                return;
+            }
+
+            if(other == unit || other.type == unit.type || !other.within(unit, range)){
                 return;
             }
 

@@ -26,6 +26,7 @@ import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.meta.*;
+import wh.content.*;
 import wh.entities.bullet.*;
 import wh.entities.bullet.laser.*;
 
@@ -357,6 +358,79 @@ public final class UIUtils{
         }
     }
 
+    public static boolean hasText(String text){
+        return text != null && !text.isEmpty();
+    }
+
+    public static void applyTrigBlink(Label label, Color base){
+        if(label == null) return;
+        label.update(() -> {
+            Color baseColor = Color.white.cpy().lerp(base, Mathf.absin(Time.time, 6f, 0.45f));
+            float alpha = 0.55f + Mathf.absin(Time.time, 6f, 0.45f);
+            label.setColor(baseColor.r, baseColor.g, baseColor.b, Mathf.clamp(alpha));
+        });
+    }
+
+    public static void showFleetWarnHudCentered(TextureRegion region, Color color, String text, float duration){
+        float width = Core.graphics.getWidth();
+        float height = Core.graphics.getHeight() * 0.22f;
+
+        Table warning = new Table(Tex.paneSolid);
+        warning.touchable = Touchable.enabled;
+        warning.margin(8f);
+        warning.table(t2 -> {
+            t2.defaults().growY();
+            t2.image().growX().height(Math.max(4f, height * 0.06f)).padRight(-10f).color(color);
+            t2.image(region).size(Math.min(height * 0.68f, 140f)).color(color);
+            t2.image().growX().height(Math.max(4f, height * 0.06f)).padLeft(-10f).color(color);
+        }).growX().growY().row();
+
+        if(hasText(text)){
+            String formattedCenteredText = text.trim();
+            if(!(formattedCenteredText.startsWith("<<") && formattedCenteredText.endsWith(">>"))){
+                formattedCenteredText = "<< " + formattedCenteredText + " >>";
+            }
+            final String centeredAlertText = formattedCenteredText;
+            warning.table(tText -> {
+                tText.center();
+                Label centeredLabel = new Label(centeredAlertText);
+                centeredLabel.setWrap(true);
+                centeredLabel.setAlignment(Align.center);
+                applyTrigBlink(centeredLabel, color);
+                tText.add(centeredLabel)
+                .width(width * 0.72f).padTop(6f).center();
+            }).growX().center().row();
+        }
+
+        Label skipHint = new Label("Left click to skip");
+        skipHint.setAlignment(Align.center);
+        skipHint.setFontScale(0.9f);
+        skipHint.setColor(color);
+        warning.add(skipHint).growX().padTop(4f).padBottom(2f).center().row();
+
+        Table container = Core.scene.table();
+        container.touchable = Touchable.enabled;
+        container.setFillParent(true);
+        container.center().add(warning).width(width).height(height);
+
+        Runnable dismiss = () -> {
+            container.clearActions();
+            container.actions(
+            Actions.fadeOut(0.22f, Interp.pow2Out),
+            Actions.remove()
+            );
+        };
+        warning.clicked(dismiss);
+
+        container.actions(
+        Actions.alpha(0f),
+        Actions.fadeIn(0.28f, Interp.pow2In),
+        Actions.delay(Math.max(0.1f, duration)),
+        Actions.fadeOut(0.36f, Interp.pow2Out),
+        Actions.remove()
+        );
+    }
+
     public static void showToast(Drawable icon, String text, Sound sound){
         showToast(icon, text, sound, Color.white);
     }
@@ -388,6 +462,12 @@ public final class UIUtils{
             Actions.run(() -> container.actions(Actions.translateBy(0, table.getPrefHeight(), 1f, Interp.fade), Actions.remove()))
             );
         });
+    }
+
+    public static void showToastText(String text){
+        if(headless || !hasText(text)) return;
+        TextureRegionDrawable fl = new TextureRegionDrawable(WHContent.fleet);
+        showToast(fl, text, Sounds.none);
     }
 
     public static ImageButton selfStyleImageButton(Drawable imageUp, ImageButton.ImageButtonStyle is, Runnable listener){

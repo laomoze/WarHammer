@@ -22,7 +22,7 @@ public final class WHSounds{
     LaserGatling = new Sound(),
     machineGunShoot = new Sound(),
     sniperShoot = new Sound(),
-    pistonLaser = new Sound(),
+    /*  pistonLaser = new Sound(),*/
     rifleLaser = new Sound(),
     shootGunDouble = new Sound();
 
@@ -46,7 +46,7 @@ public final class WHSounds{
             LaserGatling = new Sound(ogg("trLaserGatling"));
             machineGunShoot = new Sound(ogg("mgsvGatling"));
             sniperShoot = new Sound(wav("sniper-shoot"));
-            pistonLaser = new Sound(wav("piston-laser"));
+            /*   pistonLaser = new Sound(wav("piston-laser"));*/
             rifleLaser = new Sound(wav("rifle-laser"));
             shootGunDouble = new Sound(ogg("shoot-gun-double"));
         }catch(Exception e){

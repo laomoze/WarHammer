@@ -1,9 +1,11 @@
 package wh.entities.abilities;
 
+import arc.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
+import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
@@ -11,6 +13,8 @@ import mindustry.entities.abilities.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
+
+import static wh.core.WarHammerMod.name;
 
 
 /** 根据单位近期朝向记录生成推进尾迹和额外加速表现。 */
@@ -153,6 +157,25 @@ public class BoostAbility extends Ability{
 //		}
 //
 //		Draw.blend();
+    }
+
+    @Override
+    public void addStats(Table t){
+        super.addStats(t);
+        if(velocityMultiple > 1f){
+            t.row();
+            t.add(Core.bundle.format("stat.wh-max-boost-percent", Strings.autoFixed((velocityMultiple - 1f) * 100f, 2) + "%"));
+        }
+    }
+
+    @Override
+    public String localized(){
+        return Core.bundle.get(getBundle());
+    }
+
+    @Override
+    public String getBundle(){
+        return "ability." + name("boost-ability");
     }
 }
 

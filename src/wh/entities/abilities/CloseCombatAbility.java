@@ -54,6 +54,14 @@ public class CloseCombatAbility extends Ability{
             enemyCount++;
         });
 
+        Units.nearbyBuildings(unit.x, unit.y, range, build -> {
+            if(build.dead() || !build.isValid() || build.team == unit.team){
+                return;
+            }
+
+            enemyCount++;
+        });
+
         int effectiveEnemies = Math.min(enemyCount, maxEnemies);
         damageMultiplier = 1f + effectiveEnemies * damageBoostPerEnemy;
     }

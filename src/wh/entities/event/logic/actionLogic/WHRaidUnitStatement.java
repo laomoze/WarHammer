@@ -532,7 +532,7 @@ public class WHRaidUnitStatement extends LStatement{
     public void write(StringBuilder builder){
         builder.append("wh-raid-unit ");
         builder.append(safeToken(team, "@crux")).append(" ");
-        builder.append(safeToken(unit, "@air4")).append(" ");
+        builder.append(safeToken(unit, "@airA4")).append(" ");
         builder.append(safeToken(count, "8")).append(" ");
         builder.append(safeToken(spread, "8")).append(" ");
         builder.append(safeToken(checkTeam, "@sharded")).append(" ");
@@ -941,7 +941,7 @@ public class WHRaidUnitStatement extends LStatement{
                 if(mappedByName != null) return mappedByName;
             }
 
-            return WHUnitTypes.air1;
+            return WHUnitTypes.airA1;
         }
 
         private Team resolveTeam(){

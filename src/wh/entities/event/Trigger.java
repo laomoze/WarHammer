@@ -22,6 +22,7 @@ import wh.content.*;
 import wh.gen.*;
 
 import static wh.entities.event.PortableAutoEventTrigger.*;
+import static wh.ui.UIUtils.*;
 
 /**
  * 自动事件触发器实体。

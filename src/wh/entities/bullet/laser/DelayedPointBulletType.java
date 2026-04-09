@@ -136,10 +136,10 @@ public class DelayedPointBulletType extends BulletType{
             float rectLength = Math.max(b.dst(tX, tY), 1f);
             float rectWidth = Math.max(width * pathDistortionRectWidthScale, 1f);
 
-            Tmp.v2.trns(rot, -width);
-            Tmp.v3.trns(rot, rectLength * 0.5f + width / 2);
+            Tmp.v4.trns(rot, -width);
+            Tmp.v5.trns(rot, rectLength * 0.5f + width / 2);
             MainRenderer.addShockRect(
-            b.x + Tmp.v2.x + Tmp.v3.x, b.y + Tmp.v2.y + Tmp.v3.y,
+            b.x + Tmp.v4.x + Tmp.v5.x, b.y + Tmp.v4.y + Tmp.v5.y,
             rectLength, rectWidth, rot, delayEffectLifeTime, pathDistortionRectStrength);
         }
     }

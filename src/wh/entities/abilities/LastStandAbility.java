@@ -27,7 +27,7 @@ public class LastStandAbility extends Ability{
     // 当前生命比例低于此值时，才允许触发保命。
     public float healthTrigger = 0.3f;
     // damageWindow 内累计承伤达到该比例时触发。
-    public float damageThreshold = 0.3f;
+    public float damageThreshold = 0.15f;
     // 统计爆发承伤的时间窗长度。
     public float damageWindow = 120;
     public float invincibleDuration = 180f;

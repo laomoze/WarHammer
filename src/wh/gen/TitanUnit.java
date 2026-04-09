@@ -20,6 +20,8 @@ import wh.entities.world.entities.*;
 import wh.graphics.*;
 
 public class TitanUnit extends MechUnit{
+    private static final float shieldEpsilon = 0.001f;
+
     public boolean shader = true;
     public boolean shouldRegen = false;
     public int regenMount = 3;
@@ -44,27 +46,7 @@ public class TitanUnit extends MechUnit{
 
     public float rotateAngle = 0f;
 
-    public float LONG_AXIS;
-    public float MINOR_AXIS;
-    public float RADIUS;
-    public float REGEN;
-    public float MAX;
-    public float COOLDOWN;
-    public float RESTART_RATIO;
-    public float REFLECT_CHANCE;
-    public boolean SHADER;
-    public boolean PERCENT_REGEN;
-    public float PERCENT_REGEN_AMOUNT;
-    public float DAMAGE_MAX;
-    public float ACCUMULATE_DAMAGE;
-    public float SHIELD_DAMAGE_MAX_PER;
-    public float DAMAGE_MAX_PER_TICK;
-
-    public float FULL_ABSORB_TIME;
-    public float REGEN_THRESHOLD;
-
-    public Effect ABSORB_EFFECT;
-    public Effect REFLECT_EFFECT;
+    private TitanUnitType titanType;
 
     public static TitanUnit create(){
         return new TitanUnit();
@@ -78,61 +60,112 @@ public class TitanUnit extends MechUnit{
     @Override
     public void setType(UnitType type){
         super.setType(type);
-        if(type instanceof TitanUnitType t){
-            LONG_AXIS = t.longAxis;
-            MINOR_AXIS = t.minorAxis;
-            RADIUS = t.radius;
-            REGEN = t.regen;
-            MAX = t.max;
-            COOLDOWN = t.cooldown;
-            RESTART_RATIO = t.restartRatio;
-            REFLECT_CHANCE = t.reflectChance;
-
-            SHADER = t.ignoreBulletAbsorb;
-            PERCENT_REGEN = t.percentRegen;
-            PERCENT_REGEN_AMOUNT = t.percentRegenAmount;
-
-            DAMAGE_MAX = t.damageMax;
-            SHIELD_DAMAGE_MAX_PER = t.shieldDamageMaxPer;
-            DAMAGE_MAX_PER_TICK = SHIELD_DAMAGE_MAX_PER / 60f;
-
-            ACCUMULATE_DAMAGE = t.accumulateDamage;
-            REGEN_THRESHOLD = t.regenThreshold;
-            FULL_ABSORB_TIME = t.fullAbsorbTime;
-
-            ABSORB_EFFECT = t.absorbEffect;
-            REFLECT_EFFECT = t.reflectEffect;
+        titanType = type instanceof TitanUnitType t ? t : null;
+        if(titanType != null){
+            shader = titanType.shader;
         }
-
     }
 
-    public static float calculateInEllipse(Bullet bullet, Unit unit, float a, float b, float XY){
+    private float longAxis(){
+        return titanType != null ? titanType.longAxis : 0f;
+    }
+
+    private float minorAxis(){
+        return titanType != null ? titanType.minorAxis : 0f;
+    }
+
+    private float regen(){
+        return titanType != null ? titanType.regen : 0f;
+    }
+
+    private float maxShield(){
+        return titanType != null ? titanType.max : 0f;
+    }
+
+    private float cooldown(){
+        return titanType != null ? titanType.cooldown : 0f;
+    }
+
+    private float restartRatio(){
+        return titanType != null ? titanType.restartRatio : 0f;
+    }
+
+    private float reflectChance(){
+        return titanType != null ? titanType.reflectChance : 0f;
+    }
+
+    private boolean ignoreBulletAbsorb(){
+        return titanType != null && titanType.ignoreBulletAbsorb;
+    }
+
+    private boolean percentRegen(){
+        return titanType != null && titanType.percentRegen;
+    }
+
+    private float percentRegenAmount(){
+        return titanType != null ? titanType.percentRegenAmount : 0f;
+    }
+
+    private float damageMax(){
+        return titanType != null ? titanType.damageMax : 0f;
+    }
+
+    private float accumulateDamage(){
+        return titanType != null ? titanType.accumulateDamage : 0f;
+    }
+
+    private float shieldDamageMaxPer(){
+        return titanType != null ? titanType.shieldDamageMaxPer : 0f;
+    }
+
+    private float damageMaxPerTick(){
+        return shieldDamageMaxPer() / 60f;
+    }
+
+    private float fullAbsorbTime(){
+        return titanType != null ? titanType.fullAbsorbTime : 0f;
+    }
+
+    private float regenThreshold(){
+        return titanType != null ? titanType.regenThreshold : 0f;
+    }
+
+    private Effect absorbEffect(){
+        return titanType != null && titanType.absorbEffect != null ? titanType.absorbEffect : Fx.absorb;
+    }
+
+    private Effect reflectEffect(){
+        return titanType != null && titanType.reflectEffect != null ? titanType.reflectEffect : Fx.dynamicExplosion;
+    }
+
+    public static boolean inEllipse(Bullet bullet, Unit unit, float axisX, float axisY){
+        if(axisX <= 0f || axisY <= 0f) return false;
+
         float realX = bullet.x() - unit.x, realY = bullet.y() - unit.y;
 
-        float unitRotation = unit.rotation - 90;
+        float unitRotation = unit.rotation - 90f;
         float cosRot = Mathf.cosDeg(unitRotation);
         float sinRot = Mathf.sinDeg(unitRotation);
 
         float rotX = realX * cosRot - realY * sinRot;
         float rotY = realX * sinRot + realY * cosRot;
 
-        float dx = rotX / a, dy = rotY / b;
-
-        return XY == 1 ? dx : dy;
+        float dx = rotX / axisX, dy = rotY / axisY;
+        return dx * dx + dy * dy <= 1f;
     }
 
     public final Cons<Bullet> ellipseShieldConsumer = bullet -> {
-        if(bullet.team != this.team && bullet.type.absorbable && bullet.type.collides){
-            float tx = calculateInEllipse(bullet, this, LONG_AXIS, MINOR_AXIS, 1);
-            float ty = calculateInEllipse(bullet, this, LONG_AXIS, MINOR_AXIS, 0);
-
-            if(tx * tx + ty * ty <= 1f){
-
-                if(fullAbsorbTimer <= 0.001f){
-                    absorbBullet(bullet, this);
-                }else if(Mathf.chance(REFLECT_CHANCE) && bullet.type.reflectable && fullAbsorbTimer <= 0.001f){
-                    reflectBullet(bullet, this);
-                }else if(fullAbsorbTimer > 1f){
+        if(bullet.team != this.team && (ignoreBulletAbsorb() || bullet.type.absorbable) && bullet.type.collides){
+            float axisX = longAxis() * size, axisY = minorAxis() * size;
+            if(inEllipse(bullet, this, axisX, axisY)){
+                if(fullAbsorbTimer <= shieldEpsilon){
+                    if(bullet.type.reflectable && Mathf.chance(reflectChance())){
+                        reflectBullet(bullet, this);
+                    }else{
+                        absorbBullet(bullet, this);
+                    }
+                }else{
+                    // Full absorb mode nullifies all incoming bullets.
                     bullet.damage = 1f;
                     bullet.type.splashDamage = 0f;
                     bullet.type.splashDamageRadius = -1f;
@@ -145,7 +178,7 @@ public class TitanUnit extends MechUnit{
 
 
     public void absorbBullet(Bullet bullet, TitanUnit unit){
-        ABSORB_EFFECT.at(bullet);
+        absorbEffect().at(bullet);
         /* damage(bullet.type().shieldDamage(bullet));*/
         shieldDamage(bullet);
         bullet.absorb();
@@ -156,14 +189,15 @@ public class TitanUnit extends MechUnit{
         bullet.owner = unit;
         bullet.team = unit.team;
         bullet.time += 1f;
-        bullet.rotation(bullet.rotation() - 180);
+        bullet.rotation(bullet.rotation() - 180f);
         unit.alpha = 1f;
-        REFLECT_EFFECT.at(bullet.x, bullet.y, 0, unit.team.color);
+        reflectEffect().at(bullet.x, bullet.y, 0f, unit.team.color);
     }
 
     public void checkRadius(TitanUnit unit){
-        Groups.bullet.intersect(unit.x - LONG_AXIS, unit.y - MINOR_AXIS, LONG_AXIS * 2f * size, MINOR_AXIS * 2f * size,
-        ellipseShieldConsumer);
+        float axisX = longAxis() * size, axisY = minorAxis() * size;
+        if(axisX <= 0f || axisY <= 0f) return;
+        Groups.bullet.intersect(unit.x - axisX, unit.y - axisY, axisX * 2f, axisY * 2f, ellipseShieldConsumer);
     }
 
     public void maintainShield(TitanUnit unit){
@@ -171,17 +205,20 @@ public class TitanUnit extends MechUnit{
     }
 
     public void regenShield(TitanUnit unit){
-        if(forceShield >= MAX && regenCount <= regenMount && !hasRegenerated && !shouldRegen){
+        float max = maxShield();
+        if(max <= 0f) return;
+
+        if(forceShield >= max && regenCount <= regenMount && !hasRegenerated && !shouldRegen){
             shouldRegen = true;
         }
 
-        if(forceShield < REGEN_THRESHOLD * MAX && !hasRegenerated && shouldRegen && !wasBroken){
-            lastForceShield = forceShield = MAX;
+        if(forceShield < regenThreshold() * max && !hasRegenerated && shouldRegen && !wasBroken){
+            lastForceShield = forceShield = max;
             shouldRegen = false;
             regenCount++;
 
             fullAbsorb = true;
-            fullAbsorbTimer = FULL_ABSORB_TIME * 0.7f;
+            fullAbsorbTimer = fullAbsorbTime() * 0.7f;
             maintainShield(this);
         }
         if(regenCount > regenMount){
@@ -198,12 +235,16 @@ public class TitanUnit extends MechUnit{
     public void shieldDamage(float amount, boolean pierceArmor){
         boolean hadVoidShields = forceShield > 0.0001f;
         if(hadVoidShields){
-            float limitAmount = Math.min(amount, DAMAGE_MAX);
-            float actualDamage = Damage.applyArmor(limitAmount, pierceArmor ? armor * Mathf.clamp((MAX - forceShield) / MAX, 0f, 1f) : 0);
+            float max = maxShield();
+            float limitAmount = Math.min(amount, damageMax());
+            float missingShieldRatio = max <= 0f ? 1f : Mathf.clamp((max - forceShield) / max, 0f, 1f);
+            float effectiveArmor = pierceArmor ? armor * missingShieldRatio : 0f;
+            float actualDamage = Damage.applyArmor(limitAmount, effectiveArmor);
             float amount2 = Math.min(actualDamage, damageRecent);
 
-            forceShield = forceShield - amount2;
-            if(fullAbsorbTimer <= 0.001f) damageCount += amount2;
+            forceShield -= amount2;
+            damageRecent -= amount2;
+            if(fullAbsorbTimer <= shieldEpsilon) damageCount += amount2;
         }
     }
 
@@ -218,7 +259,7 @@ public class TitanUnit extends MechUnit{
             shieldAlpha = 1f;
         }
 
-        float limitAmount = Math.min(amount, DAMAGE_MAX);
+        float limitAmount = Math.min(amount, damageMax());
 
         if(hadVoidShields){
 
@@ -229,37 +270,38 @@ public class TitanUnit extends MechUnit{
             amount -= finalDamage;
             damageRecent -= finalDamage;
 
-            if(fullAbsorbTimer <= 0.001f) damageCount += Math.abs(finalDamage);
+            if(fullAbsorbTimer <= shieldEpsilon) damageCount += Math.abs(finalDamage);
         }
 
-        if(amount > 0 && hadShields && !hadVoidShields){
-            float shieldDamage = Math.min(Math.max(shield, 0), limitAmount);
+        if(amount > 0f && hadShields && !hadVoidShields){
+            float shieldDamage = Math.min(Math.max(shield, 0f), limitAmount);
             shield -= shieldDamage;
             hitTime = 1f;
             amount -= shieldDamage;
         }
-        if(amount > 0 && !hadShields && !hadVoidShields && type.killable){
+        if(amount > 0f && !hadShields && !hadVoidShields && type.killable){
             health -= limitAmount;
-            if(health <= 0 && !dead){
+            if(health <= 0f && !dead){
                 kill();
             }
         }
 
         if(hadShields && shield <= 0.0001f || hadVoidShields && forceShield <= 0.0001f){
-            Fx.unitShieldBreak.at(x, y, 0, type.shieldColor(self()), this);
+            Fx.unitShieldBreak.at(x, y, 0f, type.shieldColor(self()), this);
         }
     }
-
-    public Interval interval = new Interval();
 
     @Override
     public void update(){
         super.update();
 
+        float max = maxShield();
+        float cooldown = cooldown();
+
         fullAbsorbTimer = Math.max(fullAbsorbTimer - Time.delta, 0f);
         fullAbsorbReloadTimer = Math.max(fullAbsorbReloadTimer - Time.delta, 0f);
 
-        damageRecent = Math.min(damageRecent + DAMAGE_MAX_PER_TICK * Time.delta, SHIELD_DAMAGE_MAX_PER);
+        damageRecent = Math.min(damageRecent + damageMaxPerTick() * Time.delta, shieldDamageMaxPer());
 
         damageCountTimer += Time.delta;
         if(damageCountTimer > 60f){
@@ -267,50 +309,48 @@ public class TitanUnit extends MechUnit{
             damageCount = 0f;
         }
 
-        if(forceShield <= 0.001f && !wasBroken){
+        if(forceShield <= shieldEpsilon && !wasBroken){
             forceShield = 0f;
-            cooldownTimer = COOLDOWN;
+            cooldownTimer = cooldown;
             wasBroken = true;
         }
 
-        size = Mathf.lerpDelta(size, wasBroken ? 0 : 1, 0.08f);
+        size = Mathf.lerpDelta(size, wasBroken ? 0f : 1f, 0.08f);
 
         if(wasBroken) hasRegenerated = false;
 
-        if(cooldownTimer > 0){
+        if(cooldownTimer > 0f){
             cooldownTimer -= Time.delta;
-            if(cooldownTimer <= 0 && forceShield < 0){
-                forceShield = MAX * RESTART_RATIO;
+            if(cooldownTimer <= 0f && forceShield <= shieldEpsilon){
+                forceShield = max * restartRatio();
                 wasBroken = false;
             }
         }
 
-        if(forceShield < MAX && cooldownTimer <= 0){
-            if(fullAbsorbTimer <= 0.001f){
-                forceShield += Time.delta * REGEN;
+        if(forceShield < max && cooldownTimer <= 0f){
+            if(fullAbsorbTimer <= shieldEpsilon){
+                forceShield += Time.delta * regen();
             }
-            if(PERCENT_REGEN){
-                forceShield += Time.delta * MAX * (PERCENT_REGEN_AMOUNT / 60f);
+            if(percentRegen()){
+                forceShield += Time.delta * max * (percentRegenAmount() / 60f);
             }
-            forceShield = fullAbsorbTimer > 0.0001f ? forceShield : Math.min(forceShield, MAX);
+            forceShield = fullAbsorbTimer > shieldEpsilon ? forceShield : Math.min(forceShield, max);
             wasBroken = false;
         }
 
         alpha = Math.max(alpha - Time.delta / 10f, 0f);
 
-        //
-
-        if(fullAbsorbTimer <= 0.001f && !fullAbsorb) lastForceShield = forceShield;
+        if(fullAbsorbTimer <= shieldEpsilon && !fullAbsorb) lastForceShield = forceShield;
 
         regenShield(this);
 
-        if(damageCount > ACCUMULATE_DAMAGE && fullAbsorbTimer <= 0.001f && !fullAbsorb && fullAbsorbReloadTimer <= 0.001f){
+        if(damageCount > accumulateDamage() && fullAbsorbTimer <= shieldEpsilon && !fullAbsorb && fullAbsorbReloadTimer <= shieldEpsilon){
             fullAbsorb = true;
-            fullAbsorbTimer = FULL_ABSORB_TIME;
+            fullAbsorbTimer = fullAbsorbTime();
             maintainShield(this);
         }
 
-        if(fullAbsorbTimer <= 0.001f && fullAbsorb){
+        if(fullAbsorbTimer <= shieldEpsilon && fullAbsorb){
             fullAbsorbReloadTimer = fullAbsorbReload;
             fullAbsorbTimer = 0f;
             forceShield = lastForceShield;
@@ -318,7 +358,7 @@ public class TitanUnit extends MechUnit{
             fullAbsorb = false;
         }
 
-        if(forceShield > 0.001f && cooldownTimer <= 0.001f){
+        if(forceShield > shieldEpsilon && cooldownTimer <= shieldEpsilon){
             checkRadius(this);
         }
     }
@@ -327,26 +367,27 @@ public class TitanUnit extends MechUnit{
     @Override
     public void draw(){
         super.draw();
-        Draw.color(this.type.shieldColor(this).cpy(), Color.white, Mathf.clamp(alpha));
-        float Width = LONG_AXIS * size, Height = MINOR_AXIS * size;
+        Draw.color(Tmp.c1.set(type.shieldColor(this)), Color.white, Mathf.clamp(alpha));
+        float width = longAxis() * size, height = minorAxis() * size;
         boolean hadVoidShields = forceShield > 0.0001f;
         if(!hadVoidShields){
-            Draw.color(this.type.shieldColor(this), Color.white, Mathf.clamp(alpha));
-            Lines.stroke(2 + hitSize * 0.03f + Mathf.absin(Time.time, 0.2f));
-            float cooldownProgress = 1f - Math.abs((cooldownTimer / COOLDOWN));
-            Drawn.ellipseProcess(x, y, 365, rotateAngle + rotation, LONG_AXIS, MINOR_AXIS, cooldownProgress);
+            Draw.color(type.shieldColor(this), Color.white, Mathf.clamp(alpha));
+            Lines.stroke(2f + hitSize * 0.03f + Mathf.absin(Time.time, 0.2f));
+            float maxCooldown = cooldown();
+            float cooldownProgress = maxCooldown <= 0f ? 1f : 1f - Math.abs(cooldownTimer / maxCooldown);
+            Drawn.ellipseProcess(x, y, 365, rotateAngle + rotation, longAxis(), minorAxis(), cooldownProgress);
         }
         if(Vars.renderer.animateShields){
             Draw.z(Layer.shields + 0.001f * alpha);
             Draw.z(shader ? WHContent.HEXAGONAL_SHIELD + 0.001f * alpha : Layer.shields + 0.001f * alpha);
-            Drawn.ellipse(x, y, 50, rotateAngle + rotation, Width, Height);
+            Drawn.ellipse(x, y, 50, rotateAngle + rotation, width, height);
         }else{
             Draw.z(Layer.shields);
             Lines.stroke(1.5f);
             Draw.alpha(0.09f);
-            Drawn.ellipse(x, y, 50, rotateAngle + rotation, Width, Height);
+            Drawn.ellipse(x, y, 50, rotateAngle + rotation, width, height);
             Draw.alpha(1f);
-            Lines.ellipse(x, y, 50, Width, Height, rotateAngle + rotation);
+            Lines.ellipse(x, y, 50, width, height, rotateAngle + rotation);
         }
 
         Draw.reset();
@@ -359,9 +400,15 @@ public class TitanUnit extends MechUnit{
         t.row();
         t.table(bars -> {
             bars.defaults().growX().pad(5).height(20f);
-            bars.add(new Bar(Core.bundle.format("bar.wh-full-absorb"), Pal.accent, () -> fullAbsorbTimer / FULL_ABSORB_TIME));
+            bars.add(new Bar(Core.bundle.format("bar.wh-full-absorb"), Pal.accent, () -> {
+                float fullTime = fullAbsorbTime();
+                return fullTime <= 0f ? 0f : fullAbsorbTimer / fullTime;
+            }));
             bars.row();
-            bars.add(new Bar("stat.shieldhealth", Pal.accent, () -> Mathf.clamp(forceShield / MAX, 0, 1)));
+            bars.add(new Bar("stat.shieldhealth", Pal.accent, () -> {
+                float max = maxShield();
+                return max <= 0f ? 0f : Mathf.clamp(forceShield / max, 0f, 1f);
+            }));
         }).growX().padBottom(5);
     }
 
@@ -386,24 +433,24 @@ public class TitanUnit extends MechUnit{
         regenCount = read.i();
         wasBroken = read.bool();
 
-        LONG_AXIS = read.f();
-        MINOR_AXIS = read.f();
-        RADIUS = read.f();
-        REGEN = read.f();
-        MAX = read.f();
-        COOLDOWN = read.f();
-        RESTART_RATIO = read.f();
-        REFLECT_CHANCE = read.f();
-        SHADER = read.bool();
-        PERCENT_REGEN = read.bool();
-        PERCENT_REGEN_AMOUNT = read.f();
-        DAMAGE_MAX = read.f();
-        ACCUMULATE_DAMAGE = read.f();
-        SHIELD_DAMAGE_MAX_PER = read.f();
-        DAMAGE_MAX_PER_TICK = read.f();
-        FULL_ABSORB_TIME = read.f();
-        REGEN_THRESHOLD = read.f();
-
+        // Keep legacy stream layout for save compatibility.
+        read.f(); // LONG_AXIS
+        read.f(); // MINOR_AXIS
+        read.f(); // RADIUS
+        read.f(); // REGEN
+        read.f(); // MAX
+        read.f(); // COOLDOWN
+        read.f(); // RESTART_RATIO
+        read.f(); // REFLECT_CHANCE
+        read.bool(); // SHADER
+        read.bool(); // PERCENT_REGEN
+        read.f(); // PERCENT_REGEN_AMOUNT
+        read.f(); // DAMAGE_MAX
+        read.f(); // ACCUMULATE_DAMAGE
+        read.f(); // SHIELD_DAMAGE_MAX_PER
+        read.f(); // DAMAGE_MAX_PER_TICK
+        read.f(); // FULL_ABSORB_TIME
+        read.f(); // REGEN_THRESHOLD
     }
 
     @Override
@@ -427,23 +474,24 @@ public class TitanUnit extends MechUnit{
         write.i(regenCount);
         write.bool(wasBroken);
 
-        write.f(LONG_AXIS);
-        write.f(MINOR_AXIS);
-        write.f(RADIUS);
-        write.f(REGEN);
-        write.f(MAX);
-        write.f(COOLDOWN);
-        write.f(RESTART_RATIO);
-        write.f(REFLECT_CHANCE);
-        write.bool(SHADER);
-        write.bool(PERCENT_REGEN);
-        write.f(PERCENT_REGEN_AMOUNT);
-        write.f(DAMAGE_MAX);
-        write.f(ACCUMULATE_DAMAGE);
-        write.f(SHIELD_DAMAGE_MAX_PER);
-        write.f(DAMAGE_MAX_PER_TICK);
-        write.f(FULL_ABSORB_TIME);
-        write.f(REGEN_THRESHOLD);
+        // Keep legacy stream layout for save compatibility.
+        write.f(longAxis());
+        write.f(minorAxis());
+        write.f((longAxis() + minorAxis()) * 0.5f);
+        write.f(regen());
+        write.f(maxShield());
+        write.f(cooldown());
+        write.f(restartRatio());
+        write.f(reflectChance());
+        write.bool(shader);
+        write.bool(percentRegen());
+        write.f(percentRegenAmount());
+        write.f(damageMax());
+        write.f(accumulateDamage());
+        write.f(shieldDamageMaxPer());
+        write.f(damageMaxPerTick());
+        write.f(fullAbsorbTime());
+        write.f(regenThreshold());
     }
 
     @Override
@@ -468,26 +516,25 @@ public class TitanUnit extends MechUnit{
             regenCount = read.i();
             wasBroken = read.bool();
 
-            LONG_AXIS = read.f();
-            MINOR_AXIS = read.f();
-            RADIUS = read.f();
-            REGEN = read.f();
-            MAX = read.f();
-            COOLDOWN = read.f();
-            RESTART_RATIO = read.f();
-            REFLECT_CHANCE = read.f();
-            SHADER = read.bool();
-            PERCENT_REGEN = read.bool();
-            PERCENT_REGEN_AMOUNT = read.f();
-            DAMAGE_MAX = read.f();
-            ACCUMULATE_DAMAGE = read.f();
-            SHIELD_DAMAGE_MAX_PER = read.f();
-            DAMAGE_MAX_PER_TICK = read.f();
-            FULL_ABSORB_TIME = read.f();
-            REGEN_THRESHOLD = read.f();
-
+            // Keep legacy stream layout for sync compatibility.
+            read.f(); // LONG_AXIS
+            read.f(); // MINOR_AXIS
+            read.f(); // RADIUS
+            read.f(); // REGEN
+            read.f(); // MAX
+            read.f(); // COOLDOWN
+            read.f(); // RESTART_RATIO
+            read.f(); // REFLECT_CHANCE
+            read.bool(); // SHADER
+            read.bool(); // PERCENT_REGEN
+            read.f(); // PERCENT_REGEN_AMOUNT
+            read.f(); // DAMAGE_MAX
+            read.f(); // ACCUMULATE_DAMAGE
+            read.f(); // SHIELD_DAMAGE_MAX_PER
+            read.f(); // DAMAGE_MAX_PER_TICK
+            read.f(); // FULL_ABSORB_TIME
+            read.f(); // REGEN_THRESHOLD
         }else{
-
             read.f();
             read.f();
             read.bool();
@@ -506,6 +553,7 @@ public class TitanUnit extends MechUnit{
             read.i();
             read.bool();
 
+            // Keep legacy stream layout for sync compatibility.
             read.f();
             read.f();
             read.f();
@@ -547,22 +595,23 @@ public class TitanUnit extends MechUnit{
         write.i(regenCount);
         write.bool(wasBroken);
 
-        write.f(LONG_AXIS);
-        write.f(MINOR_AXIS);
-        write.f(RADIUS);
-        write.f(REGEN);
-        write.f(MAX);
-        write.f(COOLDOWN);
-        write.f(RESTART_RATIO);
-        write.f(REFLECT_CHANCE);
-        write.bool(SHADER);
-        write.bool(PERCENT_REGEN);
-        write.f(PERCENT_REGEN_AMOUNT);
-        write.f(DAMAGE_MAX);
-        write.f(ACCUMULATE_DAMAGE);
-        write.f(SHIELD_DAMAGE_MAX_PER);
-        write.f(DAMAGE_MAX_PER_TICK);
-        write.f(FULL_ABSORB_TIME);
-        write.f(REGEN_THRESHOLD);
+        // Keep legacy stream layout for sync compatibility.
+        write.f(longAxis());
+        write.f(minorAxis());
+        write.f((longAxis() + minorAxis()) * 0.5f);
+        write.f(regen());
+        write.f(maxShield());
+        write.f(cooldown());
+        write.f(restartRatio());
+        write.f(reflectChance());
+        write.bool(shader);
+        write.bool(percentRegen());
+        write.f(percentRegenAmount());
+        write.f(damageMax());
+        write.f(accumulateDamage());
+        write.f(shieldDamageMaxPer());
+        write.f(damageMaxPerTick());
+        write.f(fullAbsorbTime());
+        write.f(regenThreshold());
     }
 }

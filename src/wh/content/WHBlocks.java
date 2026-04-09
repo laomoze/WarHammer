@@ -2353,13 +2353,13 @@ public final class WHBlocks{
         };
 
         ventDistiller = new ThermalGenerator("vent-distiller"){{
-            requirements(Category.production, with(WHItems.manganese, 70, Items.graphite, 50));
+            requirements(Category.production, with(WHItems.manganese, 70, WHItems.chromium, 50));
 
             attribute = Attribute.steam;
             group = BlockGroup.liquids;
             displayEfficiencyScale = 1f / 9f;
             minEfficiency = 9f - 0.0001f;
-            powerProduction = (750.00001f / 60f) / 9f;
+            powerProduction = (750.1f / 60f) / 9f;
             displayEfficiency = false;
             generateEffect = Fx.turbinegenerate;
             effectChance = 0.04f;
@@ -3212,8 +3212,10 @@ public final class WHBlocks{
 
             size = 3;
             plans = Seq.with(
-            new UnitPlan(WHUnitTypes.air1, 60f * 30, with(Items.graphite, 50, Items.metaglass, 30, Items.silicon, 70)),
-            new UnitPlan(WHUnitTypes.airB1, 60f * 40, with(Items.graphite, 50, Items.silicon, 40, WHItems.manganeseSteel, 15))
+            new UnitPlan(WHUnitTypes.airA1, 60f * 30, with(Items.graphite, 50,
+            Items.metaglass, 30, Items.silicon, 70)),
+            new UnitPlan(WHUnitTypes.airB1, 60f * 40, with(Items.graphite, 50, Items.silicon, 40,
+            WHItems.manganeseSteel, 15))
             );
             fogRadius = 3;
             consumePower(180 / 60f);
@@ -3223,7 +3225,8 @@ public final class WHBlocks{
         groundFactory = new UnitFactory("ground-factory"){{
             requirements(Category.units, with(Items.graphite, 50, WHItems.manganese, 150, Items.silicon, 100));
             plans = Seq.with(
-            new UnitPlan(WHUnitTypes.M1, 60f * 20, with(Items.graphite, 30, Items.silicon, 30, WHItems.chromium, 30))
+            new UnitPlan(WHUnitTypes.M1, 60f * 20, with(Items.graphite, 30,
+            Items.silicon, 30, WHItems.chromium, 30))
             );
             size = 3;
             fogRadius = 3;
@@ -3235,7 +3238,8 @@ public final class WHBlocks{
             requirements(Category.units, with(WHItems.manganeseSteel, 100, Items.tungsten, 120, Items.silicon, 100, Items.plastanium, 50));
 
             plans = Seq.with(
-            new UnitPlan(WHUnitTypes.Mecha2, 60f * 60, with(WHItems.manganeseSteel, 50, WHItems.uranium, 100, Items.silicon, 150, Items.plastanium, 35))
+            new UnitPlan(WHUnitTypes.Mecha2, 60f * 60, with(WHItems.manganeseSteel, 50,
+            WHItems.uranium, 100, Items.silicon, 150, Items.plastanium, 35))
             );
 
             size = 3;
@@ -3254,8 +3258,12 @@ public final class WHBlocks{
             createSound = Sounds.unitCreateBig;
 
             plans = Seq.with(
-            new UnitPlan(WHUnitTypes.tankA1, 60f * 150f, with(WHItems.manganeseSteel, 300, WHItems.ceramite, 400, WHItems.molybdenumAlloy, 150, Items.silicon, 800)),
-            new UnitPlan(WHUnitTypes.tankB1, 60f * 150f, with(WHItems.manganeseSteel, 600, WHItems.ceramite, 400, WHItems.molybdenumAlloy, 150, Items.silicon, 800))
+            new UnitPlan(WHUnitTypes.tankA1, 60f * 150f, with(WHItems.manganeseSteel, 300,
+            WHItems.ceramite, 400, WHItems.molybdenumAlloy, 150, Items.silicon, 800)),
+            new UnitPlan(WHUnitTypes.tankB1, 60f * 150f, with(WHItems.manganeseSteel, 600,
+            WHItems.ceramite, 400, WHItems.molybdenumAlloy, 150, Items.silicon, 800)),
+            new UnitPlan(WHUnitTypes.tankC1, 60f * 150, with(WHItems.manganeseSteel, 500,
+            WHItems.ceramite, 300, WHItems.resonantCrystal, 120, Items.silicon, 1200))
             );
 
             researchCostMultiplier = 0.75f;
@@ -3269,7 +3277,7 @@ public final class WHBlocks{
             consumeLiquid(Liquids.hydrogen, 15f / 60f);
 
             addUpgrade(WHUnitTypes.M1, WHUnitTypes.M2, with(WHItems.manganeseSteel, 60, WHItems.cobalt, 50, Items.silicon, 70));
-            addUpgrade(WHUnitTypes.air1, WHUnitTypes.air2, with(WHItems.manganeseSteel, 70, Items.graphite, 80, Items.silicon, 40));
+            addUpgrade(WHUnitTypes.airA1, WHUnitTypes.airA2, with(WHItems.manganeseSteel, 70, Items.graphite, 80, Items.silicon, 40));
             addUpgrade(WHUnitTypes.airB1, WHUnitTypes.airB2, with(WHItems.manganeseSteel, 70, WHItems.uranium, 50, Items.silicon, 70));
 
             constructTime = 60f * 20f;
@@ -3284,11 +3292,15 @@ public final class WHBlocks{
             consumePower(15f);
             consumeLiquid(Liquids.nitrogen, 40 / 60f);
 
-            addUpgrade(WHUnitTypes.M2, WHUnitTypes.M3, with(WHItems.manganeseSteel, 90, WHItems.uranium, 150, Items.plastanium, 70, Items.silicon, 200));
-            addUpgrade(WHUnitTypes.air2, WHUnitTypes.air3, with(WHItems.manganeseSteel, 120, WHItems.ceramite, 70, Items.silicon, 130));
-            addUpgrade(WHUnitTypes.airB2, WHUnitTypes.airB3, with(WHItems.manganeseSteel, 120, WHItems.uranium, 150, Items.plastanium, 80, Items.silicon, 130));
+            addUpgrade(WHUnitTypes.M2, WHUnitTypes.M3, with(WHItems.manganeseSteel, 90, WHItems.uranium, 150,
+            Items.plastanium, 70, Items.silicon, 200));
+            addUpgrade(WHUnitTypes.airA2, WHUnitTypes.airA3, with(WHItems.manganeseSteel, 120,
+            WHItems.ceramite, 70, Items.silicon, 130));
+            addUpgrade(WHUnitTypes.airB2, WHUnitTypes.airB3, with(WHItems.manganeseSteel, 120,
+            WHItems.uranium, 150, Items.plastanium, 80, Items.silicon, 130));
 
-            addUpgrade(WHUnitTypes.Mecha2, WHUnitTypes.Mecha3, with(WHItems.armorAlloy, 200, WHItems.ceramite, 150, WHItems.combustible, 100, Items.silicon, 600));
+            addUpgrade(WHUnitTypes.Mecha2, WHUnitTypes.Mecha3, with(WHItems.armorAlloy, 200,
+            WHItems.ceramite, 150, WHItems.combustible, 100, Items.silicon, 600));
 
             constructTime = 60f * 40f;
             researchCostMultiplier = 0.75f;
@@ -3308,7 +3320,7 @@ public final class WHBlocks{
 
             addUpgrade(WHUnitTypes.M3, WHUnitTypes.M4A, with(WHItems.armorAlloy, 200, WHItems.ceramite, 300, Items.silicon, 800));
 
-            addUpgrade(WHUnitTypes.air3, WHUnitTypes.air4, with(WHItems.armorAlloy, 300, WHItems.ceramite, 300, Items.silicon, 800));
+            addUpgrade(WHUnitTypes.airA3, WHUnitTypes.airA4, with(WHItems.armorAlloy, 300, WHItems.ceramite, 300, Items.silicon, 800));
             addUpgrade(WHUnitTypes.airB3, WHUnitTypes.airB4, with(WHItems.armorAlloy, 300, WHItems.ceramite, 150, Items.silicon, 1100));
 
             addUpgrade(WHUnitTypes.Mecha3, WHUnitTypes.Mecha4, with(WHItems.molybdenumAlloy, 250,
@@ -3332,7 +3344,7 @@ public final class WHBlocks{
             addUpgrade(WHUnitTypes.M4A, WHUnitTypes.M5, with(WHItems.ceramite, 500, WHItems.entanglement, 100,
             WHItems.protocolChip, 150, Items.silicon, 1200));
 
-            addUpgrade(WHUnitTypes.air4, WHUnitTypes.air5, with(WHItems.ceramite, 500, WHItems.entanglement, 200,
+            addUpgrade(WHUnitTypes.airA4, WHUnitTypes.airA5, with(WHItems.ceramite, 500, WHItems.entanglement, 200,
             WHItems.protocolChip, 150, Items.silicon, 1200));
 
             addUpgrade(WHUnitTypes.airB4, WHUnitTypes.airB5, with(WHItems.ceramite, 400, WHItems.entanglement, 150,
@@ -3341,8 +3353,11 @@ public final class WHBlocks{
             addUpgrade(WHUnitTypes.tankA1, WHUnitTypes.tankA2, with(WHItems.ceramite, 800, WHItems.entanglement, 200,
             WHItems.molybdenumAlloy, 350, Items.silicon, 1200));
 
-            addUpgrade(WHUnitTypes.tankB1, WHUnitTypes.tankB2, with(WHItems.ceramite, 800, WHItems.entanglement, 200,
+            addUpgrade(WHUnitTypes.tankB1, WHUnitTypes.tankB2, with(WHItems.ceramite, 800, WHItems.culverCrystal, 200,
             WHItems.molybdenumAlloy, 350, Items.silicon, 1200));
+
+            addUpgrade(WHUnitTypes.tankC1, WHUnitTypes.tankC2, with(WHItems.manganeseSteel, 500, WHItems.ceramite, 400,
+            WHItems.protocolChip, 200, WHItems.molybdenumAlloy, 400, Items.silicon, 1400));
 
             addUpgrade(WHUnitTypes.Mecha4, WHUnitTypes.Mecha5, with(WHItems.ceramite, 500, WHItems.molybdenumAlloy, 200,
             WHItems.protocolChip, 100, Items.silicon, 1200));
@@ -3365,7 +3380,7 @@ public final class WHBlocks{
             addUpgrade(WHUnitTypes.M5, WHUnitTypes.M6, with(WHItems.protocolChip, 200, WHItems.sealedPromethium, 200,
             WHItems.refineCeramite, 300));
 
-            addUpgrade(WHUnitTypes.air5, WHUnitTypes.air6, with(WHItems.protocolChip, 200, WHItems.culverCrystal, 200, WHItems.sealedPromethium, 150,
+            addUpgrade(WHUnitTypes.airA5, WHUnitTypes.airA6, with(WHItems.protocolChip, 200, WHItems.culverCrystal, 200, WHItems.sealedPromethium, 150,
             WHItems.refineCeramite, 400));
 
             addUpgrade(WHUnitTypes.airB5, WHUnitTypes.airB6, with(WHItems.protocolChip, 200, WHItems.protocolChip, 300,
@@ -3395,11 +3410,8 @@ public final class WHBlocks{
             new UnitPlan(WHUnitTypes.airB1, 60f * 40, false, with(Items.graphite, 50, Items.silicon, 40, WHItems.manganeseSteel, 15)),
             new UnitPlan(WHUnitTypes.airB2, 60f * 60, false, with(WHItems.manganeseSteel, 50, Items.graphite, 80, Items.silicon, 40)),
             new UnitPlan(WHUnitTypes.airB3, 60f * 80, false, with(WHItems.manganeseSteel, 200, Items.tungsten, 200, Items.plastanium, 100, Items.silicon, 200)),
-            new UnitPlan(WHUnitTypes.airB4, 60f * 140, false, with(WHItems.manganeseSteel, 500, WHItems.ceramite, 400, WHItems.sealedPromethium, 100, Items.silicon, 2000)),
-
-            new UnitPlan(WHUnitTypes.tankC1, 60f * 150, true, with(WHItems.manganeseSteel, 500, WHItems.ceramite, 300, WHItems.resonantCrystal, 150, Items.silicon, 2000)),
-            new UnitPlan(WHUnitTypes.tankC2, 60f * 250, true, with(WHItems.manganeseSteel, 500, WHItems.ceramite, 400, WHItems.protocolChip, 200,
-            WHItems.molybdenumAlloy, 400, Items.silicon, 2500)));
+            new UnitPlan(WHUnitTypes.airB4, 60f * 140, false, with(WHItems.manganeseSteel, 500, WHItems.ceramite, 400, WHItems.sealedPromethium, 100, Items.silicon, 2000))
+            );
 
             drawBlock = b -> {
                 Draw.z(Layer.effect);
@@ -3444,7 +3456,7 @@ public final class WHBlocks{
             range = 300;
             spawnRange = 150;
             plans = Seq.with(
-            new UnitPlan(WHUnitTypes.air7, 60f * 60f * 7.5f, true, with(WHItems.armorAlloy, 4000, WHItems.refineCeramite, 3000,
+            new UnitPlan(WHUnitTypes.airA7, 60f * 60f * 7.5f, true, with(WHItems.armorAlloy, 4000, WHItems.refineCeramite, 3000,
             WHItems.adamantium, 2000, WHItems.protocolChip, 1200)),
             new UnitPlan(WHUnitTypes.tankAG, 60f * 60f * 7.5f, true, with(WHItems.armorAlloy, 4000, WHItems.refineCeramite, 3000,
             WHItems.adamantium, 2000, WHItems.protocolChip, 800)),

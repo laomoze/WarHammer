@@ -788,11 +788,6 @@ public class WHBullets{
 
         airRaiderMissile = new MissileBulletType(){
             {
-                trailEffect = new Effect(50, e -> {
-                    Draw.color(WHPal.ShootOrange);
-                    Angles.randLenVectors(e.id, 1, -20 * e.finpow(), e.rotation, 80, (x, y) ->
-                    Fill.square(e.x + x, e.y + y, 5 * e.foutpow(), Mathf.randomSeed(e.id, 360) + e.time));
-                });
                 width = 50;
                 height = 60;
                 sprite = name("large-missile");
@@ -804,27 +799,31 @@ public class WHBullets{
                 homingRange = 30;
                 trailLength = 10;
                 trailWidth = 3;
-                trailColor = WHPal.ShootOrange;
                 shrinkY = 0.5f;
                 shrinkX = 0.5f;
-                backColor = WHPal.ShootOrangeLight;
-                frontColor = WHPal.WHYellow2;
+                frontColor = WHPal.ShootOrangeLight;
+                lightningColor = trailColor = hitColor = backColor = WHPal.ShootOrange;
                 hitEffect = despawnEffect = new MultiEffect(
-                WHFx.blast(WHPal.ShootOrange, 10),
-                WHFx.line45Explosion(WHPal.ShootOrange, WHPal.ShootOrangeLight, 10));
+                WHFx.generalExplosion(60, hitColor, splashDamageRadius, 5, false),
+                WHFx.line45Explosion(hitColor, hitColor, 10));
+
+                trailEffect = new Effect(50, e -> {
+                    Draw.color(hitColor);
+                    Angles.randLenVectors(e.id, 1, -20 * e.finpow(), e.rotation, 80, (x, y) ->
+                    Fill.square(e.x + x, e.y + y, 5 * e.foutpow(), Mathf.randomSeed(e.id, 360) + e.time));
+                });
                 hitSound = explosionQuad;
                 hitShake = 1;
-                shootEffect = WHFx.shootLineSmall(backColor);
+                shootEffect = WHFx.shootLineSmall(hitColor);
                 smokeEffect = hugeSmokeGray;
                 hittable = false;
-                damage = 100;
-                shieldDamageMultiplier = 3;
-                splashDamageRadius = 56;
+                damage = 90;
+                shieldDamageMultiplier = 5;
+                splashDamageRadius = 32;
                 splashDamage = 100;
                 lightningDamage = 30;
-                lightning = 1;
-                lightningLength = 10;
-                lightningColor = WHPal.ShootOrange;
+                lightning = 3;
+                lightningLength = 12;
             }
 
             final float Mag = 20;
@@ -1126,6 +1125,7 @@ public class WHBullets{
             reloadMultiplier = 0.8f;
             rangeChange = 1.5f * 8f;
             ammoMultiplier = 2;
+
             lifetime = 180f / speed;
             width = 9;
             height = 9;
@@ -1139,6 +1139,9 @@ public class WHBullets{
             backColor = hitColor = trailColor = Pal.glassAmmoBack;
             shootEffect = Fx.shootSmallColor;
             hitEffect = Fx.flakExplosion;
+
+            collidesGround = true;
+
             fragBullet = new BasicBulletType(3f, 12, name("tall")){{
                 width = 10f;
                 height = 10f;

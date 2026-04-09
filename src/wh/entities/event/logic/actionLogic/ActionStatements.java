@@ -297,10 +297,10 @@ public final class ActionStatements{
 
                 @Override
                 protected boolean begin(LExecutor exec){
-                    float sec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vSec), 0f, exec));
+                    float sec = Math.max(0f, ActionLogicSupport.parseFloat(vSec, 0f, exec));
                     target.set(
-                    ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vx), 0f, exec),
-                    ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vy), 0f, exec)
+                    ActionLogicSupport.parseWorldCoord(vx, 0f, exec),
+                    ActionLogicSupport.parseWorldCoord(vy, 0f, exec)
                     );
                     if(sec <= 0f){
                         if(!Vars.headless){
@@ -384,7 +384,7 @@ public final class ActionStatements{
 
                 @Override
                 protected boolean begin(LExecutor exec){
-                    float sec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vSec), 0f, exec));
+                    float sec = Math.max(0f, ActionLogicSupport.parseFloat(vSec, 0f, exec));
                     if(sec <= 0f){
                         if(!Vars.headless){
                             forcedCutscene = !Vars.control.input.logicCutscene;
@@ -464,7 +464,7 @@ public final class ActionStatements{
                 @Override
                 protected boolean begin(LExecutor exec){
                     if(!Vars.headless){
-                        Vars.control.input.logicCutsceneZoom = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vz), 1f, exec);
+                        Vars.control.input.logicCutsceneZoom = ActionLogicSupport.parseFloat(vz, 1f, exec);
                     }
                     return true;
                 }
@@ -525,9 +525,9 @@ public final class ActionStatements{
 
                 @Override
                 protected boolean begin(LExecutor exec){
-                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vIn), 1f, exec));
-                    float hold = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vHold), 1f, exec));
-                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOut), 1f, exec));
+                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(vIn, 1f, exec));
+                    float hold = Math.max(0f, ActionLogicSupport.parseFloat(vHold, 1f, exec));
+                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(vOut, 1f, exec));
 
                     inTicks = inSec * Time.toSeconds;
                     holdTicks = hold * Time.toSeconds;
@@ -631,9 +631,9 @@ public final class ActionStatements{
 
                 @Override
                 protected boolean begin(LExecutor exec){
-                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vIn), 1f, exec));
-                    float hold = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vHold), 1f, exec));
-                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOut), 1f, exec));
+                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(vIn, 1f, exec));
+                    float hold = Math.max(0f, ActionLogicSupport.parseFloat(vHold, 1f, exec));
+                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(vOut, 1f, exec));
 
                     inTicks = inSec * Time.toSeconds;
                     holdTicks = hold * Time.toSeconds;
@@ -771,13 +771,13 @@ public final class ActionStatements{
                     ActionLogicSupport.ensureCutsceneUI();
                     String val = ActionLogicSupport.parseText(
                     vTextVar == null ? textToken : ActionLogicSupport.valueText(vTextVar));
-                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vIn), 0.25f, exec));
-                    float hold = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vHold), 0.5f, exec));
-                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOut), 0.25f, exec));
+                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(vIn, 0.25f, exec));
+                    float hold = Math.max(0f, ActionLogicSupport.parseFloat(vHold, 0.5f, exec));
+                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(vOut, 0.25f, exec));
                     float totalSec = inSec + hold + outSec;
-                    float overlay = Mathf.clamp(ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOverlay), 0f, exec));
+                    float overlay = Mathf.clamp(ActionLogicSupport.parseFloat(vOverlay, 0f, exec));
                     Color fontColor = ActionLogicSupport.parseColor(ActionLogicSupport.valueText(vColor), Color.white);
-                    float scale = Mathf.clamp(ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vScale), 1f, exec), 0.25f, 4f);
+                    float scale = Mathf.clamp(ActionLogicSupport.parseFloat(vScale, 1f, exec), 0.25f, 4f);
 
                     // 单条语句流程：淡入 -> 停留 -> 淡出。
                     ActionContext.cutsceneUI.infoLabel = new FLabel(val);
@@ -1014,16 +1014,16 @@ public final class ActionStatements{
                 protected boolean begin(LExecutor exec){
                     UnitType unitType = ActionLogicSupport.parseUnitType(ActionLogicSupport.valueText(vu));
                     Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vt), Team.derelict);
-                    float worldX = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vx), 0f, exec);
-                    float worldY = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vy), 0f, exec);
-                    float angleVal = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(va), 0f, exec);
-                    float delay = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vd), 0f, exec) * Time.toSeconds;
-                    float spread = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vi), 0f, exec);
-                    float shieldVal = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vShield), -1f, exec);
+                    float worldX = ActionLogicSupport.parseWorldCoord(vx, 0f, exec);
+                    float worldY = ActionLogicSupport.parseWorldCoord(vy, 0f, exec);
+                    float angleVal = ActionLogicSupport.parseFloat(va, 0f, exec);
+                    float delay = ActionLogicSupport.parseFloat(vd, 0f, exec) * Time.toSeconds;
+                    float spread = ActionLogicSupport.parseFloat(vi, 0f, exec);
+                    float shieldVal = ActionLogicSupport.parseFloat(vShield, -1f, exec);
                     StatusEffect statusVal = ActionLogicSupport.parseStatusEffect(ActionLogicSupport.valueText(vStatus), null);
-                    float statusDurVal = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vStatusDur), 0f, exec));
-                    int waves = Math.max(1, ActionLogicSupport.parseInt(ActionLogicSupport.valueText(vSpawnerCount), 1));
-                    float intervalSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vSpawnerInterval), 0f, exec));
+                    float statusDurVal = Math.max(0f, ActionLogicSupport.parseFloat(vStatusDur, 0f, exec));
+                    int waves = Math.max(1, ActionLogicSupport.parseInt(vSpawnerCount, 1, exec));
+                    float intervalSec = Math.max(0f, ActionLogicSupport.parseFloat(vSpawnerInterval, 0f, exec));
                     float intervalTicks = intervalSec * Time.toSeconds;
 
                     Runnable spawnOne = () -> {
@@ -1170,16 +1170,16 @@ public final class ActionStatements{
                 protected boolean begin(LExecutor exec){
                     UnitType unitType = ActionLogicSupport.parseUnitType(ActionLogicSupport.valueText(vu));
                     Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vt), Team.derelict);
-                    float worldX = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vx), 0f, exec);
-                    float worldY = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vy), 0f, exec);
-                    float angleVal = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(va), 0f, exec);
-                    float delay = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vd), 0f, exec) * Time.toSeconds;
-                    float spread = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vi), 0f, exec);
-                    float shieldVal = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vShield), -1f, exec);
+                    float worldX = ActionLogicSupport.parseWorldCoord(vx, 0f, exec);
+                    float worldY = ActionLogicSupport.parseWorldCoord(vy, 0f, exec);
+                    float angleVal = ActionLogicSupport.parseFloat(va, 0f, exec);
+                    float delay = ActionLogicSupport.parseFloat(vd, 0f, exec) * Time.toSeconds;
+                    float spread = ActionLogicSupport.parseFloat(vi, 0f, exec);
+                    float shieldVal = ActionLogicSupport.parseFloat(vShield, -1f, exec);
                     StatusEffect statusVal = ActionLogicSupport.parseStatusEffect(ActionLogicSupport.valueText(vStatus), null);
-                    float statusDurVal = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vStatusDur), 0f, exec));
-                    int waves = Math.max(1, ActionLogicSupport.parseInt(ActionLogicSupport.valueText(vSpawnerCount), 1));
-                    float intervalSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vSpawnerInterval), 0f, exec));
+                    float statusDurVal = Math.max(0f, ActionLogicSupport.parseFloat(vStatusDur, 0f, exec));
+                    int waves = Math.max(1, ActionLogicSupport.parseInt(vSpawnerCount, 1, exec));
+                    float intervalSec = Math.max(0f, ActionLogicSupport.parseFloat(vSpawnerInterval, 0f, exec));
                     float intervalTicks = intervalSec * Time.toSeconds;
 
                     Runnable spawnOne = () -> {
@@ -1390,15 +1390,15 @@ public final class ActionStatements{
                 @Override
                 protected boolean begin(LExecutor exec){
                     Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vt), Team.derelict);
-                    float worldX = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vx), 0f, exec);
-                    float worldY = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vy), 0f, exec);
-                    float delay = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vd), 0f, exec) * Time.toSeconds;
-                    float spread = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vi), 0f, exec);
-                    float shieldVal = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vShield), -1f, exec);
+                    float worldX = ActionLogicSupport.parseWorldCoord(vx, 0f, exec);
+                    float worldY = ActionLogicSupport.parseWorldCoord(vy, 0f, exec);
+                    float delay = ActionLogicSupport.parseFloat(vd, 0f, exec) * Time.toSeconds;
+                    float spread = ActionLogicSupport.parseFloat(vi, 0f, exec);
+                    float shieldVal = ActionLogicSupport.parseFloat(vShield, -1f, exec);
                     StatusEffect statusVal = ActionLogicSupport.parseStatusEffect(ActionLogicSupport.valueText(vStatus), null);
-                    float statusDurVal = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vStatusDur), 0f, exec));
-                    int waves = Math.max(1, ActionLogicSupport.parseInt(ActionLogicSupport.valueText(vSpawnerCount), 1));
-                    float intervalSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vSpawnerInterval), 0f, exec));
+                    float statusDurVal = Math.max(0f, ActionLogicSupport.parseFloat(vStatusDur, 0f, exec));
+                    int waves = Math.max(1, ActionLogicSupport.parseInt(vSpawnerCount, 1, exec));
+                    float intervalSec = Math.max(0f, ActionLogicSupport.parseFloat(vSpawnerInterval, 0f, exec));
                     float intervalTicks = intervalSec * Time.toSeconds;
 
                     Seq<UnitType> types = parseUnitList(ActionLogicSupport.valueText(vus));
@@ -1500,11 +1500,11 @@ public final class ActionStatements{
                     if(Vars.headless) return true;
                     ActionLogicSupport.ensureCutsceneUI();
 
-                    float worldX = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vx), 0f, exec);
-                    float worldY = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vy), 0f, exec);
-                    float r = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vrad), 80f, exec);
-                    float t = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vsec), 3f, exec);
-                    int styleId = ActionLogicSupport.parseInt(ActionLogicSupport.valueText(vst), 0);
+                    float worldX = ActionLogicSupport.parseWorldCoord(vx, 0f, exec);
+                    float worldY = ActionLogicSupport.parseWorldCoord(vy, 0f, exec);
+                    float r = ActionLogicSupport.parseFloat(vrad, 80f, exec);
+                    float t = ActionLogicSupport.parseFloat(vsec, 3f, exec);
+                    int styleId = ActionLogicSupport.parseInt(vst, 0, exec);
                     Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vteam), Team.derelict);
 
                     ActionContext.cutsceneUI.mark(
@@ -1600,12 +1600,12 @@ public final class ActionStatements{
                 @Override
                 protected boolean begin(LExecutor exec){
                     Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vt), Team.derelict);
-                    int bulletID = ActionLogicSupport.parseInt(ActionLogicSupport.valueText(vb), 0);
-                    float sourceX = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vsx), 0f, exec);
-                    float sourceY = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vsy), 0f, exec);
-                    float targetX = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vdx), 0f, exec);
-                    float targetY = ActionLogicSupport.parseWorldCoord(ActionLogicSupport.valueText(vdy), 0f, exec);
-                    float spread = ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vspread), 80f, exec);
+                    int bulletID = ActionLogicSupport.parseInt(vb, 0, exec);
+                    float sourceX = ActionLogicSupport.parseWorldCoord(vsx, 0f, exec);
+                    float sourceY = ActionLogicSupport.parseWorldCoord(vsy, 0f, exec);
+                    float targetX = ActionLogicSupport.parseWorldCoord(vdx, 0f, exec);
+                    float targetY = ActionLogicSupport.parseWorldCoord(vdy, 0f, exec);
+                    float spread = ActionLogicSupport.parseFloat(vspread, 80f, exec);
 
                     Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread) * tilesize);
                     float dst = Mathf.dst(sourceX, sourceY, targetX, targetY);
@@ -1665,9 +1665,9 @@ public final class ActionStatements{
                 @Override
                 protected boolean begin(LExecutor exec){
 
-                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vIn), 1f, exec));
-                    float hold = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vHold), 1f, exec));
-                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOut), 1f, exec));
+                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(vIn, 1f, exec));
+                    float hold = Math.max(0f, ActionLogicSupport.parseFloat(vHold, 1f, exec));
+                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(vOut, 1f, exec));
                     float totalSec = inSec + hold + outSec;
 
                     if(!Vars.headless){
@@ -1790,13 +1790,13 @@ public final class ActionStatements{
                     String val = ActionLogicSupport.parseText(
                     vTextVar == null ? textToken : ActionLogicSupport.valueText(vTextVar)
                     );
-                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vIn), 0.5f, exec));
-                    float hold = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vHold), 0.5f, exec));
-                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOut), 0.5f, exec));
+                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(vIn, 0.5f, exec));
+                    float hold = Math.max(0f, ActionLogicSupport.parseFloat(vHold, 0.5f, exec));
+                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(vOut, 0.5f, exec));
                     float totalSec = inSec + hold + outSec;
-                    float overlay = Mathf.clamp(ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vOverlay), 0f, exec));
+                    float overlay = Mathf.clamp(ActionLogicSupport.parseFloat(vOverlay, 0f, exec));
                     Color fontColor = ActionLogicSupport.parseColor(ActionLogicSupport.valueText(vColor), Color.white);
-                    float scale = Mathf.clamp(ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vScale), 1f, exec), 0.25f, 4f);
+                    float scale = Mathf.clamp(ActionLogicSupport.parseFloat(vScale, 1f, exec), 0.25f, 4f);
 
                     // 单条语句流程：淡入 -> 停留 -> 淡出。
                     Sounds.uiChat.play();
@@ -1960,7 +1960,7 @@ public final class ActionStatements{
             return new ActionInstruction(vr, vo){
                 @Override
                 protected boolean begin(LExecutor exec){
-                    float sec = Math.max(0f, ActionLogicSupport.parseFloat(ActionLogicSupport.valueText(vs), 0f, exec));
+                    float sec = Math.max(0f, ActionLogicSupport.parseFloat(vs, 0f, exec));
                     if(sec <= 0f){
                         return true;
                     }
@@ -2022,7 +2022,7 @@ public final class ActionStatements{
                 @Override
                 protected boolean begin(LExecutor exec){
                     if(Vars.headless) return true;
-                    int iconId = ActionLogicSupport.parseInt(ActionLogicSupport.valueText(vi), 0);
+                    int iconId = ActionLogicSupport.parseInt(vi, 0, exec);
                     Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vt), Team.derelict);
                     String message = ActionLogicSupport.parseText(
                     vTextVar == null ? textToken : ActionLogicSupport.valueText(vTextVar)
@@ -2089,8 +2089,8 @@ public final class ActionStatements{
                 @Override
                 protected boolean begin(LExecutor exec){
                     if(Vars.headless) return true;
-                    int allyID = ActionLogicSupport.parseInt(ActionLogicSupport.valueText(va), 0);
-                    int enemyID = ActionLogicSupport.parseInt(ActionLogicSupport.valueText(ve), 0);
+                    int allyID = ActionLogicSupport.parseInt(va, 0, exec);
+                    int enemyID = ActionLogicSupport.parseInt(ve, 0, exec);
                     Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vt), Team.derelict);
                     if(Vars.player.team() == teamVal){
                         ActionLogicSupport.warningSound(allyID).play();

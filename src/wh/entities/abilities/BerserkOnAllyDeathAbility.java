@@ -18,13 +18,13 @@ import static wh.core.WarHammerMod.name;
 /** 附近友军阵亡后，单位短时间进入狂暴状态。 */
 public class BerserkOnAllyDeathAbility extends Ability implements AllyDeathListener{
     // 监听友军死亡的判定范围。
-    public float range = 120f;
+    public float range = 90;
     // 一次触发后的持续时间。
-    public float duration = 180f;
-    public float speedMultiplier = 1.25f;
-    public float reloadMultiplier = 1.35f;
+    public float duration = 90;
+    public float speedMultiplier = 1.4f;
+    public float reloadMultiplier = 1.2f;
     // 狂暴期间的承伤减免。
-    public float damageReduction = 0.2f;
+    public float damageReduction = 0.5f;
 
     public Effect triggerEffect = Fx.overdriven;
     public Sound triggerSound = Sounds.none;
@@ -42,7 +42,6 @@ public class BerserkOnAllyDeathAbility extends Ability implements AllyDeathListe
 
     @Override
     public void update(Unit unit){
-        // data 在这里表示剩余狂暴时间，而不是普通冷却进度。
         data = Math.max(0f, data - Time.delta);
         if(unit.dead || data <= 0f){
             return;
