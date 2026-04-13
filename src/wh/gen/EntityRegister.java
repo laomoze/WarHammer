@@ -1,14 +1,18 @@
 package wh.gen;
 
-import arc.func.*;
-import arc.struct.*;
-import mindustry.gen.*;
-import wh.content.WHBulletsOther.*;
-import wh.entities.*;
-import wh.entities.bullet.ApproachBullet.*;
-import wh.entities.event.*;
-import wh.entities.world.entities.*;
-import wh.entities.world.entities.powerArmorComp.*;
+import arc.func.Prov;
+import arc.struct.ObjectIntMap;
+import arc.struct.ObjectMap;
+import mindustry.gen.EntityMapping;
+import mindustry.gen.Entityc;
+import wh.content.WHBulletsOther.TrailBullet;
+import wh.entities.AirborneSpawner;
+import wh.entities.RiftSpawner;
+import wh.entities.Spawner;
+import wh.entities.bullet.ApproachBullet.AB;
+import wh.entities.event.Trigger;
+import wh.entities.world.entities.AirRaiderUnitType;
+import wh.entities.world.entities.powerArmorComp.PowerArmourUnit;
 
 public final class EntityRegister{
     private static final ObjectIntMap<Class<? extends Entityc>> ids = new ObjectIntMap<>();
@@ -51,6 +55,7 @@ public final class EntityRegister{
         register("PowerArmourUnit", PowerArmourUnit.class, PowerArmourUnit::new);
 
         register("RevengeUnit", RevengeUnit.class, RevengeUnit::new);
+        register("GeminiUnit", GeminiUnit.class, GeminiUnit::new);
 
         register("ApproachB", AB.class, AB::new);
         register("TrailBullet", TrailBullet.class, TrailBullet::new);

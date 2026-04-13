@@ -1,28 +1,37 @@
 package wh.entities.world.entities;
 
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.gen.*;
-import mindustry.type.*;
-import mindustry.world.blocks.payloads.*;
-import wh.gen.*;
-import wh.gen.CarrierUnit.*;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
+import arc.struct.Seq;
+import arc.util.Tmp;
+import mindustry.content.Fx;
+import mindustry.content.UnitTypes;
+import mindustry.entities.Effect;
+import mindustry.gen.Payloadc;
+import mindustry.gen.Unit;
+import mindustry.type.UnitType;
+import mindustry.world.blocks.payloads.Payload;
+import mindustry.world.blocks.payloads.UnitPayload;
+import wh.gen.CarrierPayloadUnit;
+import wh.gen.CarrierUnit.CarrierHostc;
 
-import java.util.*;
+import java.util.Arrays;
 
 public class CarrierUnitType extends WHUnitType{
+    private static final float refitEps = 0.001f;
+    private static final float directionEps2 = 0.0001f;
+
     public static class Runway{
+        // 跑道锚点相对航母中心点的本地偏移。
         public float x, y;
+        // 该跑道最多可容纳的机位数。
         public int capacity;
-        // Local angle offset in degrees relative to carrier forward.
-        // NaN means use carrier forward direction.
+        // 相对航母朝向的角度偏移（度）。NaN 表示直接使用航母前向。
         public float angle = Float.NaN;
-        // Whether this runway participates in payload layer drawing.
+        // 是否在载荷层绘制该跑道上的 payload；false 时仅参与逻辑，不渲染模型。
         public boolean drawPayloadLayer = true;
 
         public Runway(float x, float y, int capacity){
@@ -106,8 +115,10 @@ public class CarrierUnitType extends WHUnitType{
     public float fighterOrbitSmoothing = 70f;
     public float fighterAttackDistanceFactor = 0.8f;
     public float deckVisualSmoothing = 0.6f;
-    // Queue visual movement multiplier; 1 = base speed, lower is slower.
+    // 队列视觉插值速度倍率；1 为基础速度，越小越慢。
     public float queueMoveSpeed = 0.1f;
+    // 载荷绘制层偏移（相对 unit 当前 Draw.z()）；负值会压到单位主体下方。
+    public float payloadLayerOffset = -0.02f;
 
     public CarrierUnitType(String name){
         super(name);
@@ -188,14 +199,62 @@ public class CarrierUnitType extends WHUnitType{
         return point.within(0f, 0f, 8f) && !unit.within(0f, 0f, 80f);
     }
 
+    protected boolean shouldDrawConstructPreview(CarrierHostc carrier, UnitPayload payload) {
+        if (payload == null || payload.unit == null) return false;
+        if (!carrier.deckRefitShowsConstruct(payload.unit.id)) return false;
+        return carrier.deckRefitRemaining(payload.unit.id) > refitEps;
+    }
+
+    protected float resolvePayloadRotation(Unit unit, Vec2 from, Vec2 to) {
+        if (!invalidCarrierPoint(unit, from) && !invalidCarrierPoint(unit, to) && from.dst2(to) > directionEps2) {
+            return Angles.angle(from.x, from.y, to.x, to.y);
+        }
+        return unit.rotation();
+    }
+
+    protected void drawRunwayConstructPreview(Unit unit, CarrierHostc carrier, Payload payload, UnitPayload up, int slot, int runway, float remain) {
+        float total = Math.max(Math.max(recoverRefitTime, refitEps), remain);
+        float progress = Mathf.clamp(1f - remain / total, 0f, 1f);
+
+        carrier.recoveryPoint(runway, Tmp.v2);
+        carrier.runwayFrontPoint(runway, Tmp.v3);
+
+        if (invalidCarrierPoint(unit, Tmp.v2)) {
+            carrier.deckSlotWorldVisual(payload, slot, Tmp.v2);
+        }
+        if (invalidCarrierPoint(unit, Tmp.v3)) {
+            carrier.recoveryPoint(runway, Tmp.v3);
+        }
+        if (invalidCarrierPoint(unit, Tmp.v3)) {
+            Tmp.v3.set(unit.x, unit.y);
+        }
+
+        float rot = resolvePayloadRotation(unit, Tmp.v2, Tmp.v3) - 90f;
+        TextureRegion icon = up.unit.type.fullIcon;
+        if (icon != null) {
+            Draw.alpha(progress);
+            Draw.rect(icon, Tmp.v2.x, Tmp.v2.y, rot);
+            Draw.alpha(1f);
+        }
+    }
+
+    protected void drawRunwayPayload(Unit unit, CarrierHostc carrier, Payload payload, int slot, int runway) {
+        carrier.deckSlotWorldVisual(payload, slot, Tmp.v1);
+        carrier.recoveryPoint(runway, Tmp.v2);
+        carrier.runwayFrontPoint(runway, Tmp.v3);
+
+        float payloadRotation = resolvePayloadRotation(unit, Tmp.v2, Tmp.v3);
+        payload.set(Tmp.v1.x, Tmp.v1.y, payloadRotation);
+        payload.draw();
+    }
+
     @Override
     public <T extends Unit&Payloadc> void drawPayload(T unit){
         if(!(unit instanceof CarrierHostc carrier)) return;
-
         if(!unit.hasPayload()) return;
 
         float prev = Draw.z();
-        Draw.z(prev - 0.02f);
+        Draw.z(prev + payloadLayerOffset);
 
         Seq<Payload> payloads = unit.payloads();
         int payloadCount = payloads.size;
@@ -208,7 +267,7 @@ public class CarrierUnitType extends WHUnitType{
         Arrays.fill(payloadSlotCache, -1);
         Arrays.fill(payloadRunwayCache, 0);
 
-        // Precompute slot/runway once per payload; select one construct target per runway.
+        // 一次性缓存 payload 的 slot/runway，同时选出每条跑道唯一构建投影目标。
         for(int i = 0; i < payloadCount; i++){
             Payload payload = payloads.get(i);
             if(payload == null) continue;
@@ -220,10 +279,8 @@ public class CarrierUnitType extends WHUnitType{
             payloadRunwayCache[i] = runway;
 
             if(!(payload instanceof UnitPayload up) || up.unit == null) continue;
-            if(!carrier.deckRefitShowsConstruct(up.unit.id)) continue;
+            if (!shouldDrawConstructPreview(carrier, up)) continue;
 
-            float remain = carrier.deckRefitRemaining(up.unit.id);
-            if(remain <= 0.001f) continue;
             if(slot >= 0 && slot >= constructSlotCache[runway]){
                 constructSlotCache[runway] = slot;
                 constructPayloadCache[runway] = payload;
@@ -238,55 +295,19 @@ public class CarrierUnitType extends WHUnitType{
 
             int slot = payloadSlotCache[i];
             int runway = payloadRunwayCache[i];
-            if(!runwayDrawPayloadLayer(runway)){
-                continue;
-            }
+            if (!runwayDrawPayloadLayer(runway)) continue;
 
             if(payload instanceof UnitPayload up && up.unit != null){
-                float remain = carrier.deckRefitRemaining(up.unit.id);
-                if(carrier.deckRefitShowsConstruct(up.unit.id) && remain > 0.001f){
+                if (shouldDrawConstructPreview(carrier, up)) {
                     if(constructPayloadCache[runway] == payload){
-                        float total = Math.max(Math.max(recoverRefitTime, 0.001f), remain);
-                        float progress = Mathf.clamp(1f - remain / total, 0f, 1f);
-                        carrier.recoveryPoint(runway, Tmp.v2);
-                        carrier.runwayFrontPoint(runway, Tmp.v3);
-
-                        if(invalidCarrierPoint(unit, Tmp.v2)){
-                            carrier.deckSlotWorldVisual(payload, slot, Tmp.v2);
-                        }
-                        if(invalidCarrierPoint(unit, Tmp.v3)){
-                            carrier.recoveryPoint(runway, Tmp.v3);
-                        }
-                        if(invalidCarrierPoint(unit, Tmp.v3)){
-                            Tmp.v3.set(unit.x, unit.y);
-                        }
-
-                        float fx = Tmp.v2.x;
-                        float fy = Tmp.v2.y;
-                        float runwayRotation = unit.rotation();
-                        if(Tmp.v2.dst2(Tmp.v3) > 0.0001f){
-                            runwayRotation = Angles.angle(Tmp.v2.x, Tmp.v2.y, Tmp.v3.x, Tmp.v3.y);
-                        }
-
-                        Draw.alpha(progress);
-                        float frot = runwayRotation - 90f;
-                        TextureRegion ficon = up.unit.type.fullIcon;
-                        if(ficon != null) Draw.rect(ficon, fx, fy, frot);
-                        Draw.alpha(1f);
+                        float remain = carrier.deckRefitRemaining(up.unit.id);
+                        drawRunwayConstructPreview(unit, carrier, payload, up, slot, runway, remain);
                     }
                     continue;
                 }
             }
 
-            carrier.deckSlotWorldVisual(payload, slot, Tmp.v1);
-            float payloadRotation = unit.rotation();
-            carrier.recoveryPoint(runway, Tmp.v2);
-            carrier.runwayFrontPoint(runway, Tmp.v3);
-            if(!invalidCarrierPoint(unit, Tmp.v2) && !invalidCarrierPoint(unit, Tmp.v3) && Tmp.v2.dst2(Tmp.v3) > 0.0001f){
-                payloadRotation = Angles.angle(Tmp.v2.x, Tmp.v2.y, Tmp.v3.x, Tmp.v3.y);
-            }
-            payload.set(Tmp.v1.x, Tmp.v1.y, payloadRotation);
-            payload.draw();
+            drawRunwayPayload(unit, carrier, payload, slot, runway);
         }
 
         Draw.z(prev);

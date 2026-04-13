@@ -1,22 +1,35 @@
 package wh.gen.CarrierUnit;
 
-import arc.*;
-import arc.math.*;
-import arc.math.geom.*;
+import arc.Events;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
 import arc.struct.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.*;
-import mindustry.ai.types.*;
-import mindustry.content.*;
-import mindustry.core.*;
-import mindustry.entities.*;
-import mindustry.game.EventType.*;
-import mindustry.gen.*;
-import mindustry.world.blocks.payloads.*;
-import wh.entities.world.entities.*;
-import wh.gen.CarrierUnit.UnitAI.*;
-import wh.gen.*;
+import arc.util.Interval;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.ai.types.CommandAI;
+import mindustry.content.Fx;
+import mindustry.core.World;
+import mindustry.entities.EntityGroup;
+import mindustry.entities.UnitSorts;
+import mindustry.entities.Units;
+import mindustry.game.EventType.PayloadDropEvent;
+import mindustry.game.EventType.PickupEvent;
+import mindustry.gen.Building;
+import mindustry.gen.Groups;
+import mindustry.gen.Teamc;
+import mindustry.gen.Unit;
+import mindustry.world.blocks.payloads.Payload;
+import mindustry.world.blocks.payloads.UnitPayload;
+import wh.entities.world.entities.CarrierUnitType;
+import wh.gen.CarrierUnit.UnitAI.CarrierBoundAIC;
+import wh.gen.CarrierUnit.UnitAI.CarrierFighterAI;
+import wh.gen.EntityRegister;
 
 @SuppressWarnings("unchecked")
 public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
@@ -147,6 +160,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     @Override
     public void update(){
         super.update();
+        boolean server = !Vars.net.client();
 
         CarrierUnitType ctype = carrierType();
         if(ctype == null) return;
@@ -158,9 +172,13 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
         ensureRunwayQueueSync(ctype);
         ensureRunwayRecoveryClaims();
-        // Recovery-claim cleanup is periodic; no need to scan every frame.
         if(runtimeIntervals().get(intervalClaimCleanup, 20f)){
             cleanupRunwayRecoveryClaims();
+        }
+
+        if (!server) {
+            updatePayloadVisuals(ctype);
+            return;
         }
 
         if(regrouping && runwayLanes != null){
@@ -171,6 +189,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             }
         }
 
+        // 运行顺序：先同步状态，再处理回收/补编，最后处理发射。
         refreshRunwayFlightState(ctype);
         updateDeckMaintenance(ctype);
         updateRecovery(ctype);
@@ -196,7 +215,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
     public int computeTargetFighterCount(CarrierUnitType ctype){
         int cap = Math.max(Math.min(deckSlotCount(), ctype.deckCapacity()), 1);
-        // Simplified policy: always keep deck target at full capacity.
+        // 当前策略：目标机库数量始终维持满编。
         targetFighterCount = cap;
         return cap;
     }
@@ -524,14 +543,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return out.set(frontX + forward.x * forwardOffset, frontY + forward.y * forwardOffset);
     }
 
-    public Vec2 launchPoint(int runway, Vec2 out){
-        return launchExitPoint(runway, out);
-    }
-
-    public Vec2 launchPoint(Vec2 out){
-        return launchPoint(0, out);
-    }
-
     public Vec2 recoveryPoint(int runway, Vec2 out){
         if(out == null) out = Tmp.v1;
 
@@ -553,10 +564,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             out.set(x, y);
         }
         return out;
-    }
-
-    public Vec2 recoveryPoint(Vec2 out){
-        return recoveryPoint(0, out);
     }
 
     public Vec2 recoveryReversePoint(int runway, Vec2 out){
@@ -631,12 +638,23 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             }
 
             if(ai.targetPos != null && Float.isFinite(ai.targetPos.x) && Float.isFinite(ai.targetPos.y)){
-                // Ignore "focus" points that are effectively on top of the carrier itself.
-                // Otherwise fighters may never accumulate idle-return time and get stuck hovering.
                 float minFocus = Math.max(hitSize * 0.8f, 28f);
                 if(!ai.targetPos.within(x, y, minFocus)){
-                    out.set(ai.targetPos);
-                    return true;
+                    Teamc pointEnemy = Units.bestEnemy(
+                            team,
+                            ai.targetPos.x,
+                            ai.targetPos.y,
+                            40, u -> u.checkTarget(true, true), UnitSorts.weakest);
+                    if (pointEnemy == null) {
+                        Building tile = Vars.world == null ? null : Vars.world.buildWorld(ai.targetPos.x, ai.targetPos.y);
+                        if (tile != null && tile.team != team && tile.isValid()) {
+                            pointEnemy = tile;
+                        }
+                    }
+                    if (pointEnemy != null) {
+                        out.set(pointEnemy);
+                        return true;
+                    }
                 }
             }
         }
@@ -681,7 +699,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         if(!isBoundFighter(fighter)) return false;
 
         int runway = fighterRunway(fighter);
-        // Return-to-deck trigger: must be at runway touchdown and have free deck/runway capacity.
+        // 必须在触地点附近且甲板仍有容量时，才允许回收入队。
         if(!nearRecoveryTouchdown(fighter, runway, recoveryTouchdownRadius(fighter, ctype))) return false;
         if(storedFighterCountInRunway(runway) >= runwayCapacity(runway)) return false;
         if(payloads.size >= deckSlotCount()) return false;
@@ -710,10 +728,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             ai = newAi;
             fighter.controller(newAi);
         }
-    }
-
-    protected void bindFighter(Unit fighter){
-        bindFighter(fighter, fighterRunway(fighter));
     }
 
     protected int payloadRunway(Payload payload, int fallback){
@@ -776,11 +790,8 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         if(payloads.size >= deckSlotCount()) return;
 
         Unit fighter = ctype.fighterType.create(team);
-        // Payload units are expected to be counted already, matching vanilla pickup semantics.
         fighter.team.data().updateCount(fighter.type, 1);
         bindFighter(fighter, r);
-        // Only loss-replacement fighters play construct visuals.
-        // Use positive timer = show construct, zero timer = immediate ready.
         boolean replacementFromLoss = regrouping || lossCount > 0;
         float refit = replacementFromLoss ? Math.max(ctype.recoverRefitTime, 0f) : 0f;
         if(refit > 0.001f){
@@ -793,7 +804,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         UnitPayload created = new UnitPayload(fighter);
         runwayQueue(r).addLast(created);
         noteDeckFighterCreated(r);
-        // New deck-generated fighters should appear at recovery tail point (T) first.
         recoveryPoint(r, Tmp.v1);
         if(invalidLaunchPoint(Tmp.v1)){
             runwayQueueBackPoint(r, Tmp.v1);
@@ -811,7 +821,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     protected void rebuildDeckSlots(){
-        // Queue-driven layout: deck slot coordinates are derived at query time.
     }
 
     protected void trimPayloadToDeck(){
@@ -979,7 +988,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             return true;
         }
 
-        // Claim lock controls per-runway approach order; periodic cleanup avoids full scan every call.
+        // 周期清理回收资格锁，避免陈旧占位。
         if(runtimeIntervals().get(intervalClaimCleanup, 6f)){
             cleanupRunwayRecoveryClaims();
         }
@@ -996,7 +1005,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
         int claim = runwayRecoveryClaims[runway];
         if(claim == fighter.id){
-            // Prevent far-away stale claims from blocking this runway indefinitely.
             if(!fighter.within(Tmp.v1, claimRadius * 1.8f)){
                 runwayRecoveryClaims[runway] = -1;
                 claim = -1;
@@ -1020,7 +1028,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         if(holder != null){
             float holderDst2 = holder.dst2(Tmp.v1);
             float fighterDst2 = fighter.dst2(Tmp.v1);
-            // If this fighter is clearly closer to touchdown, allow claim takeover.
             if(fighterDst2 + claimRadius * claimRadius * 0.2f < holderDst2){
                 runwayRecoveryClaims[runway] = fighter.id;
                 return true;
@@ -1028,26 +1035,9 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
 
         if(claim < 0){
-            // No active claimant on this runway: allow this fighter to begin approach immediately.
-            // Gating by distance here can deadlock when the wait orbit sits outside claimRadius.
+            // 无锁时直接抢占，保证等待中的战机能进入回收流程。
             runwayRecoveryClaims[runway] = fighter.id;
             return true;
-        }
-        return false;
-    }
-
-    protected boolean runwayHasReturningFighter(int runway, int exceptId){
-        int r = clampRunway(runway);
-        for(int i = activeFighters.size - 1; i >= 0; i--){
-            int fighterId = activeFighters.get(i);
-            if(fighterId == exceptId) continue;
-
-            Unit fighter = Groups.unit.getByID(fighterId);
-            if(fighter == null || !fighter.isAdded() || fighter.dead()) continue;
-            if(!isBoundFighter(fighter) || fighterRunway(fighter) != r) continue;
-            if(fighter.controller() instanceof CarrierBoundAIC ai && ai.isReturning()){
-                return true;
-            }
         }
         return false;
     }
@@ -1184,7 +1174,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
                 boolean legacyNoRunway = packed >= 0L && packed < (1L << flagRunwayBits);
 
                 if(legacyNoRunway){
-                    // Old saves had no runway bits; redistribute by current free slots.
                     runway = findRunwayWithSpace(counts);
                 }else{
                     int decoded = decodeRunwayFlag(up.unit.flag());
@@ -1362,7 +1351,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
     protected float recoveryTouchdownRadius(Unit fighter, CarrierUnitType ctype){
         if(fighter == null || ctype == null) return 0f;
-        // Keep touchdown radius tight so recovery happens at the runway tail point.
         return Math.max(3.5f, Math.max(ctype.slotSpacing() * 0.18f, fighter.hitSize * 0.4f));
     }
 
@@ -1384,7 +1372,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             if(!ai.canRecoverNow()) return false;
             if(!fighter.within(touchX, touchY, touchdownRadius)) return false;
         }else{
-            // Non-carrier AI fallback: only allow direct pickup very close to recovery point.
+            // 非舰载 AI 兜底：仅在极近距离允许直接回收。
             if(!fighter.within(touchX, touchY, touchdownRadius)) return false;
         }
         return canBeginLanding(fighter);
@@ -1446,7 +1434,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
                 boolean constructing = payload.unit != null && deckRefitTimers.get(payload.unit.id, 0f) > eps;
                 if(constructing){
-                    // Keep positive-refit fighters anchored at recovery tail point (T) while construct effect is active.
                     recoveryPoint(runway, state.current);
                     if(invalidLaunchPoint(state.current)){
                         runwayQueueBackPoint(runway, state.current);
@@ -1456,12 +1443,10 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
                     }
                     state.seeded = true;
                 }else if(!state.seeded){
-                    // Seed from preassigned visual point when available (e.g. recovered fighter outside runway).
                     Vec2 seededVisual = payloadVisualPos.get(payload);
                     if(seededVisual != null && !invalidLaunchPoint(seededVisual)){
                         state.current.set(seededVisual);
                     }else{
-                        // Default enqueue seed is always recovery tail point (T).
                         recoveryPoint(runway, state.current);
                     }
                     if(invalidLaunchPoint(state.current)){
@@ -1510,7 +1495,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             }
         }
 
-        // Visual-cache cleanup is fallback maintenance; run periodically to reduce per-frame allocations.
         if(runtimeIntervals().get(intervalVisualCleanup, 30f)){
             cleanupPayloadVisualCaches();
         }
@@ -1591,7 +1575,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             RunwayLane lane = runwayLane(runway);
             CarrierBoundAIC ai = fighter.controller() instanceof CarrierBoundAIC carrierAi ? carrierAi : null;
             boolean recovering = ai != null && (ai.isReturning() || ai.isLanding());
-            // Do not block launch for taking-off fighters; only landing should lock runway launch.
             boolean launchBlocked = ai != null && ai.isLanding();
             lane.trackAirborne(fighter, recovering, launchBlocked);
         }
@@ -1604,7 +1587,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         for(Unit fighter : lane.airborneUnits){
             CarrierBoundAIC ai = fighter.controller() instanceof CarrierBoundAIC carrierAi ? carrierAi : null;
             boolean recovering = ai != null && (ai.isReturning() || ai.isLanding());
-            // Same launch-lock policy as refreshRunwayFlightState.
             boolean launchBlocked = ai != null && ai.isLanding();
             if(!recovering){
                 lane.allAirborneRecovering = false;
@@ -1643,11 +1625,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
     protected int airborneFightersInRunway(int runway){
         return runwayLane(runway).airborneUnits.size;
-    }
-
-    protected boolean runwayAirborneAllReturning(int runway){
-        RunwayLane lane = runwayLane(runway);
-        return lane.airborneUnits.size > 0 && lane.allAirborneRecovering;
     }
 
     protected boolean runwayCanRearmNow(int runway){
@@ -1705,12 +1682,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
     protected boolean runwayReadyForLaunchWave(int runway){
         RunwayLane lane = runwayLane(runway);
-        // Launch gate: runway must be full, and (when enabled) all stored fighters are full health.
         return lane.storedFighterCount >= runwayCapacity(runway) && runwayStoredFightersAllHealthy(runway);
-    }
-
-    protected float launchInterval(CarrierUnitType ctype){
-        return Math.max(ctype.launchInterval, 1f);
     }
 
     protected void updateLaunch(CarrierUnitType ctype){
@@ -1782,7 +1754,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
         RunwayPayloadState state = runwayPayloadStates == null ? null : runwayPayloadStates.get(payload);
         if(state == null || !state.seeded){
-            // Visual state may not be initialized yet after queue reorder; front payload can still launch.
+            // 队列重排后视觉状态可能尚未种子化，允许队头先发射。
             return true;
         }
 
@@ -1793,8 +1765,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             return true;
         }
 
-        // When carrier is moving, visual smoothing can lag behind the real runway point.
-        // Use the logical target as fallback so launch does not stall while moving.
+        // 航母移动时视觉可能滞后，放宽到 target 点避免发射卡死。
         float movingThreshold = threshold * 2.4f;
         return state.target.dst2(Tmp.v4) <= movingThreshold * movingThreshold;
     }
@@ -1824,7 +1795,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         fighter.set(Tmp.v1.x, Tmp.v1.y);
         fighter.rotation(launchAngle);
         if(fighter.type.flying){
-            // Keep a minimum lift at spawn to avoid collision shove against the carrier hull.
+            // 生成瞬间保持最低抬升，减少与航母模型碰撞。
             fighter.elevation = Math.max(fighter.elevation, 0.22f);
         }
         fighter.id = EntityGroup.nextId();
@@ -1837,7 +1808,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         fighter.unloaded();
 
         sanitizeSpawnedFighterPosition(fighter, r, Tmp.v4);
-        // Keep takeoff origin/effects aligned with the fighter's real spawn point.
+        // 用最终生成位置作为特效与起飞起点，避免视觉错位。
         Tmp.v1.set(fighter.x, fighter.y);
 
         fighter.rotation(launchAngle);
@@ -1886,13 +1857,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    protected float launchSpawnForward(Unit fighter){
-        // Push further forward to avoid immediate overlap with the carrier body.
-        return Math.max(hitSize * 0.72f + fighter.hitSize * 1.65f, 28f);
-    }
-
     protected float launchSpawnNudge(Unit fighter){
-        // Strict spawn alignment: use exact runway launch point.
         return 0f;
     }
 
@@ -1930,7 +1895,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         deckHealPulseTimers.remove(fighter.id, 0f);
         float refit = Math.max(carrierType() == null ? 0f : carrierType().recoverRefitTime, 0f);
         if(refit > 0.001f){
-            // Recovered fighters need refit delay but should not show construct visuals.
+            // 负值表示“有整备时间但不显示建造投影”。
             deckRefitTimers.put(fighter.id, -refit);
         }else{
             deckRefitTimers.remove(fighter.id, 0f);
@@ -1939,7 +1904,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         UnitPayload recovered = new UnitPayload(fighter);
         runwayQueue(r).addLast(recovered);
         noteAirborneFighterRecovered(fighter, r);
-        // First visual frame should start at recovery tail point (T), then smoothly enter queue.
+        // 回收首帧放在尾点，再由视觉插值并入队列。
         recoveryPoint(r, Tmp.v1);
         if(invalidLaunchPoint(Tmp.v1)){
             runwayQueueBackPoint(r, Tmp.v1);
@@ -2178,6 +2143,87 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         for(IntFloatMap.Entry entry : deckRefitTimers){
             write.i(entry.key);
             write.f(entry.value);
+        }
+    }
+
+    @Override
+    public void writeSync(Writes write) {
+        super.writeSync(write);
+
+        write.bool(deckInitialized);
+        write.bool(regrouping);
+        write.i(targetFighterCount);
+        write.i(lossCount);
+
+        write.s(Math.min(activeFighters.size, 32767));
+        for (int i = 0; i < activeFighters.size && i < 32767; i++) {
+            write.i(activeFighters.get(i));
+        }
+
+        write.b(Math.min(targetRunwayCounts.size, 255));
+        for (int i = 0; i < targetRunwayCounts.size && i < 255; i++) {
+            write.i(targetRunwayCounts.get(i));
+        }
+
+        write.s(Math.min(deckRefitTimers.size, 32767));
+        int refitWritten = 0;
+        for (IntFloatMap.Entry entry : deckRefitTimers) {
+            if (refitWritten >= 32767) break;
+            write.i(entry.key);
+            write.f(entry.value);
+            refitWritten++;
+        }
+    }
+
+    @Override
+    public void readSync(Reads read) {
+        super.readSync(read);
+
+        boolean syncDeckInitialized = read.bool();
+        boolean syncRegrouping = read.bool();
+        int syncTargetFighterCount = read.i();
+        int syncLossCount = read.i();
+
+        IntSeq syncActiveFighters = new IntSeq();
+        int activeSize = read.us();
+        for (int i = 0; i < activeSize; i++) {
+            syncActiveFighters.add(read.i());
+        }
+
+        IntSeq syncTargetRunwayCounts = new IntSeq();
+        int runwaySize = read.ub();
+        for (int i = 0; i < runwaySize; i++) {
+            syncTargetRunwayCounts.add(read.i());
+        }
+
+        IntFloatMap syncDeckRefitTimers = new IntFloatMap();
+        int refitSize = read.us();
+        for (int i = 0; i < refitSize; i++) {
+            int fighterId = read.i();
+            float remain = read.f();
+            if (Math.abs(remain) > 0.001f) {
+                syncDeckRefitTimers.put(fighterId, remain);
+            }
+        }
+
+        if (!isLocal()) {
+            deckInitialized = syncDeckInitialized;
+            regrouping = syncRegrouping;
+            targetFighterCount = syncTargetFighterCount;
+            lossCount = syncLossCount;
+
+            activeFighters.clear();
+            activeFighters.addAll(syncActiveFighters);
+
+            targetRunwayCounts.clear();
+            targetRunwayCounts.addAll(syncTargetRunwayCounts);
+
+            deckRefitTimers.clear();
+            for (IntFloatMap.Entry entry : syncDeckRefitTimers) {
+                deckRefitTimers.put(entry.key, entry.value);
+            }
+
+            deckHealPulseTimers.clear();
         }
     }
 }

@@ -1,29 +1,53 @@
 package wh.content;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.pooling.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.entities.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.Rand;
+import arc.math.geom.Position;
+import arc.math.geom.Vec2;
+import arc.struct.Seq;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.pooling.Pools;
+import mindustry.Vars;
+import mindustry.content.Fx;
+import mindustry.content.Liquids;
+import mindustry.entities.Damage;
+import mindustry.entities.Effect;
+import mindustry.entities.Mover;
+import mindustry.entities.Units;
 import mindustry.entities.bullet.*;
-import mindustry.entities.effect.*;
-import mindustry.entities.pattern.*;
-import mindustry.game.*;
+import mindustry.entities.effect.MultiEffect;
+import mindustry.entities.pattern.ShootHelix;
+import mindustry.entities.pattern.ShootMulti;
+import mindustry.entities.pattern.ShootPattern;
+import mindustry.entities.pattern.ShootSpread;
+import mindustry.game.Team;
 import mindustry.gen.*;
-import mindustry.graphics.*;
-import wh.core.*;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.graphics.Trail;
+import wh.core.WHSettings;
 import wh.entities.bullet.*;
-import wh.entities.bullet.laser.*;
-import wh.entities.world.blocks.defense.turrets.HeatTurret.*;
-import wh.graphics.*;
-import wh.util.*;
+import wh.entities.bullet.laser.LightingContinuousLaserBullet;
+import wh.entities.bullet.laser.LightingLaserBulletType;
+import wh.entities.bullet.laser.LightningLinkerBulletType;
+import wh.entities.world.blocks.defense.turrets.HeatTurret.HeatBulletType;
+import wh.entities.world.blocks.defense.turrets.HeatTurret.HeatTurretBuild;
+import wh.gen.GeminiUnit;
+import wh.graphics.Drawn;
+import wh.graphics.PositionLightning;
+import wh.graphics.WHPal;
+import wh.util.WHUtils;
 
-import java.util.*;
+import java.util.Objects;
 
 import static arc.graphics.g2d.Draw.color;
 import static arc.graphics.g2d.Lines.stroke;
@@ -52,6 +76,8 @@ public class WHBulletsOther{
     public static BulletType RevengeBullet2;
     public static BulletType RevengeBullet3;
     public static BulletType RevengeBullet4;
+
+    public static BulletType GeminiBullet1;
 
 
     public static void load(){
@@ -1518,6 +1544,121 @@ public class WHBulletsOther{
                         );
                     }};
 
+                }};
+            }
+        };
+
+        GeminiBullet1 = new ApproachBullet() {
+            {
+                damage = splashDamage = 1;
+
+                color = hitColor = Team.crux.color.cpy();
+                despawnEffect = new MultiEffect(
+                        WHFx.square(60, hitColor, 10, 30, 6),
+                        WHFx.generalExplosion(8, hitColor, 20, 30, false)
+                );
+
+                trailEffect = WHFx.hitCircle(60, hitColor, hitColor, 2, 15, 5).layer(Layer.bullet - 0.001f);
+                trailChance = 0.5f;
+
+                shootEffect = WHFx.hitSpark(20, hitColor, 4, 30, 1, 8);
+
+                reload = lifetime;
+                rotateSpeed = 0.8f;
+
+                speed = 6;
+                initAngleRand = 360;
+                initSpeedRand = 0.25f;
+                ownerVelocityScale = 0.5f;
+                followOwnerVelocity = true;
+                shootAngleFollowsOwner = true;
+                shootIgnoreRange = true;
+                shootWithAimWhenNoTarget = true;
+                continuousAimOwner = true;
+
+                shootY = 34f;
+
+                approach = b -> {
+                };
+
+                drawer = b -> {
+                    float t = 20;
+                    float fadeIn = Mathf.clamp(b.time / t);
+                    float fadeOut = b.time > lifetime - t ? Mathf.clamp(1 - (b.time - lifetime) / t) : 1;
+
+                    float radius = 25 * fadeOut * fadeIn;
+
+                    Draw.z(Layer.bullet + b.layer);
+                    /* Draw.color(b.team.color.cpy());*/
+                    Color c = Team.crux.color.cpy();
+                    Draw.color(c);
+
+                    GeminiUnit.drawLowHealthEye(b.x, b.y + 30, radius * fadeOut * fadeIn, fadeOut * fadeIn, fadeOut * fadeIn, c);
+                    Draw.color(c);
+                    Drawn.surround(b.id, b.x, b.y, 50, 5, 5, 7.5f, fadeOut * fadeIn);
+
+                    Tmp.v1.set(b);
+                    float ex = Tmp.v1.x, ey = Tmp.v1.y;
+
+                    Fill.circle(ex, ey, (radius + Mathf.absin(Time.time, 10, radius / 4f)));
+                    float ang = Time.time * 1.5f;
+                    for (int i : Mathf.signs) {
+                        WHUtils.tri(ex, ey, radius / 3f, radius * 2.35f, ang + 90 * i);
+                    }
+                    ang *= -1.5f;
+                    for (int i : Mathf.signs) {
+                        WHUtils.tri(ex, ey, radius / 4f, radius * 1.85f, ang + 90 * i);
+                    }
+                    Draw.color(Color.black);
+                    Fill.circle(ex, ey, (radius + Mathf.absin(Time.time, 10, radius / 4f)) * 0.7f);
+                };
+
+                trailAmount = 3;
+                trailWidth = 2;
+                trailUpdate = b -> {
+                    for (int i = 0; i < trailAmount - 1; i++) {
+                        if (!Vars.headless) {
+                            if (b.trails[i] == null) b.trails[i] = new Trail(15);
+                            b.trails[i].length = 15;
+                            rand.setSeed(b.id);
+
+                            float dx = WHUtils.dx(b.x, 40, (Time.time / 2 * rand.random(0.7f, 1.4f) * (8 - (i % 2 == 0 ? 0.6f : 0))) + Mathf.randomSeed(b.id, 360) + 180 * i),
+                                    dy = WHUtils.dy(b.y, 40, (Time.time / 2 * rand.random(0.7f, 1.4f) * (8 - (i % 2 != 0 ? 0.6f : 0))) + Mathf.randomSeed(b.id, 360) + 180 * i);
+                            if (!Vars.headless) b.trails[i].update(dx, dy, trailInterp.apply(b.fin()) * trailWidth);
+                        }
+                    }
+                    if (!Vars.headless) {
+                        if (b.trails[2] == null) b.trails[2] = new Trail(10);
+                        b.trails[2].length = 10;
+                        rand.setSeed(b.id);
+
+                        float a = 13 * (1 - Mathf.absin(8, 0.3f)), ang = rand.random(90);
+
+                        float dx = WHUtils.ellipseXY(b.x, b.y, a, a / 2, ang, (Time.time / 2 * rand.random(0.7f, 1)) + Mathf.randomSeed(b.id, 360) + 45, 0),
+                                dy = WHUtils.ellipseXY(b.x, b.y, a, a / 2, ang, (Time.time / 2 * rand.random(0.7f, 1)) + Mathf.randomSeed(b.id, 360) + 45, 1);
+                        if (!Vars.headless) b.trails[2].update(dx, dy, trailInterp.apply(b.fin()) * trailWidth);
+                    }
+                };
+
+                bulletType = new LightingContinuousLaserBullet(4500 / 10f) {{
+
+                    pierceArmor = true;
+                    damageInterval = 6f;
+                    pierceCap = 2;
+                    hitColor = lightColor = Team.crux.color.cpy().cpy();
+
+                    lifetime = 350;
+                    length = 550;
+
+                    width = 12;
+
+                    rings = 1;
+                    ringSpacing = 20f;
+
+                    colors = new Color[]{hitColor.cpy().a(0.4f), hitColor.cpy().a(0.6f), hitColor.cpy().a(0.8f), Pal.coalBlack};
+
+                    smokeEffect = Fx.shootSmallSmoke;
+                    despawnEffect = hitEffect = Fx.hitMeltdown;
                 }};
             }
         };

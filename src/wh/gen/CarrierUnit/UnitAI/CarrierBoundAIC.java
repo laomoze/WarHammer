@@ -1,6 +1,6 @@
 package wh.gen.CarrierUnit.UnitAI;
 
-import arc.math.geom.*;
+import arc.math.geom.Vec2;
 
 /**
  * Common carrier-flight contract used by carrier runtime.
@@ -12,8 +12,6 @@ public interface CarrierBoundAIC{
     CarrierBoundAIC setRunway(int runwayIndex);
 
     CarrierBoundAIC beginTakeoff(Vec2 from, Vec2 to, float duration, float speedMultiplier);
-
-    boolean isTakingOff();
 
     boolean isLanding();
 

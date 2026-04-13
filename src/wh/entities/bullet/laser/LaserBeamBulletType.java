@@ -1,20 +1,35 @@
 package wh.entities.bullet.laser;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import arc.util.pooling.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.entities.bullet.*;
-import mindustry.game.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import wh.content.*;
-import wh.graphics.*;
-import wh.util.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.Rand;
+import arc.math.geom.Vec2;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.pooling.Pools;
+import mindustry.content.Fx;
+import mindustry.entities.Effect;
+import mindustry.entities.Mover;
+import mindustry.entities.bullet.ContinuousBulletType;
+import mindustry.game.Team;
+import mindustry.gen.Building;
+import mindustry.gen.Bullet;
+import mindustry.gen.Entityc;
+import mindustry.gen.Teamc;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import wh.content.WHFx;
+import wh.core.WHSettings;
+import wh.graphics.MainRenderer;
+import wh.graphics.PositionLightning;
+import wh.util.WHUtils;
 
 import static mindustry.Vars.state;
 
@@ -29,8 +44,8 @@ public class LaserBeamBulletType extends ContinuousBulletType{
     public float lengthFalloff = 0.8f;
     public float oscScl = 2f, oscMag = 0.15f;
     public float lightningSpacing = -1, lightningDelay = 0.1f, lightningAngleRand;
-    public float lightningChance = 0.1f;
     public boolean tri = false, triCap = false;
+    public float triCapTipLengthScale = 2f;
     public float sideLength = 29f, sideWidth = 0.7f;
     public float sideAngle = 90f;
     public boolean drawPositionLighting = false;
@@ -41,6 +56,8 @@ public class LaserBeamBulletType extends ContinuousBulletType{
     public boolean rotate = false;
     public float rotateAngle = 20;
     public float damageMult = 0;
+    public boolean debugDrawLengths = false;
+    public float debugLengthLaneSpacing = 9f;
     public Effect LasergroundEffect = WHFx.BeamLaserGroundEffect;
     public Interp moveInterp = Interp.pow2In;
     public float moveSpeed = 0.03f;
@@ -158,10 +175,10 @@ public class LaserBeamBulletType extends ContinuousBulletType{
             }else{
                 float tipHeight = width * 0.7f;
                 Tmp.v2.trns(rot, realLength - tipHeight).add(b);
-                Tmp.v1.trns(rot, width * 2f).add(Tmp.v2);
+                Tmp.v1.trns(rot, width * triCapTipLengthScale).add(Tmp.v2);
                 Draw.color(color);
                 for(int s : Mathf.signs){
-                    Tmp.v3.trns(b.rotation(), w * -0.7f, w * s);
+                    Tmp.v3.trns(rot, w * -0.7f, w * s);
                     Fill.tri(Tmp.v2.x, Tmp.v2.y, Tmp.v1.x, Tmp.v1.y, Tmp.v2.x + Tmp.v3.x, Tmp.v2.y + Tmp.v3.y);
                 }
             }
@@ -171,6 +188,14 @@ public class LaserBeamBulletType extends ContinuousBulletType{
         Draw.reset();
         Tmp.v1.trns(rot, realLength * 1.1f);
         Drawf.light(b.x, b.y, b.x + Tmp.v1.x, b.y + Tmp.v1.y, width * 1.2f * b.fout(), colors[0], 0.6f);
+        Draw.reset();
+        if (debugDrawLengths || WHSettings.laserDebugLengths()) {
+            Draw.z(Layer.flyingUnit + 1f);
+            drawDebugLengthLine(b, rot, data.currentLength, -1.5f, Color.green);
+            drawDebugLengthLine(b, rot, b.fdata, -0.5f, Color.blue);
+            drawDebugLengthLine(b, rot, data.deltaLength, 0.5f, Color.orange);
+            drawDebugLengthLine(b, rot, data.debugResultLength, 1.5f, Color.red);
+        }
     }
 
     @Override
@@ -180,14 +205,18 @@ public class LaserBeamBulletType extends ContinuousBulletType{
     @Override
     public void applyDamage(Bullet b){
         if(!(b instanceof LaserDataBullet data)) return;
-        float resultLength = data.currentLength < 0.001f ? b.fdata : data.currentLength + 8, rot = b.rotation() + data.rotation;
+        float rot = b.rotation() + data.rotation;
+        float lengthBase = Math.max(data.currentLength, b.fdata);
+        float lengthPad = triCap ? Math.max(0f, width * (triCapTipLengthScale - 0.7f)) + width * 0.5f : width * 0.5f;
+        float resultLength = Math.max(lengthBase, 0f) + lengthPad;
+        data.debugResultLength = resultLength;
 
         float damage = b.damage;
         if(timescaleDamage && b.owner instanceof Building build){
             b.damage *= build.timeScale();
         }
 
-        WHUtils.collideLine(data, b.team, b.x, b.y, rot, resultLength, largeHit, laserAbsorb, pierceCap);
+        WHUtils.collideLine(b, b.team, b.x, b.y, rot, resultLength, largeHit, laserAbsorb, pierceCap);
 
         b.damage = damage;
 
@@ -219,17 +248,30 @@ public class LaserBeamBulletType extends ContinuousBulletType{
         return b.fdata;
     }
 
+    private void drawDebugLengthLine(Bullet b, float rot, float length, float lane, Color color) {
+        if (length <= 0.001f) return;
+        float offset = lane * debugLengthLaneSpacing;
+        float sx = b.x + Angles.trnsx(rot + 90f, offset);
+        float sy = b.y + Angles.trnsy(rot + 90f, offset);
+        Draw.color(color);
+        Draw.alpha(0.95f);
+        Lines.stroke(1.6f);
+        Lines.lineAngle(sx, sy, rot, length, false);
+    }
+
 
     @Override
     public void update(Bullet b){
+        if (!(b instanceof LaserDataBullet data)) return;
         b.fdata = findAbsorber(b);
         super.update(b);
-
-        if(!(b instanceof LaserDataBullet data)) return;
 
         b.damage = damage * (1 + b.fin(moveInterp) * damageMult) * b.damageMultiplier();
 
         float lerp = rotate ? moveSpeed : moveSpeed * 0.6f + b.fin(moveInterp) * moveSpeed * 0.4f;
+        if (rotate) {
+            data.rotation = data.rotateAngle * b.fout();
+        }
         float rot = b.rotation() + data.rotation;
 
         boolean stop = data.stop, maxPierceCap = b.type.pierceCap != -1 && b.collided.size >= b.type.pierceCap;
@@ -239,17 +281,13 @@ public class LaserBeamBulletType extends ContinuousBulletType{
 
         if(stop/*||maxPierceCap*/){
             data.deltaLength = b.fdata = WHUtils.findLaserPierceLength(b, pierceCap, laserAbsorb, len, rot);
-            data.currentLength = Mathf.lerpDelta(data.currentLength, b.fdata, 0.3f);
+            data.currentLength = Mathf.lerpDelta(data.currentLength, b.fdata, 0.15f);
         }else{
             if(data.currentLength < b.fdata && data.deltaLength != 0){
                 b.fdata = WHUtils.findLaserPierceLength(b, pierceCap, laserAbsorb, len, rot);
             }
             data.currentLength = b.fdata;
             data.currentLength = Mathf.lerpDelta(data.currentLength, b.fdata, lerp);
-        }
-
-        if(rotate){
-            data.rotation = data.rotateAngle * b.fout();
         }
 
         Tmp.v1.trns(rot, data.currentLength);
@@ -293,14 +331,15 @@ public class LaserBeamBulletType extends ContinuousBulletType{
 
     public static class LaserDataBullet extends Bullet{
         public float currentLength, startLength, deltaLength, length;
+        public float debugResultLength;
         public float rotation, rotationStart, rotateAngle;
-        public boolean stop, move;
+        public boolean stop;
 
         @Override
         public void reset(){
             super.reset();
-            move = stop = false;
-            deltaLength = currentLength = startLength = length = rotation = rotationStart = rotateAngle = 0f;
+            stop = false;
+            deltaLength = currentLength = startLength = length = debugResultLength = rotation = rotationStart = rotateAngle = 0f;
         }
 
         public static LaserDataBullet create(){

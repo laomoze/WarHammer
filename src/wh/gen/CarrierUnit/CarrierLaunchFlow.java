@@ -1,8 +1,8 @@
 package wh.gen.CarrierUnit;
 
-import arc.util.*;
-import mindustry.world.blocks.payloads.*;
-import wh.entities.world.entities.*;
+import arc.util.Time;
+import mindustry.world.blocks.payloads.UnitPayload;
+import wh.entities.world.entities.CarrierUnitType;
 
 /**
  * Rearm + launch flow extracted from CarrierRuntime for readability.
@@ -76,8 +76,8 @@ final class CarrierLaunchFlow{
             lane.launchReload = Math.max(lane.launchReload - Time.delta, 0f);
             if(lane.launchReload > eps) continue;
 
-            // Check full/healthy gate only when opening a launch wave.
-            // Once opened, keep launching this runway's current queue instead of reverting to one-by-one.
+            // 仅在开启一轮发射波时检查“满编/满血”门限。
+            // 一旦开启，优先把当前跑道队列打完，不再退回逐个判定。
             if(!lane.launchWaveActive){
                 if(host.runwayLaunchBlocked(runway)) continue;
                 if(!host.runwayReadyForLaunchWave(runway)) continue;
@@ -85,7 +85,7 @@ final class CarrierLaunchFlow{
             }
 
             if(host.runwayLaunchBlocked(runway)){
-                // Keep wave active, wait until runway is free, then continue with interval pacing.
+                // 波次保持激活，等待跑道解锁后按间隔继续发射。
                 continue;
             }
 
@@ -97,10 +97,10 @@ final class CarrierLaunchFlow{
                 continue;
             }
 
-            // Preserve classic per-fighter launch interval even during a wave.
+            // 即使在波次中，也保持“每架战机一次间隔”的节奏。
             lane.launchReload = launchInterval(ctype);
             if(!launched){
-                // Keep wave active and retry next interval when front payload becomes launchable.
+                // 本轮未发出时保持波次，下一次间隔再重试队头载荷。
                 lane.launchWaveActive = true;
             }
         }

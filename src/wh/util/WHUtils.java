@@ -5,29 +5,46 @@
 
 package wh.util;
 
-import arc.*;
-import arc.func.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
+import arc.Core;
+import arc.func.Boolf;
+import arc.func.Cons;
+import arc.func.Floatc2;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.Rand;
 import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
+import arc.struct.FloatSeq;
+import arc.struct.IntSet;
+import arc.struct.ObjectMap;
+import arc.struct.Seq;
 import arc.util.Nullable;
-import arc.util.pooling.*;
-import mindustry.ai.types.*;
-import mindustry.core.*;
-import mindustry.entities.Damage.*;
-import mindustry.entities.*;
-import mindustry.entities.bullet.*;
-import mindustry.game.*;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.pooling.Pool;
+import arc.util.pooling.Pools;
+import mindustry.ai.types.MissileAI;
+import mindustry.core.World;
+import mindustry.entities.Damage.Collided;
+import mindustry.entities.EntityCollisions;
+import mindustry.entities.Mover;
+import mindustry.entities.Units;
+import mindustry.entities.bullet.BulletType;
+import mindustry.game.Team;
 import mindustry.gen.*;
-import mindustry.type.*;
-import mindustry.world.*;
-import mindustry.world.blocks.*;
-import mindustry.world.blocks.defense.turrets.*;
-import org.jetbrains.annotations.*;
-import wh.entities.*;
-import wh.entities.bullet.laser.LaserBeamBulletType.*;
+import mindustry.type.Item;
+import mindustry.type.Liquid;
+import mindustry.type.UnitType;
+import mindustry.world.Tile;
+import mindustry.world.blocks.ControlBlock;
+import mindustry.world.blocks.defense.turrets.ItemTurret;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import wh.entities.Spawner;
+import wh.entities.bullet.laser.LaserBeamBulletType.LaserDataBullet;
 
 import static arc.Core.atlas;
 import static mindustry.Vars.*;
@@ -359,6 +376,7 @@ public final class WHUtils{
 
     public static void collideLine(Bullet hitter, Team team, float x, float y, float angle, float length, boolean large, boolean laser, int pierceCap){
         length = findLaserPierceLength(hitter, pierceCap, laser, length, angle);
+        float buildingEdgeEpsilon = 0.5f;
 
         collidedBlocks.clear();
         v1.trnsExact(angle, length);
@@ -367,27 +385,28 @@ public final class WHUtils{
             v2.set(x, y);
             v3.set(v2).add(v1);
             World.raycastEachWorld(x, y, v3.x, v3.y, (cx, cy) -> {
-                Building tile = world.build(cx, cy);
-                boolean collide = tile != null && tile.collide(hitter) && hitter.checkUnderBuild(tile, cx * tilesize, cy * tilesize)
-                && ((tile.team != team && tile.collide(hitter)) || hitter.type.testCollision(hitter, tile)) && collidedBlocks.add(tile.pos());
-                if(collide){
-                    collided.add(collidePool.obtain().set(cx * tilesize, cy * tilesize, tile));
+                for (int i = -1; i < Geometry.d4.length; i++) {
+                    int ox = i < 0 ? cx : cx + Geometry.d4[i].x;
+                    int oy = i < 0 ? cy : cy + Geometry.d4[i].y;
+                    Tile other = world.tile(ox, oy);
+                    if (other == null) continue;
+                    if (!large && !Intersector.intersectSegmentRectangle(v2, v3, other.getBounds(Tmp.r1).grow(buildingEdgeEpsilon)))
+                        continue;
 
-                    for(Point2 p : Geometry.d4){
-                        Tile other = world.tile(p.x + cx, p.y + cy);
-                        if(other != null && (large || Intersector.intersectSegmentRectangle(v2, v3, other.getBounds(Tmp.r1)))){
-                            Building build = other.build;
-                            if(build != null && hitter.checkUnderBuild(build, cx * tilesize, cy * tilesize) && collidedBlocks.add(build.pos())){
-                                collided.add(collidePool.obtain().set((p.x + cx * tilesize), (p.y + cy) * tilesize, build));
-                            }
-                        }
-                    }
+                    Building build = other.build;
+                    if (build == null) continue;
+                    if (!hitter.checkUnderBuild(build, ox * tilesize, oy * tilesize)) continue;
+                    if (!((build.team != team && build.collide(hitter)) || hitter.type.testCollision(hitter, build)))
+                        continue;
+                    if (!collidedBlocks.add(build.pos())) continue;
+
+                    collided.add(collidePool.obtain().set(ox * tilesize, oy * tilesize, build));
                 }
                 return false;
             });
         }
 
-        float expand = 3f;
+        float expand = 4f;
 
         rect.setPosition(x, y).setSize(v1.x, v1.y).normalize().grow(expand * 2f);
         float x2 = v1.x + x, y2 = v1.y + y;

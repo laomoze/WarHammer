@@ -1,16 +1,28 @@
 package wh.gen.CarrierUnit.UnitAI;
 
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import mindustry.ai.types.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.type.*;
-import wh.entities.world.entities.*;
-import wh.gen.*;
-import wh.gen.CarrierUnit.*;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.geom.Position;
+import arc.math.geom.Vec2;
+import arc.util.Interval;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.ai.types.FlyingAI;
+import mindustry.ai.types.GroundAI;
+import mindustry.entities.Predict;
+import mindustry.entities.Sized;
+import mindustry.entities.Units;
+import mindustry.entities.units.UnitController;
+import mindustry.entities.units.WeaponMount;
+import mindustry.gen.Groups;
+import mindustry.gen.Teamc;
+import mindustry.gen.Unit;
+import mindustry.type.Weapon;
+import wh.entities.world.entities.CarrierUnitType;
+import wh.gen.CarrierPayloadUnit;
+import wh.gen.CarrierUnit.CarrierHostc;
 
 public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC{
     private static final float eps = 0.001f;
@@ -70,23 +82,6 @@ public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC{
         return this;
     }
 
-    public CarrierFighterAI beginTakeoff(float duration, float speedMultiplier){
-        CarrierHostc carrier = unit == null ? null : carrier();
-        if(carrier != null){
-            carrier.runwayFrontPoint(runwayIndex, takeoffFrom);
-            carrier.launchExitPoint(runwayIndex, takeoffTo);
-        }else if(unit != null){
-            takeoffFrom.set(unit.x, unit.y);
-            Tmp.v1.trns(unit.rotation, Math.max(unit.hitSize * 2f, 28f));
-            takeoffTo.set(unit.x + Tmp.v1.x, unit.y + Tmp.v1.y);
-        }else{
-            takeoffFrom.setZero();
-            takeoffTo.setZero();
-        }
-
-        return beginTakeoff(takeoffFrom, takeoffTo, duration, speedMultiplier);
-    }
-
     public CarrierFighterAI beginTakeoff(Vec2 from, Vec2 to, float duration, float speedMultiplier){
         CarrierHostc carrier = unit == null ? null : carrier();
 
@@ -130,15 +125,11 @@ public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC{
             unit.vel.set(takeoffDir).scl(takeoffCruiseSpeed * 0.35f);
             unit.rotation = takeoffDir.angle();
             if(unit.type.flying){
-                // Prevent touching the deck in the first takeoff frames (which causes recoil-like shove).
+                // 起飞前几帧强制抬升，避免擦甲板导致反冲。
                 unit.elevation = Math.max(unit.elevation, 0.22f);
             }
         }
         return this;
-    }
-
-    public boolean isTakingOff(){
-        return takeoffTimer > 0.001f;
     }
 
     public boolean isLanding(){
@@ -147,7 +138,7 @@ public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC{
 
     public boolean canRecoverNow(){
         if(unit == null || !returning || landingTimer <= eps) return false;
-        // Do not allow server recovery before landing phase reaches touchdown.
+        // 触地点前不允许服务端直接回收，避免空中入舱。
         return landingTimer <= Math.max(Time.delta * 1.5f, 1f);
     }
 
@@ -388,7 +379,7 @@ public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC{
     protected void updateLanding(CarrierHostc carrier, CarrierUnitType type){
         if(landingTimer <= eps) return;
 
-        // Track moving/rotating carrier touchdown each frame to avoid stale landing points.
+        // 每帧跟随航母更新触地点，避免目标点过期。
         carrier.recoveryPoint(runwayIndex, Tmp.v4);
         if(!invalidCarrierPoint(Tmp.v4, carrier)){
             landingTo.set(Tmp.v4);
@@ -507,7 +498,7 @@ public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC{
     }
 
     protected boolean holdForRecoveryClaim(CarrierHostc carrier, float orbitRadius){
-        // 申请跑道回收 claim。没拿到时保持外圈等待，避免多机抢同一跑道。
+        // 申请回收资格；失败则继续外圈等待。
         approachingRecovery = true;
         if(carrier.allowRecoveryApproach(unit)) return false;
 
@@ -545,8 +536,7 @@ public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC{
     }
 
     protected void updateReturn(CarrierHostc carrier, CarrierUnitType type){
-        // 返航主流程：
-        // 1) 外圈等待 -> 2) 获得 claim 后对正跑道 -> 3) 落地触发 carrier.tryRecoverFighter()
+        // 返航流程：外圈等待 -> 申请回收资格 -> 对正进场 -> 触地回收。
         updateRunwayPoints(carrier, Tmp.v1, Tmp.v2, Tmp.v4);
 
         float runwayAngle = Angles.angle(Tmp.v2.x, Tmp.v2.y, Tmp.v4.x, Tmp.v4.y);
@@ -607,10 +597,8 @@ public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC{
             return;
         }
 
-        // Do not start runway alignment as soon as the fighter crosses the entry line.
-        // First fly straight into T, then only at close range switch to final.
-        // 中文说明：先飞到回收触点附近，再切换最终进场，减少提前转向导致的抖动/切角。
         if(nearRecovery && inEntryWindow){
+            // 先进入触点附近，再切最终进场，减少提前切角抖动。
             target = carrier;
             enterRecoveryPoint(Tmp.v2, speed, turnRate, 0.38f, 0.07f);
             return;
@@ -628,7 +616,7 @@ public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC{
         CarrierHostc carrier = carrier();
         CarrierUnitType type = carrier == null ? null : carrier.carrierType();
         if(carrier == null || type == null){
-            // Carrier missing or invalid: restore this fighter to its type default controller.
+            // 航母无效时回退默认控制器。
             if(switchToDefaultController()) return;
             fallbackMovement();
             return;
@@ -669,7 +657,7 @@ public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC{
             if(unit.type.flying){
                 float liftProgress = Mathf.curve(linear, takeoffLiftStart, 1f);
                 float elev = Mathf.clamp(Interp.sineOut.apply(liftProgress), 0f, 1f);
-                // Keep a small floor so the fighter doesn't scrape the carrier during takeoff.
+                // 起飞过程中保持最低抬升，避免刮碰航母。
                 unit.elevation = Math.max(elev, 0.16f);
             }
 
@@ -730,8 +718,7 @@ public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC{
         if(hasCombatTarget){
             noTargetTimer = 0f;
         }else{
-            // Keep return timer running when there is no real combat target.
-            // Nearby "focus" points should not block idle recall forever.
+            // 没有真实战斗目标时累计返航计时；聚焦点不应无限阻断返航。
             float farFocus = Math.max(type.fighterOrbitRadius * 1.25f, 120f);
             if(!hasFocusPoint || !focusPoint.within(carrier.x(), carrier.y(), farFocus)){
                 noTargetTimer += Time.delta;

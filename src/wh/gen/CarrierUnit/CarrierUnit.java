@@ -1,9 +1,10 @@
 package wh.gen.CarrierUnit;
 
-import arc.math.*;
-import arc.math.geom.*;
-import mindustry.gen.*;
-import wh.entities.world.entities.*;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
+import mindustry.gen.PayloadUnit;
+import mindustry.gen.Unit;
+import wh.entities.world.entities.CarrierUnitType;
 
 /**
  * Shared carrier unit foundation: type/runway sizing, carrier flag codec and generic point validity checks.
@@ -75,7 +76,7 @@ public class CarrierUnit extends PayloadUnit{
         long packed = decodePackedFlag(flag);
         if(packed < 0) return -1;
 
-        // Backward compatibility: old format stored only carrier ID.
+        // 向后兼容：旧格式只存储航母编号。
         if(packed < (1L << flagRunwayBits)){
             return (int)packed;
         }
@@ -86,7 +87,7 @@ public class CarrierUnit extends PayloadUnit{
         long packed = decodePackedFlag(flag);
         if(packed < 0) return -1;
 
-        // Backward compatibility: old format had no runway.
+        // 向后兼容：旧格式不包含跑道信息。
         if(packed < (1L << flagRunwayBits)){
             return 0;
         }
@@ -109,8 +110,7 @@ public class CarrierUnit extends PayloadUnit{
 
     protected boolean suspiciousOriginPoint(Vec2 point){
         if(point == null) return true;
-        // If the carrier is not near world origin, launch points near origin are almost certainly invalid.
+        // 当航母不在世界原点附近时，接近原点的起飞点通常是无效脏数据。
         return point.within(0f, 0f, 8f) && !within(0f, 0f, 80f);
     }
 }
-

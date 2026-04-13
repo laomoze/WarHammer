@@ -1,10 +1,11 @@
 package wh.core;
 
-import arc.*;
-import arc.math.*;
-import mindustry.*;
-import mindustry.game.EventType.*;
-import mindustry.gen.*;
+import arc.Core;
+import arc.Events;
+import arc.math.Mathf;
+import mindustry.Vars;
+import mindustry.game.EventType.ClientLoadEvent;
+import mindustry.gen.Icon;
 
 public final class WHSettings{
     public static final String effectEnabledKey = "wh-effect-enabled";
@@ -60,5 +61,9 @@ public final class WHSettings{
 
     public static boolean carrierDebugHud(){
         return Core.settings.getBool(carrierDebugHudKey, false);
+    }
+
+    public static boolean laserDebugLengths() {
+        return carrierDebugHud();
     }
 }

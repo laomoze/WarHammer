@@ -1,25 +1,33 @@
 package wh.gen;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.*;
-import mindustry.ai.types.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.entities.bullet.*;
+import arc.Core;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.struct.ObjectFloatMap;
+import arc.struct.Seq;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.ai.types.MissileAI;
+import mindustry.content.Fx;
+import mindustry.entities.Damage;
+import mindustry.entities.UnitSorts;
+import mindustry.entities.Units;
+import mindustry.entities.bullet.BulletType;
 import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import mindustry.world.blocks.defense.Wall.*;
-import mindustry.world.blocks.defense.turrets.Turret.*;
-import wh.content.*;
-import wh.entities.bullet.ApproachBullet.*;
-import wh.util.*;
+import mindustry.graphics.Layer;
+import mindustry.type.UnitType;
+import mindustry.world.blocks.defense.Wall.WallBuild;
+import mindustry.world.blocks.defense.turrets.Turret.TurretBuild;
+import wh.content.WHBulletsOther;
+import wh.content.WHStatusEffects;
+import wh.entities.bullet.ApproachBullet.AB;
+import wh.util.WHUtils;
 
 import static mindustry.io.TypeIO.*;
 import static wh.util.WHUtils.rand;
@@ -145,6 +153,12 @@ public class RevengeUnit extends UnitEntity{
     @Override
     public void update(){
         super.update();
+        boolean server = !Vars.net.client();
+        if (!server) {
+            updateClientVisualState();
+            return;
+        }
+
         if(canShoot()) bulletRecoveryTimer += Time.delta * reloadMultiplier();
 
         rand.setSeed(id);
@@ -271,7 +285,17 @@ public class RevengeUnit extends UnitEntity{
         }
     }
 
+    public void updateClientVisualState() {
+        abilityDuration = Math.max(abilityDuration - Time.delta, 0f);
+        if (abilityDuration > 1f) {
+            drawSize = Mathf.lerpDelta(drawSize, 1f, 0.08f);
+        } else {
+            drawSize = Mathf.lerpDelta(drawSize, 0f, 0.1f);
+        }
+    }
+
     public void createBullet(){
+        if (Vars.net.client()) return;
         float
         bulletX = x + Angles.trnsx(rotation - 90, this.shootX, this.shootY),
         bulletY = y + Angles.trnsy(rotation - 90, this.shootX, this.shootY);
@@ -362,6 +386,31 @@ public class RevengeUnit extends UnitEntity{
         write.i(enemies.size);
         for(Healthc e : enemies){
             writeUnit(write, (Unit)e);
+        }
+    }
+
+    @Override
+    public void writeSync(Writes write) {
+        super.writeSync(write);
+        write.f(abilityDuration);
+        write.f(drawSize);
+        write.f(checkReload);
+        write.f(bulletRecoveryTimer);
+    }
+
+    @Override
+    public void readSync(Reads read) {
+        super.readSync(read);
+        float syncAbilityDuration = read.f();
+        float syncDrawSize = read.f();
+        float syncCheckReload = read.f();
+        float syncBulletRecoveryTimer = read.f();
+
+        if (!isLocal()) {
+            abilityDuration = syncAbilityDuration;
+            drawSize = syncDrawSize;
+            checkReload = syncCheckReload;
+            bulletRecoveryTimer = syncBulletRecoveryTimer;
         }
     }
 }

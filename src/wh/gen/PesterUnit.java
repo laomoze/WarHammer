@@ -5,31 +5,43 @@
 
 package wh.gen;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.*;
-import mindustry.ai.types.*;
-import mindustry.content.*;
-import mindustry.core.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.math.Mathf;
+import arc.math.Rand;
+import arc.math.geom.Position;
+import arc.math.geom.Vec2;
+import arc.struct.ObjectFloatMap;
+import arc.struct.ObjectIntMap;
+import arc.struct.Seq;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.ai.types.MissileAI;
+import mindustry.content.Fx;
+import mindustry.content.StatusEffects;
+import mindustry.core.World;
+import mindustry.entities.Effect;
+import mindustry.entities.Sized;
+import mindustry.entities.Units;
+import mindustry.entities.units.UnitController;
 import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import mindustry.world.meta.*;
-import wh.content.*;
-import wh.entities.*;
-import wh.entities.world.entities.*;
-import wh.graphics.*;
-import wh.math.*;
-import wh.util.*;
+import mindustry.graphics.Trail;
+import mindustry.type.UnitType;
+import mindustry.world.meta.BlockGroup;
+import wh.content.WHBullets;
+import wh.content.WHSounds;
+import wh.entities.WHUnitSorts;
+import wh.entities.world.entities.PesterUnitType;
+import wh.graphics.Drawn;
+import wh.math.WHInterp;
+import wh.util.WHUtils;
 
-import java.util.*;
+import java.util.Iterator;
 
 public class PesterUnit extends UnitEntity implements Pesterc {
     public static final ObjectIntMap<Healthc> checked = new ObjectIntMap();
@@ -139,6 +151,11 @@ public class PesterUnit extends UnitEntity implements Pesterc {
 
          isBoss( hasEffect(StatusEffects.boss));
         super.update();
+        boolean server = !Vars.net.client();
+        if (!server && !isLocal()) {
+            salvoReload = Mathf.lerpDelta(salvoReload, salvoReloadTarget, 0.25F);
+            bossWeaponReload = Mathf.lerpDelta(bossWeaponReload, bossWeaponReloadTarget, 0.25F);
+        }
         UnitType var2 =  type;
         if (var2 instanceof PesterUnitType) {
             PesterUnitType pType = (PesterUnitType)var2;
@@ -183,15 +200,17 @@ public class PesterUnit extends UnitEntity implements Pesterc {
 
             if ( bossWeaponReload > pType.bossReload) {
                  bossWeaponReload =  bossWeaponWarmup =  bossWeaponProgress = 0.0F;
-                 shootBossTarget();
+                if (server) {
+                    shootBossTarget();
+                }
                  lastTargetPos.set( x,  y);
             }
 
-            if ( hatred.size > 0) {
+            if (server && hatred.size > 0) {
                  hatredCheckReload -= Time.delta;
             }
 
-            if ( hatredCheckReload < 0.0F) {
+            if (server && hatredCheckReload < 0.0F) {
                  hatredCheckReload = pType.checkReload;
                 Groups.bullet.intersect( x - pType.checkRange,  y - pType.checkRange, pType.checkRange * 2.0F, pType.checkRange * 2.0F, (bullet) -> {
                     if (bullet.team !=  team) {
@@ -229,7 +248,7 @@ public class PesterUnit extends UnitEntity implements Pesterc {
                 }
             }
 
-            if ( nextTargets.any()) {
+            if (server && nextTargets.any()) {
                  salvoReload += Time.delta * (1.0F + (float)Mathf.num( isBoss) *  reloadMultiplier);
                 if ( salvoReload > pType.salvoReload) {
                      shootAtHatred();
@@ -240,9 +259,17 @@ public class PesterUnit extends UnitEntity implements Pesterc {
 
 
     }
-    public void shootBossTarget(){WHBullets.ncBlackHole.create(self(), team, lastTargetPos.x, lastTargetPos.y, 0, 1, 1, 1,  WHBullets.ncBlackHole.splashDamageRadius);
+
+    public void shootBossTarget() {
+        if (Vars.net.client()) return;
+        WHBullets.ncBlackHole.create(self(), team, lastTargetPos.x, lastTargetPos.y, 0, 1, 1, 1, WHBullets.ncBlackHole.splashDamageRadius);
     }
     public void shootAtHatred() {
+        if (Vars.net.client()) {
+            checked.clear();
+            nextTargets.clear();
+            return;
+        }
         Tmp.v1.trns(this.rotation, 2 * Vars.tilesize).add(this.x, this.y);
         Tmp.v1.y += 2 * Vars.tilesize; // 确保Y坐标的偏移也被考虑
         float ex = Tmp.v1.x;
@@ -307,7 +334,7 @@ public class PesterUnit extends UnitEntity implements Pesterc {
                 var10000.at(var10001, var10002, var10003,  team.color, h);
                 Fx.chainLightning.at( x,  y, 0.0F,  team.color, h);
                 Time.run(pType.shootDelay, () -> {
-                    if (Vars.state.isGame() && h.isValid()) {
+                    if (!Vars.net.client() && Vars.state.isGame() && h.isValid()) {
                         pType.hitterBullet.create(this,  team, h.getX(), h.getY(), 0.0F);
                          heal(500.0F);
                     }
