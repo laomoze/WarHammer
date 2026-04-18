@@ -1,14 +1,17 @@
 package wh.entities.abilities;
 
-import arc.*;
-import arc.audio.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.entities.abilities.*;
+import arc.Core;
+import arc.audio.Sound;
+import arc.graphics.g2d.Lines;
+import arc.scene.ui.layout.Table;
+import arc.util.Strings;
+import mindustry.content.Fx;
+import mindustry.entities.Effect;
+import mindustry.entities.abilities.Ability;
 import mindustry.gen.*;
 
+import static arc.graphics.g2d.Draw.color;
+import static arc.graphics.g2d.Lines.stroke;
 import static wh.core.WarHammerMod.name;
 
 /** 子弹击杀目标后，为发射者回复生命值。 */
@@ -17,7 +20,11 @@ public class BulletKillHealAbility extends Ability implements BulletKillListener
     public float healPercent = 0.05f;
     public float minTargetMaxHealth = 0f;
 
-    public Effect healEffect = Fx.healWaveDynamic;
+    public Effect healEffect = new Effect(35, e -> {
+        color(e.color);
+        stroke(e.fout() * 3f);
+        Lines.circle(e.x, e.y, 4f + e.finpow() * e.rotation);
+    });
     public Sound healSound = Sounds.none;
 
     public BulletKillHealAbility(){
@@ -48,11 +55,10 @@ public class BulletKillHealAbility extends Ability implements BulletKillListener
             return;
         }
 
-        // 回复直接加到单位身上，不改子弹本体，方便后续复用同一事件。
         unit.heal(amount);
 
         if(healEffect != Fx.none){
-            healEffect.at(unit.x, unit.y, unit.hitSize, unit.team.color, unit);
+            healEffect.at(unit.x, unit.y, unit.hitSize * 2f, unit.team.color, unit);
         }
 
         if(healSound != Sounds.none){

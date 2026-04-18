@@ -5,17 +5,21 @@
 
 package wh.entities.bullet;
 
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.entities.bullet.*;
-import mindustry.gen.*;
-import wh.content.*;
-import wh.core.*;
-import wh.graphics.*;
-import wh.util.struct.*;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.math.Mathf;
+import arc.math.Rand;
+import arc.math.geom.Vec2;
+import arc.util.Tmp;
+import mindustry.Vars;
+import mindustry.entities.bullet.BasicBulletType;
+import mindustry.gen.Bullet;
+import mindustry.gen.Hitboxc;
+import wh.content.WHFx;
+import wh.core.WHSettings;
+import wh.graphics.PositionLightning;
+import wh.util.struct.Vec2Seq;
 
 public class TrailFadeBulletType extends BasicBulletType{
     protected static final Vec2 v1 = new Vec2();
@@ -99,8 +103,6 @@ public class TrailFadeBulletType extends BasicBulletType{
     @Override
     public void hitEntity(Bullet b, Hitboxc entity, float health){
         super.hitEntity(b, entity, health);
-
-        hit(b);
     }
 
     @Override
@@ -127,7 +129,7 @@ public class TrailFadeBulletType extends BasicBulletType{
     @Override
     public void init(Bullet b){
         super.init(b);
-        if(Vars.headless && trailLength > 0) return;
+        if (Vars.headless) return;
         Vec2Seq[] points = new Vec2Seq[tracers];
         for(int i = 0; i < tracers; i++){
             Vec2Seq p = new Vec2Seq();

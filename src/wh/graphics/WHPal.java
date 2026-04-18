@@ -6,9 +6,10 @@
 package wh.graphics;
 
 
-import arc.graphics.*;
-import mindustry.content.*;
-import mindustry.graphics.*;
+import arc.graphics.Color;
+import mindustry.content.Items;
+import mindustry.game.Team;
+import mindustry.graphics.Pal;
 
 public final class WHPal {
     public static Color ancient;
@@ -34,6 +35,7 @@ public final class WHPal {
     public static Color OrePromethiumColor;
     public static Color molybdenumAlloyColor;
     public static Color resonantCrystalColor;
+    public static Color BossColor;
 
     private WHPal() {
     }
@@ -42,6 +44,8 @@ public final class WHPal {
         Outline = Color.valueOf("383848");
         OutlineS = Color.valueOf("42424FFF");
         Heat = Color.valueOf("FF4040");
+
+        BossColor = Team.crux.color.cpy().lerp(Pal.slagOrange, 0.15f);
 
         ancient = Items.surgeAlloy.color.cpy().lerp(Pal.accent, 0.115F);
         ancientHeat = Color.red.cpy().mul(1.075F);

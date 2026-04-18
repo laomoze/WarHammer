@@ -1,23 +1,31 @@
 package wh.gen;
 
-import arc.*;
-import arc.func.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import mindustry.ui.*;
-import wh.content.*;
-import wh.entities.world.entities.*;
-import wh.graphics.*;
+import arc.Core;
+import arc.func.Cons;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.math.Mathf;
+import arc.scene.ui.layout.Table;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.content.Fx;
+import mindustry.entities.Damage;
+import mindustry.entities.Effect;
+import mindustry.gen.Bullet;
+import mindustry.gen.Groups;
+import mindustry.gen.MechUnit;
+import mindustry.gen.Unit;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.type.UnitType;
+import mindustry.ui.Bar;
+import wh.content.WHContent;
+import wh.entities.world.entities.TitanUnitType;
+import wh.graphics.Drawn;
 
 public class TitanUnit extends MechUnit{
     private static final float shieldEpsilon = 0.001f;
@@ -294,6 +302,7 @@ public class TitanUnit extends MechUnit{
     @Override
     public void update(){
         super.update();
+        if (!isAuthority()) return;
 
         float max = maxShield();
         float cooldown = cooldown();
@@ -361,6 +370,10 @@ public class TitanUnit extends MechUnit{
         if(forceShield > shieldEpsilon && cooldownTimer <= shieldEpsilon){
             checkRadius(this);
         }
+    }
+
+    public boolean isAuthority() {
+        return !Vars.net.client() || isLocal();
     }
 
 

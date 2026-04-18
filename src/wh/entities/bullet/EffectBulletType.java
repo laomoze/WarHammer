@@ -1,8 +1,8 @@
 package wh.entities.bullet;
 
-import mindustry.content.*;
-import mindustry.entities.bullet.*;
-import mindustry.gen.*;
+import mindustry.content.Fx;
+import mindustry.entities.bullet.BulletType;
+import mindustry.gen.Bullet;
 
 public class EffectBulletType extends BulletType {
     public EffectBulletType() {
@@ -32,4 +32,11 @@ public class EffectBulletType extends BulletType {
 
     @Override
     public void drawLight(Bullet b) {}
+
+    @Override
+    public void removed(Bullet b) {
+        if (b.frags == 0 && fragOnDespawn && fragBullet != null) {
+            createFrags(b, b.x, b.y);
+        }
+    }
 }

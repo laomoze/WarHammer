@@ -14,6 +14,7 @@ import arc.util.pooling.Pools;
 import mindustry.Vars;
 import mindustry.ai.types.MissileAI;
 import mindustry.entities.Mover;
+import mindustry.entities.UnitSorts;
 import mindustry.entities.Units;
 import mindustry.entities.bullet.BulletType;
 import mindustry.entities.bullet.ContinuousBulletType;
@@ -32,15 +33,15 @@ public class ApproachBullet extends BulletType{
     public BulletType bulletType;
     public Color color;
 
-    public float retarget = 12f;
+    public float retarget = 15;
     public float reload = 90;
 
     public float shootX = 0, shootY = 0;
     public float xRand = 0, yRand = 0;
     public float velocityRnd = 0.08f;
     public float rotateSpeed = 2;
-    public float initAngleRand = 0f;
-    public float initSpeedRand = 0f;
+
+    public Units.Sortf unitSort = UnitSorts.closest;
 
     // Optional behavior switches. Defaults preserve legacy behavior.
     public boolean followOwnerVelocity = false;
@@ -48,11 +49,9 @@ public class ApproachBullet extends BulletType{
     // Starts inheriting owner movement only after own speed decays near zero.
     public float followOwnerSpeedThreshold = 0.08f;
     public boolean shootAngleFollowsOwner = false;
-    public boolean shootIgnoreRange = false;
-    public boolean shootIgnoreAngle = false;
-    public boolean shootWithAimWhenNoTarget = false;
+
     public boolean continuousAimOwner = false;
-    public float continuousChildFadeTime = 12f;
+    public float continuousChildFadeTime = 60;
 
     public float soundPitchMin = 1, soundPitchMax = 1;
     public Sound chargeSound = Sounds.chargeLancer;
@@ -71,12 +70,6 @@ public class ApproachBullet extends BulletType{
 
     public Approach approach = b -> {
         if(b.target != null){
-            float
-            bulletX = Angles.trnsx(b.rotation() - 90, this.shootX, this.shootY) + b.x,
-            bulletY = Angles.trnsy(b.rotation() - 90, this.shootX, this.shootY) + b.y,
-            targetRotation = Angles.angle(bulletX, bulletY, b.target.x(), b.target.y()),
-            rotation = Angles.moveToward(b.rotation(), targetRotation, rotateSpeed * Time.delta);
-            b.rotation(rotation);
             rand.setSeed(b.id);
             float dx = WHUtils.dx(b.target.x(), homingRange * 0.5f * rand.random(0.7f, 1), b.ang + Time.time / 2),
             dy = WHUtils.dy(b.target.y(), homingRange * 0.5f * rand.random(0.7f, 1), b.ang + Time.time / 2);
@@ -88,7 +81,7 @@ public class ApproachBullet extends BulletType{
     public BulletDrawer drawer = b -> {
         float t = 20;
         float fadeIn = Mathf.clamp(b.time / t);
-        float fadeOut = b.time > lifetime - t ? Mathf.clamp(1 - (b.time - lifetime) / t) : 1;
+        float fadeOut = b.time > b.lifetime - t ? Mathf.clamp(1f - (b.time - (b.lifetime - t)) / t) : 1f;
 
         float radius = 10f * fadeOut * fadeIn;
 
@@ -156,44 +149,33 @@ public class ApproachBullet extends BulletType{
         if(b.time > homingDelay){
             baseSpeedNow = 0f;
             b.initVel(b.rotation(), 0f);
-            if(b.timer.get(4, retarget) && b.find){
+            if (b.timer.get(3, retarget) && b.find) {
                 float rx = b.x, ry = b.y;
                 if(b.target != null){
                     rx = b.target.x();
                     ry = b.target.y();
                 }
-                b.target = Units.closestTarget(b.team, rx, ry, homingRange,
+                b.target = Units.bestTarget(b.team, rx, ry, homingRange,
                 e -> e != null && e.checkTarget(collidesAir, collidesGround),
-                t -> t != null && collidesGround);
+                        t -> t != null && collidesGround, unitSort);
             }
             if(b.target != null){
                 approach.update(b);
-
                 float bulletX = Angles.trnsx(b.rotation() - 90, this.shootX, this.shootY) + b.x;
                 float bulletY = Angles.trnsy(b.rotation() - 90, this.shootX, this.shootY) + b.y;
                 float targetRotation = Angles.angle(bulletX, bulletY, b.target.x(), b.target.y());
-                boolean inRange = shootIgnoreRange || b.within(b.target, homingRange + 8);
-                boolean angleOk = shootIgnoreAngle || Angles.within(b.rotation(), targetRotation, 10);
+                float rotation = Angles.moveToward(b.rotation(), targetRotation, rotateSpeed * Time.delta);
+                b.rotation(rotation);
+                boolean inRange = b.within(b.target, homingRange + 8f);
+                boolean angleOk = Angles.within(rotation, targetRotation, 14f);
 
                 if (inRange && bulletType != null) {
-                    if (b.timer.get(3, 20) && b.reload < 0.0001f && angleOk) {
+                    if (b.reload < 0.0001f && angleOk) {
                         shoot(b, b.x, b.y, b.rotation());
                         b.reload = reload;
                     }
                 }
-            } else if (shootWithAimWhenNoTarget && bulletType != null) {
-                float ax = b.aimX < 0f ? b.x + Angles.trnsx(b.rotation(), 64f) : b.aimX;
-                float ay = b.aimY < 0f ? b.y + Angles.trnsy(b.rotation(), 64f) : b.aimY;
-                float bulletX = Angles.trnsx(b.rotation() - 90, this.shootX, this.shootY) + b.x;
-                float bulletY = Angles.trnsy(b.rotation() - 90, this.shootX, this.shootY) + b.y;
-                float aimRotation = Angles.angle(bulletX, bulletY, ax, ay);
-                b.rotation(Angles.moveToward(b.rotation(), aimRotation, rotateSpeed * Time.delta));
-                boolean angleOk = shootIgnoreAngle || Angles.within(b.rotation(), aimRotation, 10f);
-                if (b.timer.get(3, 20) && b.reload < 0.0001f && angleOk) {
-                    shoot(b, b.x, b.y, b.rotation());
-                    b.reload = reload;
-                }
-            }else{
+            } else {
                 b.ang = Mathf.random(360);
             }
         }else{
@@ -216,7 +198,7 @@ public class ApproachBullet extends BulletType{
             float fireRotation = b.rotation();
             float bulletX = Angles.trnsx(fireRotation - 90f, this.shootX, this.shootY) + b.x;
             float bulletY = Angles.trnsy(fireRotation - 90f, this.shootX, this.shootY) + b.y;
-            if (continuousAimOwner && b.owner instanceof Unit ownerUnit) {
+            if (continuousAimOwner && b.owner instanceof Unit ownerUnit && !b.find) {
                 float ang = Angles.angle(bulletX, bulletY, ownerUnit.aimX, ownerUnit.aimY);
                 b.rotation(ang);
                 b.bu.rotation(b.rotation());
@@ -240,7 +222,9 @@ public class ApproachBullet extends BulletType{
     protected void shoot(AB b, float shootX, float shootY, float rotation){
 
         if(shootType.firstShotDelay > 0){
-            chargeSound.at(shootX, shootY, Mathf.random(soundPitchMin, soundPitchMax));
+            float bulletX = Angles.trnsx(b.rotation() - 90, this.shootX, this.shootY) + b.x;
+            float bulletY = Angles.trnsy(b.rotation() - 90, this.shootX, this.shootY) + b.y;
+            chargeSound.at(bulletX, bulletY, Mathf.random(soundPitchMin, soundPitchMax));
             bulletType.chargeEffect.at(shootX, shootY, rotation, bulletType.keepVelocity ? b : null);
         }
 
@@ -270,8 +254,8 @@ public class ApproachBullet extends BulletType{
         float angle = angleOffset + fireRotation + Mathf.range(bulletType.inaccuracy);
 
         Entityc shooter = b.owner instanceof MissileAI ai ? ai.shooter : b.owner;
-        b.bu = bulletType.create(b, shooter, b.team, bulletX, bulletY, angle, -1f, (1f - velocityRnd) + Mathf.random(velocityRnd),
-        lifeScl, null, mover, -1, -1, b.target);
+        b.bu = bulletType.create(b.owner, shooter, b.team, bulletX, bulletY, angle, -1f, (1f - velocityRnd) + Mathf.random(velocityRnd),
+                lifeScl, b, mover, -1, -1, b.target);
 
         shootSound.at(bulletX, bulletY, Mathf.random(soundPitchMin, soundPitchMax));
 
@@ -296,7 +280,7 @@ public class ApproachBullet extends BulletType{
 
     @Override
     public void removed(Bullet b) {
-        if (b instanceof AB ab && ab.bu != null && ab.bu.isAdded() && ab.bu.type instanceof ContinuousBulletType) {
+        if (b instanceof AB ab && ab.bu != null && ab.bu.type instanceof ContinuousBulletType) {
             float fade = Math.max(1f, continuousChildFadeTime);
             ab.bu.time = Math.max(ab.bu.time, ab.bu.lifetime - fade);
         }
@@ -330,14 +314,7 @@ public class ApproachBullet extends BulletType{
                 ab.trails[i].clear();
             }
         }
-        Bullet created = WHUtils.anyOtherCreate(ab, this, shooter, owner, team, x, y, angle, damage, velocityScl, lifetimeScl, data, mover, aimX, aimY, target);
-        if (created instanceof AB createdAb && (initAngleRand > 0f || initSpeedRand > 0f)) {
-            float minScale = Math.max(0f, 1f - initSpeedRand);
-            float initAngle = angle + Mathf.range(initAngleRand);
-            float initSpeed = speed * Mathf.random(minScale, 1f + initSpeedRand);
-            createdAb.initVel(initAngle, initSpeed);
-        }
-        return created;
+        return WHUtils.anyOtherCreate(ab, this, shooter, owner, team, x, y, angle, damage, velocityScl, lifetimeScl, data, mover, aimX, aimY, target);
     }
 
     public static class AB extends Bullet{

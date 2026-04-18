@@ -16,9 +16,11 @@ import arc.math.Angles;
 import arc.math.Interp;
 import arc.math.Mathf;
 import arc.math.Rand;
+import arc.math.geom.Position;
 import arc.math.geom.Rect;
 import arc.math.geom.Vec2;
 import arc.struct.Seq;
+import arc.util.Nullable;
 import arc.util.Time;
 import arc.util.Tmp;
 import mindustry.Vars;
@@ -62,7 +64,6 @@ import mindustry.world.meta.Env;
 import wh.entities.abilities.*;
 import wh.entities.bullet.*;
 import wh.entities.bullet.laser.*;
-import wh.entities.world.drawer.GeminiUnitType;
 import wh.entities.world.drawer.part.AimLaserPart;
 import wh.entities.world.drawer.part.AncientEngine;
 import wh.entities.world.drawer.part.BarrelPart;
@@ -100,20 +101,25 @@ public final class WHUnitTypes {
             cMoon, revenge,
             airA7,
             airA6, airA5, airA4, airA3, airA2, airA1,
+
     //空辅
-    airB6, airB5, airB4, airB3, airB2, airB1,
+    airB6, airB5, airB4, airB3, airB2, airB1;
     //坦克
-    tankAG,
+    public static UnitType
+            tankAG,
             tankA3, tankA2, tankA1,
             tankB3, tankB2, tankB1,
             tankC3, tankC2, tankC1,
-            tankD2, tankD1,
+            tankD2, tankD1;
     //机甲
-    Mecha7, Mecha6, Mecha5, Mecha4, Mecha3, Mecha2,
+    public static UnitType
+            Mecha7, Mecha6, Mecha5, Mecha4, Mecha3, Mecha2;
     //陆军
-    M6, M5,
+    public static UnitType
+            M6, M5,
             M4A, M4B, M4C, M4D,
             M3, M2, M1,
+
     //特种
     MEn1,
             airD1, airD2;
@@ -793,6 +799,1059 @@ public final class WHUnitTypes {
                 });
             }
         };
+
+        air7Enemy = new GeminiUnitType("air7-enemy") {
+            {
+                constructor = GeminiUnit::new;
+
+                flying = true;
+
+                speed = 0.5f;
+                rotateSpeed = 0.07f;
+                faceTarget = false;
+                hitSize = 130;
+                armor = 65;
+                health = 400 * 1000;
+                healColor = Team.crux.color;
+                fogRadius = range * 0.7f;
+                lowAltitude = true;
+
+                ammoCapacity = 90000;
+
+                targetFlags = new BlockFlag[]{BlockFlag.turret, null};
+
+                lowHealthSpecialBullet(WHBulletsOther.GeminiBullet1);
+
+                engineSize = -1f;
+
+                for (int i = 0; i < 7; i++) {
+                    addEngine(330 / 4f - 1 + i, -364 / 4f - i / 2f, 0f, 2, false);
+                }
+
+                for (int i = 0; i < 5; i++) {
+                    addEngine(-315 / 4f - 1 + i, -382 / 4f, 0f, 2, false);
+                }
+
+                for (int i = 0; i < 6; i++) {
+                    addEngine(-157 / 4f - 6 + i * 2, -475 / 4f, 0f, 3f, false);
+                }
+
+                for (int i = 0; i < 4; i++) {
+                    addEngine(122 / 4f + i, -365 / 4f, 0f, 2, false);
+                }
+
+                for (int i = 0; i < 4; i++) {
+                    addEngine(199 / 4f + i, -458 / 4f, 0f, 2, false);
+                }
+
+                engines.add(
+                        new WHUnitEngine(-154 / 4f, -448 / 4f, 0, 40, 3) {{
+                            line = true;
+                        }},
+                        new WHUnitEngine(65 / 4f, -368 / 4f, 10, 30, 2) {{
+                            line = true;
+                        }}
+                );
+
+                Color bc = Pal.coalBlack.cpy().a(0.85f);
+
+                Weapon a7laserrw = new HealthStateWeapon(name("small-cannon")) {
+                    {
+                        shootY = 64 / 4f;
+                        reload = 120;
+                        rotate = true;
+                        mirror = false;
+                        alternate = false;
+                        rotateSpeed = 2f;
+                        shootSound = shootMissile;
+                        recoil = 2.0F;
+                        shoot = new ShootAlternate() {
+                            {
+                                spread = 30 / 4f;
+                                shots = 2;
+                                shotDelay = 10;
+                                firstShotDelay = 30;
+                            }
+                        };
+
+                        parentizeEffects = true;
+
+                        bullet = new LightingLaserBulletType(300) {{
+                            Color color = hitColor = lightningColor = WHPal.BossColor.cpy();
+                            chargeEffect = WHFx.genericCharge(shoot.firstShotDelay, hitColor, 5, 30).followParent(true);
+                            lifetime = 50;
+                            length = 450;
+                            width = 30;
+                            pierceCap = 4;
+                            laserAbsorb = false;
+                            sideAngle = 90;
+                            sideLength = 15;
+                            colors = new Color[]{color.a(0.4f), color.a(0.7f), color, Color.white};
+                        }};
+
+                        switchBulletHealthf = 0.6f;
+                        lowHealthShoot = new ShootMulti(
+                                new ShootAlternate() {
+                                    {
+                                        spread = 30 / 4f;
+                                        shots = 2;
+                                        firstShotDelay = 30;
+                                    }
+                                },
+                                new ShootPattern() {{
+                                    shots = 2;
+                                    shotDelay = 20;
+                                }}
+                        );
+                        lowHealthBullet = new LightingLaserBulletType(400) {
+                            {
+                                pierceArmor = true;
+                                Color color = hitColor = lightningColor = WHPal.BossColor.cpy();
+                                laserEffect = Fx.none;
+                                chargeEffect = WHFx.genericCharge(30, hitColor, 5, 30).followParent(true);
+                                hitEffect = new MultiEffect(
+                                        /*WHFx.shuttle(30, hitColor, Pal.coalBlack.cpy().a(0.85f), true, 50, -1),*/
+                                        WHFx.generalExplosion(20, hitColor, 30, 5, false),
+                                        WHFx.hitSparkAng(30, hitColor, hitColor, 8, 40, 15, 1.5f, 10)
+                                );
+                                lifetime = 50;
+                                length = 450;
+                                width = 30;
+                                pierceCap = 5;
+                                laserAbsorb = false;
+                                sideAngle = 90;
+                                sideLength = 15;
+                                colors = new Color[]{color.a(0.4f), color.a(0.7f), bc};
+
+                                fragOnHit = true;
+                                fragBullets = 1;
+                                fragBullet = new SizeDamageBullet() {
+                                    {
+                                        sizeDamageCreate.lightning = 1;
+                                        sizeDamageCreate.lightningDamage = 12;
+                                        sizeDamageCreate.lightningLength = 10;
+                                        damageInterp = Interp.linear;
+
+                                        lifetime = 20;
+                                        maxDamageMultiple = 4;
+                                        hitSizeDamage = 100;
+                                        maxHitSizeScale = 4 * 8 * 8;
+                                        hitSizeLightingScale = 4;
+                                        splashDamageRadius = 10f;
+
+                                        hitColor = lightningColor = trailColor = WHPal.BossColor;
+                                        trailLength = 12;
+                                        trailWidth = 2;
+                                        trailChance = 0.01f;
+                                        despawnEffect = hitEffect = none;
+                                    }
+
+                                    @Override
+                                    public void draw(Bullet b) {
+                                        //none
+                                    }
+
+                                    @Override
+                                    public void dynamicHitEffect(Sized s, Seq<Sized> data, Bullet b) {
+                                        float size = Math.min(s.hitSize() / 2, 15);
+                                        if (Mathf.chance(0.32) || data.size < 8) {
+                                            float sd = Mathf.random(size * 2f, size * 4);
+                                            WHFx.shuttle(30, hitColor, bc, true, 1, 1)
+                                                    .at(s.getX() + Mathf.range(size), s.getY() + Mathf.range(size), Mathf.chance(0.5) ? 45 : 135, hitColor, sd);
+                                        }
+                                    }
+                                };
+                            }
+
+                            @Override
+                            public void hitEntity(Bullet b, Hitboxc entity, float health) {
+                                super.hitEntity(b, entity, health);
+                                Vec2 v = new Vec2().set(entity);
+                                /*  Drawn.randFadeLightningEffect(b.x,b.y,5,20,hitColor,true)*/
+                                chainLightningFadeReversed.at(v.x, v.y, 12f, hitColor, v);
+                            }
+
+                            @Override
+                            public void draw(Bullet b) {
+                                super.draw(b);
+                                float realLength = b.fdata;
+
+                                float f = Mathf.curve(b.fin(), 0f, 0.2f);
+                                float baseLen = realLength * f;
+                                float cwidth = width;
+                                float compound = 1f;
+                                compound *= Mathf.pow(lengthFalloff, colors.length - 1);
+                                Draw.z(EFFECT_BOTTOM);
+                                Draw.color(colors[colors.length - 1]);
+                                Lines.stroke((cwidth *= compound) * b.fout());
+                                Lines.lineAngle(b.x, b.y, b.rotation(), baseLen, false);
+                                Tmp.v1.trns(b.rotation(), baseLen);
+                                Drawf.tri(b.x + Tmp.v1.x, b.y + Tmp.v1.y, Lines.getStroke(), cwidth * 2f + width / 2f, b.rotation());
+
+                                Fill.circle(b.x, b.y, 1f * cwidth * b.fout());
+                                for (int i : Mathf.signs) {
+                                    Drawf.tri(b.x, b.y, sideWidth * b.fout() * cwidth, sideLength * compound, b.rotation() + sideAngle * i);
+                                }
+                                Draw.z(EFFECT_MASK);
+                                Draw.color(colors[colors.length - 1]);
+                                Lines.stroke((cwidth *= compound) * b.fout());
+                                Lines.lineAngle(b.x, b.y, b.rotation(), baseLen, false);
+                                Tmp.v1.trns(b.rotation(), baseLen);
+                                Drawf.tri(b.x + Tmp.v1.x, b.y + Tmp.v1.y, Lines.getStroke(), cwidth * 2f + width / 2f, b.rotation());
+
+                                Fill.circle(b.x, b.y, 1f * cwidth * b.fout());
+                                for (int i : Mathf.signs) {
+                                    Drawf.tri(b.x, b.y, sideWidth * b.fout() * cwidth, sideLength * compound, b.rotation() + sideAngle * i);
+                                }
+                            }
+                        };
+                    }
+                };
+
+                Weapon a7laserrw2 = new HealthStateWeapon(name("air-enemy-weapon4")) {{
+                    reload = 30;
+                    ejectEffect = Fx.none;
+                    recoil = 2f;
+                    shootSound = WHSounds.LaserGatling;
+                    velocityRnd = 0.15f;
+                    inaccuracy = 2f;
+
+                    rotate = true;
+                    rotateSpeed = 1.5f;
+                    mirror = false;
+
+                    shootY = 16 / 4f;
+
+                    bullet = new DelayedPointBulletType() {{
+                        lifetime = 30;
+                        damage = 200;
+                        splashDamage = 200;
+                        splashDamageRadius = 40;
+                        maxRange = range = 500;
+                        width = 16f;
+                        square = true;
+
+                        Color c = hitColor = lightningColor = WHPal.BossColor.cpy();
+                        shootEffect = WHFx.hitSpark(20, c, 10, 20, 1, 5f);
+                        colors = new Color[]{c.a(0.3f), c.a(0.7f), c, Color.white};
+                        hitEffect = despawnEffect = new MultiEffect(
+                                WHFx.trailHitSpark(30, hitColor, 5, splashDamageRadius, 1.5f, 10f),
+                                WHFx.linePolyOut(30, hitColor, 15, 3, 4, 0)
+                        );
+                    }};
+
+                    switchBulletHealthf = 0.7f;
+                    lowHealthShoot = new ShootPattern() {{
+                        shotDelay = 10;
+                        shots = 2;
+                    }};
+                    lowHealthBullet = new DelayedPointBulletType() {
+                        {
+                            lifetime = 20;
+                            damage = 300;
+                            splashDamage = 100;
+                            splashDamageRadius = 40;
+                            maxRange = range = 500;
+                            width = 20;
+                            square = true;
+                            renderingDistortion = true;
+                            pathDistortionRectWidthScale = 4;
+
+                            Color c = hitColor = lightningColor = WHPal.BossColor.cpy();
+                            shootEffect = WHFx.hitSpark(20, c, 10, 20, 1, 5f);
+                            colors = new Color[]{c.a(0.3f), c.a(0.7f), bc};
+
+                            trailChance = 1;
+                            trailSpacing = 50;
+                            trailEffect = WHFx.square(30, hitColor, 1, 20, 4);
+
+                            hitEffect = despawnEffect = new MultiEffect(
+                                    WHFx.instRotation(30, hitColor, splashDamageRadius, 45, false),
+                                    WHFx.trailHitSpark(30, hitColor, 5, splashDamageRadius, 1.5f, 10f),
+                                    WHFx.linePolyOut(30, hitColor, splashDamageRadius, 3, 4, 0)
+                            );
+
+                            fragBullets = 2;
+                            fragBullet = new LightningBulletType() {{
+                                damage = 75;
+                                ammoMultiplier = 1f;
+                                lightningColor = bc;
+                                lightningLength = 10;
+                                armorMultiplier = 2;
+                                lightningType = WHBulletsOther.DarkLighting;
+                            }};
+                        }
+
+                        @Override
+                        public void draw(Bullet b) {
+                            super.draw(b);
+                            if (!(b.data instanceof DelayedPointBulletData data)) return;
+                            Position target = data.target;
+
+                            float tX = target.getX();
+                            float tY = target.getY();
+                            float cwidth = width / 1.4f * b.fout();
+                            float compound = 1f;
+                            compound *= Mathf.pow(lengthFalloff, colors.length - 1);
+
+                            Draw.z(EFFECT_BOTTOM);
+                            Color color = bc;
+                            Draw.color(color);
+                            float s = (cwidth *= compound) * (b.fout() * 2 + 1) / 3;
+                            Lines.stroke(s);
+                            Lines.line(b.x, b.y, tX, tY, false);
+                            float r = b.rotation() + 45f;
+                            Fill.square(b.x, b.y, 1.25f * cwidth * b.fout(), r);
+                            Fill.square(tX, tY, 1.25f * cwidth * b.fout(), r);
+                            Fill.square(Mathf.lerp(b.x, tX, b.fin()),
+                                    Mathf.lerp(b.y, tY, b.fin()), 2 * (s + width / 8f) * (1 + b.fout()) * 0.5f * b.fin(), r);
+
+                            Draw.z(EFFECT_MASK);
+                            Draw.color(color);
+                            Lines.stroke(s);
+                            Lines.line(b.x, b.y, tX, tY, false);
+                            Fill.square(b.x, b.y, 1.25f * cwidth * b.fout(), r);
+                            Fill.square(tX, tY, 1.25f * cwidth * b.fout(), r);
+                            Fill.square(Mathf.lerp(b.x, tX, b.fin()),
+                                    Mathf.lerp(b.y, tY, b.fin()), 2 * (s + width / 8f) * (1 + b.fout()) * 0.5f * b.fin(), r);
+                        }
+                    };
+                }};
+
+                Weapon a7laserrw3 = new HealthStateWeapon(name("")) {
+                    {
+                        shootRequireHealthf = 0.5f;
+                        shootCone = 180;
+                        predictTarget = false;
+                        top = false;
+                        mirror = false;
+                        rotate = true;
+                        x = y = shootX = shootY = 0.0F;
+                        continuous = false;
+                        rotateSpeed = 100;
+                        reload = 600;
+                        range = 600;
+                        inaccuracy = 20f;
+
+                        shoot = new ShootSummon(0, 0, 250, 0) {
+                            {
+                                shots = 4;
+                                shotDelay = 20;
+                            }
+
+                            @Override
+                            public void shoot(int totalShots, BulletHandler handler, @Nullable Runnable barrelIncrementer) {
+                                for (int i = 0; i < shots; i++) {
+                                    Tmp.v1.trns(Mathf.random(360f), Mathf.random(hitSize / 2, radius + hitSize / 2));
+
+                                    handler.shoot(x + Tmp.v1.x, y + Tmp.v1.y, Mathf.range(spread), firstShotDelay + shotDelay * i);
+                                }
+                            }
+                        };
+
+                        shake = 13.0F;
+                        shootSound = Sounds.none;
+                        bullet = WHBulletsOther.GeminiBullet2;
+                    }
+                };
+
+                Weapon a7laserrw4 = new HealthStateWeapon(name("air-enemy-weapon1")) {
+                    {
+                        reload = 150;
+                        recoil = 2;
+                        x = 167 / 4f;
+                        y = -106 / 4f;
+                        shootY = 40 / 4f;
+                        minWarmup = 0.9f;
+                        shootWarmupSpeed = 0.06f;
+
+                        mirror = false;
+                        rotateSpeed = 1;
+                        rotate = true;
+
+                        shootSound = WHSounds.sniperShoot;
+
+                        shoot.shots = 2;
+                        shoot.shotDelay = 60;
+                        shoot.firstShotDelay = 30;
+
+                        bullet = new MultiTrailBulletType(15, 500, name("pierce")) {
+                            {
+
+                                width = 12;
+                                height = width * 2.5f;
+
+                                lifetime = 700 / speed;
+                                keepVelocity = false;
+                                splashDamage = damage;
+                                splashDamageRadius = 90;
+
+                                lightningColor = lightColor = hitColor = trailColor = backColor = WHPal.BossColor;
+
+                                frontColor = hitColor.cpy().lerp(Color.white, 0.5f);
+
+                                lightning = 3;
+                                lightningLength = 6;
+                                lightningLengthRand = 8;
+                                lightningDamage = 50;
+
+                                hittable = false;
+
+                                offset = 10;
+                                subTrails = 3;
+                                trailLength = 20;
+                                subTrailWidth = 1.5f;
+                                trailWidth = width / 3f;
+                                despawnShake = 10;
+
+                                shootEffect = new MultiEffect(
+                                        shootBigColor,
+                                        WHFx.shoot3DWave(30, hitColor, 60, 5),
+                                        WHFx.instShoot(hitColor, frontColor),
+                                        WHFx.linePolyOut(30, hitColor, 4, 2, 6, 0),
+                                        linePolyOut(15, hitColor, 40, 2, 6, 0).startDelay(15f)
+                                );
+
+                                hitEffect = new MultiEffect(
+                                        WHFx.shuttle(60, backColor, frontColor, true, splashDamageRadius / 2, 45),
+                                        WHFx.shuttle(60, backColor, frontColor, true, splashDamageRadius / 2, 135).startDelay(20f),
+                                        WHFx.trailCircleHitSpark(60, hitColor, 12, splashDamageRadius + 10, 1.5f, 10f),
+                                        WHFx.instHit(hitColor, true, 3, splashDamageRadius)
+                                );
+
+                                despawnEffect = new MultiEffect(
+                                        WHFx.circleOut(90, hitColor, splashDamageRadius),
+                                        WHFx.generalExplosion(90, hitColor, splashDamageRadius, 6, true)
+                                );
+
+                                fragBullets = 5;
+                                fragBullet = new CritBulletType(3, 200) {{
+                                    width = height = 14;
+                                    shrinkX = shrinkY = 1;
+                                    trailLength = 5;
+                                    trailWidth = 2;
+                                    drag = 0.02f;
+                                    lifetime = 32;
+                                    splashDamage = damage;
+                                    splashDamageRadius = 40;
+                                    frontColor = lightningColor = lightColor = hitColor = trailColor = backColor = WHPal.BossColor;
+
+                                    hitEffect = despawnEffect = new MultiEffect(
+                                            WHFx.instRotation(30, hitColor, splashDamageRadius * 0.8f, 90, false),
+                                            WHFx.hitPoly(30, hitColor, hitColor, 5, splashDamageRadius, 4, 5, 45),
+                                            WHFx.trailCircleHitSpark(30, hitColor, 5, splashDamageRadius, 1f, 6)
+                                    );
+                                }};
+                            }
+
+                            @Override
+                            public void drawTrail(Bullet b) {
+                                drawTrails(b);
+                            }
+
+                            @Override
+                            public void draw(Bullet b) {
+                                drawTrail(b);
+                                Draw.color(WHPal.BossColor);
+                                float wx = b.x, wy = b.y, warmup = 1 + 1.5f * Mathf.curve(b.fin(), 0, 0.5f);
+                                float scl = 0.75f, w = 23 / 4f * warmup, h = 140 / 4f * warmup;
+                                Drawn.drawLaserSpear(wx, wy, w, h, b.rotation());
+                            }
+                        };
+
+                        switchBulletHealthf = 0.4f;
+                        lowHealthShoot.firstShotDelay = 30f;
+                        lowHealthBullet = new MultiTrailBulletType(15, 500, name("pierce")) {
+                            private final int geminiSpawnCount = 4;
+                            private final float geminiSpawnInterval = 20;
+
+                            private void spawnGeminiAroundOwner(Bullet b, @Nullable Teamc lockTarget) {
+                                Entityc ownerRef = b.owner;
+                                Team teamRef = b.team;
+                                if (!(ownerRef instanceof Position)) return;
+                                float spawnRadius = ownerRef instanceof Sized s ? s.hitSize() * 0.55f : 14f;
+
+                                for (int i = 0; i < geminiSpawnCount; i++) {
+                                    int idx = i;
+                                    Time.run(geminiSpawnInterval * i, () -> {
+                                        if (!(ownerRef instanceof Position op)) return;
+                                        if (ownerRef instanceof Healthc h && !h.isValid()) return;
+
+                                        float ang = 45 + idx * (360f / geminiSpawnCount);
+                                        float sx = op.getX() + Angles.trnsx(ang, spawnRadius);
+                                        float sy = op.getY() + Angles.trnsy(ang, spawnRadius);
+
+                                        Bullet bullet = WHBulletsOther.GeminiBullet3.create(ownerRef, teamRef, sx, sy, ang);
+                                        if (bullet == null) return;
+                                        bullet.type.shootEffect.at(sx, sy, ang);
+                                        if (bullet instanceof WHBulletsOther.GeminiLockBullet gb) {
+                                            gb.lockTarget = lockTarget;
+                                        }
+                                    });
+                                }
+                            }
+
+                            {
+                                width = 12;
+                                height = width * 2.5f;
+
+                                lifetime = 550 / speed;
+                                keepVelocity = false;
+                                splashDamage = damage;
+                                splashDamageRadius = 90;
+
+                                lightningColor = lightColor = hitColor = trailColor = backColor = WHPal.BossColor;
+
+                                frontColor = Pal.coalBlack;
+
+                                lightning = 8;
+                                lightningLength = 6;
+                                lightningLengthRand = 8;
+                                lightningDamage = 50;
+                                lightningType = WHBulletsOther.DarkLighting;
+
+                                hittable = false;
+
+                                offset = 5;
+                                subTrails = 3;
+                                trailLength = 12;
+                                subTrailWidth = 1.5f;
+                                trailWidth = width / 3f;
+
+                                pierceCap = 2;
+                                pierceBuilding = true;
+
+                                despawnShake = 10;
+
+                                shootEffect = new MultiEffect(
+                                        shootBigColor,
+                                        WHFx.shoot3DWave(30, hitColor, 60, 5),
+                                        WHFx.instShoot(hitColor, frontColor),
+                                        WHFx.linePolyOut(30, hitColor, 4, 2, 6, 0),
+                                        linePolyOut(15, hitColor, 40, 2, 6, 0).startDelay(15f)
+                                );
+
+                                hitEffect = new MultiEffect(
+                                        WHFx.shuttle(60, backColor, frontColor, true, splashDamageRadius, 45),
+                                        WHFx.shuttle(60, backColor, frontColor, true, splashDamageRadius, 135).startDelay(20f),
+                                        WHFx.trailCircleHitSpark(60, hitColor, 12, splashDamageRadius + 10, 1.5f, 10f),
+                                        WHFx.instHit(hitColor, true, 3, splashDamageRadius * 2)
+                                );
+
+                                despawnEffect = new MultiEffect(
+                                        WHFx.circleOut(90, hitColor, splashDamageRadius),
+                                        WHFx.generalExplosion(90, hitColor, splashDamageRadius, 6, true)
+                                );
+                            }
+
+                            @Override
+                            public void drawTrail(Bullet b) {
+                                drawTrails(b);
+                            }
+
+                            @Override
+                            public void hitEntity(Bullet b, Hitboxc entity, float health) {
+                                super.hitEntity(b, entity, health);
+                                if (entity instanceof Healthc he && he.healthf() > 0.5f) {
+                                    spawnGeminiAroundOwner(b, entity instanceof Teamc t ? t : null);
+                                }
+                            }
+
+                            @Override
+                            public void hitTile(Bullet b, Building build, float x, float y, float initialHealth, boolean direct) {
+                                super.hitTile(b, build, x, y, initialHealth, direct);
+                                if (build.healthf() > 0.5f) {
+                                    spawnGeminiAroundOwner(b, build);
+                                }
+                            }
+
+                            @Override
+                            public void draw(Bullet b) {
+                                drawTrail(b);
+                                Draw.color(WHPal.BossColor);
+                                float wx = b.x, wy = b.y, warmup = 1 + 1.5f * Mathf.curve(b.fin(), 0, 0.5f);
+                                float scl = 0.75f, w = 23 / 4f, h = 140 / 4f * warmup;
+                                Drawn.drawLaserSpear(wx, wy, w, h, b.rotation());
+                                Draw.z(EFFECT_MASK);
+                                Draw.color(Pal.coalBlack);
+                                Drawn.drawLaserSpear(wx, wy, w * scl, h * scl, b.rotation());
+                                Draw.z(EFFECT_BOTTOM);
+                                Draw.color(Pal.coalBlack);
+                                Drawn.drawLaserSpear(wx, wy, w * scl, h * scl, b.rotation());
+                            }
+                        };
+                    }
+
+
+                    @Override
+                    public void draw(Unit unit, WeaponMount mount) {
+                        super.draw(unit, mount);
+                        if (mount instanceof HealthStateMount hm) {
+
+                            float
+                                    rotation = unit.rotation - 90f,
+                                    realRecoil = Mathf.pow(mount.recoil, recoilPow) * recoil,
+                                    weaponRotation = rotation + (rotate ? mount.rotation : baseRotation),
+                                    wx = unit.x + Angles.trnsx(rotation, x, y) + Angles.trnsx(weaponRotation, this.shootX, this.shootY) + Angles.trnsx(weaponRotation, 0f, -realRecoil),
+                                    wy = unit.y + Angles.trnsy(rotation, x, y) + Angles.trnsy(weaponRotation, this.shootX, this.shootY) + Angles.trnsy(weaponRotation, 0f, -realRecoil),
+                                    warmup = 1 - mount.smoothReload, scl = 0.75f, w = 23 / 4f, h = 140 / 4f * warmup;
+
+                            if (warmup <= 0.001f) return;
+                            Draw.z(Layer.bullet - 0.001f);
+                            float pc = Mathf.clamp((1 - unit.healthf()) / switchBulletHealthf);
+                            Draw.color(WHPal.BossColor);
+                            Drawn.drawLaserSpear(wx, wy, w, h, weaponRotation + 90);
+
+                            Draw.z(EFFECT_MASK);
+                            Draw.color(WHPal.BossColor, Pal.coalBlack, pc);
+                            Drawn.drawLaserSpear(wx, wy, w * scl, h * scl, weaponRotation + 90);
+                            Draw.z(EFFECT_BOTTOM);
+                            Draw.color(WHPal.BossColor, Pal.coalBlack, pc);
+                            Drawn.drawLaserSpear(wx, wy, w * scl, h * scl, weaponRotation + 90);
+                        }
+                    }
+                };
+
+
+                Weapon a7EnMissile = new Weapon(name("air-enemy-weapon3")) {
+                    {
+                        reload = 90;
+                        rotate = true;
+                        mirror = false;
+                        rotateSpeed = 1.5f;
+                        shootSound = WHSounds.launch;
+                        inaccuracy = 6;
+                        alternate = true;
+                        shoot = new ShootAlternate() {{
+                            barrels = 3;
+                            spread = 17 / 4f;
+                            shots = 3;
+                            shotDelay = 4f;
+                        }};
+                        bullet = new CritBulletType(10, 90, name("pierce")) {
+                            {
+                                hittable = false;
+                                pierceArmor = true;
+                                width = 10;
+                                height = width * 3;
+                                shrinkX = shrinkY = 0f;
+
+                                splashDamage = damage;
+                                splashDamageRadius = 30;
+
+
+                                lightningColor = hitColor = backColor = trailColor = WHPal.BossColor;
+                                frontColor = backColor.cpy().lerp(Color.white, 0.5f);
+
+                                lifetime = 500 / speed;
+                                damage = 80;
+                                trailLength = 6;
+                                trailWidth = 1.5f;
+                                status = WHStatusEffects.armorFracture;
+                                statusDuration = 120;
+                                homingDelay = 10;
+                                homingPower = 0.01f;
+                                followAimSpeed = 1f;
+
+                                trailChance = 0.1f;
+                                trailEffect = new MultiEffect(
+                                        WHFx.square(30, hitColor, 1, 30, 5),
+                                        WHFx.tri(30, hitColor, 1, 25, 7)
+                                );
+
+                                despawnEffect = hitEffect = new MultiEffect(
+                                        WHFx.square(60, hitColor, 6, 50, 7)
+
+                                );
+                                smokeEffect = hugeSmoke;
+                                shootEffect = shootBigColor;
+                                lightningDamage = 40;
+                                lightning = 2;
+                                lightningLength = 12;
+                            }
+
+                            @Override
+                            public void update(Bullet b) {
+                                super.update(b);
+                                if (b.time < homingDelay) {
+                                    float in = b.time / homingDelay;
+                                    b.initVel(b.rotation(), speed / 2f * (1 - in));
+                                } else {
+                                    float in = Math.min(1, (b.time - homingDelay) / 9);
+                                    b.initVel(b.rotation(), speed * 1.8f * in);
+                                }
+                            }
+                        };
+                    }
+                };
+
+
+                weapons.add(new HealthStateWeapon(name("small-cannon-3")) {
+                    {
+                        shootRequireHealthf = 0.5f;
+
+                        x = -196 / 4f;
+                        y = -12 / 4f;
+                        mirror = false;
+                        rotate = true;
+                        rotateSpeed = 1.2f;
+                        reload = 100;
+                        recoil = 2;
+                        recoilTime = 20;
+                        shootCone = 20f;
+                        inaccuracy = 0;
+                        velocityRnd = 0.1f;
+                        cooldownTime = 30;
+                        shootY = 51 / 4f;
+                        shootSound = WHSounds.launch;
+
+                        shoot = new ShootHelix() {{
+                            shots = 4;
+                            shotDelay = 10;
+                        }};
+
+                        bullet = new CritBulletType(6, 150) {
+                            {
+
+                                width = 14;
+                                height = width * 2;
+                                pierceArmor = true;
+
+                                backColor = lightningColor = hitColor = trailColor = WHPal.BossColor;
+
+                                lifetime = 550 / speed;
+                                trailLength = 12;
+                                trailWidth = width / 4f;
+
+                                splashDamage = damage;
+                                splashDamageRadius = 50;
+
+                                homingPower = 0.1f;
+                                homingDelay = 60;
+                                followAimSpeed = 1.5f;
+
+                                pierceCap = 2;
+                                pierceBuilding = true;
+
+                                shootEffect = new MultiEffect(
+                                        WHFx.shootLine(60, 30),
+                                        shootBigColor);
+
+                                despawnEffect = hitEffect = new MultiEffect(
+                                        /*   WHFx.sharpBlast(hitColor, frontColor, 50, splashDamageRadius),*/
+                                        WHFx.instRotation(20, hitColor, splashDamageRadius, 90, false),
+                                        WHFx.generalExplosion(20, hitColor, splashDamageRadius, 5, false),
+                                        WHFx.instHit(hitColor, true, 3, splashDamageRadius / 2)
+                                );
+                                shootEffect = shootBigColor;
+
+                                intervalBullet = new LightningBulletType() {{
+                                    damage = 90;
+                                    collidesAir = true;
+                                    lightningColor = WHPal.BossColor;
+                                    lightningLength = 3;
+                                    lightningLengthRand = 4;
+
+                                    lightningType = new BulletType(0.0001f, 0f) {{
+                                        lifetime = Fx.lightning.lifetime;
+                                        hitEffect = Fx.hitLancer;
+                                        despawnEffect = Fx.none;
+                                        status = StatusEffects.shocked;
+                                        statusDuration = 10f;
+                                        hittable = false;
+                                        lightColor = WHPal.BossColor;
+                                    }};
+                                }};
+
+                                bulletInterval = 10f;
+
+                                fragBullets = 2;
+                                fragAngle = 30;
+                                fragBullet = new CritBulletType(2, 100) {{
+                                    lifetime = 20;
+                                    width = 10;
+                                    height = width * 2;
+                                    hitSize = 10;
+                                    splashDamage = damage;
+                                    splashDamageRadius = 40;
+                                    buildingDamageMultiplier = 2;
+                                    frontColor = WHPal.BossColor;
+
+                                    backColor = lightningColor = hitColor = trailColor = WHPal.BossColor;
+                                    despawnEffect = hitEffect = new MultiEffect(
+                                            WHFx.linePolyOut(13f, hitColor, splashDamageRadius, 2.5f, 4, 0),
+                                            WHFx.trailHitSpark(13f, hitColor, 5, 45, 1.5f, 10)
+                                    );
+                                }};
+
+                            }
+                        };
+                    }
+                });
+
+                weapons.add(new HealthStateWeapon(name("small-cannon")) {
+                    {
+                        reload = 120;
+                        x = -114 / 4f;
+                        y = -75 / 4f;
+                        shootY = 64 / 4f;
+                        rotate = true;
+                        rotateSpeed = 2f;
+                        layerOffset = 0.0001f;
+                        recoil = 2;
+                        recoilTime = 45f;
+                        mirror = false;
+                        inaccuracy = 3;
+                        shootSound = shootSpectre;
+                        heatColor = WHPal.Heat;
+                        cooldownTime = 10f;
+                        shoot = new ShootAlternate() {{
+                            barrels = 2;
+                            spread = 36 / 4f;
+                            shots = 4;
+                            shotDelay = 25f;
+                        }};
+                        bullet = new CritBulletType(10, 400, name("pierce")) {
+                            {
+                                width = 10;
+                                height = width * 1.5f;
+                                trailWidth = width / 3.5f;
+                                trailLength = 10;
+
+                                lifetime = 550 / speed;
+                                splashDamageRadius = 80;
+                                splashDamage = damage / 2;
+                                lightningDamage = 40;
+                                lightning = 3;
+                                lightningLength = 8;
+                                lightningLengthRand = 10;
+
+                                buildingDamageMultiplier = 2.5f;
+                                armorMultiplier = 1.5f;
+
+                                hitColor = lightningColor = backColor = trailColor = WHPal.BossColor;
+
+
+                                shootEffect = new MultiEffect(
+                                        shootBigColor,
+                                        WHFx.shootLineSmall(hitColor)
+                                );
+
+                                trailInterval = 10;
+                                trailEffect = new MultiEffect(
+                                        WHFx.square(45, hitColor, 2, 25, 6),
+                                        WHFx.instTrail(hitColor, 0, false)
+                                );
+                                trailRotation = true;
+
+
+                                hitShake = 3;
+                                hitSound = explosionPlasmaSmall;
+                                hitEffect = despawnEffect = new MultiEffect(
+                                        WHFx.instHit(hitColor, true, 3, splashDamageRadius / 2),
+                                        WHFx.lineCircleIn(20, hitColor, splashDamageRadius, 3),
+                                        WHFx.trailHitSpark(60, hitColor, 5, 45, 1.5f, 10),
+                                        WHFx.generalExplosion(40, hitColor, splashDamageRadius, 5, false).startDelay(20),
+                                        explosionSmokeEffect(30, hitColor, splashDamageRadius, 4, 10).startDelay(20f)
+                                );
+                            }
+                        };
+
+                        switchBulletHealthf = 0.7f;
+                        lowHealthShoot = shoot;
+                        lowHealthBullet = new TrailFadeBulletType(10, 550, name("pierce")) {
+                            {
+                                tracerUpdateSpacing = 0.5f;
+                                hitBlinkTrail = false;
+                                despawnBlinkTrail = false;
+                                tracers = 2;
+
+                                buildingDamageMultiplier = 2.3f;
+                                armorMultiplier = 1.5f;
+
+                                width = 10;
+                                height = width * 1.5f;
+                                trailWidth = width / 3.5f;
+                                trailLength = 10;
+
+                                lifetime = 600 / speed;
+                                splashDamageRadius = 80;
+                                splashDamage = damage;
+                                lightningDamage = 70;
+                                lightning = 3;
+                                lightningLength = 8;
+                                lightningLengthRand = 10;
+
+                                lightningType = WHBulletsOther.DarkLighting;
+
+                                frontColor = Pal.coalBlack;
+                                hitColor = lightningColor = backColor = trailColor = WHPal.BossColor;
+
+                                shootEffect = new MultiEffect(
+                                        shootBigColor,
+                                        WHFx.shootLineSmall(hitColor)
+                                );
+
+                                trailInterval = 15;
+                                trailEffect = new MultiEffect(
+                                        WHFx.square(45, hitColor, 2, 25, 6),
+                                        WHFx.instTrail(hitColor, 240, false)
+                                );
+                                trailRotation = true;
+
+                                hitShake = 3;
+                                hitSound = explosionPlasmaSmall;
+                                hitEffect = despawnEffect = new MultiEffect(
+                                        WHFx.shuttle(60, backColor, frontColor, true, splashDamageRadius / 1.5f, -1),
+                                        WHFx.instHit(hitColor, true, 3, splashDamageRadius / 2),
+                                        WHFx.lineCircleIn(20, hitColor, splashDamageRadius, 3),
+                                        WHFx.square(60, hitColor, 15, splashDamageRadius, 6),
+                                        WHFx.trailHitSpark(60, hitColor, 10, splashDamageRadius, 1.5f, 10),
+                                        WHFx.generalExplosion(40, hitColor, splashDamageRadius, 5, false).startDelay(20),
+                                        explosionSmokeEffect(30, hitColor, splashDamageRadius, 4, 10).startDelay(20f)
+                                );
+                                fragBullets = 3;
+                                fragBullet = new CritBulletType(3.4f, 100, "missile-large") {{
+                                    collides = false;
+                                    collidesTiles = false;
+                                    splashDamageRadius = 40f;
+                                    splashDamage = 100f;
+                                    lightColor = backColor = trailColor = hitColor = WHPal.BossColor;
+                                    drag = 0.02f;
+                                    hitEffect = new MultiEffect(
+                                            WHFx.lineCircleIn(20, hitColor, splashDamageRadius, 3),
+                                            WHFx.circleOut(30, hitColor, splashDamageRadius).startDelay(20),
+                                            WHFx.trailHitSpark(60, hitColor, 4, splashDamageRadius, 1.5f, 10)
+                                    );
+                                    despawnEffect = Fx.scatheSlash;
+                                    knockback = 0.8f;
+                                    lifetime = 23f;
+                                    width = height = 15;
+
+                                    frontColor = WHPal.BossColor;
+                                    smokeEffect = Fx.shootBigSmoke2;
+                                    despawnShake = 7f;
+                                    lightRadius = 30f;
+                                    lightOpacity = 0.5f;
+
+                                    trailLength = 20;
+                                    trailWidth = 3.5f;
+                                    trailEffect = Fx.none;
+                                }};
+                            }
+
+                            @Override
+                            public void draw(Bullet b) {
+                                drawTrail(b);
+                                drawParts(b);
+                                float shrink = shrinkInterp.apply(b.fout());
+                                float height = this.height * ((1f - shrinkY) + shrinkY * shrink);
+                                float width = this.width * ((1f - shrinkX) + shrinkX * shrink);
+                                float offset = -90 + (spin != 0 ? Mathf.randomSeed(b.id, 360f) + b.time * spin : 0f) + rotationOffset;
+
+                                Color mix = Tmp.c1.set(mixColorFrom).lerp(mixColorTo, b.fin());
+
+                                Draw.mixcol(mix, mix.a);
+
+                                if (backRegion.found()) {
+                                    Draw.color(backColor);
+                                    Draw.rect(backRegion, b.x, b.y, width, height, b.rotation() + offset);
+                                }
+
+                                Draw.z(EFFECT_MASK);
+                                Draw.color(frontColor);
+                                Draw.rect(frontRegion, b.x, b.y, width, height, b.rotation() + offset);
+
+                                Draw.z(EFFECT_BOTTOM);
+                                Draw.color(frontColor);
+                                Draw.rect(frontRegion, b.x, b.y, width, height, b.rotation() + offset);
+
+                                Draw.reset();
+                            }
+                        };
+                    }
+                });
+
+                weapons.add(new Weapon(name("tankAG-weapon2")) {
+                    {
+                        reload = 60;
+                        recoil = 2;
+                        x = 186 / 4f;
+                        y = -242 / 4f;
+                        shootY = 80 / 4f;
+
+                        shoot = new ShootAlternate() {
+                            {
+                                barrels = 2;
+                                spread = 46 / 4f;
+                                shots = 10;
+                                shotDelay = 4;
+                            }
+                        };
+
+                        mirror = false;
+                        rotateSpeed = 2;
+                        rotate = true;
+                        inaccuracy = 3;
+
+                        shootSound = shootSpectre;
+                        ejectEffect = Fx.casing4;
+
+                        bullet = new CritBulletType(15, 200) {
+                            {
+                                width = 10;
+                                height = width * 4;
+
+                                pierceCap = 3;
+                                splashDamage = damage;
+                                splashDamageRadius = 32;
+                                lifetime = 440 / speed;
+                                hitSound = explosion;
+                                shootEffect = shootTitan;
+                                smokeEffect = shootBigSmoke;
+                                frontColor = Pal.coalBlack;
+                                hitColor = backColor = lightColor = trailColor = WHPal.BossColor;
+
+                                hitEffect = new MultiEffect(
+                                        WHFx.trailHitSpark(30f, hitColor, 4, 40, 1.5f, 10f)
+                                );
+                                despawnEffect = new MultiEffect(
+                                        WHFx.square(30, hitColor, 20, 30, 5),
+                                        WHFx.generalExplosion(10, hitColor, 30, 10, false));
+                            }
+
+                            @Override
+                            public void draw(Bullet b) {
+                                float scl = 0.5f;
+                                Draw.color(backColor);
+                                Drawf.tri(b.x, b.y, width, height / 2, b.rotation());
+                                Drawf.tri(b.x, b.y, width, height / 2, b.rotation() - 180);
+                                Draw.z(EFFECT_MASK);
+                                Draw.color(frontColor);
+                                Drawf.tri(b.x, b.y, width * scl, height / 2 * scl, b.rotation());
+                                Drawf.tri(b.x, b.y, width * scl, height / 2 * scl, b.rotation() - 180);
+                                Draw.z(EFFECT_BOTTOM);
+                                Draw.color(frontColor);
+                                Drawf.tri(b.x, b.y, width * scl, height / 2 * scl, b.rotation());
+                                Drawf.tri(b.x, b.y, width * scl, height / 2 * scl, b.rotation() - 180);
+                            }
+                        };
+                    }
+                });
+
+                weapons.addAll(
+                        copyAndMove(a7laserrw, -123 / 4f, 272 / 4f),
+                        copyAndMove(a7laserrw, 200 / 4f, 350 / 4f),
+                        copyAndMove(a7laserrw2, -227 / 4f, 365 / 4f),
+                        copyAndMove(a7laserrw2, -132 / 4f, 108 / 4f),
+                        copyAndMove(a7laserrw3, 0, 0),
+                        copyAndMove(a7laserrw4, 185 / 4f, -33 / 4f),
+                        copyAndMove(a7laserrw4, -108 / 4f, -298 / 4f),
+                        copyAndMove(a7EnMissile, 157 / 4f, 109 / 4f)
+                );
+            }
+        };
+
         revenge = new SuperHeavyUnitType("revenge") {
             {
                 constructor = RevengeUnit::new;
@@ -804,7 +1863,7 @@ public final class WHUnitTypes {
                 health = 280 * 1000;
                 armor = 40;
                 hitSize = 100;
-                healColor = WHPal.WHYellow;
+                healColor = Team.crux.color;
                 fogRadius = range * 0.3f;
                 lightRadius = 600;
 
@@ -1890,8 +2949,11 @@ public final class WHUnitTypes {
                                         shoot.shoot(mount.barrelCounter, (xOffset, yOffset, angle, delay, mover) -> {
                                             if (delay > 0f) {
                                                 Time.run(delay, () -> {
-                                                    chargeSound.at(xOffset + shootX, yOffset + shootY, Mathf.random(soundPitchMin, soundPitchMax));
-                                                    bullet.chargeEffect.at(xOffset + shootX, yOffset + shootY, rotation, unit);
+                                                    Tmp.v1.trns(rotation - 90f, xOffset, yOffset);
+                                                    float fx = shootX + Tmp.v1.x;
+                                                    float fy = shootY + Tmp.v1.y;
+                                                    bullet.chargeEffect.at(fx, fy, rotation, unit);
+                                                    chargeSound.at(fx, fy, Mathf.random(soundPitchMin, soundPitchMax));
                                                 });
                                             }
                                         });
@@ -2064,33 +3126,6 @@ public final class WHUnitTypes {
                         copyAndMove(air7Laser1, -117 / 4f, -89 / 4f),
                         air7MainWeapon
                 );
-            }
-        };
-
-        air7Enemy = new GeminiUnitType("air7-enemy") {
-            {
-                constructor = GeminiUnit::new;
-
-                flying = true;
-                speed = 0.5f;
-                rotateSpeed = 0.1f;
-                faceTarget = false;
-                hitSize = airA7.hitSize;
-                armor = airA7.armor;
-                health = Mathf.round(revenge.health * 1.5f);
-
-                lowAltitude = airA7.lowAltitude;
-                engineOffset = airA7.engineOffset;
-                engineSize = airA7.engineSize;
-
-                range = Math.max(airA7.range, 600f);
-                targetFlags = new BlockFlag[]{BlockFlag.turret, null};
-
-                lowHealthSpecialBullet(WHBulletsOther.GeminiBullet1);
-
-                for (Weapon weapon : revenge.weapons) {
-                    weapons.add(copy(weapon));
-                }
             }
         };
 
@@ -4220,6 +5255,7 @@ public final class WHUnitTypes {
                         x = y = 0;
                         rotate = true;
                         predictTarget = false;
+                        rotateSpeed = 100;
                         mirror = false;
                         inaccuracy = 0.0F;
 
@@ -4231,7 +5267,7 @@ public final class WHUnitTypes {
                         bullet = new DoomLaserBulletType() {{
                             lifetime = 500;
                             damage = 800;
-                            splashDamage = 250;
+                            splashDamage = 500;
                             damageInterval = 6;
 
                             buildingDamageMultiplier = 0.5f;
@@ -4249,6 +5285,7 @@ public final class WHUnitTypes {
 
                             homingDelay = 120;
                             homingPower = 0.1f;
+                            followAimSpeed = 0.5f;
 
                             shake = 10;
 
@@ -4422,12 +5459,8 @@ public final class WHUnitTypes {
                                     if (shoot.firstShotDelay > 0) {
                                         mount.charging = true;
                                         shoot.shoot(mount.barrelCounter, (xOffset, yOffset, angle, delay, mover) -> {
-                                            if (delay > 0f) {
-                                                Time.run(delay, () -> {
-                                                    chargeSound.at(xOffset + shootX, yOffset + shootY, Mathf.random(soundPitchMin, soundPitchMax));
-                                                    bullet.chargeEffect.at(xOffset + shootX, yOffset + shootY, rotation, unit);
-                                                });
-                                            }
+                                            chargeSound.at(xOffset + shootX, yOffset + shootY, Mathf.random(soundPitchMin, soundPitchMax));
+                                            bullet.chargeEffect.at(xOffset + shootX, yOffset + shootY, rotation, unit);
                                         });
                                     }
 
@@ -7094,7 +8127,6 @@ public final class WHUnitTypes {
 
                                 pierceCap = 2;
                                 pierceBuilding = true;
-                                pierceArmor = true;
 
                                 shootEffect = new MultiEffect(
                                         WHFx.linePolyOut(20, hitColor, 25, 2.5f, 6, 60),
@@ -12914,11 +13946,11 @@ public final class WHUnitTypes {
 
         applyAirLineAbility(air7Enemy,
                 heal -> {
-                    heal.healAmount = 2000;
-                    heal.healPercent = 0.04f;
+                    heal.healAmount = 1000;
+                    heal.healPercent = 0.003f;
                 },
                 close -> {
-                    close.damageBoostPerEnemy = 0.03f;
+                    close.damageBoostPerEnemy = 0.04f;
                     close.maxEnemies = 10;
                 });
 

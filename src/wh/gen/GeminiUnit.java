@@ -7,39 +7,71 @@ import arc.graphics.g2d.Lines;
 import arc.math.Angles;
 import arc.math.Mathf;
 import arc.math.Rand;
-import arc.struct.*;
+import arc.math.geom.Vec2;
+import arc.struct.ObjectFloatMap;
+import arc.struct.Seq;
 import arc.util.Time;
 import arc.util.Tmp;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.Vars;
 import mindustry.ai.types.MissileAI;
+import mindustry.entities.Damage;
+import mindustry.entities.Effect;
 import mindustry.entities.Units;
 import mindustry.entities.bullet.BulletType;
 import mindustry.game.Team;
 import mindustry.gen.*;
+import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
+import mindustry.graphics.Trail;
 import mindustry.type.UnitType;
 import mindustry.world.blocks.defense.Wall.WallBuild;
 import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.meta.BlockGroup;
 import wh.content.WHBulletsOther;
 import wh.content.WHFx;
+import wh.core.WHSettings;
 import wh.entities.bullet.ApproachBullet;
 import wh.entities.bullet.ApproachBullet.AB;
-import wh.entities.world.drawer.GeminiUnitType;
+import wh.entities.world.entities.GeminiUnitType;
+import wh.util.WHUtils;
 
 import static mindustry.io.TypeIO.readEntity;
 import static mindustry.io.TypeIO.writeEntity;
+import static wh.content.WHFx.rand;
 
 public class GeminiUnit extends UnitEntity {
+    public static class GeminiSyncState {
+        public Healthc primaryLink;
+        public float primaryLinkTimeLeft;
+        public float phaseTimeLeft;
+        public float phaseCooldownTimer;
+        public float phaseVisualFade;
+        public GeminiUnit pairLinkUnit;
+        public boolean pairLinking;
+        public boolean pairLinked;
+        public final Seq<Healthc> secondaryLinks = new Seq<>();
+    }
+
+    public static class GhostTrail {
+        public int id = -1;
+        public float x;
+        public float y;
+        public float radius;
+        public float fade;
+        public float stroke;
+        public boolean secondary;
+        public long seed;
+    }
+
     public static final float PRIMARY_RETARGET_INTERVAL = 8f * 60f;
     public static final float ATTACKER_MEMORY_DURATION = 20f * 60f;
     public static final float PRIMARY_LINK_DURATION = 18f * 60f;
-    public static final float SECONDARY_RANGE = 220f;
+    public static final float SECONDARY_RANGE = 300;
     public static final float SECONDARY_REFRESH_INTERVAL = 30f;
     public static final float SECONDARY_TRANSFER_INTERVAL = 1f;
-    public static final float SECONDARY_TRANSFER_DAMAGE_MULTIPLIER = 2f;
+    public static final float SECONDARY_TRANSFER_DAMAGE_MULTIPLIER = 1.6f;
     public static final float SECONDARY_MIN_SCORE = 3500f;
     public static final float SELF_TO_PRIMARY_DAMAGE = 0.8f;
     public static final float ATTACKER_PRUNE_INTERVAL = 20f;
@@ -48,52 +80,56 @@ public class GeminiUnit extends UnitEntity {
 
     public static final float MAIN_STROKE = 2.6f;
     public static final float SECONDARY_STROKE = 1.8f;
-    public static final float MAIN_STROKE_IN_LERP = 0.06f;
-    public static final float MAIN_STROKE_OUT_LERP = 0.04f;
     public static final float SECONDARY_STROKE_IN_LERP = 0.08f;
     public static final float SECONDARY_STROKE_OUT_LERP = 0.05f;
-    public static final float EARLY_LINK_RESET_PROGRESS = 1f / 3f;
+    public static final float PRIMARY_GHOST_OUT_LERP = 0.05f;
+
+    public static final float EARLY_LINK_RESET_PROGRESS = 1f / 2f;
+
     public static final float PHASE_INTERVAL = 25f * 60f;
     public static final float PHASE_DURATION = 7f * 60f;
-    public static final float PHASE_ALPHA = 0.35f;
-    public static final float PHASE_IN_LERP = 0.09f;
-    public static final float PHASE_OUT_LERP = 0.06f;
-    public static final float LINK_RING_LAYER = Layer.flyingUnitLow + 0.01f;
+    public static final float PHASE_ALPHA = 0.4f;
+
     public static final float LINK_RING_STROKE = 1.35f;
-    public static final float LINK_RING_PULSE = 0.12f;
-    public static final float LOW_HEALTH_EYE_THRESHOLD = 0.5f;
-    public static final float LOW_HEALTH_EYE_LAYER = Layer.effect + 0.005f;
+    public static final float LINK_RING_PULSE = 0.08f;
+    public static final float LOW_HEALTH_EYE_THRESHOLD = 0.6f;
     public static final float LOW_HEALTH_EYE_OFFSET = 0.32f;
-    public static final float LOW_HEALTH_EYE_OPEN_IN_SPEED = 0.08f;
-    public static final float LOW_HEALTH_EYE_OPEN_OUT_SPEED = 0.06f;
+
     public static final float LOW_HEALTH_SPECIAL_INTERVAL = 6f * 60f;
     public static final int LOW_HEALTH_SPECIAL_MAX_BULLETS = 4;
     public static final int LOW_HEALTH_SPECIAL_BURST = 3;
     public static final float LOW_HEALTH_SPECIAL_SPREAD = 20f;
     public static final float LOW_HEALTH_SPECIAL_SCAN_RANGE = 200;
     public static final float LOW_HEALTH_SPECIAL_SCAN_INTERVAL = 120;
+
+    public static final float PAIR_LINK_RANGE = 800;
+    public static final float PAIR_LINK_REFRESH_INTERVAL = 60;
+    public static final float PAIR_LINK_RADIUS_APPROACH = 0.02f;
+    public static final float PAIR_LINK_DAMAGE_REDUCTION = 0.2f;
+    public static final float PAIR_LINK_TRANSFER_FRACTION = 0.3f;
+
+    public static final float LOW_HEALTH_DAMAGE_CAP = 3000f;
+    public static final float LOW_HEALTH_ARMOR_MULTIPLIER = 1.5f;
+    public static final int PAIR_LINK_TRAIL_COUNT = 3;
+    public static final int PRIMARY_GHOST_TRAIL_MAX = 6;
     public static final Rand seededRand = new Rand();
 
     public final ObjectFloatMap<Healthc> attackers = new ObjectFloatMap<>();
     public final ObjectFloatMap<Healthc> attackerHatred = new ObjectFloatMap<>();
     public final Seq<Healthc> secondaryLinks = new Seq<>();
     public final Seq<Healthc> secondaryCandidates = new Seq<>();
-    public final Seq<Healthc> pendingRemove = new Seq<>();
 
-    public final IntFloatMap secondaryLastHealth = new IntFloatMap();
-    public final IntSet seenSecondary = new IntSet();
-    public final IntSeq staleSecondary = new IntSeq();
-    public final IntFloatMap secondaryStrokeFade = new IntFloatMap();
-    public final IntFloatMap secondaryGhostX = new IntFloatMap();
-    public final IntFloatMap secondaryGhostY = new IntFloatMap();
-    public final IntFloatMap secondaryGhostRadius = new IntFloatMap();
-    public final IntSet seenSecondaryStroke = new IntSet();
-    public final IntSet drawnSecondaryStroke = new IntSet();
-    public final IntSeq staleSecondaryStroke = new IntSeq();
     public final Seq<Bullet> lowHealthSpecialBullets = new Seq<>();
     public final Seq<Bullet> lowHealthSpecialDraw = new Seq<>();
+    public final Seq<GhostTrail> ghostTrails = new Seq<>();
+    public final Trail[] pairLinkTrails = new Trail[PAIR_LINK_TRAIL_COUNT];
+    public final Vec2[] pairLinkTrailPoints = new Vec2[PAIR_LINK_TRAIL_COUNT];
+    public final float[] pairLinkTrailRadius = new float[PAIR_LINK_TRAIL_COUNT];
 
     public Healthc primaryLink;
+    public GeminiUnit pairLinkUnit;
+    public boolean pairLinking = false;
+    public boolean pairLinked = false;
     public float primaryLinkTimeLeft = 0f;
     public float primaryStrokeFade = 0f;
     public float retargetTimer = PRIMARY_RETARGET_INTERVAL;
@@ -106,10 +142,16 @@ public class GeminiUnit extends UnitEntity {
     public float primaryGhostX = Float.NaN;
     public float primaryGhostY = Float.NaN;
     public float primaryGhostRadius = Float.NaN;
+    public float primaryDurabilitySnapshot = Float.NaN;
+    public float pendingSecondaryTransferDamage = 0f;
     public ApproachBullet lowHealthSpecialBulletType;
     public float lowHealthSpecialTimer = LOW_HEALTH_SPECIAL_INTERVAL;
     public float lowHealthSpecialScanTimer = 0f;
     public float lowHealthEyeOpen = 0f;
+    public float pairLinkRefreshTimer = 0f;
+    public float pairLinkFade = 0f;
+    public long primaryGhostTrailSeed = 1L;
+    public transient final GeminiSyncState syncStateScratch = new GeminiSyncState();
 
     @Override
     public int classId() {
@@ -131,16 +173,25 @@ public class GeminiUnit extends UnitEntity {
         primaryGhostX = Float.NaN;
         primaryGhostY = Float.NaN;
         primaryGhostRadius = Float.NaN;
+        primaryDurabilitySnapshot = Float.NaN;
+        pendingSecondaryTransferDamage = 0f;
         lowHealthSpecialTimer = Mathf.random(LOW_HEALTH_SPECIAL_INTERVAL * 0.35f, LOW_HEALTH_SPECIAL_INTERVAL);
         lowHealthSpecialScanTimer = Mathf.random(0f, LOW_HEALTH_SPECIAL_SCAN_INTERVAL);
         lowHealthEyeOpen = 0f;
-        secondaryStrokeFade.clear();
-        secondaryGhostX.clear();
-        secondaryGhostY.clear();
-        secondaryGhostRadius.clear();
-        drawnSecondaryStroke.clear();
+        pairLinkUnit = null;
+        pairLinking = false;
+        pairLinked = false;
+        pairLinkRefreshTimer = Mathf.random(0f, PAIR_LINK_REFRESH_INTERVAL);
+        pairLinkFade = 0f;
         lowHealthSpecialBullets.clear();
         lowHealthSpecialDraw.clear();
+        ghostTrails.clear();
+        primaryGhostTrailSeed = 1L;
+        for (int i = 0; i < PAIR_LINK_TRAIL_COUNT; i++) {
+            if (pairLinkTrails[i] != null) pairLinkTrails[i].clear();
+            pairLinkTrailPoints[i] = null;
+            pairLinkTrailRadius[i] = 0f;
+        }
     }
 
     public ApproachBullet resolveLowHealthSpecialBulletType(UnitType fromType) {
@@ -194,14 +245,79 @@ public class GeminiUnit extends UnitEntity {
     }
 
     @Override
+    public void damage(float amount) {
+        rawDamage(Damage.applyArmor(amount, effectiveArmor(1f)) / healthMultiplier / Vars.state.rules.unitHealth(team));
+    }
+
+    @Override
+    public void damage(float amount, boolean withEffect) {
+        float pre = hitTime;
+        damage(amount);
+        if (!withEffect) {
+            hitTime = pre;
+        }
+    }
+
+    @Override
+    public void damageArmorMult(float amount, float armorMult) {
+        damageArmorMult(amount, armorMult, true);
+    }
+
+    @Override
+    public void damageArmorMult(float amount, float armorMult, boolean withEffect) {
+        float pre = hitTime;
+        rawDamage(Damage.applyArmor(amount, effectiveArmor(armorMult)) / healthMultiplier / Vars.state.rules.unitHealth(team));
+        if (!withEffect) {
+            hitTime = pre;
+        }
+    }
+
+    @Override
+    public void damagePierce(float amount) {
+        damagePierce(amount, true);
+    }
+
+    @Override
+    public void damagePierce(float amount, boolean withEffect) {
+        float pre = hitTime;
+        rawDamage(amount / healthMultiplier / Vars.state.rules.unitHealth(team));
+        if (!withEffect) {
+            hitTime = pre;
+        }
+    }
+
+    @Override
     public void rawDamage(float amount) {
+        rawDamageInternal(amount, true);
+    }
+
+    public void rawDamageInternal(float amount, boolean allowPairTransfer) {
         if (amount <= 0f) {
             super.rawDamage(amount);
             return;
         }
 
+        amount = clampLowHealthRawDamage(amount);
+
         // Clients keep vanilla application; damage split is server-authoritative.
-        if (Vars.net.client() || isPhasing() || !isEnemyTarget(primaryLink)) {
+        if (Vars.net.client()) {
+            super.rawDamage(amount);
+            return;
+        }
+
+        if (allowPairTransfer && hasValidPairLink()) {
+            float reduced = amount * (1f - PAIR_LINK_DAMAGE_REDUCTION);
+            float redirected = reduced * PAIR_LINK_TRANSFER_FRACTION;
+            if (redirected > 0.001f) {
+                pairLinkUnit.shield(pairLinkUnit.shield() + redirected);
+            }
+            amount = reduced - redirected;
+            if (amount <= 0.001f) {
+                return;
+            }
+        }
+
+        if (isPhasing() || !isEnemyTarget(primaryLink)) {
             super.rawDamage(amount);
             return;
         }
@@ -210,7 +326,6 @@ public class GeminiUnit extends UnitEntity {
         float selfPortion = 1f - share;
         if (selfPortion <= 0.0001f) {
             damageLinkedTarget(amount);
-            damageSecondaryTargets(amount);
             return;
         }
 
@@ -223,9 +338,9 @@ public class GeminiUnit extends UnitEntity {
         if (selfTaken > 0.001f) {
             float transfer = selfTaken * (share / selfPortion);
             damageLinkedTarget(transfer);
-            damageSecondaryTargets(transfer);
         }
     }
+
 
     public void damageSecondaryTargets(float amount) {
         if (amount <= 0.001f || !isEnemyTarget(primaryLink)) return;
@@ -235,27 +350,31 @@ public class GeminiUnit extends UnitEntity {
             if (!isSecondaryTarget(secondary)) continue;
 
             secondary.damage(amount);
-
-            int sid = entityId(secondary);
-            if (sid >= 0) {
-                // 立即刷新快照，避免将“主链转移造成的掉血”再次当作次级转移来源重复结算。
-                secondaryLastHealth.put(sid, currentDurability(secondary));
-            }
         }
     }
 
     @Override
     public void update() {
         super.update();
-
-        if (Vars.net.client()) {
-            updateClientVisualState();
-            return;
-        }
+        boolean authority = isAuthority();
 
         updateLowHealthEyeAnimation();
-        updatePhaseState();
+        updateAimCoordinates();
         updateLowHealthSpecialAttack();
+        updateEffect();
+        updateLowHealthBullet();
+
+        if (authority) {
+            updatePhaseState();
+        }
+
+        sanitizePairLinkState(!authority);
+        updatePairLinkVisuals();
+
+        if (!authority) {
+            updateStrokeFade(isEnemyTarget(primaryLink));
+            return;
+        }
 
         attackerPruneTimer -= Time.delta;
         if (attackerPruneTimer <= 0f) {
@@ -271,9 +390,11 @@ public class GeminiUnit extends UnitEntity {
             return;
         }
 
-        // 主链接目标死亡/失效时统一入口处理，避免分散逻辑。
-        onPrimaryTargetDeadOrInvalid();
+        updatePairLinkState();
 
+        if (primaryLink != null && !isEnemyTarget(primaryLink)) {
+            losePrimaryLink(true);
+        }
         retargetTimer -= Time.delta;
         if (retargetTimer <= 0f) {
             retargetTimer = PRIMARY_RETARGET_INTERVAL;
@@ -304,27 +425,232 @@ public class GeminiUnit extends UnitEntity {
         }
 
         updateStrokeFade(hasPrimary);
+
     }
 
-    public void updateClientVisualState() {
-        updateLowHealthEyeAnimation();
-        cleanupLowHealthSpecialBullets();
+    public boolean isAuthority() {
+        return !Vars.net.client() || isLocal();
+    }
 
-        // 客户端也保持同样的主链失效处理，避免视觉状态分叉。
-        onPrimaryTargetDeadOrInvalid();
+    public boolean hasPairLinkRole() {
+        return pairLinking || pairLinked;
+    }
 
-        if (phaseTimeLeft > 0f) {
-            phaseTimeLeft = Math.max(phaseTimeLeft - Time.delta, 0f);
+    public boolean hasValidPairLink() {
+        return !dead() && isValid() && pairLinkUnit != null && hasPairLinkRole() && isValidPairLinkUnit(pairLinkUnit);
+    }
+
+    public boolean isValidPairLinkUnit(GeminiUnit other) {
+        return !dead() && isValid() && other != null && other != this && !other.dead() && other.isValid() && other.team == team;
+    }
+
+    public boolean isValidPairCandidate(GeminiUnit other) {
+        if (!isValidPairLinkUnit(other) || other.isPhasing()) return false;
+
+        float range = PAIR_LINK_RANGE + hitSize * 0.5f + other.hitSize * 0.5f;
+        return Mathf.within(x, y, other.x, other.y, range);
+    }
+
+    public void sanitizePairLinkState(boolean preservePartner) {
+        boolean clientVisualOnly = Vars.net.client();
+        if (pairLinkUnit == this) {
+            pairLinkUnit = null;
+            pairLinking = false;
+            pairLinked = false;
+            return;
         }
 
-        boolean phased = isPhasing();
-        phaseVisualFade = Mathf.lerpDelta(phaseVisualFade, phased ? 1f : 0f, phased ? PHASE_IN_LERP : PHASE_OUT_LERP);
-
-        if (primaryLinkTimeLeft > 0f) {
-            primaryLinkTimeLeft = Math.max(primaryLinkTimeLeft - Time.delta, 0f);
+        if (pairLinkUnit == null) {
+            // Save/load recovery: entity references can be temporarily unresolved on first tick.
+            // Rebuild link from role flags before clearing the role.
+            if (!clientVisualOnly && hasPairLinkRole()) {
+                GeminiUnit recovered = recoverPairLinkUnit();
+                if (recovered != null) {
+                    pairLinkUnit = recovered;
+                    return;
+                }
+            }
+            pairLinking = false;
+            pairLinked = false;
+            return;
         }
 
-        updateStrokeFade(isEnemyTarget(primaryLink));
+        if (!isValidPairLinkUnit(pairLinkUnit)) {
+            clearPairLink(preservePartner || clientVisualOnly);
+            return;
+        }
+
+        if (!pairLinking && !pairLinked) {
+            pairLinkUnit = null;
+            return;
+        }
+
+        // On clients, pair state is server-authoritative. Do not require reciprocal
+        // fields to already be populated on the partner in the same sync step.
+        if (clientVisualOnly) {
+            return;
+        }
+
+        // Save/load path: preserve pair reference this tick, defer reciprocal checks.
+        if (preservePartner) {
+            return;
+        }
+
+        if (pairLinking) {
+            if (pairLinkUnit.pairLinkUnit != this || !pairLinkUnit.pairLinked) {
+                clearPairLink(false);
+            }
+            return;
+        }
+
+        if (pairLinkUnit.pairLinkUnit != this || !pairLinkUnit.pairLinking) {
+            clearPairLink(false);
+        }
+    }
+
+    public GeminiUnit recoverPairLinkUnit() {
+        if (!hasPairLinkRole()) return null;
+
+        final GeminiUnit[] best = {null};
+        final int[] bestScore = {-1};
+        final float[] bestDst2 = {Float.MAX_VALUE};
+        float range = PAIR_LINK_RANGE + hitSize * 1.5f;
+
+        Units.nearby(team, x - range, y - range, range * 2f, range * 2f, unit -> {
+            if (!(unit instanceof GeminiUnit other)) return;
+            if (other == this) return;
+            if (!isValidPairLinkUnit(other) || other.isPhasing()) return;
+
+            // Roles are directional: linking -> linked.
+            boolean roleMatch = pairLinking ? (other.pairLinked && !other.pairLinking) : (other.pairLinking && !other.pairLinked);
+            if (!roleMatch) return;
+
+            float maxRange = PAIR_LINK_RANGE + hitSize * 0.5f + other.hitSize * 0.5f;
+            if (!Mathf.within(x, y, other.x, other.y, maxRange)) return;
+
+            int score = 0;
+            if (other.pairLinkUnit == this) score += 3;
+            else if (other.pairLinkUnit == null) score += 1;
+            else return;
+
+            float dst2 = Mathf.dst2(x, y, other.x, other.y);
+            if (score > bestScore[0] || (score == bestScore[0] && dst2 < bestDst2[0])) {
+                best[0] = other;
+                bestScore[0] = score;
+                bestDst2[0] = dst2;
+            }
+        });
+
+        GeminiUnit recovered = best[0];
+        if (recovered == null) return null;
+
+        // Repair reciprocal state so later strict sanitize passes.
+        recovered.pairLinkUnit = this;
+        if (pairLinking) {
+            recovered.pairLinking = false;
+            recovered.pairLinked = true;
+        } else {
+            recovered.pairLinking = true;
+            recovered.pairLinked = false;
+        }
+        return recovered;
+    }
+
+    public void clearPairLink(boolean preservePartner) {
+        GeminiUnit other = pairLinkUnit;
+        pairLinkUnit = null;
+        pairLinking = false;
+        pairLinked = false;
+
+        if (!preservePartner && other != null && other.pairLinkUnit == this) {
+            other.pairLinkUnit = null;
+            other.pairLinking = false;
+            other.pairLinked = false;
+        }
+    }
+
+    public GeminiUnit findPairLinkCandidate() {
+        final GeminiUnit[] best = {null};
+        final float[] bestDst2 = {Float.MAX_VALUE};
+        float range = PAIR_LINK_RANGE;
+
+        Units.nearby(team, x - range, y - range, range * 2f, range * 2f, unit -> {
+            if (!(unit instanceof GeminiUnit other)) return;
+            if (other == this) return;
+            if (!isValidPairCandidate(other)) return;
+            if (other.pairLinkUnit != null || other.pairLinking || other.pairLinked) return;
+            if (pairLinked || pairLinking || pairLinkUnit != null) return;
+
+            float dst2 = Mathf.dst2(x, y, other.x, other.y);
+            if (best[0] == null || dst2 < bestDst2[0] || (Mathf.equal(dst2, bestDst2[0], 0.001f) && other.id < best[0].id)) {
+                best[0] = other;
+                bestDst2[0] = dst2;
+            }
+        });
+
+        return best[0];
+    }
+
+    public void establishPairLink(GeminiUnit other) {
+        if (other == null || !isValidPairCandidate(other)) return;
+
+        clearPairLink(false);
+        other.clearPairLink(false);
+
+        pairLinkUnit = other;
+        pairLinking = true;
+        pairLinked = false;
+        pairLinkFade = 0f;
+        pairLinkRefreshTimer = PAIR_LINK_REFRESH_INTERVAL;
+
+        other.pairLinkUnit = this;
+        other.pairLinking = false;
+        other.pairLinked = true;
+        other.pairLinkFade = 0f;
+        other.pairLinkRefreshTimer = PAIR_LINK_REFRESH_INTERVAL;
+    }
+
+    public void updatePairLinkState() {
+        sanitizePairLinkState(false);
+
+        pairLinkRefreshTimer -= Time.delta;
+        if (pairLinkRefreshTimer > 0f) return;
+
+        pairLinkRefreshTimer = PAIR_LINK_REFRESH_INTERVAL;
+        if (pairLinked || pairLinkUnit != null) return;
+
+        GeminiUnit candidate = findPairLinkCandidate();
+        if (candidate != null) {
+            establishPairLink(candidate);
+        }
+    }
+
+    public void updatePairLinkVisuals() {
+        boolean active = hasValidPairLink();
+        pairLinkFade = Mathf.lerpDelta(pairLinkFade, active ? 1f : 0f, active ? 0.05f : 0.08f);
+        if (Vars.headless || (!active && pairLinkFade <= 0.01f)) return;
+
+        for (int i = 0; i < PAIR_LINK_TRAIL_COUNT; i++) {
+            if (pairLinkTrails[i] == null) pairLinkTrails[i] = new Trail(15);
+            if (pairLinkTrailPoints[i] == null) pairLinkTrailPoints[i] = new Vec2(x, y);
+
+            pairLinkTrails[i].length = 30;
+            seededRand.setSeed((long) id * i);
+            float targetRadius = hitSize() * seededRand.random(1f, 1.5f);
+            float speedScale = seededRand.random(0.9f, 2);
+            float baseAngle = Mathf.randomSeed(id + i, 360f) + 360f / PAIR_LINK_TRAIL_COUNT * i;
+            float radiusProgress = pairLinkTrailRadius[i];
+            radiusProgress = Mathf.approachDelta(radiusProgress, active ? 1f : 0f, PAIR_LINK_RADIUS_APPROACH);
+            pairLinkTrailRadius[i] = Mathf.clamp(radiusProgress);
+            float radius = pairLinkTrailRadius[i] * targetRadius;
+            float angle = Time.time * speedScale * Mathf.sign(seededRand.random(1) > 0.5f) + baseAngle;
+            float tg = Mathf.randomSeed(id, 360);
+            float tx = WHUtils.ellipseXY(x, y, radius, radius / 2.5f, tg, angle, 0);
+            float ty = WHUtils.ellipseXY(x, y, radius, radius / 2.5f, tg, angle, 1);
+
+            pairLinkTrails[i].update(tx, ty);
+            pairLinkTrailPoints[i].set(tx, ty);
+        }
     }
 
     @Override
@@ -341,6 +667,9 @@ public class GeminiUnit extends UnitEntity {
         float eyeCy = y + hitSize * (0.58f + eyeDanger * 0.08f + LOW_HEALTH_EYE_OFFSET);
         drawLowHealthEye(eyeCx, eyeCy, hitSize * 1.02f);
 
+        Draw.z(WHFx.EFFECT_BOTTOM);
+        drawLowHealth(team.color.cpy(), lowHealthEyeOpen);
+
         Color mainColor = Tmp.c1.set(team.color).lerp(Color.white, Mathf.absin(4.2f, 0.34f));
         Color secondaryColor = Tmp.c2.set(mainColor).lerp(Color.white, 0.2f);
         float z = Draw.z();
@@ -352,9 +681,8 @@ public class GeminiUnit extends UnitEntity {
             float primaryRadius = hasPrimary ? targetHitSize(primaryLink) * 0.5f : Math.max(primaryGhostRadius, 2f);
 
             float primaryFadeVisual = Mathf.pow(primaryStrokeFade, 1.35f);
-            drawnSecondaryStroke.clear();
 
-            Draw.z(LINK_RING_LAYER);
+            Draw.z(WHFx.EFFECT_BOTTOM);
             if (hasPrimary) {
                 drawLinkRing(primaryLink, mainColor, bodyAlpha * primaryFadeVisual);
             }
@@ -362,7 +690,8 @@ public class GeminiUnit extends UnitEntity {
                 Healthc linked = secondaryLinks.get(i);
                 if (!isSecondaryRenderTarget(linked)) continue;
                 int linkId = entityId(linked);
-                float secondaryFade = linkId < 0 ? 0f : secondaryStrokeFade.get(linkId, 0f);
+                GhostTrail secondaryGhost = linkId < 0 ? null : findGhostTrail(linkId, true);
+                float secondaryFade = secondaryGhost != null ? secondaryGhost.fade : (isSecondaryTarget(linked) ? 1f : 0f);
                 if (secondaryFade <= 0.01f) continue;
                 float secondaryFadeVisual = Mathf.pow(secondaryFade, 1.35f);
                 drawLinkRing(linked, secondaryColor, bodyAlpha * secondaryFadeVisual * 0.84f);
@@ -386,23 +715,23 @@ public class GeminiUnit extends UnitEntity {
             for (int i = 0; i < secondaryLinks.size; i++) {
                 Healthc linked = secondaryLinks.get(i);
                 int linkId = entityId(linked);
-                float secondaryFade = linkId < 0 ? 0f : secondaryStrokeFade.get(linkId, 0f);
+                GhostTrail secondaryGhost = linkId < 0 ? null : findGhostTrail(linkId, true);
+                float secondaryFade = secondaryGhost != null ? secondaryGhost.fade : (isSecondaryTarget(linked) ? 1f : 0f);
                 float secondaryStroke = SECONDARY_STROKE * Mathf.pow(secondaryFade, 1.55f);
                 if (secondaryStroke <= 0.01f) continue;
 
                 float tx = linked.getX();
                 float ty = linked.getY();
                 float tr = targetHitSize(linked) * 0.5f;
-                if (linkId >= 0) {
-                    drawnSecondaryStroke.add(linkId);
-                    tx = secondaryGhostX.get(linkId, tx);
-                    ty = secondaryGhostY.get(linkId, ty);
-                    tr = secondaryGhostRadius.get(linkId, tr);
-                    if (isSecondaryRenderTarget(linked)) {
-                        tx = linked.getX();
-                        ty = linked.getY();
-                        tr = targetHitSize(linked) * 0.5f;
-                    }
+                if (secondaryGhost != null) {
+                    tx = secondaryGhost.x;
+                    ty = secondaryGhost.y;
+                    tr = secondaryGhost.radius;
+                }
+                if (isSecondaryRenderTarget(linked)) {
+                    tx = linked.getX();
+                    ty = linked.getY();
+                    tr = targetHitSize(linked) * 0.5f;
                 }
 
                 drawLinkCurvesSized(
@@ -416,36 +745,95 @@ public class GeminiUnit extends UnitEntity {
                 );
             }
 
-            // Residual trails: draw to last known positions for links already removed from secondaryLinks.
-            for (IntFloatMap.Entry entry : secondaryStrokeFade) {
-                int linkId = entry.key;
-                if (drawnSecondaryStroke.contains(linkId)) continue;
-
-                float secondaryFade = entry.value;
-                float secondaryStroke = SECONDARY_STROKE * Mathf.pow(secondaryFade, 1.55f);
-                if (secondaryStroke <= 0.01f) continue;
-
-                float tx = secondaryGhostX.get(linkId, Float.NaN);
-                float ty = secondaryGhostY.get(linkId, Float.NaN);
-                float tr = secondaryGhostRadius.get(linkId, 2f);
-                if (Float.isNaN(tx) || Float.isNaN(ty)) continue;
-
-                drawLinkCurvesSized(
-                        primaryX, primaryY, primaryRadius,
-                        tx, ty, tr,
-                        3,
-                        ((long) id << 28) ^ linkId ^ 7331L,
-                        secondaryStroke,
-                        secondaryColor,
-                        0.82f * bodyAlpha
-                );
-            }
         }
 
+        drawPrimaryGhostTrails(mainColor, secondaryColor, bodyAlpha);
         drawLowHealthSpecialLinks(mainColor, bodyAlpha);
+        drawPairLinkEffects(mainColor, bodyAlpha);
 
         Draw.z(z);
         Draw.reset();
+    }
+
+    public void drawPairLinkEffects(Color baseColor, float bodyAlpha) {
+        if (Vars.headless) return;
+        if (pairLinkFade <= 0.01f && !hasValidPairLink()) return;
+
+        float z = Draw.z();
+        Color pairColor = Tmp.c3.set(baseColor).lerp(Color.white, 0.3f);
+        float trailWidth = Math.max(1.2f, hitSize * 0.035f) * Math.max(pairLinkFade, 0.25f);
+
+        Draw.z(Layer.effect + 0.019f);
+        for (int i = 0; i < PAIR_LINK_TRAIL_COUNT; i++) {
+            Trail trail = pairLinkTrails[i];
+            Vec2 point = pairLinkTrailPoints[i];
+            if (trail == null || point == null) continue;
+
+            trail.drawCap(pairColor, trailWidth);
+            trail.draw(pairColor, trailWidth);
+            Draw.color(pairColor);
+            Fill.circle(point.x, point.y, trailWidth * 0.8f);
+        }
+
+        if (pairLinking && hasValidPairLink()) {
+            GeminiUnit other = pairLinkUnit;
+            Draw.z(Layer.flyingUnitLow - 0.001f);
+            drawLinkRing(this, pairColor, bodyAlpha * pairLinkFade * 0.3f);
+            drawLinkRing(other, pairColor, bodyAlpha * pairLinkFade * 0.3f);
+
+            Draw.z(Layer.effect + 0.03f);
+            drawLinkCurvesSized(
+                    x, y, hitSize * 0.52f,
+                    other.x, other.y, other.hitSize * 0.52f,
+                    4,
+                    ((long) id << 24) ^ other.id ^ 0x51F15EEDL,
+                    5 * (1 + Mathf.sin(8, 0.25f)) * pairLinkFade,
+                    pairColor,
+                    bodyAlpha * pairLinkFade,
+                    Math.min(Mathf.dst(x, y, other.x, other.y) * 0.03f, 8f)
+            );
+        }
+
+        Draw.z(z);
+    }
+
+    public void drawPrimaryGhostTrails(Color mainColor, Color secondaryColor, float bodyAlpha) {
+        if (ghostTrails.isEmpty() || bodyAlpha <= 0.001f) return;
+
+        float z = Draw.z();
+        Draw.z(WHFx.EFFECT_BOTTOM);
+        for (int i = 0; i < ghostTrails.size; i++) {
+            GhostTrail ghost = ghostTrails.get(i);
+            if (ghost.secondary && hasSecondaryLinkId(ghost.id)) continue;
+            Color color = ghost.secondary ? secondaryColor : mainColor;
+            float fadeVisual = Mathf.pow(ghost.fade, 1.35f);
+            float alpha = bodyAlpha * fadeVisual;
+            if (alpha <= 0.001f) continue;
+            drawLinkRing(ghost.x, ghost.y, ghost.radius * 2f, ghost.seed, color, alpha);
+        }
+
+        Draw.z(Layer.effect + 0.02f);
+        for (int i = 0; i < ghostTrails.size; i++) {
+            GhostTrail ghost = ghostTrails.get(i);
+            if (ghost.secondary && hasSecondaryLinkId(ghost.id)) continue;
+            Color color = ghost.secondary ? secondaryColor : mainColor;
+            int amount = ghost.secondary ? 3 : 4;
+            float alphaMul = ghost.secondary ? 0.82f : 1f;
+            float stroke = ghost.stroke * Mathf.pow(ghost.fade, 1.45f);
+            if (stroke <= 0.01f) continue;
+
+            drawLinkCurvesSized(
+                    x, y, hitSize * 0.5f,
+                    ghost.x, ghost.y, ghost.radius,
+                    amount,
+                    ((long) id << 32) ^ ghost.seed,
+                    stroke,
+                    color,
+                    bodyAlpha * Mathf.pow(ghost.fade, 1.2f) * alphaMul
+            );
+        }
+
+        Draw.z(z);
     }
 
     public boolean isPhasing() {
@@ -467,27 +855,27 @@ public class GeminiUnit extends UnitEntity {
         }
 
         boolean phased = isPhasing();
-        phaseVisualFade = Mathf.lerpDelta(phaseVisualFade, phased ? 1f : 0f, phased ? PHASE_IN_LERP : PHASE_OUT_LERP);
+        phaseVisualFade = Mathf.lerpDelta(phaseVisualFade, phased ? 1f : 0f, phased ? 0.08f : 0.02f);
     }
 
     public void activatePhase() {
         phaseTimeLeft = PHASE_DURATION;
         phaseCooldownTimer = PHASE_INTERVAL;
         if (!Vars.headless) {
-            WHFx.spawn.at(x, y, rotation, team.color, type);
+            WHFx.GeminiPhaseEffect.at(x, y, rotation, team.color, type);
         }
     }
 
     public void pruneExpiredAttackers() {
-        pendingRemove.clear();
+        Seq<Healthc> expired = new Seq<>();
         for (ObjectFloatMap.Entry<Healthc> entry : attackers.entries()) {
             Healthc target = entry.key;
             if (entry.value <= Time.time || !isEnemyTarget(target)) {
-                pendingRemove.add(target);
+                expired.add(target);
             }
         }
 
-        for (Healthc target : pendingRemove) {
+        for (Healthc target : expired) {
             attackers.remove(target, 0f);
             attackerHatred.remove(target, 0f);
         }
@@ -495,6 +883,7 @@ public class GeminiUnit extends UnitEntity {
 
     public void choosePrimaryLink() {
         pruneExpiredAttackers();
+        Healthc previousPrimary = primaryLink;
 
         Healthc best = null;
         float bestHatred = -1f;
@@ -518,6 +907,9 @@ public class GeminiUnit extends UnitEntity {
             return;
         }
 
+        if (previousPrimary != null && previousPrimary != best) {
+            archiveCurrentPrimaryGhost();
+        }
         primaryLink = best;
         primaryLinkTimeLeft = PRIMARY_LINK_DURATION;
         secondaryRefreshTimer = 0f;
@@ -526,12 +918,9 @@ public class GeminiUnit extends UnitEntity {
         primaryGhostX = Float.NaN;
         primaryGhostY = Float.NaN;
         primaryGhostRadius = Float.NaN;
-        secondaryStrokeFade.clear();
-        secondaryGhostX.clear();
-        secondaryGhostY.clear();
-        secondaryGhostRadius.clear();
-        drawnSecondaryStroke.clear();
+        clearSecondaryGhostTrails();
         clearSecondaryActiveLinks();
+        primaryDurabilitySnapshot = currentDurability(primaryLink);
     }
 
     public void expirePrimaryLink() {
@@ -543,7 +932,8 @@ public class GeminiUnit extends UnitEntity {
     }
 
     public void refreshSecondaryLinks() {
-        if (onPrimaryTargetDeadOrInvalid()) {
+        if (primaryLink != null && !isEnemyTarget(primaryLink)) {
+            losePrimaryLink(true);
             return;
         }
         if (!(primaryLink instanceof Teamc)) {
@@ -577,99 +967,37 @@ public class GeminiUnit extends UnitEntity {
             if (!secondaryLinks.contains(candidate, true)) {
                 secondaryLinks.add(candidate);
             }
-            int candidateId = entityId(candidate);
-            if (candidateId >= 0) {
-                secondaryStrokeFade.put(candidateId, secondaryStrokeFade.get(candidateId, 0f));
-                secondaryGhostX.put(candidateId, candidate.getX());
-                secondaryGhostY.put(candidateId, candidate.getY());
-                secondaryGhostRadius.put(candidateId, targetHitSize(candidate) * 0.5f);
-            }
         }
-        syncSecondarySnapshots();
     }
 
     /**
-     * 次级链接伤害转移核心：
-     * 1) 维护 secondaryLinks 的有效性（失效目标先记录幽灵坐标，再移除活动列表）。
-     * 2) 对仍在次级范围内的目标，比较“上一帧耐久快照”和“当前耐久”。
-     * 3) 目标掉血 -> 按倍率把伤害转移到主链接，同时自身也承受同量（反噬/回灌效果）。
-     * 4) 清理离开监控集合的快照，避免 map 长期积累。
+     * Accumulate primary durability loss and transfer to secondary links once per transfer tick.
      */
     public void processSecondaryTransfers() {
         if (Vars.net.client()) return;
-
-        if (onPrimaryTargetDeadOrInvalid()) {
+        if (!isEnemyTarget(primaryLink)) {
+            if (primaryLink != null) {
+                losePrimaryLink(true);
+            }
+            primaryDurabilitySnapshot = Float.NaN;
+            pendingSecondaryTransferDamage = 0f;
             return;
         }
 
-        if (secondaryLinks.isEmpty()) {
-            secondaryLastHealth.clear();
+        float primaryDurabilityNow = currentDurability(primaryLink);
+        if (Float.isNaN(primaryDurabilitySnapshot)) {
+            primaryDurabilitySnapshot = primaryDurabilityNow;
             return;
         }
 
-        pendingRemove.clear();
-        seenSecondary.clear();
+        float primaryDurabilityLoss = Math.max(primaryDurabilitySnapshot - primaryDurabilityNow, 0f);
+        primaryDurabilitySnapshot = primaryDurabilityNow;
+        pendingSecondaryTransferDamage += primaryDurabilityLoss;
 
-        // 扫描所有活动次级链接，更新快照并执行伤害转移。
-        for (int i = 0; i < secondaryLinks.size; i++) {
-            Healthc secondary = secondaryLinks.get(i);
-            if (!isSecondaryRenderTarget(secondary)) {
-                int sid = entityId(secondary);
-                if (sid >= 0) {
-                    secondaryGhostX.put(sid, secondary.getX());
-                    secondaryGhostY.put(sid, secondary.getY());
-                    secondaryGhostRadius.put(sid, targetHitSize(secondary) * 0.5f);
-                }
-                pendingRemove.add(secondary);
-                continue;
-            }
-
-            // 不在次级生效范围内时，不做转移，但保留链接用于后续淡出表现。
-            if (!isSecondaryTarget(secondary)) {
-                continue;
-            }
-
-            int entityId = entityId(secondary);
-            if (entityId < 0) {
-                pendingRemove.add(secondary);
-                continue;
-            }
-
-            seenSecondary.add(entityId);
-
-            float durabilityNow = currentDurability(secondary);
-            float lastDurability = secondaryLastHealth.get(entityId, Float.NaN);
-            if (Float.isNaN(lastDurability)) {
-                secondaryLastHealth.put(entityId, durabilityNow);
-                continue;
-            }
-
-            float damageTaken = Math.max(lastDurability - durabilityNow, 0f);
-            if (damageTaken > 0.001f) {
-                // 目标掉血 -> 转移到主链接 + 自身反噬。
-                float transfer = damageTaken * SECONDARY_TRANSFER_DAMAGE_MULTIPLIER;
-                damageLinkedTarget(transfer);
-                super.rawDamage(transfer);
-            }
-
-            secondaryLastHealth.put(entityId, durabilityNow);
-        }
-
-        // 从活动链接列表移除失效目标（视觉残影仍由 ghost + fade 维护）。
-        for (Healthc target : pendingRemove) {
-            secondaryLinks.remove(target);
-        }
-
-        // 清理快照中已不再被本轮扫描到的条目，避免无效历史数据堆积。
-        staleSecondary.clear();
-        for (IntFloatMap.Entry entry : secondaryLastHealth) {
-            if (!seenSecondary.contains(entry.key)) {
-                staleSecondary.add(entry.key);
-            }
-        }
-
-        for (int i = 0; i < staleSecondary.size; i++) {
-            secondaryLastHealth.remove(staleSecondary.get(i), 0f);
+        if (pendingSecondaryTransferDamage > 0.001f) {
+            float secondaryDamage = pendingSecondaryTransferDamage * SECONDARY_TRANSFER_DAMAGE_MULTIPLIER;
+            pendingSecondaryTransferDamage = 0f;
+            damageSecondaryTargets(secondaryDamage);
         }
     }
 
@@ -685,6 +1013,83 @@ public class GeminiUnit extends UnitEntity {
         return !Float.isNaN(primaryGhostX) && !Float.isNaN(primaryGhostY) && !Float.isNaN(primaryGhostRadius);
     }
 
+    public GhostTrail findGhostTrail(int trailId, boolean secondary) {
+        for (int i = 0; i < ghostTrails.size; i++) {
+            GhostTrail ghost = ghostTrails.get(i);
+            if (ghost.secondary == secondary && ghost.id == trailId) {
+                return ghost;
+            }
+        }
+        return null;
+    }
+
+    public boolean hasSecondaryLinkId(int linkId) {
+        for (int i = 0; i < secondaryLinks.size; i++) {
+            if (entityId(secondaryLinks.get(i)) == linkId) return true;
+        }
+        return false;
+    }
+
+    public void clearSecondaryGhostTrails() {
+        for (int i = ghostTrails.size - 1; i >= 0; i--) {
+            if (ghostTrails.get(i).secondary) {
+                ghostTrails.remove(i);
+            }
+        }
+    }
+
+    public void addGhostTrail(float gx, float gy, float radius, float fade, float stroke, boolean secondary, int trailId, long seedHint) {
+        if (Float.isNaN(gx) || Float.isNaN(gy) || Float.isNaN(radius)) return;
+        if (fade <= 0.01f) return;
+
+        GhostTrail ghost = trailId >= 0 ? findGhostTrail(trailId, secondary) : null;
+        if (ghost == null) {
+            ghost = new GhostTrail();
+            ghost.secondary = secondary;
+            ghost.id = trailId;
+            ghost.seed = (Math.max(seedHint, 0L) << 16) ^ (primaryGhostTrailSeed++);
+            ghostTrails.add(ghost);
+        }
+
+        ghost.x = gx;
+        ghost.y = gy;
+        ghost.radius = Math.max(radius, 2f);
+        ghost.fade = Mathf.clamp(fade);
+        ghost.stroke = Math.max(stroke, 0.01f);
+
+        if (ghostTrails.size > PRIMARY_GHOST_TRAIL_MAX) {
+            ghostTrails.remove(0);
+        }
+    }
+
+    public void addGhostTrail(float gx, float gy, float radius, float fade, float stroke, boolean secondary, long seedHint) {
+        addGhostTrail(gx, gy, radius, fade, stroke, secondary, -1, seedHint);
+    }
+
+    public void addPrimaryGhostTrail(float gx, float gy, float radius, float fade, long seedHint) {
+        addGhostTrail(gx, gy, radius, fade, MAIN_STROKE, false, seedHint);
+    }
+
+    public void addSecondaryGhostTrail(float gx, float gy, float radius, float fade, float stroke, int linkId) {
+        addGhostTrail(gx, gy, radius, fade, stroke, true, linkId, linkId);
+    }
+
+    public void archiveCurrentPrimaryGhost() {
+        if (!hasPrimaryGhost()) return;
+        addPrimaryGhostTrail(primaryGhostX, primaryGhostY, primaryGhostRadius, primaryStrokeFade, entityId(primaryLink));
+    }
+
+    public void updateGhostTrails() {
+        for (int i = ghostTrails.size - 1; i >= 0; i--) {
+            GhostTrail ghost = ghostTrails.get(i);
+            if (ghost.secondary) continue;
+            ghost.fade = Mathf.lerpDelta(ghost.fade, 0f, PRIMARY_GHOST_OUT_LERP);
+            if (ghost.fade <= 0.01f) {
+                ghostTrails.remove(i);
+            }
+        }
+    }
+
     public float primaryLinkProgress() {
         return Mathf.clamp(1f - primaryLinkTimeLeft / PRIMARY_LINK_DURATION);
     }
@@ -693,31 +1098,18 @@ public class GeminiUnit extends UnitEntity {
         return primaryLinkProgress() < EARLY_LINK_RESET_PROGRESS;
     }
 
-    /**
-     * 主链接目标死亡/失效统一处理入口。
-     *
-     * @return 是否已处理断链（true 表示 primaryLink 已被清空）
-     */
-    public boolean onPrimaryTargetDeadOrInvalid() {
-        if (primaryLink == null) return false;
-        if (isEnemyTarget(primaryLink)) return false;
-        losePrimaryLink(true);
-        return true;
+    public boolean isPrimaryDeathReset() {
+        return primaryLink != null && primaryLink.dead();
     }
 
-    /**
-     * 主链接丢失统一收尾：
-     * 1) 早期窗口（EARLY_LINK_RESET_PROGRESS）可选硬重置，直接清空残影与次链缓存；
-     * 2) 非硬重置保留主链 ghost，用于线条自然淡出。
-     */
-    public void losePrimaryLink(boolean allowEarlyHardReset) {
+    public void losePrimaryLink(boolean hardResetRequested) {
         if (primaryLink == null) {
-            boolean hardReset = allowEarlyHardReset && shouldHardResetPrimaryLoss();
-            if (hardReset) {
+            if (hardResetRequested) {
                 primaryGhostX = Float.NaN;
                 primaryGhostY = Float.NaN;
                 primaryGhostRadius = Float.NaN;
                 primaryStrokeFade = 0f;
+                ghostTrails.clear();
                 clearSecondaryLinks();
             } else {
                 clearSecondaryActiveLinks();
@@ -726,12 +1118,17 @@ public class GeminiUnit extends UnitEntity {
             return;
         }
 
-        boolean hardReset = allowEarlyHardReset && shouldHardResetPrimaryLoss();
+        boolean primaryDied = isPrimaryDeathReset();
+        // If primary dies early in the link cycle, hard-reset link visuals/state.
+        boolean hardReset = primaryDied
+                ? (hardResetRequested && shouldHardResetPrimaryLoss())
+                : hardResetRequested;
         if (hardReset) {
             primaryGhostX = Float.NaN;
             primaryGhostY = Float.NaN;
             primaryGhostRadius = Float.NaN;
             primaryStrokeFade = 0f;
+            ghostTrails.clear();
             clearSecondaryLinks();
         } else {
             capturePrimaryGhost();
@@ -745,141 +1142,77 @@ public class GeminiUnit extends UnitEntity {
     public void clearSecondaryActiveLinks() {
         secondaryLinks.clear();
         secondaryCandidates.clear();
-        secondaryLastHealth.clear();
-        seenSecondary.clear();
-        staleSecondary.clear();
+        primaryDurabilitySnapshot = Float.NaN;
+        pendingSecondaryTransferDamage = 0f;
     }
 
     public void clearSecondaryLinks() {
         clearSecondaryActiveLinks();
-        secondaryStrokeFade.clear();
-        secondaryGhostX.clear();
-        secondaryGhostY.clear();
-        secondaryGhostRadius.clear();
-        drawnSecondaryStroke.clear();
-        seenSecondaryStroke.clear();
-        staleSecondaryStroke.clear();
+        clearSecondaryGhostTrails();
     }
 
     /**
-     * 线条淡入/淡出状态机（主链 + 次链 + 残影）：
-     * 1) 主链根据 hasPrimary 插值到 1 或 0。
-     * 2) 次链对“仍有效且在范围”的目标淡入，对其它目标淡出。
-     * 3) 即使实体死亡/离场，也保留 ghost 坐标直到 fade 归零，避免“瞬断”。
-     * 4) fade 归零后再删缓存，防止 map 与链接状态不同步。
+     * Update link stroke fade state (primary + secondary + residual ghost).
+     * 1) Primary stroke fades in/out based on hasPrimary.
+     * 2) Active secondary links update fade and ghost position.
+     * 3) Unseen secondary entries continue to fade out.
+     * 4) Fully faded caches are removed.
+     * 5) Invalid/inactive secondary links are pruned from active list.
      */
     public void updateStrokeFade(boolean hasPrimary) {
-        primaryStrokeFade = Mathf.lerpDelta(primaryStrokeFade, hasPrimary ? 1f : 0f, hasPrimary ? MAIN_STROKE_IN_LERP : MAIN_STROKE_OUT_LERP);
+        // Primary stroke fade and primary ghost snapshot.
+        primaryStrokeFade = Mathf.lerpDelta(primaryStrokeFade, hasPrimary ? 1f : 0f, hasPrimary ? 0.04f : 0.06f);
         if (hasPrimary && primaryLink != null) {
             primaryGhostX = primaryLink.getX();
             primaryGhostY = primaryLink.getY();
             primaryGhostRadius = targetHitSize(primaryLink) * 0.5f;
         }
+        updateGhostTrails();
 
-        seenSecondaryStroke.clear();
-        // 第一阶段：更新活动次链的目标态（active/inactive）并推进 fade。
-        for (int i = 0; i < secondaryLinks.size; i++) {
+        // Keep active links simple: update secondary ghost by id, and prune invalid links.
+        for (int i = secondaryLinks.size - 1; i >= 0; i--) {
             Healthc linked = secondaryLinks.get(i);
             int linkId = entityId(linked);
-            if (linkId < 0) continue;
+            boolean renderable = isSecondaryRenderTarget(linked);
+            boolean active = hasPrimary && renderable && isSecondaryTarget(linked);
 
-            if (isSecondaryRenderTarget(linked)) {
-                secondaryGhostX.put(linkId, linked.getX());
-                secondaryGhostY.put(linkId, linked.getY());
-                secondaryGhostRadius.put(linkId, targetHitSize(linked) * 0.5f);
+            if (linkId >= 0) {
+                GhostTrail ghost = findGhostTrail(linkId, true);
+                float now = ghost == null ? (active ? 1f : 0f) : ghost.fade;
+                float target = active ? 1f : 0f;
+                float speed = active ? SECONDARY_STROKE_IN_LERP : SECONDARY_STROKE_OUT_LERP;
+                float fade = Mathf.lerpDelta(now, target, speed);
+                addSecondaryGhostTrail(
+                        linked.getX(), linked.getY(), targetHitSize(linked) * 0.5f,
+                        fade, SECONDARY_STROKE, linkId
+                );
             }
 
-            boolean active = hasPrimary && isSecondaryTarget(linked);
-            if (active) seenSecondaryStroke.add(linkId);
-
-            float now = secondaryStrokeFade.get(linkId, 0f);
-            float target = active ? 1f : 0f;
-            float speed = active ? SECONDARY_STROKE_IN_LERP : SECONDARY_STROKE_OUT_LERP;
-            secondaryStrokeFade.put(linkId, Mathf.lerpDelta(now, target, speed));
-        }
-
-        // 第二阶段：对本帧未命中的旧条目继续淡出（残影尾巴）。
-        staleSecondaryStroke.clear();
-        for (IntFloatMap.Entry entry : secondaryStrokeFade) {
-            if (seenSecondaryStroke.contains(entry.key)) continue;
-
-            float out = Mathf.lerpDelta(entry.value, 0f, SECONDARY_STROKE_OUT_LERP);
-            if (out <= 0.01f) {
-                staleSecondaryStroke.add(entry.key);
-            } else {
-                secondaryStrokeFade.put(entry.key, out);
+            if (!renderable) {
+                secondaryLinks.remove(i);
             }
         }
 
-        // 第三阶段：淡出完成后才真正删除缓存。
-        for (int i = 0; i < staleSecondaryStroke.size; i++) {
-            int linkId = staleSecondaryStroke.get(i);
-            secondaryStrokeFade.remove(linkId, 0f);
-            secondaryGhostX.remove(linkId, 0f);
-            secondaryGhostY.remove(linkId, 0f);
-            secondaryGhostRadius.remove(linkId, 0f);
-        }
+        // Secondary ghost trails not linked anymore continue fading out until removed.
+        for (int i = ghostTrails.size - 1; i >= 0; i--) {
+            GhostTrail ghost = ghostTrails.get(i);
+            if (!ghost.secondary) continue;
+            if (hasSecondaryLinkId(ghost.id)) continue;
 
-        // 第四阶段：从活动链接中移除“不可渲染且 fade 已几乎为 0”的目标。
-        pendingRemove.clear();
-        for (int i = 0; i < secondaryLinks.size; i++) {
-            Healthc linked = secondaryLinks.get(i);
-            int linkId = entityId(linked);
-            float fade = linkId < 0 ? 0f : secondaryStrokeFade.get(linkId, 0f);
-
-            if (!isSecondaryRenderTarget(linked)) {
-                if (fade <= 0.01f) {
-                    pendingRemove.add(linked);
-                }
-                continue;
+            ghost.fade = Mathf.lerpDelta(ghost.fade, 0f, SECONDARY_STROKE_OUT_LERP);
+            if (ghost.fade <= 0.01f) {
+                ghostTrails.remove(i);
             }
-
-            if (linkId < 0) {
-                if (!isSecondaryTarget(linked)) {
-                    pendingRemove.add(linked);
-                }
-                continue;
-            }
-
-            if (!isSecondaryTarget(linked) && fade <= 0.01f) {
-                pendingRemove.add(linked);
-            }
-        }
-
-        for (Healthc target : pendingRemove) {
-            secondaryLinks.remove(target);
-        }
-    }
-
-    public void syncSecondarySnapshots() {
-        seenSecondary.clear();
-
-        for (int i = 0; i < secondaryLinks.size; i++) {
-            Healthc target = secondaryLinks.get(i);
-            if (!isSecondaryTarget(target)) continue;
-
-            int entityId = entityId(target);
-            if (entityId < 0) continue;
-
-            seenSecondary.add(entityId);
-            secondaryLastHealth.put(entityId, currentDurability(target));
-        }
-
-        staleSecondary.clear();
-        for (IntFloatMap.Entry entry : secondaryLastHealth) {
-            if (!seenSecondary.contains(entry.key)) {
-                staleSecondary.add(entry.key);
-            }
-        }
-
-        for (int i = 0; i < staleSecondary.size; i++) {
-            secondaryLastHealth.remove(staleSecondary.get(i), 0f);
         }
     }
 
     public void damageLinkedTarget(float amount) {
         if (amount <= 0.001f || !isEnemyTarget(primaryLink)) return;
         primaryLink.damage(amount);
+    }
+
+
+    public void updateAimCoordinates() {
     }
 
     public Healthc findOwner(Entityc source) {
@@ -918,9 +1251,7 @@ public class GeminiUnit extends UnitEntity {
         if (teamTarget.team() == team) return false;
         if (target instanceof WallBuild) return false;
         if (target instanceof Unit unit && !unit.hittable()) return false;
-        if (target instanceof Building building && (building.block == null || building.block.group == BlockGroup.walls || building.block instanceof CoreBlock))
-            return false;
-        return true;
+        return !(target instanceof Building building) || (building.block != null && building.block.group != BlockGroup.walls && !(building.block instanceof CoreBlock));
     }
 
     public boolean isSecondaryRenderTarget(Healthc target) {
@@ -930,8 +1261,10 @@ public class GeminiUnit extends UnitEntity {
         if (target instanceof WallBuild) return false;
         if (target instanceof Unit unit && !unit.hittable()) return false;
         if (target instanceof Building building) {
-            if (building.block == null || building.block.group == BlockGroup.walls || building.block instanceof CoreBlock || !building.block.targetable)
-                return false;
+            return building.block != null
+                    && building.block.group != BlockGroup.walls
+                    && !(building.block instanceof CoreBlock)
+                    && building.block.targetable;
         }
         return true;
     }
@@ -964,6 +1297,25 @@ public class GeminiUnit extends UnitEntity {
         return target.maxHealth() + currentShield(target);
     }
 
+    public boolean isLowHealthState() {
+        return healthf() < LOW_HEALTH_EYE_THRESHOLD;
+    }
+
+    public float effectiveArmor(float armorMult) {
+        float value = armorOverride >= 0f ? armorOverride : armor;
+        if (value > 0f && isLowHealthState()) {
+            value *= LOW_HEALTH_ARMOR_MULTIPLIER;
+        }
+        return value * armorMult;
+    }
+
+    public float clampLowHealthRawDamage(float amount) {
+        if (amount > maxHealth * 0.05f)
+            return Math.min(amount, LOW_HEALTH_DAMAGE_CAP / healthMultiplier / Vars.state.rules.unitHealth(team));
+        if (!isLowHealthState()) return amount;
+        return Math.min(amount, LOW_HEALTH_DAMAGE_CAP / healthMultiplier / Vars.state.rules.unitHealth(team));
+    }
+
     public float bulletHatred(Bullet bullet) {
         if (bullet == null) return 1f;
 
@@ -978,6 +1330,27 @@ public class GeminiUnit extends UnitEntity {
         }
 
         return Math.max(ratio * base, 1f);
+    }
+
+    public void updateEffect() {
+        if (lowHealthEyeOpen > 0.6f && WHSettings.effectEnabled()) {
+            float pulse = 1f + Mathf.absin(10, LINK_RING_PULSE);
+            float radius = hitSize * 1.5f;
+            Tmp.v3.setToRandomDirection().scl(radius * pulse);
+            if (Mathf.chanceDelta(0.1f)) {
+                WHFx.tentacleCorona(120, 65, 17, 1, 0.7f, null, null)
+                        .layer(WHFx.EFFECT_BOTTOM - 0.0001f).at(
+                                x + Tmp.v3.x, y + Tmp.v3.y, Tmp.v3.angle(), team.color.cpy().a(0.23f), this);
+            }
+            if (Mathf.chanceDelta(0.08f)) {
+                new Effect(90, (e) -> {
+                    rand.setSeed(e.id);
+                    Draw.color(e.color);
+                    Tmp.v2.trns(e.rotation, rand.random(35));
+                    Fill.circle(e.x + x, e.y + y, e.fout() * 8 * rand.random(0.5f, 1.5f));
+                }).layer(WHFx.EFFECT_BOTTOM - 0.0001f).at(x + Tmp.v3.x, y + Tmp.v3.y, Tmp.v3.angle(), team.color.cpy().a(0.23f), this);
+            }
+        }
     }
 
     public void updateLowHealthSpecialAttack() {
@@ -1001,6 +1374,18 @@ public class GeminiUnit extends UnitEntity {
         if (lowHealthSpecialBullets.size >= LOW_HEALTH_SPECIAL_MAX_BULLETS) return;
 
         fireLowHealthSpecialAttack();
+    }
+
+    public void updateLowHealthBullet() {
+        for (Bullet b : lowHealthSpecialBullets) {
+            if (b instanceof AB ab) {
+                {
+                    if (ab.target instanceof Healthc h && h.dead() && !ab.find) {
+                        ab.find = true;
+                    }
+                }
+            }
+        }
     }
 
     public void cleanupLowHealthSpecialBullets() {
@@ -1060,7 +1445,10 @@ public class GeminiUnit extends UnitEntity {
         float baseAngle = Angles.angle(x, y, tx, ty);
         float spawnRadius = hitSize * 0.5f;
         for (int i = 0; i < burst; i++) {
-            float spreadOffset = burst <= 1 ? 0f : (i - (burst - 1) * 0.5f) * LOW_HEALTH_SPECIAL_SPREAD;
+            float spreadOffset = (i - (burst - 1) * 0.5f) * LOW_HEALTH_SPECIAL_SPREAD;
+            if (burst <= 1) {
+                spreadOffset = 0f;
+            }
             float fireAngle = baseAngle + spreadOffset;
             float forwardOffset = spawnRadius + Mathf.random(hitSize * 0.15f, hitSize * 0.5f);
             float sideBase = (i - (burst - 1) * 0.5f) * (hitSize * 0.3f);
@@ -1080,14 +1468,14 @@ public class GeminiUnit extends UnitEntity {
 
             if (bullet instanceof AB ab) {
                 ab.target = target;
-                ab.find = false;
-                float launchAngle = fireAngle + Mathf.range(Math.max(0f, lowHealthSpecialBulletType.initAngleRand));
-                float speedRand = Math.max(0f, lowHealthSpecialBulletType.initSpeedRand);
+                ab.find = target == null;
+                float launchAngle = fireAngle + Mathf.range(180f);
+                float speedRand = 0.5f;
                 float launchSpeed = bullet.type.speed * Mathf.random(Math.max(0f, 1f - speedRand), 1f + speedRand);
                 ab.initVel(launchAngle, launchSpeed);
             }
 
-            if (!lowHealthSpecialBullets.contains(bullet, true)) {
+            if (!lowHealthSpecialBullets.contains(bullet)) {
                 lowHealthSpecialBullets.add(bullet);
             }
         }
@@ -1137,8 +1525,8 @@ public class GeminiUnit extends UnitEntity {
     public void updateLowHealthEyeAnimation() {
         boolean showEye = !dead() && healthf() < LOW_HEALTH_EYE_THRESHOLD;
         float danger = showEye ? Mathf.clamp((LOW_HEALTH_EYE_THRESHOLD - healthf()) / LOW_HEALTH_EYE_THRESHOLD) : 0f;
-        float targetOpen = showEye ? Mathf.clamp(0.48f + danger * 0.36f) : 0f;
-        float speed = targetOpen > lowHealthEyeOpen ? LOW_HEALTH_EYE_OPEN_IN_SPEED : LOW_HEALTH_EYE_OPEN_OUT_SPEED;
+        float targetOpen = showEye ? Mathf.clamp(0.5f + danger * 0.5f) : 0f;
+        float speed = targetOpen > lowHealthEyeOpen ? 0.02f : 0.05f;
         lowHealthEyeOpen = Mathf.approachDelta(lowHealthEyeOpen, targetOpen, speed);
     }
 
@@ -1159,7 +1547,7 @@ public class GeminiUnit extends UnitEntity {
         float rx = cx + eyeWidth * 0.5f;
 
         float z = Draw.z();
-        Draw.z(LOW_HEALTH_EYE_LAYER);
+        Draw.z(Layer.effect + 0.0001f);
 
         Color eyeColor = Tmp.c3.set(Color.white.cpy().lerp(c.cpy(), 0.3f)).lerp(c, open);
         Draw.color(eyeColor);
@@ -1208,26 +1596,63 @@ public class GeminiUnit extends UnitEntity {
         return Math.max(hitSize * 0.7f, 2f);
     }
 
+    public void drawLowHealth(Color color, float alpha) {
+        if (alpha <= 0.001f) return;
+
+        float open = Mathf.clamp(lowHealthEyeOpen);
+        float size = hitSize * 1.5f;
+        float pulse = 1f + Mathf.absin(10, LINK_RING_PULSE);
+        float radius = size * pulse * (0.7f + 0.3f * open);
+        float stroke = LINK_RING_STROKE + size * 0.035f;
+
+        Draw.color(color);
+        Draw.alpha(alpha * 0.5f);
+        Lines.stroke(stroke * 1.5f * open);
+        Lines.circle(x, y, radius);
+
+        for (int i = 0; i < 4; i++) {
+            float an = i * 90 + (Time.time * 0.3f) % 360f;
+            Tmp.v1.trns(an, radius);
+            Drawf.tri(x + Tmp.v1.x, y + Tmp.v1.y, stroke * 1.5f, stroke * 10 * open, an);
+        }
+
+        Draw.alpha(alpha * 0.25f);
+        Lines.stroke(stroke * open);
+        Lines.circle(x, y, radius * 0.72f);
+        Draw.reset();
+    }
+
     public void drawLinkRing(Healthc target, Color color, float alpha) {
         if (target == null || alpha <= 0.001f) return;
 
         float size = targetHitSize(target);
         long seed = Math.max(entityId(target), 0);
-        float pulse = 1f + Mathf.absin(5.6f + (seed & 7L) * 0.32f, LINK_RING_PULSE);
-        float radius = size * pulse;
-        float stroke = LINK_RING_STROKE + size * 0.035f;
+        drawLinkRing(target.getX(), target.getY(), size, seed, color, alpha);
+    }
+
+    public void drawLinkRing(float tx, float ty, float size, long seed, Color color, float alpha) {
+        if (alpha <= 0.001f) return;
+
+        float clampedSize = Math.max(size, 2f);
+        float pulse = 1f + Mathf.absin(8 + (seed & 7L) * 0.32f, LINK_RING_PULSE);
+        float radius = clampedSize * pulse;
+        float stroke = LINK_RING_STROKE + clampedSize * 0.035f;
 
         Draw.color(color);
         Draw.alpha(alpha * 0.75f);
         Lines.stroke(stroke);
-        Lines.circle(target.getX(), target.getY(), radius);
+        Lines.circle(tx, ty, radius);
 
         Draw.alpha(alpha * 0.28f);
         Lines.stroke(stroke * 0.65f);
-        Lines.circle(target.getX(), target.getY(), radius * 0.72f);
+        Lines.circle(tx, ty, radius * 0.72f);
     }
 
     public void drawLinkCurvesSized(float x1, float y1, float startRadius, float x2, float y2, float endRadius, int amount, long seedBase, float stroke, Color color, float alpha) {
+        drawLinkCurvesSized(x1, y1, startRadius, x2, y2, endRadius, amount, seedBase, stroke, color, alpha, -1f);
+    }
+
+    public void drawLinkCurvesSized(float x1, float y1, float startRadius, float x2, float y2, float endRadius, int amount, long seedBase, float stroke, Color color, float alpha, float amplitudeWidth) {
         float dst = Mathf.dst(x1, y1, x2, y2);
         if (dst <= 2f) return;
 
@@ -1244,10 +1669,18 @@ public class GeminiUnit extends UnitEntity {
         float ex = x2 - Tmp.v2.x;
         float ey = y2 - Tmp.v2.y;
 
-        drawLinkCurves(sx, sy, ex, ey, amount, seedBase, stroke, color, alpha);
+        if (amplitudeWidth < 0f) {
+            drawLinkCurves(sx, sy, ex, ey, amount, seedBase, stroke, color, alpha);
+        } else {
+            drawLinkCurves(sx, sy, ex, ey, amount, seedBase, stroke, color, alpha, amplitudeWidth);
+        }
     }
 
     public static void drawLinkCurves(float x1, float y1, float x2, float y2, int amount, long seedBase, float stroke, Color color, float alpha) {
+        drawLinkCurves(x1, y1, x2, y2, amount, seedBase, stroke, color, alpha, -1f);
+    }
+
+    public static void drawLinkCurves(float x1, float y1, float x2, float y2, int amount, long seedBase, float stroke, Color color, float alpha, float amplitudeWidth) {
         float dst = Mathf.dst(x1, y1, x2, y2);
         if (dst <= 2f || stroke <= 0.001f || alpha <= 0.001f) return;
 
@@ -1256,11 +1689,15 @@ public class GeminiUnit extends UnitEntity {
             float strandStroke = stroke * (1f - i * 0.18f);
             float strandAlpha = alpha * (1f - i * 0.2f);
             float phaseShift = (Mathf.PI2 / amount) * i;
-            drawSingleLinkCurve(x1, y1, x2, y2, strandSeed, strandStroke, color, strandAlpha, phaseShift);
+            drawSingleLinkCurve(x1, y1, x2, y2, strandSeed, strandStroke, color, strandAlpha, phaseShift, amplitudeWidth);
         }
     }
 
     public static void drawSingleLinkCurve(float x1, float y1, float x2, float y2, long seedBase, float stroke, Color color, float alpha, float phaseShift) {
+        drawSingleLinkCurve(x1, y1, x2, y2, seedBase, stroke, color, alpha, phaseShift, -1f);
+    }
+
+    public static void drawSingleLinkCurve(float x1, float y1, float x2, float y2, long seedBase, float stroke, Color color, float alpha, float phaseShift, float amplitudeWidth) {
         float dst = Mathf.dst(x1, y1, x2, y2);
         if (dst <= 2f || stroke <= 0.001f || alpha <= 0.001f) return;
 
@@ -1275,7 +1712,7 @@ public class GeminiUnit extends UnitEntity {
         float waveSpeed = seededRand.random(0.03f, 0.05f);
         float phase = time * waveSpeed + seededRand.random(Mathf.PI2) + phaseShift;
 
-        float endpointAmp = Math.min(dst * 0.055f, 7f) * seededRand.random(0.75f, 1.05f);
+        float endpointAmp = amplitudeWidth < 0f ? Math.min(dst * 0.055f, 7f) * seededRand.random(0.75f, 1.05f) : amplitudeWidth * seededRand.random(0.75f, 1.05f);
         float w0 = Mathf.sin(phase);
         float w3 = Mathf.sin(phase - waveK);
 
@@ -1317,8 +1754,8 @@ public class GeminiUnit extends UnitEntity {
         Fill.circle(px, py, Math.max(0.75f, stroke * 0.7f));
 
         Draw.alpha(alpha * 0.45f);
-        Fill.circle(p0x, p0y, Math.max(0.45f, stroke * 0.42f));
-        Fill.circle(p3x, p3y, Math.max(0.4f, stroke * 0.36f));
+        Fill.circle(p0x, p0y, stroke * 1.5f);
+        Fill.circle(p3x, p3y, stroke * 1.5f);
     }
 
     public void writeHealthTarget(Writes write, Healthc target) {
@@ -1330,47 +1767,53 @@ public class GeminiUnit extends UnitEntity {
         return entity instanceof Healthc ? (Healthc) entity : null;
     }
 
-    public void sanitizeLinkState() {
-        if (!onPrimaryTargetDeadOrInvalid()) {
-            pendingRemove.clear();
-            for (int i = 0; i < secondaryLinks.size; i++) {
-                Healthc secondary = secondaryLinks.get(i);
-                if (!isSecondaryRenderTarget(secondary)) {
-                    int sid = entityId(secondary);
-                    if (sid >= 0) {
-                        secondaryGhostX.put(sid, secondary.getX());
-                        secondaryGhostY.put(sid, secondary.getY());
-                        secondaryGhostRadius.put(sid, targetHitSize(secondary) * 0.5f);
-                    }
-                    pendingRemove.add(secondary);
-                }
-            }
-            for (Healthc secondary : pendingRemove) {
-                secondaryLinks.remove(secondary);
-            }
-            syncSecondarySnapshots();
-        }
-
-        updateStrokeFade(isEnemyTarget(primaryLink));
+    public void writePairLinkUnit(Writes write, GeminiUnit target) {
+        writeEntity(write, target);
     }
 
-    @Override
-    public void write(Writes write) {
-        super.write(write);
+    public GeminiUnit readPairLinkUnit(Reads read) {
+        Entityc entity = readEntity(read);
+        return entity instanceof GeminiUnit ? (GeminiUnit) entity : null;
+    }
 
-        writeHealthTarget(write, primaryLink);
-        write.f(primaryLinkTimeLeft);
-        write.f(primaryStrokeFade);
-        write.f(retargetTimer);
-        write.f(secondaryRefreshTimer);
-        write.f(secondaryTransferTimer);
-        write.f(attackerPruneTimer);
-        write.f(phaseCooldownTimer);
-        write.f(phaseTimeLeft);
-        write.f(phaseVisualFade);
+    public void writePairLinkState(Writes write, boolean includeRefreshTimer) {
+        writePairLinkUnit(write, pairLinkUnit);
+        write.bool(pairLinking);
+        write.bool(pairLinked);
+        if (includeRefreshTimer) {
+            write.f(pairLinkRefreshTimer);
+        }
+    }
 
+    public void readPairLinkState(Reads read, boolean includeRefreshTimer) {
+        pairLinkUnit = readPairLinkUnit(read);
+        pairLinking = read.bool();
+        pairLinked = read.bool();
+        if (includeRefreshTimer) {
+            pairLinkRefreshTimer = read.f();
+        }
+    }
+
+    public void writeHealthTargets(Writes write, Seq<Healthc> targets) {
+        write.b(Math.min(targets.size, 255));
+        for (int i = 0; i < targets.size && i < 255; i++) {
+            writeHealthTarget(write, targets.get(i));
+        }
+    }
+
+    public void readHealthTargets(Reads read, Seq<Healthc> targets) {
+        targets.clear();
+        int size = read.ub();
+        for (int i = 0; i < size; i++) {
+            Healthc target = readHealthTarget(read);
+            if (target != null) {
+                targets.add(target);
+            }
+        }
+    }
+
+    public void writeAttackerState(Writes write) {
         int validAttackers = 0;
-        // Use one timestamp snapshot so count and payload stay in sync in the same packet.
         float now = Time.time;
         for (ObjectFloatMap.Entry<Healthc> entry : attackers.entries()) {
             if (entry.key != null && entry.value > now) {
@@ -1389,30 +1832,12 @@ public class GeminiUnit extends UnitEntity {
             write.f(attackerHatred.get(entry.key, 0f));
             written++;
         }
-
-        write.b(Math.min(secondaryLinks.size, 255));
-        for (int i = 0; i < secondaryLinks.size && i < 255; i++) {
-            writeHealthTarget(write, secondaryLinks.get(i));
-        }
     }
 
-    @Override
-    public void read(Reads read) {
-        super.read(read);
-
-        primaryLink = readHealthTarget(read);
-        primaryLinkTimeLeft = read.f();
-        primaryStrokeFade = read.f();
-        retargetTimer = read.f();
-        secondaryRefreshTimer = read.f();
-        secondaryTransferTimer = read.f();
-        attackerPruneTimer = read.f();
-        phaseCooldownTimer = read.f();
-        phaseTimeLeft = read.f();
-        phaseVisualFade = read.f();
-
+    public void readAttackerState(Reads read) {
         attackers.clear();
         attackerHatred.clear();
+
         int attackerSize = read.us();
         for (int i = 0; i < attackerSize; i++) {
             Healthc attacker = readHealthTarget(read);
@@ -1423,79 +1848,167 @@ public class GeminiUnit extends UnitEntity {
                 attackerHatred.put(attacker, Math.max(hatred, 0f));
             }
         }
-
-        secondaryLinks.clear();
-        int secondarySize = read.ub();
-        for (int i = 0; i < secondarySize; i++) {
-            Healthc secondary = readHealthTarget(read);
-            if (secondary != null) {
-                secondaryLinks.add(secondary);
-            }
-        }
-
-        sanitizeLinkState();
     }
 
-    @Override
-    public void writeSync(Writes write) {
-        super.writeSync(write);
+    public void writeFullState(Writes write) {
+        writeHealthTarget(write, primaryLink);
+        write.f(primaryLinkTimeLeft);
+        write.f(primaryStrokeFade);
+        write.f(retargetTimer);
+        write.f(secondaryRefreshTimer);
+        write.f(secondaryTransferTimer);
+        write.f(attackerPruneTimer);
+        write.f(phaseCooldownTimer);
+        write.f(phaseTimeLeft);
+        write.f(phaseVisualFade);
+        writePairLinkState(write, true);
+        writeAttackerState(write);
+        writeHealthTargets(write, secondaryLinks);
+    }
 
+    public void readFullState(Reads read) {
+        primaryLink = readHealthTarget(read);
+        primaryLinkTimeLeft = read.f();
+        primaryStrokeFade = read.f();
+        retargetTimer = read.f();
+        secondaryRefreshTimer = read.f();
+        secondaryTransferTimer = read.f();
+        attackerPruneTimer = read.f();
+        phaseCooldownTimer = read.f();
+        phaseTimeLeft = read.f();
+        phaseVisualFade = read.f();
+        readPairLinkState(read, true);
+        readAttackerState(read);
+        readHealthTargets(read, secondaryLinks);
+    }
+
+    public void writeSyncState(Writes write) {
         writeHealthTarget(write, primaryLink);
         write.f(primaryLinkTimeLeft);
         write.f(phaseTimeLeft);
         write.f(phaseCooldownTimer);
         write.f(phaseVisualFade);
+        writePairLinkState(write, false);
+        writeHealthTargets(write, secondaryLinks);
+    }
 
-        write.b(Math.min(secondaryLinks.size, 255));
-        for (int i = 0; i < secondaryLinks.size && i < 255; i++) {
-            writeHealthTarget(write, secondaryLinks.get(i));
+    public GeminiSyncState readSyncState(Reads read, GeminiSyncState state) {
+        state.primaryLink = readHealthTarget(read);
+        state.primaryLinkTimeLeft = read.f();
+        state.phaseTimeLeft = read.f();
+        state.phaseCooldownTimer = read.f();
+        state.phaseVisualFade = read.f();
+        state.pairLinkUnit = readPairLinkUnit(read);
+        state.pairLinking = read.bool();
+        state.pairLinked = read.bool();
+        readHealthTargets(read, state.secondaryLinks);
+        return state;
+    }
+
+    public void handlePrimarySyncChange(Healthc previousPrimary, Healthc nextPrimary) {
+        if (previousPrimary == nextPrimary) return;
+        primaryDurabilitySnapshot = Float.NaN;
+        pendingSecondaryTransferDamage = 0f;
+
+        if (previousPrimary != null && nextPrimary == null) {
+            primaryGhostX = previousPrimary.getX();
+            primaryGhostY = previousPrimary.getY();
+            primaryGhostRadius = targetHitSize(previousPrimary) * 0.5f;
+            clearSecondaryActiveLinks();
+        } else {
+            if (previousPrimary != null) {
+                archiveCurrentPrimaryGhost();
+                if (previousPrimary.dead()) {
+                    addPrimaryGhostTrail(
+                            previousPrimary.getX(),
+                            previousPrimary.getY(),
+                            targetHitSize(previousPrimary) * 0.5f,
+                            Math.max(primaryStrokeFade, 0.85f),
+                            entityId(previousPrimary)
+                    );
+                }
+            }
+            primaryStrokeFade = 0f;
+            primaryGhostX = Float.NaN;
+            primaryGhostY = Float.NaN;
+            primaryGhostRadius = Float.NaN;
+            clearSecondaryGhostTrails();
         }
+    }
+
+    public void applySyncState(GeminiSyncState state) {
+        Healthc previousPrimary = primaryLink;
+
+        primaryLink = state.primaryLink;
+        primaryLinkTimeLeft = state.primaryLinkTimeLeft;
+        phaseTimeLeft = state.phaseTimeLeft;
+        phaseCooldownTimer = state.phaseCooldownTimer;
+        phaseVisualFade = state.phaseVisualFade;
+        pairLinkUnit = state.pairLinkUnit;
+        pairLinking = state.pairLinking;
+        pairLinked = state.pairLinked;
+        secondaryLinks.clear();
+        secondaryLinks.addAll(state.secondaryLinks);
+
+        handlePrimarySyncChange(previousPrimary, state.primaryLink);
+        sanitizeLinkState();
+    }
+
+    public void sanitizeLinkState() {
+        sanitizeLinkState(false);
+    }
+
+    public void sanitizeLinkState(boolean preservePairState) {
+        sanitizePairLinkState(preservePairState);
+        if (primaryLink != null && !isEnemyTarget(primaryLink)) {
+            losePrimaryLink(true);
+        } else {
+            for (int i = secondaryLinks.size - 1; i >= 0; i--) {
+                Healthc secondary = secondaryLinks.get(i);
+                if (!isSecondaryRenderTarget(secondary)) {
+                    int sid = entityId(secondary);
+                    if (sid >= 0) {
+                        GhostTrail existing = findGhostTrail(sid, true);
+                        float fade = existing == null ? 0.85f : Math.max(existing.fade, 0.85f);
+                        addSecondaryGhostTrail(
+                                secondary.getX(), secondary.getY(), targetHitSize(secondary) * 0.5f,
+                                fade, SECONDARY_STROKE, sid
+                        );
+                    }
+                    secondaryLinks.remove(i);
+                }
+            }
+        }
+
+        updateStrokeFade(isEnemyTarget(primaryLink));
+    }
+
+    @Override
+    public void write(Writes write) {
+        super.write(write);
+        writeFullState(write);
+    }
+
+    @Override
+    public void read(Reads read) {
+        super.read(read);
+        readFullState(read);
+        // During save load, pair units may not be fully initialized in the same tick.
+        sanitizeLinkState(true);
+    }
+
+    @Override
+    public void writeSync(Writes write) {
+        super.writeSync(write);
+        writeSyncState(write);
     }
 
     @Override
     public void readSync(Reads read) {
         super.readSync(read);
-
-        Healthc syncPrimary = readHealthTarget(read);
-        float syncPrimaryTimeLeft = read.f();
-        float syncPhaseTimeLeft = read.f();
-        float syncPhaseCooldown = read.f();
-        float syncPhaseVisual = read.f();
-
-        int secondarySize = read.ub();
-        secondaryLinks.clear();
-        for (int i = 0; i < secondarySize; i++) {
-            Healthc secondary = readHealthTarget(read);
-            if (secondary != null) {
-                secondaryLinks.add(secondary);
-            }
-        }
-
+        GeminiSyncState syncState = readSyncState(read, syncStateScratch);
         if (!isLocal()) {
-            Healthc previousPrimary = primaryLink;
-            boolean primaryChanged = previousPrimary != syncPrimary;
-            primaryLink = syncPrimary;
-            primaryLinkTimeLeft = syncPrimaryTimeLeft;
-            phaseTimeLeft = syncPhaseTimeLeft;
-            phaseCooldownTimer = syncPhaseCooldown;
-            phaseVisualFade = syncPhaseVisual;
-            if (primaryChanged) {
-                if (previousPrimary != null && syncPrimary == null) {
-                    primaryGhostX = previousPrimary.getX();
-                    primaryGhostY = previousPrimary.getY();
-                    primaryGhostRadius = targetHitSize(previousPrimary) * 0.5f;
-                    clearSecondaryActiveLinks();
-                } else {
-                    primaryStrokeFade = 0f;
-                    primaryGhostRadius = Float.NaN;
-                    secondaryStrokeFade.clear();
-                    secondaryGhostX.clear();
-                    secondaryGhostY.clear();
-                    secondaryGhostRadius.clear();
-                    drawnSecondaryStroke.clear();
-                }
-            }
-            sanitizeLinkState();
+            applySyncState(syncState);
         }
     }
 

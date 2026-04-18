@@ -104,6 +104,16 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
+    public static class CarrierSyncState {
+        public boolean deckInitialized = false;
+        public boolean regrouping = false;
+        public int targetFighterCount = -1;
+        public int lossCount = 0;
+        public final IntSeq activeFighters = new IntSeq();
+        public final IntSeq targetRunwayCounts = new IntSeq();
+        public final IntFloatMap deckRefitTimers = new IntFloatMap();
+    }
+
     public IntSeq activeFighters = new IntSeq();
     public IntFloatMap sortieElapsed = new IntFloatMap();
     public IntSeq targetRunwayCounts = new IntSeq();
@@ -122,14 +132,15 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     public transient ObjectMap<UnitPayload, RunwayPayloadState> runwayPayloadStates = new ObjectMap<>();
     public transient Seq<Payload> queueOverflow = new Seq<>();
     public transient int[] runwayRecoveryClaims = new int[0];
-    private transient Vec2 runwayPointScratch;
-    private transient IntSet deckQueuedIdsScratch;
-    private transient IntSeq deckStaleIdsScratch;
+    private transient Vec2 runwayPointScratch = new Vec2();
+    private transient IntSet deckQueuedIdsScratch = new IntSet();
+    private transient IntSeq deckStaleIdsScratch = new IntSeq();
     private transient Interval runtimeIntervals = new Interval(4);
     private transient boolean runwayQueuesDirty = true;
-    private transient ObjectSet<Payload> payloadLiveScratch;
-    private transient Seq<Payload> payloadStalePayloadScratch;
-    private transient Seq<UnitPayload> payloadStaleStateScratch;
+    private transient ObjectSet<Payload> payloadLiveScratch = new ObjectSet<>();
+    private transient Seq<Payload> payloadStalePayloadScratch = new Seq<>();
+    private transient Seq<UnitPayload> payloadStaleStateScratch = new Seq<>();
+    private transient CarrierSyncState syncStateScratch = new CarrierSyncState();
 
     @Override
     public int classId(){
@@ -172,7 +183,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
         ensureRunwayQueueSync(ctype);
         ensureRunwayRecoveryClaims();
-        if(runtimeIntervals().get(intervalClaimCleanup, 20f)){
+        if (runtimeIntervals.get(intervalClaimCleanup, 20f)) {
             cleanupRunwayRecoveryClaims();
         }
 
@@ -200,7 +211,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
     public int storedFighterCountInRunway(int runway){
         int r = clampRunway(runway);
-        if(runwayQueues != null && runwayQueues.length == runwayCount() && runwayQueues.length > r && runwayQueues[r] != null){
+        if (runwayQueues.length == runwayCount() && runwayQueues.length > r) {
             return runwayQueues[r].size;
         }
 
@@ -225,67 +236,8 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return targetRunwayCounts.size > r ? targetRunwayCounts.get(r) : 0;
     }
 
-    protected Vec2 runwayPointScratch(){
-        if(runwayPointScratch == null){
-            runwayPointScratch = new Vec2();
-        }
-        return runwayPointScratch;
-    }
-
-    protected IntSet deckQueuedIdsScratch(){
-        if(deckQueuedIdsScratch == null){
-            deckQueuedIdsScratch = new IntSet();
-        }else{
-            deckQueuedIdsScratch.clear();
-        }
-        return deckQueuedIdsScratch;
-    }
-
-    protected IntSeq deckStaleIdsScratch(){
-        if(deckStaleIdsScratch == null){
-            deckStaleIdsScratch = new IntSeq();
-        }else{
-            deckStaleIdsScratch.clear();
-        }
-        return deckStaleIdsScratch;
-    }
-
-    protected Interval runtimeIntervals(){
-        if(runtimeIntervals == null){
-            runtimeIntervals = new Interval(4);
-        }
-        return runtimeIntervals;
-    }
-
     protected void markRunwayQueuesDirty(){
         runwayQueuesDirty = true;
-    }
-
-    protected ObjectSet<Payload> payloadLiveScratch(){
-        if(payloadLiveScratch == null){
-            payloadLiveScratch = new ObjectSet<>();
-        }else{
-            payloadLiveScratch.clear();
-        }
-        return payloadLiveScratch;
-    }
-
-    protected Seq<Payload> payloadStalePayloadScratch(){
-        if(payloadStalePayloadScratch == null){
-            payloadStalePayloadScratch = new Seq<>();
-        }else{
-            payloadStalePayloadScratch.clear();
-        }
-        return payloadStalePayloadScratch;
-    }
-
-    protected Seq<UnitPayload> payloadStaleStateScratch(){
-        if(payloadStaleStateScratch == null){
-            payloadStaleStateScratch = new Seq<>();
-        }else{
-            payloadStaleStateScratch.clear();
-        }
-        return payloadStaleStateScratch;
     }
 
     protected int runwayTargetCount(int runway){
@@ -402,19 +354,19 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
     protected int deckSlotForPayloadInternal(Payload payload){
         if(payload == null || deckSlotCount() <= 0) return -1;
-        if(queueOverflow != null && queueOverflow.contains(payload, true)) return -1;
+        if (queueOverflow.contains(payload, true)) return -1;
 
-        if(payload instanceof UnitPayload up && runwayPayloadStates != null){
+        if (payload instanceof UnitPayload up) {
             RunwayPayloadState state = runwayPayloadStates.get(up);
             if(state != null && state.slot >= 0 && state.slot < deckSlotCount()){
                 return state.slot;
             }
         }
 
-        if(runwayQueues != null && runwayQueues.length == runwayCount()){
+        if (runwayQueues.length == runwayCount()) {
             for(int runway = 0; runway < runwayQueues.length; runway++){
                 Queue<UnitPayload> queue = runwayQueues[runway];
-                if(queue == null || queue.isEmpty()) continue;
+                if (queue.isEmpty()) continue;
 
                 int localIndex = 0;
                 for(UnitPayload queued : queue){
@@ -482,7 +434,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
         runwayFrontPoint(runway, out);
         float frontX = out.x, frontY = out.y;
-        Vec2 forward = runwayForwardVector(runway, runwayPointScratch());
+        Vec2 forward = runwayForwardVector(runway, runwayPointScratch);
         float depth = runwayDeckDepth(runway);
         return out.set(frontX - forward.x * depth, frontY - forward.y * depth);
     }
@@ -538,7 +490,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
         runwayFrontPoint(runway, out);
         float frontX = out.x, frontY = out.y;
-        Vec2 forward = runwayForwardVector(runway, runwayPointScratch());
+        Vec2 forward = runwayForwardVector(runway, runwayPointScratch);
         float forwardOffset = Math.max(ctype.launchForwardOffset, 0f);
         return out.set(frontX + forward.x * forwardOffset, frontY + forward.y * forwardOffset);
     }
@@ -553,7 +505,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
         int slot = runwayLastSlot(runway);
         deckSlotWorld(slot, out);
-        Vec2 forward = runwayForwardVector(runway, runwayPointScratch());
+        Vec2 forward = runwayForwardVector(runway, runwayPointScratch);
         float rearOffset = Math.abs(ctype.recoverRearOffset);
         out.sub(forward.x * rearOffset, forward.y * rearOffset);
 
@@ -828,9 +780,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         while(payloads.size > deckSlotCount() && !payloads.isEmpty()){
             Payload removed = payloads.pop();
             payloadVisualPos.remove(removed);
-            if(queueOverflow != null){
-                queueOverflow.remove(removed, true);
-            }
+            queueOverflow.remove(removed, true);
             if(removed instanceof UnitPayload up){
                 removeUnitPayloadFromAllQueues(up);
                 runwayPayloadStates.remove(up);
@@ -848,39 +798,27 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     protected void resetTransientRunwayState(){
-        if(payloadVisualPos == null){
-            payloadVisualPos = new ObjectMap<>();
-        }else{
-            payloadVisualPos.clear();
-        }
+        payloadVisualPos.clear();
 
         runwayQueues = new Queue[0];
         runwayLanes = new RunwayLane[0];
         runwayPayloadStates.clear();
 
-        if(queueOverflow == null){
-            queueOverflow = new Seq<>();
-        }else{
-            queueOverflow.clear();
-        }
+        queueOverflow.clear();
 
         runwayRecoveryClaims = new int[0];
-        if(deckQueuedIdsScratch != null) deckQueuedIdsScratch.clear();
-        if(deckStaleIdsScratch != null) deckStaleIdsScratch.clear();
+        deckQueuedIdsScratch.clear();
+        deckStaleIdsScratch.clear();
         runtimeIntervals = new Interval(4);
         runwayQueuesDirty = true;
-        if(payloadLiveScratch != null) payloadLiveScratch.clear();
-        if(payloadStalePayloadScratch != null) payloadStalePayloadScratch.clear();
-        if(payloadStaleStateScratch != null) payloadStaleStateScratch.clear();
+        payloadLiveScratch.clear();
+        payloadStalePayloadScratch.clear();
+        payloadStaleStateScratch.clear();
     }
 
     protected void ensureRunwayQueues(){
         int runways = runwayCount();
-        if(runwayQueues != null && runwayQueues.length == runways){
-            for(int i = 0; i < runways; i++){
-                if(runwayQueues[i] == null) runwayQueues[i] = new Queue<>();
-            }
-            if(queueOverflow == null) queueOverflow = new Seq<>();
+        if (runwayQueues.length == runways) {
             ensureRunwayLanes();
             return;
         }
@@ -891,15 +829,14 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
         runwayLanes = new RunwayLane[runways];
         runwayPayloadStates.clear();
-        if(queueOverflow == null) queueOverflow = new Seq<>();
-        else queueOverflow.clear();
+        queueOverflow.clear();
         ensureRunwayLanes();
         markRunwayQueuesDirty();
     }
 
     protected void ensureRunwayLanes(){
         int runways = runwayCount();
-        if(runwayLanes == null || runwayLanes.length != runways){
+        if (runwayLanes.length != runways) {
             runwayLanes = new RunwayLane[runways];
         }
 
@@ -912,7 +849,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             }
 
             lane.runway = i;
-            if(runwayQueues != null && runwayQueues.length > i && runwayQueues[i] != null){
+            if (runwayQueues.length > i) {
                 lane.queue = runwayQueues[i];
             }else if(lane.queue == null){
                 lane.queue = new Queue<>();
@@ -989,7 +926,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
 
         // 周期清理回收资格锁，避免陈旧占位。
-        if(runtimeIntervals().get(intervalClaimCleanup, 6f)){
+        if (runtimeIntervals.get(intervalClaimCleanup, 6f)) {
             cleanupRunwayRecoveryClaims();
         }
         recoveryPoint(runway, Tmp.v1);
@@ -1128,7 +1065,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             return;
         }
 
-        if(!runwayQueuesDirty && !runtimeIntervals().get(intervalQueueSyncCheck, 20f)){
+        if (!runwayQueuesDirty && !runtimeIntervals.get(intervalQueueSyncCheck, 20f)) {
             return;
         }
 
@@ -1247,7 +1184,8 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             return;
         }
 
-        IntSet queued = deckQueuedIdsScratch();
+        IntSet queued = deckQueuedIdsScratch;
+        queued.clear();
         boolean allowHeal = ctype != null && ctype.recoverHealFraction > 0.0001f;
         float healInterval = allowHeal ? Math.max(ctype.recoverHealInterval, 1f) : 1f;
         float healFraction = allowHeal ? Mathf.clamp(ctype.recoverHealFraction, 0f, 1f) : 0f;
@@ -1268,7 +1206,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
 
         decayAndPruneDeckRefitTimers(queued);
-        if(runtimeIntervals().get(intervalDeckTimerPrune, 25f)){
+        if (runtimeIntervals.get(intervalDeckTimerPrune, 25f)) {
             pruneDeckTimerMap(deckHealPulseTimers, queued);
         }
     }
@@ -1290,7 +1228,8 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     protected void decayAndPruneDeckRefitTimers(IntSet queued){
         if(deckRefitTimers.size <= 0) return;
 
-        IntSeq stale = deckStaleIdsScratch();
+        IntSeq stale = deckStaleIdsScratch;
+        stale.clear();
         for(IntFloatMap.Entry entry : deckRefitTimers){
             int fighterId = entry.key;
             if(!queued.contains(fighterId)){
@@ -1316,7 +1255,8 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     protected void pruneDeckTimerMap(IntFloatMap timers, IntSet queued){
         if(timers == null || timers.size <= 0) return;
 
-        IntSeq stale = deckStaleIdsScratch();
+        IntSeq stale = deckStaleIdsScratch;
+        stale.clear();
         for(IntFloatMap.Entry entry : timers){
             if(!queued.contains(entry.key)){
                 stale.add(entry.key);
@@ -1495,20 +1435,22 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             }
         }
 
-        if(runtimeIntervals().get(intervalVisualCleanup, 30f)){
+        if (runtimeIntervals.get(intervalVisualCleanup, 30f)) {
             cleanupPayloadVisualCaches();
         }
     }
 
     protected void cleanupPayloadVisualCaches(){
-        ObjectSet<Payload> livePayloads = payloadLiveScratch();
+        ObjectSet<Payload> livePayloads = payloadLiveScratch;
+        livePayloads.clear();
         for(Payload payload : payloads){
             if(payload != null){
                 livePayloads.add(payload);
             }
         }
 
-        Seq<Payload> stalePayloads = payloadStalePayloadScratch();
+        Seq<Payload> stalePayloads = payloadStalePayloadScratch;
+        stalePayloads.clear();
         for(ObjectMap.Entry<Payload, Vec2> entry : payloadVisualPos){
             if(!livePayloads.contains(entry.key)){
                 stalePayloads.add(entry.key);
@@ -1518,7 +1460,8 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             payloadVisualPos.remove(payload);
         }
 
-        Seq<UnitPayload> staleStates = payloadStaleStateScratch();
+        Seq<UnitPayload> staleStates = payloadStaleStateScratch;
+        staleStates.clear();
         for(ObjectMap.Entry<UnitPayload, RunwayPayloadState> entry : runwayPayloadStates){
             if(entry.key == null || !livePayloads.contains(entry.key)){
                 staleStates.add(entry.key);
@@ -1991,7 +1934,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     protected boolean legacyLaunchWaveActive(){
-        if(runwayLanes == null) return false;
+        if (runwayLanes.length == 0) return false;
         for(RunwayLane lane : runwayLanes){
             if(lane != null && lane.launchWaveActive){
                 return true;
@@ -2001,7 +1944,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     protected float legacyMinRecoverReload(){
-        if(runwayLanes == null || runwayLanes.length == 0) return 0f;
+        if (runwayLanes.length == 0) return 0f;
         float min = Float.MAX_VALUE;
         for(RunwayLane lane : runwayLanes){
             if(lane == null) continue;
@@ -2011,7 +1954,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     protected float legacyLaunchReload(){
-        if(runwayLanes == null || runwayLanes.length == 0) return 0f;
+        if (runwayLanes.length == 0) return 0f;
         for(RunwayLane lane : runwayLanes){
             if(lane != null && lane.launchWaveActive){
                 return lane.launchReload;
@@ -2021,7 +1964,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     protected float legacyMinRearmReload(){
-        if(runwayLanes == null || runwayLanes.length == 0) return 0f;
+        if (runwayLanes.length == 0) return 0f;
         float min = Float.MAX_VALUE;
         for(RunwayLane lane : runwayLanes){
             if(lane == null) continue;
@@ -2031,7 +1974,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     protected float legacyMaxRegroupDelay(){
-        if(runwayLanes == null || runwayLanes.length == 0) return 0f;
+        if (runwayLanes.length == 0) return 0f;
         float max = 0f;
         for(RunwayLane lane : runwayLanes){
             if(lane == null) continue;
@@ -2041,7 +1984,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     protected int legacyLaunchRunwayCursor(){
-        if(runwayLanes == null || runwayLanes.length == 0) return 0;
+        if (runwayLanes.length == 0) return 0;
         for(RunwayLane lane : runwayLanes){
             if(lane != null && lane.launchWaveActive){
                 return lane.runway;
@@ -2050,9 +1993,114 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return 0;
     }
 
-    @Override
-    public void read(Reads read){
-        super.read(read);
+    protected void writeIntSeqFull(Writes write, IntSeq seq) {
+        write.i(seq.size);
+        for (int i = 0; i < seq.size; i++) {
+            write.i(seq.get(i));
+        }
+    }
+
+    protected void readIntSeqFull(Reads read, IntSeq seq) {
+        seq.clear();
+        int size = read.i();
+        for (int i = 0; i < size; i++) {
+            seq.add(read.i());
+        }
+    }
+
+    protected void writeIntSeqSyncShort(Writes write, IntSeq seq) {
+        write.s(Math.min(seq.size, 32767));
+        for (int i = 0; i < seq.size && i < 32767; i++) {
+            write.i(seq.get(i));
+        }
+    }
+
+    protected void readIntSeqSyncShort(Reads read, IntSeq seq) {
+        seq.clear();
+        int size = read.us();
+        for (int i = 0; i < size; i++) {
+            seq.add(read.i());
+        }
+    }
+
+    protected void writeIntSeqSyncByte(Writes write, IntSeq seq) {
+        write.b(Math.min(seq.size, 255));
+        for (int i = 0; i < seq.size && i < 255; i++) {
+            write.i(seq.get(i));
+        }
+    }
+
+    protected void readIntSeqSyncByte(Reads read, IntSeq seq) {
+        seq.clear();
+        int size = read.ub();
+        for (int i = 0; i < size; i++) {
+            seq.add(read.i());
+        }
+    }
+
+    protected void writeIntFloatMapFull(Writes write, IntFloatMap map) {
+        write.i(map.size);
+        for (IntFloatMap.Entry entry : map) {
+            write.i(entry.key);
+            write.f(entry.value);
+        }
+    }
+
+    protected void readIntFloatMapFull(Reads read, IntFloatMap map) {
+        map.clear();
+        int size = read.i();
+        for (int i = 0; i < size; i++) {
+            int key = read.i();
+            float value = read.f();
+            if (Math.abs(value) > 0.001f) {
+                map.put(key, value);
+            }
+        }
+    }
+
+    protected void writeIntFloatMapSyncShort(Writes write, IntFloatMap map) {
+        write.s(Math.min(map.size, 32767));
+        int written = 0;
+        for (IntFloatMap.Entry entry : map) {
+            if (written >= 32767) break;
+            write.i(entry.key);
+            write.f(entry.value);
+            written++;
+        }
+    }
+
+    protected void readIntFloatMapSyncShort(Reads read, IntFloatMap map) {
+        map.clear();
+        int size = read.us();
+        for (int i = 0; i < size; i++) {
+            int key = read.i();
+            float value = read.f();
+            if (Math.abs(value) > 0.001f) {
+                map.put(key, value);
+            }
+        }
+    }
+
+    protected void writeCarrierFullState(Writes write) {
+        write.bool(deckInitialized);
+        write.bool(regrouping);
+        write.bool(legacyLaunchWaveActive());
+        write.f(legacyLaunchReload());
+        write.f(legacyMinRecoverReload());
+        write.f(legacyMinRearmReload());
+        write.f(legacyMaxRegroupDelay());
+        write.i(targetFighterCount);
+        write.i(lossCount);
+        write.i(legacyLaunchRunwayCursor());
+        write.i(0);
+
+        writeIntSeqFull(write, activeFighters);
+        writeIntFloatMapFull(write, sortieElapsed);
+        writeIntSeqFull(write, targetRunwayCounts);
+        writeIntFloatMapFull(write, deckRefitTimers);
+    }
+
+    protected void readCarrierFullState(Reads read) {
         deckInitialized = read.bool();
         regrouping = read.bool();
         boolean legacyLaunchWave = read.bool();
@@ -2065,36 +2113,11 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         int legacyLaunchRunwayCursor = read.i();
         read.i();
 
-        activeFighters.clear();
-        int activeSize = read.i();
-        for(int i = 0; i < activeSize; i++){
-            activeFighters.add(read.i());
-        }
-
-        sortieElapsed.clear();
-        int sortieSize = read.i();
-        for(int i = 0; i < sortieSize; i++){
-            int fighterId = read.i();
-            float elapsed = read.f();
-            sortieElapsed.put(fighterId, elapsed);
-        }
-
-        targetRunwayCounts.clear();
-        int runwaySize = read.i();
-        for(int i = 0; i < runwaySize; i++){
-            targetRunwayCounts.add(read.i());
-        }
-
-        deckRefitTimers.clear();
+        readIntSeqFull(read, activeFighters);
+        readIntFloatMapFull(read, sortieElapsed);
+        readIntSeqFull(read, targetRunwayCounts);
+        readIntFloatMapFull(read, deckRefitTimers);
         deckHealPulseTimers.clear();
-        int refitSize = read.i();
-        for(int i = 0; i < refitSize; i++){
-            int fighterId = read.i();
-            float remain = read.f();
-            if(Math.abs(remain) > 0.001f){
-                deckRefitTimers.put(fighterId, remain);
-            }
-        }
 
         rebuildDeckSlots();
         trimPayloadToDeck();
@@ -2108,122 +2131,71 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    @Override
-    public void write(Writes write){
-        super.write(write);
+    protected void writeCarrierSyncState(Writes write) {
         write.bool(deckInitialized);
         write.bool(regrouping);
-        write.bool(legacyLaunchWaveActive());
-        write.f(legacyLaunchReload());
-        write.f(legacyMinRecoverReload());
-        write.f(legacyMinRearmReload());
-        write.f(legacyMaxRegroupDelay());
         write.i(targetFighterCount);
         write.i(lossCount);
-        write.i(legacyLaunchRunwayCursor());
-        write.i(0);
+        writeIntSeqSyncShort(write, activeFighters);
+        writeIntSeqSyncByte(write, targetRunwayCounts);
+        writeIntFloatMapSyncShort(write, deckRefitTimers);
+    }
 
-        write.i(activeFighters.size);
-        for(int i = 0; i < activeFighters.size; i++){
-            write.i(activeFighters.get(i));
+    protected CarrierSyncState readCarrierSyncState(Reads read, CarrierSyncState state) {
+        state.deckInitialized = read.bool();
+        state.regrouping = read.bool();
+        state.targetFighterCount = read.i();
+        state.lossCount = read.i();
+        readIntSeqSyncShort(read, state.activeFighters);
+        readIntSeqSyncByte(read, state.targetRunwayCounts);
+        readIntFloatMapSyncShort(read, state.deckRefitTimers);
+        return state;
+    }
+
+    protected void applyCarrierSyncState(CarrierSyncState state) {
+        deckInitialized = state.deckInitialized;
+        regrouping = state.regrouping;
+        targetFighterCount = state.targetFighterCount;
+        lossCount = state.lossCount;
+
+        activeFighters.clear();
+        activeFighters.addAll(state.activeFighters);
+
+        targetRunwayCounts.clear();
+        targetRunwayCounts.addAll(state.targetRunwayCounts);
+
+        deckRefitTimers.clear();
+        for (IntFloatMap.Entry entry : state.deckRefitTimers) {
+            deckRefitTimers.put(entry.key, entry.value);
         }
 
-        write.i(sortieElapsed.size);
-        for(IntFloatMap.Entry entry : sortieElapsed){
-            write.i(entry.key);
-            write.f(entry.value);
-        }
+        deckHealPulseTimers.clear();
+    }
 
-        write.i(targetRunwayCounts.size);
-        for(int i = 0; i < targetRunwayCounts.size; i++){
-            write.i(targetRunwayCounts.get(i));
-        }
+    @Override
+    public void read(Reads read) {
+        super.read(read);
+        readCarrierFullState(read);
+    }
 
-        write.i(deckRefitTimers.size);
-        for(IntFloatMap.Entry entry : deckRefitTimers){
-            write.i(entry.key);
-            write.f(entry.value);
-        }
+    @Override
+    public void write(Writes write) {
+        super.write(write);
+        writeCarrierFullState(write);
     }
 
     @Override
     public void writeSync(Writes write) {
         super.writeSync(write);
-
-        write.bool(deckInitialized);
-        write.bool(regrouping);
-        write.i(targetFighterCount);
-        write.i(lossCount);
-
-        write.s(Math.min(activeFighters.size, 32767));
-        for (int i = 0; i < activeFighters.size && i < 32767; i++) {
-            write.i(activeFighters.get(i));
-        }
-
-        write.b(Math.min(targetRunwayCounts.size, 255));
-        for (int i = 0; i < targetRunwayCounts.size && i < 255; i++) {
-            write.i(targetRunwayCounts.get(i));
-        }
-
-        write.s(Math.min(deckRefitTimers.size, 32767));
-        int refitWritten = 0;
-        for (IntFloatMap.Entry entry : deckRefitTimers) {
-            if (refitWritten >= 32767) break;
-            write.i(entry.key);
-            write.f(entry.value);
-            refitWritten++;
-        }
+        writeCarrierSyncState(write);
     }
 
     @Override
     public void readSync(Reads read) {
         super.readSync(read);
-
-        boolean syncDeckInitialized = read.bool();
-        boolean syncRegrouping = read.bool();
-        int syncTargetFighterCount = read.i();
-        int syncLossCount = read.i();
-
-        IntSeq syncActiveFighters = new IntSeq();
-        int activeSize = read.us();
-        for (int i = 0; i < activeSize; i++) {
-            syncActiveFighters.add(read.i());
-        }
-
-        IntSeq syncTargetRunwayCounts = new IntSeq();
-        int runwaySize = read.ub();
-        for (int i = 0; i < runwaySize; i++) {
-            syncTargetRunwayCounts.add(read.i());
-        }
-
-        IntFloatMap syncDeckRefitTimers = new IntFloatMap();
-        int refitSize = read.us();
-        for (int i = 0; i < refitSize; i++) {
-            int fighterId = read.i();
-            float remain = read.f();
-            if (Math.abs(remain) > 0.001f) {
-                syncDeckRefitTimers.put(fighterId, remain);
-            }
-        }
-
+        CarrierSyncState state = readCarrierSyncState(read, syncStateScratch);
         if (!isLocal()) {
-            deckInitialized = syncDeckInitialized;
-            regrouping = syncRegrouping;
-            targetFighterCount = syncTargetFighterCount;
-            lossCount = syncLossCount;
-
-            activeFighters.clear();
-            activeFighters.addAll(syncActiveFighters);
-
-            targetRunwayCounts.clear();
-            targetRunwayCounts.addAll(syncTargetRunwayCounts);
-
-            deckRefitTimers.clear();
-            for (IntFloatMap.Entry entry : syncDeckRefitTimers) {
-                deckRefitTimers.put(entry.key, entry.value);
-            }
-
-            deckHealPulseTimers.clear();
+            applyCarrierSyncState(state);
         }
     }
 }

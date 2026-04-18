@@ -1,20 +1,26 @@
 package wh.gen;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import mindustry.ui.*;
-import wh.content.*;
-import wh.graphics.*;
+import arc.Core;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.scene.ui.layout.Table;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.content.Fx;
+import mindustry.gen.UnitEntity;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.type.UnitType;
+import mindustry.ui.Bar;
+import wh.content.WHFx;
+import wh.graphics.Drawn;
 
 
 public class StarrySkyEntity extends UnitEntity {
@@ -49,41 +55,47 @@ public class StarrySkyEntity extends UnitEntity {
     @Override
     public void update() {
         super.update();
-
-        if (cooldown > 0) {
-            CooldownPhase();
-        }
-
-        if (triggered && cooldown <= 0) {
-            if (timer > duration) {
-                AbsorptionPhase();
-            } else if (timer > 0) {
-                ConversionPhase();
-            } else if (timer <= 0) {
-                cooldown = cooldownTime;
-                triggered = false;
-                currentDamage = 0f;
-                actualDamage = 0f;
-                damageMultiplier = 1;
+        if (isAuthority()) {
+            if (cooldown > 0) {
+                CooldownPhase();
             }
-        }
-        if (timer > duration && timer < delay + duration) {
-            if (Mathf.chance(0.05)) {
+
+            if (triggered && cooldown <= 0) {
+                if (timer > duration) {
+                    AbsorptionPhase();
+                } else if (timer > 0) {
+                    ConversionPhase();
+                } else if (timer <= 0) {
+                    cooldown = cooldownTime;
+                    triggered = false;
+                    currentDamage = 0f;
+                    actualDamage = 0f;
+                    damageMultiplier = 1;
+                }
+            }
+            if (timer > duration && timer < delay + duration && Mathf.chance(0.05)) {
                 Tmp.v1.rnd(Mathf.random(80 + hitSize)).scl(-Mathf.random(1, 2)).add(x, y);
                 WHFx.chainLightningFadeReversed.at(x, y, 12f, team.color.cpy(), Tmp.v1.cpy());
             }
         }
 
-        if (triggered &&timer>0 &&damageMultiplier > 1&& Time.time - lastDamageTime <= DAMAGE_TIME) {
-            warmup = Mathf.lerpDelta(warmup, 1, 0.08f);
-        } else  {
-            warmup = Mathf.lerpDelta(warmup, 0, 0.1f);
-        }
+        updateVisualState();
+    }
 
-        if (timer > duration && timer < duration + delay&& Time.time - lastDamageTime <= DAMAGE_TIME) {
-            size = Mathf.lerpDelta(size, 1, 0.08f);
-        } else {
-            size = Mathf.lerpDelta(size, 0, 0.08f);
+    public boolean isAuthority() {
+        return !Vars.net.client() || isLocal();
+    }
+
+    public void updateVisualState() {
+        boolean warmupActive = triggered && timer > 0f && damageMultiplier > 1;
+        warmup = Mathf.lerpDelta(warmup, warmupActive ? 1f : 0f, warmupActive ? 0.08f : 0.1f);
+
+        boolean sizeActive = timer > duration && timer < duration + delay;
+        size = Mathf.lerpDelta(size, sizeActive ? 1f : 0f, 0.08f);
+
+        boolean conversionActive = timer > 0f && timer < delay && damageMultiplier > 1;
+        if (!conversionActive) {
+            effectTriggered = false;
         }
     }
 
@@ -259,18 +271,20 @@ public class StarrySkyEntity extends UnitEntity {
     @Override
     public void readSync(Reads read) {
         super.readSync(read);
+        float syncCooldown = read.f();
+        float syncTimer = read.f();
+        float syncCurrentDamage = read.f();
+        boolean syncTriggered = read.bool();
+        int syncDamageMultiplier = read.i();
+        float syncActualDamage = read.f();
+
         if (!isLocal()) {
-            timer = read.f();
-            currentDamage = read.f();
-            triggered = read.bool();
-            damageMultiplier = read.i();
-            actualDamage = read.f();
-        } else {
-            read.f();
-            read.f();
-            read.bool();
-            read.i();
-            read.f();
+            cooldown = syncCooldown;
+            timer = syncTimer;
+            currentDamage = syncCurrentDamage;
+            triggered = syncTriggered;
+            damageMultiplier = syncDamageMultiplier;
+            actualDamage = syncActualDamage;
         }
     }
 

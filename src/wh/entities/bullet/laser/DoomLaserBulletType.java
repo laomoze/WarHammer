@@ -1,21 +1,35 @@
 package wh.entities.bullet.laser;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.entities.bullet.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.world.blocks.*;
-import mindustry.world.blocks.environment.*;
-import wh.content.*;
-import wh.graphics.*;
-import wh.util.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.Rand;
+import arc.math.geom.Position;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.Vars;
+import mindustry.content.Fx;
+import mindustry.entities.Damage;
+import mindustry.entities.Effect;
+import mindustry.entities.Units;
+import mindustry.entities.bullet.ContinuousBulletType;
+import mindustry.gen.Bullet;
+import mindustry.gen.Teamc;
+import mindustry.gen.Unit;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.graphics.Trail;
+import mindustry.world.blocks.ControlBlock;
+import mindustry.world.blocks.environment.Floor;
+import wh.content.WHFx;
+import wh.graphics.Drawn;
+import wh.util.WHUtils;
 
 import static mindustry.Vars.headless;
 import static wh.content.WHFx.groundEffect;
@@ -96,26 +110,23 @@ public class DoomLaserBulletType extends ContinuousBulletType{
             Drawf.tri(Tmp.v2.x, Tmp.v2.y, strokeWidth, sideLength * fout2 * (0.8f - i * 0.2f), sideAngle - 180);
 
             Rand rand = WHUtils.rand(b.id);
-            float base = (Time.time / triLifetime * rand.random(0.3f, 1f));
 
             int particles = 5;
             for(int a = 0; a < particles; a++){
                 Draw.z(Layer.bullet + 0.01f);
-                float fin1 = (rand.random(1f) + base) % 1f, fout1 = 1f - fin1,
-                fadeIn1 = Mathf.curve(b.fin(), 0f, 0.15f),
-                progress = Interp.pow2In.apply(fadeIn1) * Interp.pow5Out.apply(fout1),
+                float progress = Mathf.absin(12, 1),
                 angle1 = b.rotation() - 180,
                 size = width / 1.5f * (0.8f - i * 0.2f) * fout2,
                 length = rand.random(triSize * 0.5f, triSize * 2) * (1 - i * 0.2f) * fout2 * progress;
                 Draw.color(Tmp.c1.set(colors[i]).mul(1f + Mathf.absin(Time.time + i * 10f, 1f, 0.15f)));
                 Drawn.tri(rx, ry, size, triSize / 3 * (0.8f - i * 0.2f), angle1 - 180);
                 Drawn.tri(rx, ry, size * progress, length * (0.8f - i * 0.2f), angle1 + 10 * particles * rand.random(1));
+            }
 
-                if(trailLength > 0 && b.trail != null){
-                    Color colorIndex = colors[i % (colors.length - 1)];
-                    Color trailColor = Tmp.c1.set(colorIndex).mul(1f + Mathf.absin(Time.time + i * 10f, 1f, 0.15f)).lerp(Color.black, 0.05f);
-                    b.trail.draw(trailColor, width / 3.5f * (0.8f - i * 0.2f) * fout2);
-                }
+            if (trailLength > 0 && b.trail != null) {
+                Color colorIndex = colors[i % (colors.length - 1)];
+                Color trailColor = Tmp.c1.set(colorIndex).mul(1f + Mathf.absin(Time.time + i * 10f, 1f, 0.15f)).lerp(Color.black, 0.05f);
+                b.trail.draw(trailColor, width / 3.5f * (0.8f - i * 0.2f) * fout2);
             }
         }
 

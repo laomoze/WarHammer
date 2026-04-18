@@ -1,27 +1,35 @@
 package wh.entities.world.entities.weapon;
 
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import mindustry.audio.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.type.*;
-import wh.entities.world.entities.weapon.MarkWeapon.*;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
+import arc.struct.ObjectFloatMap;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.audio.SoundLoop;
+import mindustry.entities.Mover;
+import mindustry.entities.Predict;
+import mindustry.entities.Sized;
+import mindustry.entities.units.WeaponMount;
+import mindustry.gen.Bullet;
+import mindustry.gen.Sounds;
+import mindustry.gen.Unit;
+import mindustry.type.Weapon;
+import wh.entities.world.entities.weapon.MarkWeapon.MarkWeaponMount;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.headless;
+import static mindustry.Vars.state;
 
 public class MulitShootContinueWeapon extends Weapon{
     public MulitShootContinueWeapon(String name){
         super(name);
         continuous = true;
-        mountType = MarkWeapon.MarkWeaponMount::new;
+        mountType = MultiShootMount::new;
     }
 
     @Override
     public void update(Unit unit, WeaponMount m){
-        if(!(m instanceof MarkWeaponMount mount)) return;
+        if (!(m instanceof MultiShootMount mount)) return;
         //super.update(unit, m);
 
         float
@@ -51,7 +59,7 @@ public class MulitShootContinueWeapon extends Weapon{
         //find a new target
         if(!controllable && autoTarget){
             if((mount.retarget -= Time.delta) <= 0f){
-                mount.target = findTarget(unit, mountX, mountY, mount.bulletWhich.range, mount.bulletWhich.collidesAir, mount.bulletWhich.collidesGround);
+                mount.target = findTarget(unit, mountX, mountY, bullet.range, bullet.collidesAir, bullet.collidesGround);
                 mount.retarget = mount.target == null ? targetInterval : targetSwitchInterval;
             }
 
@@ -107,15 +115,20 @@ public class MulitShootContinueWeapon extends Weapon{
         if(alwaysShooting) mount.shoot = true;
 
         if(continuous && mount.bullet != null && mount.bullets.size > 0){
-            mount.bullets.removeAll(b -> b == null || !b.isAdded() || b.type == null || b.time >= b.lifetime || mount.bullet.type != mount.bulletWhich);
+            mount.bullets.removeAll(b -> b == null || !b.isAdded() || b.type == null || b.time >= b.lifetime || mount.bullet.type != bullet);
             for(Bullet bullet : mount.bullets){
 
                 Vec2 pos = mount.shootPoints.get(bullet);
+                float angleOffset = mount.shootAngles.get(bullet, 0f);
+                if (pos == null) {
+                    mount.shootAngles.remove(bullet, 0f);
+                    continue;
+                }
                 float
                 bx = mountX + Angles.trnsx(weaponRotation, this.shootX + pos.x, this.shootY + pos.y),
                 by = mountY + Angles.trnsy(weaponRotation, this.shootX + pos.x, this.shootY + pos.y);
                 bullet.set(bx, by);
-                bullet.rotation(weaponRotation + 90);
+                bullet.rotation(weaponRotation + 90f + angleOffset);
 
                 mount.reload = reload;
                 mount.recoil = 1f;
@@ -133,7 +146,7 @@ public class MulitShootContinueWeapon extends Weapon{
                 //resulting length of the bullet (smoothed)
                 float resultLength = Mathf.approachDelta(curLength, shootLength, aimChangeSpeed);
                 //actual aim end point based on length
-                Tmp.v1.trns(shootAngle, mount.lastLength = resultLength).add(bulletX, bulletY);
+                Tmp.v1.trns(shootAngle + angleOffset, mount.lastLength = resultLength).add(bulletX, bulletY);
 
                 bullet.aimX = Tmp.v1.x;
                 bullet.aimY = Tmp.v1.y;
@@ -148,6 +161,7 @@ public class MulitShootContinueWeapon extends Weapon{
                 if(bullet.time >= bullet.lifetime){
                     mount.bullets.remove(bullet);
                     mount.shootPoints.remove(bullet);
+                    mount.shootAngles.remove(bullet, 0f);
                 }
             }
         }else{
@@ -191,8 +205,17 @@ public class MulitShootContinueWeapon extends Weapon{
     @Override
     protected void bullet(Unit unit, WeaponMount m, float xOffset, float yOffset, float angleOffset, Mover mover){
         super.bullet(unit, m, xOffset, yOffset, angleOffset, mover);
-        if(!(m instanceof MarkWeaponMount mount)) return;
+        if (!(m instanceof MultiShootMount mount) || mount.bullet == null) return;
         mount.bullets.add(mount.bullet);
         mount.shootPoints.put(mount.bullet, new Vec2(xOffset, yOffset));
+        mount.shootAngles.put(mount.bullet, angleOffset);
+    }
+
+    public static class MultiShootMount extends MarkWeaponMount {
+        public final ObjectFloatMap<Bullet> shootAngles = new ObjectFloatMap<>();
+
+        public MultiShootMount(Weapon weapon) {
+            super(weapon);
+        }
     }
 }

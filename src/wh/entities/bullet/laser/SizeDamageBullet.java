@@ -1,23 +1,28 @@
 package wh.entities.bullet.laser;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.pooling.*;
-import mindustry.*;
-import mindustry.content.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
+import arc.struct.Seq;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.pooling.Pools;
+import mindustry.Vars;
+import mindustry.content.StatusEffects;
+import mindustry.content.UnitTypes;
 import mindustry.entities.*;
-import mindustry.entities.bullet.*;
-import mindustry.game.*;
+import mindustry.entities.bullet.BulletType;
+import mindustry.game.Team;
 import mindustry.gen.*;
-import mindustry.graphics.*;
-import wh.content.*;
-import wh.entities.bullet.*;
-import wh.graphics.*;
-import wh.util.*;
+import mindustry.graphics.Drawf;
+import wh.content.WHFx;
+import wh.entities.bullet.EffectBulletType;
+import wh.graphics.WHPal;
+import wh.util.WHUtils;
 
 import static mindustry.Vars.indexer;
 
@@ -51,6 +56,17 @@ public class SizeDamageBullet extends EffectBulletType{
             super.init();
             hitSizeColor = hitColor;
             hitEffect = despawnEffect;
+        }
+
+        @Override
+        public void drawTrail(Bullet b) {
+        }
+
+        @Override
+        public void removed(Bullet b) {
+            if (b.frags == 0 && fragOnDespawn && fragBullet != null) {
+                createFrags(b, b.x, b.y);
+            }
         }
 
         @Override
@@ -148,9 +164,9 @@ public class SizeDamageBullet extends EffectBulletType{
     }
 
     public void dynamicHitEffect(Sized s, Seq<Sized> data, Bullet b){
-        float size = Math.min(s.hitSize(), 75);
+        float size = Math.min(s.hitSize(), 50);
         if(Mathf.chance(0.32) || data.size < 8){
-            float sd = Mathf.random(size * 3f, size * 12f);
+            float sd = Mathf.random(size * 3f, size * 6f);
             WHFx.shuttleDark.at(s.getX() + Mathf.range(size), s.getY() + Mathf.range(size), 45, b.team.color, sd);
         }
     }

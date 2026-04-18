@@ -46,7 +46,7 @@ public class RevengeUnit extends UnitEntity{
     public final float RANGE_CHECK = 120;
 
     public final float CHECK_RELOAD = 75;
-    public final float CHECK_RANGE = 450;
+    public final float CHECK_RANGE = 550;
     public float checkReload = CHECK_RELOAD;
 
     public float abilityTimer;

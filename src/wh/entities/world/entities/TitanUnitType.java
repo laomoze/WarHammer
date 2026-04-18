@@ -1,12 +1,13 @@
 package wh.entities.world.entities;
 
-import mindustry.ai.types.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.game.*;
-import mindustry.gen.*;
-import mindustry.type.*;
-import wh.gen.*;
+import mindustry.ai.types.CommandAI;
+import mindustry.content.Fx;
+import mindustry.entities.Effect;
+import mindustry.game.Team;
+import mindustry.gen.TimedKillc;
+import mindustry.gen.Unit;
+import mindustry.type.UnitType;
+import wh.gen.TitanUnit;
 
 public class TitanUnitType extends UnitType{
     public TitanUnitType(String name){
@@ -16,7 +17,7 @@ public class TitanUnitType extends UnitType{
 
     public float longAxis = 500 / 4f, minorAxis = 400 / 4f;
     public float radius = 60f;
-    public float regen = 1200 / 60f, max = 15000, cooldown = 60 * 60f, restartRatio = 0.4f;
+    public float regen = 1100 / 60f, max = 13000, cooldown = 60 * 60f, restartRatio = 0.4f;
 
     public float reflectChance = 0.15f;
     public boolean shader = true;
@@ -25,8 +26,8 @@ public class TitanUnitType extends UnitType{
     public boolean percentRegen = false;
     public float percentRegenAmount = 0.05f;
 
-    public float damageMax = 1300;
-    public float shieldDamageMaxPer = 2000;
+    public float damageMax = 2000;
+    public float shieldDamageMaxPer = 2700;
     public float accumulateDamage = 8000;
     public float fullAbsorbTime = 240;
 

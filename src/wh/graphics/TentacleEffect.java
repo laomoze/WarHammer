@@ -1,13 +1,20 @@
 package wh.graphics;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.util.*;
-import mindustry.entities.*;
-import mindustry.gen.*;
-import mindustry.world.blocks.*;
-import wh.core.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.Rand;
+import arc.util.Nullable;
+import arc.util.Time;
+import mindustry.entities.Effect;
+import mindustry.gen.Bullet;
+import mindustry.gen.EffectState;
+import mindustry.gen.Posc;
+import mindustry.gen.Rotc;
+import mindustry.world.blocks.RotBlock;
+import wh.core.WHSettings;
 
 import static mindustry.Vars.state;
 
@@ -30,14 +37,14 @@ public class TentacleEffect extends Effect{
 
     // 每条触手的分段范围
     public int minSegments = 8;
-    public int maxSegments = 15;
+    public int maxSegments = 12;
 
     // 每条触手长度/宽度随机倍数
     public float minLenMul = 1.0f, maxLenMul = 1.5f;
     public float minWidthMul = 1.0f, maxWidthMul = 1.5f;
 
     // 角速度相关参数
-    public float angleDrag = 0.1f;
+    public float angleDrag = 0.2f;
     public float angularVelocityInherit = 0.1f;
     public float minAngularVelocity = 2.8f, maxAngularVelocity = 4.8f;
 

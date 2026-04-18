@@ -1,18 +1,30 @@
 package wh.entities.bullet.laser;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.util.*;
-import arc.util.pooling.*;
-import mindustry.entities.*;
-import mindustry.entities.bullet.*;
-import mindustry.game.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import wh.core.*;
-import wh.graphics.*;
-import wh.util.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.Rand;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.pooling.Pools;
+import mindustry.entities.Damage;
+import mindustry.entities.Effect;
+import mindustry.entities.Mover;
+import mindustry.entities.bullet.ContinuousLaserBulletType;
+import mindustry.game.Team;
+import mindustry.gen.Building;
+import mindustry.gen.Bullet;
+import mindustry.gen.Entityc;
+import mindustry.gen.Teamc;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import wh.core.WHSettings;
+import wh.graphics.PositionLightning;
+import wh.util.WHUtils;
 
 public class LightingContinuousLaserBullet extends ContinuousLaserBulletType{
     public Color lightningColor;
@@ -26,6 +38,7 @@ public class LightingContinuousLaserBullet extends ContinuousLaserBulletType{
     public float particleLife = 90;
     public float particleLen = 15;
     public float particleWidth = 2;
+    public float particleLayerOffset = 1f;
 
     public boolean rotate = true;
     public float rotateAngle = 6;
@@ -93,7 +106,7 @@ public class LightingContinuousLaserBullet extends ContinuousLaserBulletType{
         float base = (Time.time / particleLife);
         if(WHSettings.effectEnabled()){
             for(int i = 0; i < particles; i++){
-                Draw.z(Layer.bullet + 1f);
+                Draw.z(Layer.bullet + particleLayerOffset);
                 float fin1 = (rand.random(1f) + base) % 1f, fout1 = 1f - fin1;
                 float len = rand.random(particleLen * 0.7f, particleLen * 1.3f);
                 float centerDeg = rand.random(Mathf.pi);

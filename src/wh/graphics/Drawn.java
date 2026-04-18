@@ -5,24 +5,33 @@
 
 package wh.graphics;
 
-import arc.*;
-import arc.func.*;
-import arc.graphics.*;
+import arc.Core;
+import arc.func.Cons;
+import arc.func.Floatc2;
+import arc.graphics.Color;
 import arc.graphics.g2d.*;
-import arc.math.*;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.Rand;
 import arc.math.geom.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.pooling.*;
-import mindustry.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.ui.*;
-import wh.content.*;
-import wh.math.*;
-import wh.util.*;
-import wh.util.struct.*;
+import arc.scene.ui.layout.Scl;
+import arc.struct.FloatSeq;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.pooling.Pools;
+import mindustry.Vars;
+import mindustry.gen.Building;
+import mindustry.gen.Player;
+import mindustry.gen.Unit;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.ui.Fonts;
+import wh.content.WHFx;
+import wh.math.WHInterp;
+import wh.util.WHUtils;
+import wh.util.struct.Vec2Seq;
 
 import static arc.graphics.g2d.Lines.polyline;
 import static mindustry.Vars.tilesize;
@@ -207,6 +216,22 @@ public final class Drawn{
         }
     }
 
+    public static void drawLaserSpear(float x, float y, float w, float h, float rot) {
+        v1.trns(rot, 0.7f * h);
+        for (int s : Mathf.signs) {
+            v3.trns(rot - 90f, w * s, -0.25f * h);
+            Fill.tri(x + v1.x, y + v1.y, x, y, x + v3.x, y + v3.y);
+        }
+
+        v1.trns(rot, 0.25f * h);
+        for (int s : Mathf.signs) {
+            v3.trns(rot - 90f, w * s, -0.45f * h);
+            Fill.tri(x + v1.x, y + v1.y, x, y, x + v3.x, y + v3.y);
+        }
+
+        Drawf.tri(x, y, w, h, rot - 180f);
+    }
+
     public static void circlePercentFlip(float x, float y, float rad, float in, float scl){
         float f = Mathf.cos(in % (scl * 3.0F), scl, 1.1F);
         circlePercent(x, y, rad, f > 0.0F ? f : -f, in + (float)(-90 * Mathf.sign(f)));
@@ -354,6 +379,8 @@ public final class Drawn{
             ly = cy;
             lrot = crot;
         }
+
+        Fill.circle(originX, originY, halfWidth);
     }
 
     /**

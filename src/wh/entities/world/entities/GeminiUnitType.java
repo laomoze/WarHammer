@@ -1,4 +1,4 @@
-package wh.entities.world.drawer;
+package wh.entities.world.entities;
 
 import arc.graphics.g2d.Draw;
 import arc.math.Mathf;
@@ -6,7 +6,6 @@ import arc.util.Log;
 import mindustry.entities.bullet.BulletType;
 import mindustry.gen.Unit;
 import wh.entities.bullet.ApproachBullet;
-import wh.entities.world.entities.SuperHeavyUnitType;
 import wh.gen.GeminiUnit;
 
 public class GeminiUnitType extends SuperHeavyUnitType {

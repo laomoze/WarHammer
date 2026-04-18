@@ -1,18 +1,26 @@
 package wh.entities.bullet.laser;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import arc.util.pooling.Pool.*;
-import arc.util.pooling.*;
-import mindustry.*;
-import mindustry.entities.*;
-import mindustry.entities.bullet.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import wh.graphics.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.math.geom.Position;
+import arc.math.geom.Vec2;
+import arc.util.Tmp;
+import arc.util.pooling.Pool.Poolable;
+import arc.util.pooling.Pools;
+import mindustry.Vars;
+import mindustry.entities.Damage;
+import mindustry.entities.Effect;
+import mindustry.entities.Units;
+import mindustry.entities.bullet.BulletType;
+import mindustry.gen.Building;
+import mindustry.gen.Bullet;
+import mindustry.gen.Hitboxc;
+import mindustry.graphics.Drawf;
+import wh.graphics.MainRenderer;
 
 public class DelayedPointBulletType extends BulletType{
     protected static float cdist = 0f;
@@ -213,17 +221,18 @@ public class DelayedPointBulletType extends BulletType{
         super.despawned(b);
     }
 
-}
+    public class DelayedPointBulletData implements Poolable {
+        public Position target;
+        public Color[] colors;
+        boolean square;
 
-class DelayedPointBulletData implements Poolable{
-    Position target;
-    Color[] colors;
-    boolean square;
-
-    @Override
-    public void reset(){
-        target = null;
-        colors = null;
-        square = false;
+        @Override
+        public void reset() {
+            target = null;
+            colors = null;
+            square = false;
+        }
     }
 }
+
+
