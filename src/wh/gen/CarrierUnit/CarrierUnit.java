@@ -5,9 +5,10 @@ import arc.math.geom.Vec2;
 import mindustry.gen.PayloadUnit;
 import mindustry.gen.Unit;
 import wh.entities.world.entities.CarrierUnitType;
+import wh.gen.CarrierFighterUnit;
 
 /**
- * Shared carrier unit foundation: type/runway sizing, carrier flag codec and generic point validity checks.
+ * Shared carrier unit foundation: type/runway sizing and generic point validity checks.
  */
 public class CarrierUnit extends PayloadUnit{
     protected static final double fighterCarrierFlagBase = -2_000_000_000d;
@@ -74,9 +75,9 @@ public class CarrierUnit extends PayloadUnit{
 
     public static int decodeCarrierFlag(double flag){
         long packed = decodePackedFlag(flag);
-        if(packed < 0) return -1;
+        if (packed < 0L) return -1;
 
-        // 向后兼容：旧格式只存储航母编号。
+        // Backward compatibility: old format only stored carrier id.
         if(packed < (1L << flagRunwayBits)){
             return (int)packed;
         }
@@ -85,9 +86,9 @@ public class CarrierUnit extends PayloadUnit{
 
     public static int decodeRunwayFlag(double flag){
         long packed = decodePackedFlag(flag);
-        if(packed < 0) return -1;
+        if (packed < 0L) return -1;
 
-        // 向后兼容：旧格式不包含跑道信息。
+        // Backward compatibility: old format had no runway info.
         if(packed < (1L << flagRunwayBits)){
             return 0;
         }
@@ -96,21 +97,18 @@ public class CarrierUnit extends PayloadUnit{
 
     public int fighterRunway(Unit fighter){
         if(fighter == null) return 0;
-        return clampRunway(decodeRunwayFlag(fighter.flag()));
+        if (fighter instanceof CarrierFighterUnit data) {
+            return clampRunway(data.runway);
+        }
+        return clampRunway(Math.max(decodeRunwayFlag(fighter.flag()), 0));
     }
 
     protected boolean validLaunchPoint(Vec2 point){
-        if(point == null) return false;
+        if (point == null || (point.x == 0f && point.y == 0f)) return false;
         return Float.isFinite(point.x) && Float.isFinite(point.y);
     }
 
     protected boolean invalidLaunchPoint(Vec2 point){
-        return !validLaunchPoint(point) || suspiciousOriginPoint(point);
-    }
-
-    protected boolean suspiciousOriginPoint(Vec2 point){
-        if(point == null) return true;
-        // 当航母不在世界原点附近时，接近原点的起飞点通常是无效脏数据。
-        return point.within(0f, 0f, 8f) && !within(0f, 0f, 80f);
+        return !validLaunchPoint(point);
     }
 }

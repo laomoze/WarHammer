@@ -56,6 +56,7 @@ public final class EntityRegister{
 
         register("RevengeUnit", RevengeUnit.class, RevengeUnit::new);
         register("GeminiUnit", GeminiUnit.class, GeminiUnit::new);
+        register("CarrierFighterUnit", CarrierFighterUnit.class, CarrierFighterUnit::new);
 
         register("ApproachB", AB.class, AB::new);
         register("TrailBullet", TrailBullet.class, TrailBullet::new);

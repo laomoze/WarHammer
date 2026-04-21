@@ -71,7 +71,7 @@ public class GeminiUnit extends UnitEntity {
     public static final float SECONDARY_RANGE = 300;
     public static final float SECONDARY_REFRESH_INTERVAL = 30f;
     public static final float SECONDARY_TRANSFER_INTERVAL = 1f;
-    public static final float SECONDARY_TRANSFER_DAMAGE_MULTIPLIER = 1.6f;
+    public static final float SECONDARY_TRANSFER_DAMAGE_MULTIPLIER = 1;
     public static final float SECONDARY_MIN_SCORE = 3500f;
     public static final float SELF_TO_PRIMARY_DAMAGE = 0.8f;
     public static final float ATTACKER_PRUNE_INTERVAL = 20f;
@@ -87,7 +87,7 @@ public class GeminiUnit extends UnitEntity {
     public static final float EARLY_LINK_RESET_PROGRESS = 1f / 2f;
 
     public static final float PHASE_INTERVAL = 25f * 60f;
-    public static final float PHASE_DURATION = 7f * 60f;
+    public static final float PHASE_DURATION = 5f * 60f;
     public static final float PHASE_ALPHA = 0.4f;
 
     public static final float LINK_RING_STROKE = 1.35f;
@@ -106,9 +106,9 @@ public class GeminiUnit extends UnitEntity {
     public static final float PAIR_LINK_REFRESH_INTERVAL = 60;
     public static final float PAIR_LINK_RADIUS_APPROACH = 0.02f;
     public static final float PAIR_LINK_DAMAGE_REDUCTION = 0.2f;
-    public static final float PAIR_LINK_TRANSFER_FRACTION = 0.3f;
+    public static final float PAIR_LINK_TRANSFER_FRACTION = 0.17f;
 
-    public static final float LOW_HEALTH_DAMAGE_CAP = 3000f;
+    public static final float LOW_HEALTH_DAMAGE_CAP = 5000;
     public static final float LOW_HEALTH_ARMOR_MULTIPLIER = 1.5f;
     public static final int PAIR_LINK_TRAIL_COUNT = 3;
     public static final int PRIMARY_GHOST_TRAIL_MAX = 6;

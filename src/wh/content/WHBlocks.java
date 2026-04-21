@@ -5485,28 +5485,16 @@ public final class WHBlocks{
                     new RegionPart("-b"){{
                         mirror = false;
                         under = true;
-                        moveY = 3;
                         moves.add(new PartMove(PartProgress.recoil, 0, -6, 0));
                         progress = PartProgress.warmup;
                         heatProgress = PartProgress.recoil;
                         heatColor = WHPal.Heat;
                     }},
-                    new RegionPart("-side-l"){{
-                        mirror = false;
+                            new RegionPart("-side") {{
+                                mirror = true;
                         x = 0;
                         y = 0;
-                        moveX = -2.4f;
-                        moveY = -3;
-                        moves.add(new PartMove(PartProgress.recoil, 0, -1, 0));
-                        progress = PartProgress.warmup;
-                        heatProgress = PartProgress.recoil;
-                        heatColor = WHPal.Heat;
-                    }},
-                    new RegionPart("-side-r"){{
-                        mirror = false;
-                        x = 0;
-                        y = 0;
-                        moveX = 2.4f;
+                                moveX = 5 / 4f;
                         moveY = -3;
                         moves.add(new PartMove(PartProgress.recoil, 0, -1, 0));
                         progress = PartProgress.warmup;

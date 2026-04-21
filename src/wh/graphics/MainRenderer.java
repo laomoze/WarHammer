@@ -1,29 +1,44 @@
 package wh.graphics;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.graphics.gl.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.pooling.*;
-import mindustry.*;
-import mindustry.game.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import wh.content.*;
-import wh.core.*;
-import wh.entities.world.entities.*;
-import wh.gen.CarrierUnit.*;
-import wh.gen.CarrierUnit.UnitAI.*;
+import arc.Events;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.graphics.gl.FrameBuffer;
+import arc.graphics.gl.Shader;
+import arc.math.geom.Vec2;
+import arc.struct.Seq;
+import arc.util.Log;
+import arc.util.Strings;
+import arc.util.Tmp;
+import arc.util.pooling.Pool;
+import arc.util.pooling.Pools;
+import mindustry.Vars;
+import mindustry.game.EventType;
+import mindustry.gen.Groups;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.graphics.Shaders;
+import wh.content.WHContent;
+import wh.core.WHSettings;
+import wh.entities.world.entities.CarrierUnitType;
+import wh.gen.CarrierUnit.CarrierHostc;
+import wh.gen.CarrierUnit.CarrierRuntime;
+import wh.gen.CarrierUnit.UnitAI.CarrierFighterAI;
 
-import static arc.Core.*;
+import static arc.Core.graphics;
+import static arc.Core.settings;
 
 public class MainRenderer{
     private final Seq<BlackHole> holes = new Seq<>();
     private final Vec2 hudQueue = new Vec2();
     private final Vec2 hudReverse = new Vec2();
+    private final Vec2 hudFront = new Vec2();
+    private final Vec2 hudLaunch = new Vec2();
+    private final Vec2 hudTakeoffFrom = new Vec2();
+    private final Vec2 hudTakeoffTo = new Vec2();
     private final Vec2 hudVel = new Vec2();
     private final Vec2 hudNose = new Vec2();
     public static MainRenderer renderer;
@@ -68,7 +83,6 @@ public class MainRenderer{
 
         Groups.unit.each(fighter -> {
             if(!(fighter.controller() instanceof CarrierFighterAI ai)) return;
-            if(!ai.isReturning()) return;
 
             CarrierHostc carrier = ai.carrierDebug();
             if(carrier == null) return;
@@ -77,8 +91,11 @@ public class MainRenderer{
 
             int runway = carrier.clampRunway(ai.runwayIndex());
             carrier.recoveryPoint(runway, Tmp.v1);
-            carrier.runwayFrontPoint(runway, Tmp.v2);
+            carrier.runwayFrontPoint(runway, hudFront);
+            carrier.launchExitPoint(runway, hudLaunch);
             carrier.runwayQueueInsertPoint(runway, hudQueue);
+            ai.debugTakeoffFrom(hudTakeoffFrom);
+            ai.debugTakeoffTo(hudTakeoffTo);
             boolean showReverse = false;
             if(carrier instanceof CarrierRuntime runtime){
                 runtime.recoveryReversePoint(runway, hudReverse);
@@ -90,13 +107,34 @@ public class MainRenderer{
             float orbitAngleErr = ai.debugOrbitAngleError();
             String stage = ai.debugStage();
             String flags = "o" + (ai.debugInOrbitBand() ? "1" : "0") + " e" + (ai.debugInEntryWindow() ? "1" : "0") + " c" + (ai.debugClaimBlocked() ? "1" : "0");
+            String fire = "t" + (ai.debugWeaponHasTarget() ? "1" : "0") +
+                    " s" + (ai.debugWeaponAllowShoot() ? "1" : "0") +
+                    " f" + (ai.debugWeaponAllowFire() ? "1" : "0");
 
             Color stateColor = ai.isLanding() ? Pal.accent : Pal.power;
-            Drawn.overlayText("r" + runway + " " + stage + " dT " + Strings.fixed(distTail, 0) + " p " + Strings.fixed(orbitAngleErr, 0) + " " + flags, fighter.x, fighter.y + fighter.hitSize + 12f, 0f, stateColor, false);
-            Drawn.overlayText("v " + Strings.fixed(velLen, 2) + " rot " + Strings.fixed(fighter.rotation, 0), fighter.x, fighter.y + fighter.hitSize + 4f, 0f, Color.white, false);
+            Drawn.overlayText(
+                    "r" + runway + " " + stage + " rc " + ai.debugRecallReason() + " dT " + Strings.fixed(distTail, 0) + " p " + Strings.fixed(orbitAngleErr, 0) + " " + flags,
+                    fighter.x, fighter.y + fighter.hitSize + 14f, 0f, stateColor, false
+            );
+            Drawn.overlayText(
+                    "v " + Strings.fixed(velLen, 2) + " rot " + Strings.fixed(fighter.rotation, 0) + " tk " + Strings.fixed(ai.debugTakeoffTimer(), 1) +
+                            " rg " + Strings.fixed(ai.debugRecallGraceTimer(), 1) + " nt " + Strings.fixed(ai.debugNoTargetTimer(), 1) + " " + fire,
+                    fighter.x, fighter.y + fighter.hitSize + 6f, 0f, Color.white, false
+            );
 
             Lines.stroke(1.2f, stateColor);
             Lines.line(fighter.x, fighter.y, Tmp.v1.x, Tmp.v1.y);
+            Drawf.dashLine(Pal.heal, hudFront.x, hudFront.y, hudLaunch.x, hudLaunch.y);
+            Draw.color(Pal.heal);
+            Fill.circle(hudFront.x, hudFront.y, 2f);
+            Fill.circle(hudLaunch.x, hudLaunch.y, 2.6f);
+
+            if (ai.debugTakeoffTimer() > 0f) {
+                Drawf.dashLine(Pal.place, hudTakeoffFrom.x, hudTakeoffFrom.y, hudTakeoffTo.x, hudTakeoffTo.y);
+                Draw.color(Pal.place);
+                Fill.circle(hudTakeoffFrom.x, hudTakeoffFrom.y, 1.8f);
+                Fill.circle(hudTakeoffTo.x, hudTakeoffTo.y, 2.2f);
+            }
             if(ai.isReturning() && showReverse){
                 Drawf.dashLine(Pal.place, Tmp.v1.x, Tmp.v1.y, hudReverse.x, hudReverse.y);
                 Draw.color(Pal.place);

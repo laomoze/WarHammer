@@ -1789,7 +1789,7 @@ public class WHBulletsOther {
             @Override
             public void update(AB b) {
                 super.update(b);
-                if (Mathf.chanceDelta(0.05f) && b.vel.len() < 0.8f) {
+                if (Mathf.chanceDelta(0.05f) && b.vel.len() < 0.8f && b.fin() < 0.8f) {
                     WHFx.tentacleCorona(120, 50, 17, 1, 0.2f, null, null)
                             .layer(WHFx.EFFECT_BOTTOM - 0.01f).at(b.x, b.y, Mathf.random(360), hitColor, b);
                 }

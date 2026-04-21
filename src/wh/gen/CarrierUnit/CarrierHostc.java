@@ -1,10 +1,11 @@
 package wh.gen.CarrierUnit;
 
-import arc.math.geom.*;
-import arc.util.*;
-import mindustry.gen.*;
-import mindustry.world.blocks.payloads.*;
-import wh.entities.world.entities.*;
+import arc.math.geom.Vec2;
+import arc.util.Nullable;
+import mindustry.gen.Teamc;
+import mindustry.gen.Unit;
+import mindustry.world.blocks.payloads.Payload;
+import wh.entities.world.entities.CarrierUnitType;
 
 /**
  * Carrier behavior contract used by fighter AI.
@@ -15,13 +16,19 @@ public interface CarrierHostc extends Teamc{
 
     int clampRunway(int runway);
 
-    Vec2 runwayFrontPoint(int runway, Vec2 out);
+    boolean ownsFighter(Unit fighter);
 
-    Vec2 launchExitPoint(int runway, Vec2 out);
+    int fighterRunway(Unit fighter);
 
-    Vec2 recoveryPoint(int runway, Vec2 out);
+    float fighterSortieTime(Unit fighter);
 
-    Vec2 runwayQueueInsertPoint(int runway, Vec2 out);
+    void runwayFrontPoint(int runway, Vec2 out);
+
+    void launchExitPoint(int runway, Vec2 out);
+
+    void recoveryPoint(int runway, Vec2 out);
+
+    void runwayQueueInsertPoint(int runway, Vec2 out);
 
     boolean allowRecoveryApproach(Unit fighter);
 

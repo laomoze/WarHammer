@@ -1,17 +1,22 @@
 package wh.entities.bullet;
 
-import arc.audio.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.entities.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.world.blocks.*;
-
-import static wh.content.WHFx.rand;
+import arc.audio.Sound;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.Vars;
+import mindustry.entities.Units;
+import mindustry.gen.Bullet;
+import mindustry.gen.Sounds;
+import mindustry.gen.Teamc;
+import mindustry.gen.Unit;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.world.blocks.ControlBlock;
 
 public class CritMissileBulletType extends CritBulletType{
     public CritMissileBulletType(){
@@ -39,7 +44,6 @@ public class CritMissileBulletType extends CritBulletType{
     public float flameLength = 10f;
     public float lengthOffset = 10f;
     public Interp lengthInterp = Interp.slope;
-    public boolean weaveMagOnce = false;
     public boolean drawMissile = false;
     public boolean drawTeamColor = false;
 
@@ -139,13 +143,6 @@ public class CritMissileBulletType extends CritBulletType{
     @Override
     public void updateWeaving(Bullet b){
         super.updateWeaving(b);
-
-        if(weaveMag != 0 && weaveMagOnce){
-            rand.setSeed(b.id);
-            float weaveRange = /*b.type.range/Vars.tilesize*/b.lifetime / Mathf.pi;
-            b.vel.rotateRadExact((float)Math.sin((b.time + Math.PI * weaveRange / 2f) / weaveRange) * weaveMag * rand.random(0.6f, 1f) *
-            (weaveRandom ? (Mathf.randomSeed(b.id, 0, 1) == 1 ? -1 : 1) : 1f) * Time.delta * Mathf.degRad);
-        }
     }
 
     @Override

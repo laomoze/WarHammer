@@ -1,18 +1,22 @@
 package wh.entities.abilities;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.entities.abilities.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
+import arc.Core;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
+import arc.scene.ui.layout.Table;
+import arc.struct.Queue;
+import arc.struct.Seq;
+import arc.util.Interval;
+import arc.util.Strings;
+import mindustry.Vars;
+import mindustry.entities.abilities.Ability;
+import mindustry.gen.Unit;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Trail;
+import mindustry.type.UnitType;
 
 import static wh.core.WarHammerMod.name;
 
@@ -75,6 +79,18 @@ public class BoostAbility extends Ability{
         out.seq = new Queue<>(maxSize + 1);
         out.timer = new Interval();
         return out;
+    }
+
+    public void resetTrails() {
+        if (trails != null) {
+            for (Trail trail : trails) {
+                if (trail != null) {
+                    trail.clear();
+                }
+            }
+        }
+        seq.clear();
+        timer = new Interval();
     }
 
     public float warmup(float angle){

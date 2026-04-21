@@ -29,10 +29,19 @@ public class CarrierUnitType extends WHUnitType{
         public float x, y;
         // 该跑道最多可容纳的机位数。
         public int capacity;
+        // 该跑道的专属舰载机类型；为空时回退到 CarrierUnitType.fighterType。
+        public UnitType fighterType;
         // 相对航母朝向的角度偏移（度）。NaN 表示直接使用航母前向。
         public float angle = Float.NaN;
+        // 跑道机位间距覆盖值；<=0 表示沿用 CarrierUnitType.slotSpacing()。
+        public float spacing = -1f;
+        // 跑道起飞前推覆盖值；NaN 表示沿用 CarrierUnitType.launchForwardOffset。
+        public float launchForwardOffset = Float.NaN;
+        // 跑道回收后移覆盖值；NaN 表示沿用 CarrierUnitType.recoverRearOffset。
+        public float recoverRearOffset = Float.NaN;
         // 是否在载荷层绘制该跑道上的 payload；false 时仅参与逻辑，不渲染模型。
         public boolean drawPayloadLayer = true;
+        public float payloadLayerOffset = Float.NaN;
 
         public Runway(float x, float y, int capacity){
             this.x = x;
@@ -45,35 +54,67 @@ public class CarrierUnitType extends WHUnitType{
             this.drawPayloadLayer = drawPayloadLayer;
         }
 
+        public Runway(float x, float y, int capacity, boolean drawPayloadLayer, float payloadLayerOffset) {
+            this(x, y, capacity, drawPayloadLayer);
+            this.payloadLayerOffset = payloadLayerOffset;
+        }
+
+        public Runway(float x, float y, int capacity, UnitType fighterType) {
+            this(x, y, capacity);
+            this.fighterType = fighterType;
+        }
+
         public Runway(float x, float y, int capacity, float angle){
             this(x, y, capacity);
             this.angle = angle;
+        }
+
+        public Runway(float x, float y, int capacity, float angle, UnitType fighterType) {
+            this(x, y, capacity, angle);
+            this.fighterType = fighterType;
+        }
+
+        public Runway(float x, float y, int capacity, UnitType fighterType, boolean drawPayloadLayer) {
+            this(x, y, capacity, drawPayloadLayer);
+            this.fighterType = fighterType;
         }
 
         public Runway(float x, float y, int capacity, float angle, boolean drawPayloadLayer){
             this(x, y, capacity, angle);
             this.drawPayloadLayer = drawPayloadLayer;
         }
+
+        public Runway(float x, float y, int capacity, float angle, boolean drawPayloadLayer, float payloadLayerOffset) {
+            this(x, y, capacity, angle, drawPayloadLayer);
+            this.payloadLayerOffset = payloadLayerOffset;
+        }
+
+        public Runway(float x, float y, int capacity, float angle, UnitType fighterType, boolean drawPayloadLayer) {
+            this(x, y, capacity, angle, drawPayloadLayer);
+            this.fighterType = fighterType;
+        }
+
+        public Runway(float x, float y, int capacity, float angle, UnitType fighterType, boolean drawPayloadLayer, float payloadLayerOffset) {
+            this(x, y, capacity, angle, fighterType, drawPayloadLayer);
+            this.payloadLayerOffset = payloadLayerOffset;
+        }
+
+        public Runway(float x, float y, int capacity, UnitType fighterType, float launchForwardOffset, float recoverRearOffset, boolean drawPayloadLayer) {
+            this(x, y, capacity, drawPayloadLayer);
+            this.fighterType = fighterType;
+            this.launchForwardOffset = launchForwardOffset;
+            this.recoverRearOffset = recoverRearOffset;
+        }
     }
 
     public UnitType fighterType = UnitTypes.flare;
     public final Seq<Runway> runways = new Seq<>();
 
-    // Legacy deck grid settings; used when no custom runways are configured.
-    public int deckLanes = 2;
-    public int deckRows = 5;
-    public int trimRearSlots = 2;
-
     public int initialFighterCount = 8;
     public int maxDeployedFighters = 8;
 
-    // Legacy deck grid positioning.
-    public float deckLaneSpacing = 18f;
-    public float deckRowSpacing = 16f;
-    public float deckFrontOffset = 24f;
-
-    // Runway controls.
-    // <= 0 means use fighter hitSize for spacing.
+    // 跑道控制参数。
+    // <= 0 时使用舰载机 hitSize 作为机位间距基准。
     public float runwaySpacing = -1f;
     public float runwaySpacingMultiplier = 1f;
 
@@ -94,21 +135,21 @@ public class CarrierUnitType extends WHUnitType{
     public Effect takeoffEffect = Fx.unitSpawn;
     public float landingDuration = 50f;
     public float landingApproachRadius = 22f;
-    // If true, only one fighter per runway is allowed to approach for recovery at a time.
+    // 为 true 时，每条跑道同一时刻仅允许 1 架战机进入回收进近。
     public boolean oneByOneRecovery = true;
-    // Return movement speed factor relative to fighter speed.
+    // 回收返航移动速度系数（相对战机基础速度）。
     public float recoveryMoveSpeedFactor = 1.05f;
-    // Holding ring radius multiplier used while waiting for recovery permission.
+    // 等待回收许可时的盘旋半径倍率。
     public float recoveryHoldRadius = 1.35f;
-    // Rotation speed while aligning for queue entry.
-    public float recoveryTurnRate = 12f;
+    // 对齐入队方向时的转向速度。
+    public float recoveryTurnRate = 2f;
     public float recoverRefitTime = 90f;
-    // Heal cadence while fighter is stored on deck after recovery.
+    // 回收后战机停放在甲板上的治疗周期。
     public float recoverHealInterval = 45f;
-    // Fraction of max health restored per recoverHealInterval tick.
+    // 每个 recoverHealInterval 恢复的最大生命值比例。
     public float recoverHealFraction = 0.12f;
-    public float idleReturnDelay = 6f * 60f;
-    public float recallHealthf = 0.35f;
+    public float idleReturnDelay = 4f * 60f;
+    public float recallHealthf = 0.15f;
     public float maxFighterDistance = 360f;
 
     public float fighterOrbitRadius = 90f;
@@ -118,7 +159,7 @@ public class CarrierUnitType extends WHUnitType{
     // 队列视觉插值速度倍率；1 为基础速度，越小越慢。
     public float queueMoveSpeed = 0.1f;
     // 载荷绘制层偏移（相对 unit 当前 Draw.z()）；负值会压到单位主体下方。
-    public float payloadLayerOffset = -0.02f;
+    public float payloadLayerOffset = 0.1f;
 
     public CarrierUnitType(String name){
         super(name);
@@ -135,8 +176,33 @@ public class CarrierUnitType extends WHUnitType{
         return this;
     }
 
+    public CarrierUnitType runway(float x, float y, int capacity, UnitType fighterType) {
+        runways.add(new Runway(x, y, capacity, fighterType));
+        return this;
+    }
+
+    public CarrierUnitType runway(float x, float y, int capacity, float angle, UnitType fighterType) {
+        runways.add(new Runway(x, y, capacity, angle, fighterType));
+        return this;
+    }
+
     public CarrierUnitType runway(float x, float y, int capacity, boolean drawPayloadLayer){
         runways.add(new Runway(x, y, capacity, drawPayloadLayer));
+        return this;
+    }
+
+    public CarrierUnitType runway(float x, float y, int capacity, boolean drawPayloadLayer, float payloadLayerOffset) {
+        runways.add(new Runway(x, y, capacity, drawPayloadLayer, payloadLayerOffset));
+        return this;
+    }
+
+    public CarrierUnitType runway(float x, float y, int capacity, UnitType fighterType, float launchForwardOffset, float recoverRearOffset, boolean drawPayloadLayer) {
+        runways.add(new Runway(x, y, capacity, fighterType, launchForwardOffset, recoverRearOffset, drawPayloadLayer));
+        return this;
+    }
+
+    public CarrierUnitType runway(float x, float y, int capacity, UnitType fighterType, boolean drawPayloadLayer) {
+        runways.add(new Runway(x, y, capacity, fighterType, drawPayloadLayer));
         return this;
     }
 
@@ -145,13 +211,138 @@ public class CarrierUnitType extends WHUnitType{
         return this;
     }
 
+    public CarrierUnitType runway(float x, float y, int capacity, float angle, boolean drawPayloadLayer, float payloadLayerOffset) {
+        runways.add(new Runway(x, y, capacity, angle, drawPayloadLayer, payloadLayerOffset));
+        return this;
+    }
+
+    public CarrierUnitType runway(float x, float y, int capacity, float angle, UnitType fighterType, boolean drawPayloadLayer) {
+        runways.add(new Runway(x, y, capacity, angle, fighterType, drawPayloadLayer));
+        return this;
+    }
+
+    public CarrierUnitType runway(float x, float y, int capacity, float angle, UnitType fighterType, boolean drawPayloadLayer, float payloadLayerOffset) {
+        runways.add(new Runway(x, y, capacity, angle, fighterType, drawPayloadLayer, payloadLayerOffset));
+        return this;
+    }
+
+    public CarrierUnitType runwayFighter(int runway, UnitType fighterType) {
+        if (!runways.any()) return this;
+        int idx = Mathf.clamp(runway, 0, runways.size - 1);
+        Runway def = runways.get(idx);
+        if (def != null) {
+            def.fighterType = fighterType;
+        }
+        return this;
+    }
+
+    public CarrierUnitType setRunwaySpacing(int runway, float spacing) {
+        Runway def = runwayDef(runway);
+        if (def != null) {
+            def.spacing = spacing;
+        }
+        return this;
+    }
+
+    public CarrierUnitType setRunwayLaunchOffset(int runway, float offset) {
+        Runway def = runwayDef(runway);
+        if (def != null) {
+            def.launchForwardOffset = offset;
+        }
+        return this;
+    }
+
+    public CarrierUnitType setRunwayRecoverOffset(int runway, float offset) {
+        Runway def = runwayDef(runway);
+        if (def != null) {
+            def.recoverRearOffset = offset;
+        }
+        return this;
+    }
+
+    public CarrierUnitType setRunwayPayloadLayerOffset(int runway, float offset) {
+        Runway def = runwayDef(runway);
+        if (def != null) {
+            def.payloadLayerOffset = offset;
+        }
+        return this;
+    }
+
     public CarrierUnitType clearRunways(){
         runways.clear();
         return this;
     }
 
+    protected Runway runwayDef(int runway) {
+        if (!runways.any()) return null;
+        int idx = Mathf.clamp(runway, 0, runways.size - 1);
+        return runways.get(idx);
+    }
+
+    public UnitType runwayFighterType(int runway) {
+        Runway def = runwayDef(runway);
+        if (def != null && def.fighterType != null) {
+            return def.fighterType;
+        }
+        return fighterType;
+    }
+
+    public float runwaySlotSpacing(int runway) {
+        Runway def = runwayDef(runway);
+        if (def != null && def.spacing > 0f) {
+            return def.spacing;
+        }
+        return slotSpacing();
+    }
+
+    public float runwayLaunchOffset(int runway) {
+        Runway def = runwayDef(runway);
+        if (def != null && Float.isFinite(def.launchForwardOffset)) {
+            return def.launchForwardOffset;
+        }
+        return launchForwardOffset;
+    }
+
+    public float runwayRecoverOffset(int runway) {
+        Runway def = runwayDef(runway);
+        if (def != null && Float.isFinite(def.recoverRearOffset)) {
+            return def.recoverRearOffset;
+        }
+        return recoverRearOffset;
+    }
+
+    public float runwayPayloadLayerOffset(int runway) {
+        Runway def = runwayDef(runway);
+        if (def != null && Float.isFinite(def.payloadLayerOffset)) {
+            return def.payloadLayerOffset;
+        }
+        return payloadLayerOffset;
+    }
+
+    public boolean hasAnyFighterType() {
+        if (fighterType != null) return true;
+        for (Runway runway : runways) {
+            if (runway != null && runway.fighterType != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public float slotSpacing(){
-        float base = runwaySpacing > 0f ? runwaySpacing : (fighterType == null ? 10f : fighterType.hitSize * 1.4f);
+        UnitType spacingType = fighterType;
+        if (spacingType == null && runways.any()) {
+            float maxHit = -1f;
+            for (int i = 0; i < runways.size; i++) {
+                UnitType type = runwayFighterType(i);
+                if (type != null && type.hitSize > maxHit) {
+                    maxHit = type.hitSize;
+                    spacingType = type;
+                }
+            }
+        }
+
+        float base = runwaySpacing > 0f ? runwaySpacing : (spacingType == null ? 10f : spacingType.hitSize * 1.5f);
         return Math.max(2f, base * Mathf.clamp(runwaySpacingMultiplier, 0.2f, 5f));
     }
 
@@ -163,11 +354,7 @@ public class CarrierUnitType extends WHUnitType{
             }
             return Math.max(count, 1);
         }
-
-        int lanes = Math.max(deckLanes, 1);
-        int rows = Math.max(deckRows, 1);
-        int trimmed = Math.max(trimRearSlots, 0);
-        return Math.max(lanes * rows - trimmed, 1);
+        return 0;
     }
 
     protected int runwayCountForDeck(){
@@ -206,30 +393,34 @@ public class CarrierUnitType extends WHUnitType{
     }
 
     protected float resolvePayloadRotation(Unit unit, Vec2 from, Vec2 to) {
+        return resolvePayloadRotation(unit, from, to, unit.rotation());
+    }
+
+    protected float resolvePayloadRotation(Unit unit, Vec2 from, Vec2 to, float fallbackRotation) {
         if (!invalidCarrierPoint(unit, from) && !invalidCarrierPoint(unit, to) && from.dst2(to) > directionEps2) {
             return Angles.angle(from.x, from.y, to.x, to.y);
         }
-        return unit.rotation();
+        return fallbackRotation;
+    }
+
+    protected float runwayPayloadRotation(Unit unit, CarrierHostc carrier, int runway) {
+        carrier.recoveryPoint(runway, Tmp.v4);
+        carrier.runwayFrontPoint(runway, Tmp.v5);
+        return resolvePayloadRotation(unit, Tmp.v4, Tmp.v5, unit.rotation() - 90f);
     }
 
     protected void drawRunwayConstructPreview(Unit unit, CarrierHostc carrier, Payload payload, UnitPayload up, int slot, int runway, float remain) {
         float total = Math.max(Math.max(recoverRefitTime, refitEps), remain);
         float progress = Mathf.clamp(1f - remain / total, 0f, 1f);
 
-        carrier.recoveryPoint(runway, Tmp.v2);
-        carrier.runwayFrontPoint(runway, Tmp.v3);
-
+        carrier.deckSlotWorldVisual(payload, slot, Tmp.v2);
         if (invalidCarrierPoint(unit, Tmp.v2)) {
-            carrier.deckSlotWorldVisual(payload, slot, Tmp.v2);
+            carrier.recoveryPoint(runway, Tmp.v2);
         }
-        if (invalidCarrierPoint(unit, Tmp.v3)) {
-            carrier.recoveryPoint(runway, Tmp.v3);
+        if (invalidCarrierPoint(unit, Tmp.v2)) {
+            Tmp.v2.set(unit.x, unit.y);
         }
-        if (invalidCarrierPoint(unit, Tmp.v3)) {
-            Tmp.v3.set(unit.x, unit.y);
-        }
-
-        float rot = resolvePayloadRotation(unit, Tmp.v2, Tmp.v3) - 90f;
+        float rot = runwayPayloadRotation(unit, carrier, runway) - 90f;
         TextureRegion icon = up.unit.type.fullIcon;
         if (icon != null) {
             Draw.alpha(progress);
@@ -240,10 +431,14 @@ public class CarrierUnitType extends WHUnitType{
 
     protected void drawRunwayPayload(Unit unit, CarrierHostc carrier, Payload payload, int slot, int runway) {
         carrier.deckSlotWorldVisual(payload, slot, Tmp.v1);
-        carrier.recoveryPoint(runway, Tmp.v2);
-        carrier.runwayFrontPoint(runway, Tmp.v3);
+        if (invalidCarrierPoint(unit, Tmp.v1)) {
+            carrier.recoveryPoint(runway, Tmp.v1);
+        }
+        if (invalidCarrierPoint(unit, Tmp.v1)) {
+            Tmp.v1.set(unit.x, unit.y);
+        }
 
-        float payloadRotation = resolvePayloadRotation(unit, Tmp.v2, Tmp.v3);
+        float payloadRotation = runwayPayloadRotation(unit, carrier, runway);
         payload.set(Tmp.v1.x, Tmp.v1.y, payloadRotation);
         payload.draw();
     }
@@ -254,7 +449,6 @@ public class CarrierUnitType extends WHUnitType{
         if(!unit.hasPayload()) return;
 
         float prev = Draw.z();
-        Draw.z(prev + payloadLayerOffset);
 
         Seq<Payload> payloads = unit.payloads();
         int payloadCount = payloads.size;
@@ -296,6 +490,8 @@ public class CarrierUnitType extends WHUnitType{
             int slot = payloadSlotCache[i];
             int runway = payloadRunwayCache[i];
             if (!runwayDrawPayloadLayer(runway)) continue;
+
+            Draw.z(prev + runwayPayloadLayerOffset(runway));
 
             if(payload instanceof UnitPayload up && up.unit != null){
                 if (shouldDrawConstructPreview(carrier, up)) {

@@ -1,17 +1,20 @@
 package wh.entities.bullet;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.entities.bullet.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import wh.entities.world.blocks.defense.turrets.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.util.Tmp;
+import mindustry.content.Fx;
+import mindustry.content.StatusEffects;
+import mindustry.entities.Units;
+import mindustry.entities.bullet.ContinuousBulletType;
+import mindustry.gen.Bullet;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.type.StatusEffect;
 
 public class MoveSuppressionBullet extends ContinuousBulletType{
     public float findRange;
@@ -20,6 +23,7 @@ public class MoveSuppressionBullet extends ContinuousBulletType{
     public float fadeTime = 15f;
     public boolean air = true;
     public boolean ground = true;
+    public StatusEffect statusEffect = StatusEffects.none;
 
     public boolean traction = false;
 
@@ -65,6 +69,7 @@ public class MoveSuppressionBullet extends ContinuousBulletType{
                     Tmp.v3.set(other).sub(b).nor().scl(scaledForce * (other.dst(b) / findRange) * in).limit(force);
                 else Tmp.v3.set(b).sub(other).limit((force + (1f - other.dst(b) / findRange) * scaledForce) * in);
                 other.impulseNet(Tmp.v3);
+                other.apply(statusEffect, 10);
             }
         });
 
