@@ -36,7 +36,7 @@ java{
 }
 
 ext{
-    mindustryVersion = (project.findProperty('mindustryVersion') ?: 'v155.4').toString()
+    mindustryVersion = (project.findProperty('mindustryVersion') ?: '157.4').toString()
     jabelVersion = (project.findProperty('jabelVersion') ?: '93fde537c7').toString()
     isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
     sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
