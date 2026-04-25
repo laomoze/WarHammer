@@ -361,19 +361,6 @@ public class CarrierUnitType extends WHUnitType{
         return runways.any() ? Math.max(runways.size, 1) : 1;
     }
 
-    protected int runwayForDeckSlot(int slot){
-        if(!runways.any() || slot < 0) return 0;
-
-        int cursor = 0;
-        for(int i = 0; i < runways.size; i++){
-            cursor += Math.max(runways.get(i).capacity, 1);
-            if(slot < cursor){
-                return i;
-            }
-        }
-        return runways.size - 1;
-    }
-
     protected boolean runwayDrawPayloadLayer(int runway){
         if(!runways.any()) return true;
         int idx = Mathf.clamp(runway, 0, runways.size - 1);
@@ -409,11 +396,11 @@ public class CarrierUnitType extends WHUnitType{
         return resolvePayloadRotation(unit, Tmp.v4, Tmp.v5, unit.rotation() - 90f);
     }
 
-    protected void drawRunwayConstructPreview(Unit unit, CarrierHostc carrier, Payload payload, UnitPayload up, int slot, int runway, float remain) {
+    protected void drawRunwayConstructPreview(Unit unit, CarrierHostc carrier, Payload payload, UnitPayload up, int runway, int localSlot, float remain) {
         float total = Math.max(Math.max(recoverRefitTime, refitEps), remain);
         float progress = Mathf.clamp(1f - remain / total, 0f, 1f);
 
-        carrier.deckSlotWorldVisual(payload, slot, Tmp.v2);
+        carrier.deckSlotWorldVisual(payload, runway, localSlot, Tmp.v2);
         if (invalidCarrierPoint(unit, Tmp.v2)) {
             carrier.recoveryPoint(runway, Tmp.v2);
         }
@@ -429,8 +416,8 @@ public class CarrierUnitType extends WHUnitType{
         }
     }
 
-    protected void drawRunwayPayload(Unit unit, CarrierHostc carrier, Payload payload, int slot, int runway) {
-        carrier.deckSlotWorldVisual(payload, slot, Tmp.v1);
+    protected void drawRunwayPayload(Unit unit, CarrierHostc carrier, Payload payload, int runway, int localSlot) {
+        carrier.deckSlotWorldVisual(payload, runway, localSlot, Tmp.v1);
         if (invalidCarrierPoint(unit, Tmp.v1)) {
             carrier.recoveryPoint(runway, Tmp.v1);
         }
@@ -454,31 +441,31 @@ public class CarrierUnitType extends WHUnitType{
         int payloadCount = payloads.size;
         int runwayCount = runwayCountForDeck();
         Payload[] constructPayloadCache = new Payload[Math.max(runwayCount, 1)];
-        int[] constructSlotCache = new int[Math.max(runwayCount, 1)];
-        int[] payloadSlotCache = new int[Math.max(payloadCount, 1)];
+        int[] constructLocalSlotCache = new int[Math.max(runwayCount, 1)];
+        int[] payloadLocalSlotCache = new int[Math.max(payloadCount, 1)];
         int[] payloadRunwayCache = new int[Math.max(payloadCount, 1)];
-        Arrays.fill(constructSlotCache, -1);
-        Arrays.fill(payloadSlotCache, -1);
+        Arrays.fill(constructLocalSlotCache, -1);
+        Arrays.fill(payloadLocalSlotCache, -1);
         Arrays.fill(payloadRunwayCache, 0);
 
-        // 一次性缓存 payload 的 slot/runway，同时选出每条跑道唯一构建投影目标。
+        // 一次性缓存 payload 的 runway/localSlot，同时选出每条跑道唯一构建投影目标。
         for(int i = 0; i < payloadCount; i++){
             Payload payload = payloads.get(i);
             if(payload == null) continue;
 
-            int slot = carrier.deckSlotForPayload(payload);
-            int runway = slot >= 0 ? runwayForDeckSlot(slot) : 0;
-            runway = carrier.clampRunway(runway);
-            payloadSlotCache[i] = slot;
+            int runway = carrier.deckRunwayForPayload(payload);
+            runway = runway >= 0 ? carrier.clampRunway(runway) : 0;
+            int localSlot = carrier.deckLocalSlotForPayload(payload);
+            payloadLocalSlotCache[i] = localSlot;
             payloadRunwayCache[i] = runway;
 
             if(!(payload instanceof UnitPayload up) || up.unit == null) continue;
             if (!shouldDrawConstructPreview(carrier, up)) continue;
 
-            if(slot >= 0 && slot >= constructSlotCache[runway]){
-                constructSlotCache[runway] = slot;
+            if (localSlot >= 0 && localSlot >= constructLocalSlotCache[runway]) {
+                constructLocalSlotCache[runway] = localSlot;
                 constructPayloadCache[runway] = payload;
-            }else if(slot < 0 && constructPayloadCache[runway] == null){
+            } else if (localSlot < 0 && constructPayloadCache[runway] == null) {
                 constructPayloadCache[runway] = payload;
             }
         }
@@ -487,7 +474,7 @@ public class CarrierUnitType extends WHUnitType{
             Payload payload = payloads.get(i);
             if(payload == null) continue;
 
-            int slot = payloadSlotCache[i];
+            int localSlot = payloadLocalSlotCache[i];
             int runway = payloadRunwayCache[i];
             if (!runwayDrawPayloadLayer(runway)) continue;
 
@@ -497,13 +484,13 @@ public class CarrierUnitType extends WHUnitType{
                 if (shouldDrawConstructPreview(carrier, up)) {
                     if(constructPayloadCache[runway] == payload){
                         float remain = carrier.deckRefitRemaining(up.unit.id);
-                        drawRunwayConstructPreview(unit, carrier, payload, up, slot, runway, remain);
+                        drawRunwayConstructPreview(unit, carrier, payload, up, runway, localSlot, remain);
                     }
                     continue;
                 }
             }
 
-            drawRunwayPayload(unit, carrier, payload, slot, runway);
+            drawRunwayPayload(unit, carrier, payload, runway, localSlot);
         }
 
         Draw.z(prev);

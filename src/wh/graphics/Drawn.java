@@ -33,6 +33,7 @@ import wh.math.WHInterp;
 import wh.util.WHUtils;
 import wh.util.struct.Vec2Seq;
 
+import static arc.graphics.g2d.Lines.circleVertices;
 import static arc.graphics.g2d.Lines.polyline;
 import static mindustry.Vars.tilesize;
 
@@ -72,6 +73,7 @@ public final class Drawn{
     private static final Vec3 cubeTmp = new Vec3();
     private static final Mat3D cubeMat = new Mat3D();
     private static final float[] cubeMul = new float[16];
+    private static final Vec3 torusTmp = new Vec3();
 
 
     static final Color c1 = new Color();
@@ -570,6 +572,81 @@ public final class Drawn{
             Lines.line(cubeProjX[a], cubeProjY[a], cubeProjX[b], cubeProjY[b]);
         }
         Draw.reset();
+    }
+
+    public static void wireTorus(float x, float y, float radius, float tubeRadius, float rotation, float stroke, Color color) {
+        wireRing(
+                x, y, radius, circleVertices(radius * 2),
+                cubeMat.idt().rotate(Vec3.Y, rotation).rotate(Vec3.X, rotation * 0.55f),
+                (radius + tubeRadius) * 6f, (radius + tubeRadius) * 3.2f,
+                color, stroke
+        );
+    }
+
+    public static void wireTorus(float x, float y, float radius,
+                                 Mat3D transform, float cameraZ, float focal, Color color, float stroke) {
+        wireRing(x, y, radius, circleVertices(radius * 2), transform, cameraZ, focal, color, stroke);
+    }
+
+    public static void wireRing(float x, float y, float radius, int ringSegments,
+                                Mat3D transform, float cameraZ, float focal, Color color, float stroke) {
+        ringSegments = Math.max(3, ringSegments);
+
+        float[] projX = new float[ringSegments];
+        float[] projY = new float[ringSegments];
+        float[] projScl = new float[ringSegments];
+        float[] projZ = new float[ringSegments];
+        System.arraycopy(transform.val, 0, cubeMul, 0, cubeMul.length);
+
+        for (int i = 0; i < ringSegments; i++) {
+            float angle = Mathf.PI2 * i / ringSegments;
+            project3D(
+                    x, y,
+                    radius * Mathf.cos(angle), 0f, radius * Mathf.sin(angle),
+                    cameraZ, focal,
+                    projX, projY, projScl, projZ, i
+            );
+        }
+
+        float minZ = Float.POSITIVE_INFINITY;
+        float maxZ = Float.NEGATIVE_INFINITY;
+        for (float z : projZ) {
+            minZ = Math.min(minZ, z);
+            maxZ = Math.max(maxZ, z);
+        }
+        float zRange = Math.max(0.0001f, maxZ - minZ);
+
+        for (int i = 0; i < ringSegments; i++) {
+            int next = (i + 1) % ringSegments;
+            drawTorusEdge(projX, projY, projScl, projZ, i, next, stroke, color, minZ, zRange);
+        }
+        Draw.reset();
+    }
+
+    private static void project3D(float x, float y, float vx, float vy, float vz, float cameraZ, float focal,
+                                  float[] projX, float[] projY, float[] projScl, float[] projZ, int index) {
+        torusTmp.set(
+                cubeMul[0] * vx + cubeMul[4] * vy + cubeMul[8] * vz + cubeMul[12],
+                cubeMul[1] * vx + cubeMul[5] * vy + cubeMul[9] * vz + cubeMul[13],
+                cubeMul[2] * vx + cubeMul[6] * vy + cubeMul[10] * vz + cubeMul[14]
+        );
+
+        float denom = Math.max(0.0001f, cameraZ - torusTmp.z);
+        float scl = focal / denom;
+        projX[index] = x + torusTmp.x * scl;
+        projY[index] = y + torusTmp.y * scl;
+        projScl[index] = scl;
+        projZ[index] = torusTmp.z;
+    }
+
+    private static void drawTorusEdge(float[] projX, float[] projY, float[] projScl, float[] projZ, int a, int b, float stroke, Color color, float minZ, float zRange) {
+        float avgScl = (projScl[a] + projScl[b]) * 0.5f;
+        float width = stroke * Mathf.clamp(avgScl * 1.45f, 0.35f, 1.9f);
+        float depth = Mathf.clamp((((projZ[a] + projZ[b]) * 0.5f) - minZ) / zRange);
+        float alpha = Mathf.lerp(0.3f, 1f, depth);
+
+        Lines.stroke(width, Tmp.c1.set(color).a(color.a * alpha));
+        Lines.line(projX[a], projY[a], projX[b], projY[b]);
     }
 
 

@@ -1,22 +1,31 @@
 package wh.entities.event.objective;
 
-import arc.*;
-import arc.func.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.scene.*;
-import arc.scene.event.*;
-import arc.scene.style.*;
-import arc.scene.ui.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import mindustry.core.*;
-import mindustry.game.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.ui.*;
-import wh.content.*;
+import arc.Core;
+import arc.func.Boolp;
+import arc.func.Floatp;
+import arc.func.Intp;
+import arc.func.Prov;
+import arc.graphics.Color;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Mathf;
+import arc.scene.Element;
+import arc.scene.Group;
+import arc.scene.event.Touchable;
+import arc.scene.style.TextureRegionDrawable;
+import arc.scene.ui.ImageButton;
+import arc.scene.ui.ScrollPane;
+import arc.scene.ui.layout.Stack;
+import arc.scene.ui.layout.Table;
+import arc.util.Log;
+import arc.util.Reflect;
+import mindustry.core.UI;
+import mindustry.game.MapObjectives;
+import mindustry.gen.Icon;
+import mindustry.gen.Tex;
+import mindustry.graphics.Pal;
+import mindustry.ui.Bar;
+import mindustry.ui.Styles;
+import wh.content.WHContent;
 
 import static mindustry.Vars.*;
 
@@ -134,12 +143,14 @@ public final class WHObjectiveUI{
             ImageButton button = new ImageButton(Icon.downOpen, Styles.clearNonei);
             button.clicked(() -> {
                 if(button.isChecked()){
+                    button.getStyle().imageUp = Icon.upOpen;
                     rebuildObjectiveList(infoT);
                     Object source = state == null || state.rules == null || state.rules.objectives == null ? null : state.rules.objectives.all;
                     lastObjectiveSource[0] = source;
                     lastObjectiveCount[0] = source == null ? 0 : state.rules.objectives.all.size;
                     infoT.exited(() -> Core.scene.unfocus(infoT));
                 }else{
+                    button.getStyle().imageUp = Icon.downOpen;
                     Core.scene.unfocus(infoT);
                 }
             });

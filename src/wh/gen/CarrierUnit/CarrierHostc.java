@@ -43,9 +43,13 @@ public interface CarrierHostc extends Teamc{
     @Nullable
     Teamc lockedTarget();
 
-    int deckSlotForPayload(Payload payload);
+    int deckRunwayForPayload(Payload payload);
 
-    void deckSlotWorldVisual(Payload payload, int slot, Vec2 out);
+    int deckLocalSlotForPayload(Payload payload);
+
+    void deckSlotWorld(int runway, int localSlot, Vec2 out);
+
+    void deckSlotWorldVisual(Payload payload, int runway, int localSlot, Vec2 out);
 
     float deckRefitRemaining(int fighterId);
 

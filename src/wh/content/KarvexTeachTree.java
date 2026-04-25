@@ -1,12 +1,16 @@
 package wh.content;
 
-import arc.struct.*;
+import arc.struct.Seq;
 import mindustry.content.*;
-import mindustry.ctype.*;
-import mindustry.game.Objectives.*;
-import mindustry.type.*;
+import mindustry.ctype.UnlockableContent;
+import mindustry.game.Objectives.Objective;
+import mindustry.game.Objectives.Produce;
+import mindustry.game.Objectives.Research;
+import mindustry.type.ItemStack;
+import mindustry.type.UnitType;
 
-import static mindustry.content.TechTree.*;
+import static mindustry.content.TechTree.TechNode;
+import static mindustry.content.TechTree.nodeRoot;
 
 public final class KarvexTeachTree{
     public static TechNode context = null;
@@ -282,6 +286,8 @@ public final class KarvexTeachTree{
     private static void buildPayloadBranch(){
         node(WHBlocks.armorPayloadConveyor, () -> {
             node(WHBlocks.armorPayloadRouter, () -> {
+            });
+            node(WHBlocks.MechanicalArm, () -> {
             });
             node(WHBlocks.t2PayloadMassDriver, () -> {
             });
@@ -648,22 +654,32 @@ public final class KarvexTeachTree{
                                 });
                             });
                         });
+
+                        node(WHUnitTypes.tankC1, () -> {
+                            node(WHUnitTypes.tankC2, () -> {
+                                node(WHUnitTypes.tankC3, () -> {
+                                });
+                            });
+                        });
                     });
                     node(WHBlocks.t4Module, () -> {
                         node(WHBlocks.t5Module, () -> {
                             node(WHBlocks.jumpBeacon, () -> {
-                                node(WHUnitTypes.tankC1, () -> {
-                                    node(WHUnitTypes.tankC2, () -> {
-                                    });
+                                node(WHUnitTypes.tankD1, () -> {
+                                });
+                                node(WHUnitTypes.tankD2, () -> {
+                                });
+                                node(WHUnitTypes.MEn1, () -> {
                                 });
                             });
                             node(WHBlocks.t6Module, () -> {
                                 node(WHBlocks.airborneDeploymentBeacon, () -> {
-                                    node(WHUnitTypes.MEn1, () -> {
-                                    });
+
                                 });
 
                                 node(WHBlocks.energyWarpGate, () -> {
+                                    node(WHUnitTypes.airB7, () -> {
+                                    });
                                     node(WHUnitTypes.airA7, () -> {
                                     });
                                     node(WHUnitTypes.tankAG, () -> {

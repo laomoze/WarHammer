@@ -123,7 +123,6 @@ public final class WHUnitTypes {
             M6, M5,
             M4A, M4B, M4C, M4D,
             M3, M2, M1,
-
     //特种
     MEn1,
             airD1, airD2;
@@ -4568,7 +4567,7 @@ public final class WHUnitTypes {
             faceTarget = false;
 
             hitSize = 120;
-            range = 430f;
+            range = 470;
             trailLength = 80;
 
             payloadCapacity = (5 * 5) * tilePayload;
@@ -4626,7 +4625,7 @@ public final class WHUnitTypes {
                             lightningColor = hitColor = backColor = trailColor = WHPal.ShootOrange;
                             frontColor = WHPal.ShootOrangeLight;
 
-                            lifetime = 500 / speed;
+                            lifetime = 520 / speed;
                             trailLength = 6;
                             trailWidth = 1.5f;
                             status = WHStatusEffects.armorFracture;
@@ -4692,7 +4691,7 @@ public final class WHUnitTypes {
                     shoot = new ShootAlternate() {
                         {
                             barrels = 2;
-                            spread = 40 / 4f;
+                            spread = 45 / 4f;
                             shots = 4;
                             shotDelay = 30;
                         }
@@ -5418,6 +5417,8 @@ public final class WHUnitTypes {
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
 
+                range = 250f;
+
                 ammoType = new PowerAmmoType(4000);
 
                 float engineSize = 1.8f;
@@ -5433,7 +5434,7 @@ public final class WHUnitTypes {
                 abilities.addAll(
                         new Propeller(64 / 4f, -88 / 4f, 0, 2),
                         new Propeller(-64 / 4f, -88 / 4f, 0, 2),
-                        new RepairFieldAbility(100, 60f * 8, 40) {{
+                        new RepairFieldAbility(100, 60f * 4, 40) {{
                             healEffect = WHFx.linePolyOut(60, WHPal.thurmixRed, 12, 3, 4, 0);
                             activeEffect = WHFx.linePolyOut(60, WHPal.thurmixRed, range, 3, 4, 0);
                         }},
@@ -5468,7 +5469,7 @@ public final class WHUnitTypes {
                                 homingPower = 0.08f;
                                 weaveMag = 0.3f;
                                 weaveScale = 12;
-                                lifetime = 220 / speed;
+                                lifetime = 250 / speed;
                                 keepVelocity = true;
                                 width = 7;
                                 height = width * 3.5f;
@@ -5481,7 +5482,7 @@ public final class WHUnitTypes {
                                 frontColor = Color.white;
                                 hitSound = Sounds.none;
 
-                                healPercent = 0.7f;
+                                healPercent = 1.5f;
                                 collidesTeam = true;
                             }};
                         }},
@@ -5503,7 +5504,7 @@ public final class WHUnitTypes {
                             bullet = new DelayedPointBulletType() {{
                                 lifetime = 60;
                                 damage = 100;
-                                maxRange = range = 240f;
+                                maxRange = range = 300;
                                 width = 16f;
                                 square = true;
 
@@ -5523,8 +5524,9 @@ public final class WHUnitTypes {
                             rotate = true;
                             rotateSpeed = 0.5f;
                             bullet = new HealCone() {{
-                                percentHeal = false;
+                                percentHeal = true;
                                 healColor = WHPal.thurmixRed;
+                                healPercent = 1.5f;
                                 lifetime = 240;
                                 healAmount = 180;
                                 findAngle = 40f;
@@ -5554,8 +5556,8 @@ public final class WHUnitTypes {
 
                             shootY = 16 / 4f;
 
-                            bullet = new MultiTrailBulletType(6, 120, name("pierce")) {{
-                                splashDamage = 100;
+                            bullet = new MultiTrailBulletType(6, 150, name("pierce")) {{
+                                splashDamage = damage;
                                 splashDamageRadius = 5 * 8f;
                                 lifetime = 300 / speed;
                                 keepVelocity = false;
@@ -8219,6 +8221,14 @@ public final class WHUnitTypes {
                                         Lines.lineAngleCenter(b.x, b.y, b.rotation(), (height / 2.5f) * inp);
                                         Draw.reset();
                                     }
+
+                                    @Override
+                                    public void hitEntity(Bullet b, Hitboxc other, float initialHealth) {
+                                        super.hitEntity(b, other, initialHealth);
+                                        if (other instanceof Shieldc h && h.shield() > damage * 3f) {
+                                            h.damage(h.shield() * 0.1f + b.damage * 3f);
+                                        }
+                                    }
                                 };
                             }
                         }
@@ -8508,7 +8518,7 @@ public final class WHUnitTypes {
                 hitSize = 32;
                 speed = 1.1f;
                 rotateSpeed = 1.5f;
-                health = 15000;
+                health = 17000;
                 armor = 24;
                 itemCapacity = 0;
                 floorMultiplier = 0.6f;
@@ -8548,8 +8558,8 @@ public final class WHUnitTypes {
                         shoot = new ShootMulti(
                                 new ShootAlternate() {{
                                     spread = 52 / 2f;
-                                    shots = 7;
-                                    shotDelay = 10;
+                                    shots = 8;
+                                    shotDelay = 13;
                                 }},
                                 new ShootHelix() {
                                     {
@@ -8633,7 +8643,7 @@ public final class WHUnitTypes {
                         alternate = false;
                         shootCone = 10;
                         shootSound = loopPulse;
-                        bullet = new MoveSuppressionBullet(10, 350, 0.9f) {{
+                        bullet = new MoveSuppressionBullet(15, 350, 0.1f) {{
                             lifetime = 240f;
                             statusEffect = WHStatusEffects.powerReduce1;
                             maxRange = findRange;
@@ -8644,6 +8654,163 @@ public final class WHUnitTypes {
                     @Override
                     protected Teamc findTarget(Unit unit, float x, float y, float range, boolean air, boolean ground) {
                         return Units.closestEnemy(unit.team, x, y, range + Math.abs(shootY), u -> u.checkTarget(true, true));
+                    }
+                });
+            }
+        };
+
+        tankD2 = new WHTankUnitType("tankD2") {
+
+            {
+                constructor = TankUnit::create;
+
+                hitSize = 32;
+                speed = 1.1f;
+                rotateSpeed = 1.5f;
+                health = 17000;
+                armor = 24;
+                itemCapacity = 0;
+                floorMultiplier = 0.6f;
+
+                outlineRadius = 3;
+                outlineColor = WHPal.Outline;
+
+                ammoType = new PowerAmmoType(4000);
+
+                float lx = 112f, ly = 120f;
+                /*   treadPullOffset = 8;*/
+                treadFrames = 16;
+                treadRects = new Rect[]{new Rect(16 - lx, 8 /*- treadPullOffset*/ - ly, 52, 224)};
+
+                researchCostMultiplier = 0.6f;
+                range = 300;
+
+                weapons.add(new Weapon(name("tankD2-weapon1")) {
+                    {
+                        x = 0;
+                        y = -14 / 4f;
+                        shootY = 92 / 4f;
+                        layerOffset = 0.01f;
+                        rotate = true;
+                        rotateSpeed = 1f;
+                        cooldownTime = 100;
+                        heatColor = WHPal.SkyBlue;
+                        mirror = false;
+                        inaccuracy = 1;
+                        reload = 150;
+                        recoilTime = 60;
+                        recoil = 2;
+
+                        shootSound = WHSounds.rifleLaser;
+
+                        shoot = new ShootAlternate() {{
+                            spread = 32 / 2f;
+                            shots = 2;
+                            shotDelay = 14;
+                        }};
+
+                        recoils = 2;
+
+                        parts.add(new RegionPart("-barrel-l") {
+                            {
+                                moveY = -20 / 4f;
+                                under = true;
+                                recoilIndex = 0;
+                                progress = heatProgress = PartProgress.recoil;
+                            }
+                        }, new RegionPart("-barrel-r") {
+                            {
+                                moveY = -20 / 4f;
+                                recoilIndex = 1;
+                                under = true;
+                                progress = heatProgress = PartProgress.recoil;
+                            }
+                        });
+
+                        bullet = new CritBulletType(20, 450) {
+                            {
+                                pierceArmor = true;
+                                lifetime = 350 / speed;
+                                splashDamageRadius = 40f;
+                                keepVelocity = false;
+                                pierceDamageFactor = 0.5f;
+                                shieldDamageMultiplier = 8;
+                                reflectable = absorbable = false;
+                                width = 2.5f;
+                                height = 100;
+
+                                pierceCap = 2;
+
+                                shrinkX = shrinkY = 0;
+                                frontColor = WHPal.SkyBlueF;
+                                trailColor = hitColor = backColor = lightColor = lightningColor = WHPal.SkyBlue;
+
+                                shootEffect = new MultiEffect(
+                                        WHFx.shoot3DWave(30, hitColor, 40, 5),
+                                        WHFx.lineCircleOut(30, hitColor, 30, 2),
+                                        WHFx.shootLine(10, 20),
+                                        Fx.shootBig);
+
+                                smokeEffect = Fx.hitLaserColor;
+                                trailChance = 0.5f;
+                                trailEffect = WHFx.hitPoly(30, hitColor, hitColor, 1, 15, 4, 6, 60);
+
+                                hitEffect = new MultiEffect(
+                                        WHFx.instHit(hitColor, true, 2, splashDamageRadius),
+                                        WHFx.square(30, hitColor, 10, splashDamageRadius, 6),
+                                        WHFx.lineCircleOut(30, hitColor, splashDamageRadius, 2),
+                                        WHFx.hitSpark(30f, hitColor, 10, splashDamageRadius, 1.4f, 10f)
+                                );
+                                despawnEffect = new MultiEffect(
+                                        WHFx.lineCircleOut(30, hitColor, 60, 2),
+                                        WHFx.generalExplosion(12, hitColor, splashDamageRadius * 1.5f, 8, false),
+                                        WHFx.trailCircleHitSpark(90, hitColor, 10, splashDamageRadius * 1.5f, 1.7f, 12)
+                                );
+                                hitSound = Sounds.none;
+                            }
+
+                            @Override
+                            public void draw(Bullet b) {
+                                float inp = b.fin(Interp.slope);
+                                Draw.color(backColor);
+                                Lines.stroke(width);
+                                Lines.lineAngleCenter(b.x, b.y, b.rotation(), height * inp);
+                                Draw.color(frontColor);
+                                Lines.stroke(width);
+                                Lines.lineAngleCenter(b.x, b.y, b.rotation(), (height / 2.5f) * inp);
+                                Draw.reset();
+                            }
+                        };
+                    }
+                });
+                weapons.add(new Weapon(name("machine-gun-1")) {
+                    {
+                        y = 1 / 4f;
+                        x = 71 / 4f;
+                        reload = 35;
+                        ejectEffect = Fx.none;
+                        recoil = 2f;
+                        shootSound = WHSounds.machineGunShoot;
+
+                        rotate = true;
+                        rotateSpeed = 1.5f;
+
+                        shootY = 16 / 4f;
+
+                        bullet = new DelayedPointBulletType() {{
+                            lifetime = 60;
+                            damage = 140;
+                            maxRange = range = 300;
+                            width = 16f;
+                            square = true;
+
+                            Color c = hitColor = lightningColor = WHPal.ShootOrange.cpy();
+                            shootEffect = WHFx.hitSpark(20, c, 10, 20, 1, 5f);
+                            colors = new Color[]{c.a(0.3f), c.a(0.7f), c, Color.white};
+                            hitEffect = despawnEffect = new MultiEffect(
+                                    WHFx.linePolyOut(30, hitColor, 15, 3, 4, 0)
+                            );
+                        }};
                     }
                 });
             }
@@ -11160,11 +11327,11 @@ public final class WHUnitTypes {
                 singleTarget = true;
 
                 abilities.add(
-                        new EllipseForceFieldAbility(75 / 4f, 50 / 4f, 4, 1000, 40 * 60f, 0.8f, 15) {{
+                        new EllipseForceFieldAbility(75 / 4f, 50 / 4f, 500 / 60f, 10000, 40 * 60f, 0.8f, 15) {{
                             percentRegen = true;
                             percentRegenAmount = 0.06f;
                         }},
-                        new ShieldRegenFieldAbility(100, 1000, 60f * 1, 60f),
+                        new ShieldRegenFieldAbility(400, 4000, 60f * 1, 60f),
                         new LastStandAbility());
 
                 outlineRadius = 3;
@@ -11517,7 +11684,6 @@ public final class WHUnitTypes {
 
                 abilities.addAll(
                         new TeamCombatAbility(),
-                        new SupportSpawnAbility(),
                         new BerserkOnAllyDeathAbility()
                 );
 
@@ -11807,6 +11973,7 @@ public final class WHUnitTypes {
         MEn1 = new PowerArmourUnitType("mEn1") {
             {
 
+                hidden = true;
                 String n = name;
                 speed = 1f;
                 hitSize = 30;
@@ -13936,168 +14103,6 @@ public final class WHUnitTypes {
                         copyAndMove(navyGWeapons, 88 / 4f, 123f / 4f),
                         copyAndMove(navyGWeapons, 116 / 4f, -82 / 4f)
                 );
-            }
-        };
-
-        carrierTestFighter = new UnitType("carrier-test-fighter") {
-            {
-                constructor = UnitEntity::create;
-
-                health = 480f;
-                speed = 1.75f;
-                accel = 0.085f;
-                drag = 0.03f;
-                flying = true;
-                hitSize = 12f;
-                armor = 4f;
-                engineOffset = 8f;
-                engineSize = 2.6f;
-                range = 185f;
-                faceTarget = false;
-                circleTarget = true;
-                circleTargetRadius = 55f;
-                omniMovement = false;
-                rotateSpeed = 4.8f;
-                lowAltitude = true;
-                targetAir = targetGround = true;
-
-                useUnitCap = false;
-                playerControllable = false;
-                logicControllable = false;
-                isEnemy = false;
-                hidden = true;
-
-                ammoType = new ItemAmmoType(Items.graphite);
-
-                moveSound = Sounds.loopThruster;
-                moveSoundPitchMin = 0.55f;
-                moveSoundPitchMax = 1.35f;
-                moveSoundVolume = 0.38f;
-
-                weapons.add(new Weapon(name("carrier-test-fighter-gun")) {
-                    {
-                        x = 3f;
-                        y = 0f;
-                        mirror = true;
-                        top = false;
-                        rotate = true;
-                        rotateSpeed = 8f;
-                        shootCone = 20f;
-                        inaccuracy = 2f;
-                        reload = 13f;
-                        shootSound = Sounds.shoot;
-                        ejectEffect = Fx.casing1;
-                        bullet = new BasicBulletType(5.5f, 22f) {
-                            {
-                                width = 6f;
-                                height = 9f;
-                                lifetime = 40f;
-                                shootEffect = Fx.shootSmall;
-                                smokeEffect = Fx.shootSmallSmoke;
-                                hitEffect = Fx.hitBulletSmall;
-                                backColor = Pal.bulletYellowBack;
-                                frontColor = Color.white;
-                                trailColor = backColor;
-                                trailLength = 6;
-                                trailWidth = 1.4f;
-                                ammoMultiplier = 2f;
-                            }
-                        };
-                    }
-                });
-            }
-        };
-
-        carrierTest = new CarrierUnitType("carrier-test") {
-            @Override
-            public void init() {
-                super.init();
-                naval = false;
-                initPathType();
-            }
-
-            public void initPathType() {
-                flowfieldPathType = Pathfinder.costHover;
-                pathCost = ControlPathfinder.costHover;
-                pathCostId = ControlPathfinder.costTypes.indexOf(pathCost);
-            }
-
-            {
-                alwaysUnlocked = true;
-                faceTarget = false;
-                hovering = true;
-                pickupUnits = true;
-                targetAir = targetGround = true;
-
-                fighterType = carrierTestFighter;
-                clearRunways()
-                        .runway(-34f, 56f, 4)
-                        .runway(34f, 56f, 4);
-
-                initialFighterCount = 8;
-                maxDeployedFighters = 8;
-                sortieDuration = 20f * 60f;
-                regroupOnAnyLoss = true;
-                regroupDelayOnLoss = 6f * 60f;
-                rearmInterval = 2.5f * 60f;
-                takeoffDuration = 90f;
-                takeoffSpeedMultiplier = 1.1f;
-                takeoffEffect = Fx.none;
-                recoverRefitTime = 120f;
-                idleReturnDelay = 3f * 60f;
-
-                launchInterval = 20f;
-                recoverCheckInterval = 6f;
-                launchForwardOffset = 58f;
-                recoverRearOffset = -52f;
-                recoverRadius = 40f;
-                maxFighterDistance = 520f;
-                recallHealthf = 0.33f;
-
-                fighterOrbitRadius = 140f;
-                fighterOrbitSmoothing = 90f;
-                fighterAttackDistanceFactor = 0.85f;
-
-                speed = 0.95f;
-                rotateSpeed = 0.8f;
-                health = 52000f;
-                armor = 14f;
-                hitSize = 58f;
-                range = 430f;
-                trailLength = 80;
-                waveTrailX = 21f;
-                waveTrailY = -24f;
-                trailScl = 3f;
-                payloadCapacity = (8 * 8) * tilePayload;
-
-                outlineRadius = 2;
-                outlineColor = WHPal.OutlineS;
-                ammoType = new PowerAmmoType(8000f);
-
-                weapons.add(new Weapon(name("carrier-test-lock")) {
-                    {
-                        mirror = false;
-                        rotate = true;
-                        rotateSpeed = 1.6f;
-                        x = 0f;
-                        y = -6f;
-                        shootY = 30f;
-                        reload = 80f;
-                        inaccuracy = 2f;
-                        bullet = new BasicBulletType(6f, 45f) {
-                            {
-                                width = 7f;
-                                height = 12f;
-                                lifetime = 380f / speed;
-                                shootEffect = Fx.shootSmall;
-                                smokeEffect = Fx.shootSmallSmoke;
-                                hitEffect = Fx.hitBulletSmall;
-                                frontColor = Color.white;
-                                backColor = hitColor = Pal.heal;
-                            }
-                        };
-                    }
-                });
             }
         };
 
