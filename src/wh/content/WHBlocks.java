@@ -27,10 +27,8 @@ import mindustry.entities.Mover;
 import mindustry.entities.UnitSorts;
 import mindustry.entities.bullet.*;
 import mindustry.entities.effect.*;
+import mindustry.entities.part.*;
 import mindustry.entities.part.DrawPart.PartProgress;
-import mindustry.entities.part.HaloPart;
-import mindustry.entities.part.RegionPart;
-import mindustry.entities.part.ShapePart;
 import mindustry.entities.pattern.*;
 import mindustry.entities.units.BuildPlan;
 import mindustry.gen.*;
@@ -1135,26 +1133,100 @@ public final class WHBlocks {
             }
         };
 
-        moSurgeSmelter = new HeatProducer("mo-surge-smelter") {
+        moSurgeSmelter = new GenericCrafter("mo-surge-smelter") {
             {
                 requirements(Category.crafting, with(Items.carbide, 60, WHItems.entanglement, 40, WHItems.armorAlloy, 50, WHItems.manganeseSteel, 70));
                 health = 900;
                 hasItems = hasPower = hasLiquids = true;
-                craftTime = 60;
+                craftTime = 120;
                 itemCapacity = 20;
                 liquidCapacity = 80f;
                 size = 3;
                 consumePower(3);
-                consumeItems(with(WHItems.molybdenum, 2, WHItems.armorAlloy, 2));
+                consumeItems(with(WHItems.molybdenum, 4, WHItems.armorAlloy, 4));
                 consumeLiquid(Liquids.slag, 20 / 60f);
-                heatOutput = 2;
-                outputItem = new ItemStack(WHItems.molybdenumAlloy, 2);
-                drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.slag), new DrawCircles() {{
+                /* heatOutput = 2;*/
+                outputItem = new ItemStack(WHItems.molybdenumAlloy, 4);
+
+                PartProgress pg = PartProgress.reload.inv();
+                PartProgress pg0 = pg.compress(0f, 0.25f);
+                PartProgress pg1 = pg.compress(0f, 0.5f);
+                PartProgress pg2 = pg.compress(0.5f, 0.8f);
+                PartProgress pg3 = pg.compress(0.8f, 1f);
+
+                drawer = new DrawMulti(new DrawRegion("-bottom"),
+                        new DrawLiquidTile(Liquids.slag), new DrawCircles() {{
                     color = Pal.lighterOrange.cpy().a(0.4f);
                     strokeMax = 2.5f;
                     radius = 10f;
                     amount = 3;
-                }}, new DrawDefault(), new DrawHeatOutput());
+                }}, new DrawRegion("-rotator", -2) {{
+                    spinSprite = true;
+                }},
+                        new DrawRegion("-mid"), new DrawBlockParts() {
+                    {
+                        parts.addAll(
+                                new RegionPart("-item1") {
+                                    {
+                                        x = -25 / 4f;
+                                        y = -25 / 4f;
+                                        color = new Color(1f, 1f, 1f, 0f);
+                                        colorTo = Color.white;
+                                        moves.addAll(new PartMove(pg0, 25 / 4f, 25 / 4f, 0));
+                                        progress = pg0.apply(pg2.curve(Interp.pow5In).inv(), (t, ot) -> t * ot);
+                                    }
+                                },
+                                new RegionPart("-item2") {
+                                    {
+                                        x = 30 / 4f;
+                                        y = 29 / 4f;
+                                        color = new Color(1f, 1f, 1f, 0f);
+                                        colorTo = Color.white;
+                                        moves.addAll(new PartMove(pg1, -30 / 4f, -29 / 4f, 0));
+                                        progress = pg1.apply(pg2.curve(Interp.pow5In).inv(), (t, ot) -> t * ot);
+                                    }
+                                },
+                                new RegionPart("-cap-l") {{
+                                    x = -17 / 4f;
+                                    moveX = 17 / 4f;
+                                    progress = pg2.curve(Interp.pow2In);
+                                    moves.addAll(new PartMove(pg3, -17 / 4f, 0, 0));
+                                }},
+                                new RegionPart("-cap-r") {{
+                                    x = 17 / 4f;
+                                    moveX = -17 / 4f;
+                                    progress = pg2.curve(Interp.pow2In);
+                                    moves.addAll(new PartMove(pg3, 17 / 4f, 0, 0));
+                                }},
+                                new EffectSpawnerPart() {{
+                                    x = -16 / 4f;
+                                    progress = pg2;
+                                    rotation = -90;
+                                    effectColor = Pal.bulletYellowBack;
+                                    effect = Fx.disperseTrail;
+                                }},
+                                new EffectSpawnerPart() {{
+                                    x = 16 / 4f;
+                                    progress = pg2;
+                                    rotation = 90;
+                                    effectColor = Pal.bulletYellowBack;
+                                    effect = Fx.disperseTrail;
+                                }});
+                    }
+
+                    @Override
+                    public void draw(Building build) {
+                        if (parts.size > 0) {
+                            float progress = build.progress();
+
+                            var params = DrawPart.params.set(build.warmup(), 1f - progress, 1f - progress, 0f, 0f, 0f, build.x, build.y, build.rotdeg() + 90);
+
+                            for (var part : parts) {
+                                part.draw(params);
+                            }
+                        }
+                    }
+                }, new DrawDefault());
                 craftEffect = new RadialEffect(Fx.surgeCruciSmoke, 4, 90f, 7f);
                 researchCostMultiplier = 0.45f;
             }
@@ -1278,7 +1350,7 @@ public final class WHBlocks {
             }
         };
 
-        ceramiteRefinery = new HeatProducer("ceramite-refinery") {
+        ceramiteRefinery = new HeatCrafter("ceramite-refinery") {
             {
                 Color color = WHPal.RefineCeramiteColor;
                 requirements(Category.crafting, with(WHItems.molybdenumAlloy, 80, WHItems.entanglement, 50, WHItems.ceramite, 50));
@@ -1288,7 +1360,8 @@ public final class WHBlocks {
                 itemCapacity = 30;
                 size = 3;
 
-                heatOutput = 3f;
+                heatRequirement = 8;
+                maxEfficiency = 1;
                 //wasteHeatOutput = 9f;
                 consumePower(6);
                 consumeItems(with(WHItems.molybdenumAlloy, 2, WHItems.ceramite, 3));
@@ -1598,7 +1671,7 @@ public final class WHBlocks {
                 consumeItems(with(Items.carbide, 3, Items.plastanium, 5));
                 consumeLiquid(Liquids.slag, 30 / 60f);
                 outputItem = new ItemStack(WHItems.ceramite, 8);
-                heatOutput = 5;
+                heatOutput = 6;
                 drawer = new DrawMulti(new DrawRegion("-bottom"),
                         new DrawLiquidTile(Liquids.slag) {{
                             alpha = 0.4f;
@@ -2374,7 +2447,7 @@ public final class WHBlocks {
                 size = 2;
                 maxNodes = 20;
                 laserRange = 24;
-                consumePowerBuffered(15 * 1000f);
+                /*      consumePowerBuffered(15 * 1000f);*/
                 laserScale = 0.4f;
                 researchCostMultiplier = 0.8f;
             }

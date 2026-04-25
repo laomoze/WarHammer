@@ -1,23 +1,33 @@
 package wh.gen;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.core.*;
-import mindustry.entities.*;
-import mindustry.game.EventType.*;
+import arc.Events;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.scene.ui.layout.Table;
+import arc.struct.Seq;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.content.Blocks;
+import mindustry.content.Fx;
+import mindustry.core.World;
+import mindustry.entities.EntityGroup;
+import mindustry.entities.Units;
+import mindustry.game.EventType.PayloadDropEvent;
+import mindustry.game.EventType.PickupEvent;
 import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.world.*;
-import mindustry.world.blocks.environment.*;
-import mindustry.world.blocks.payloads.*;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Trail;
+import mindustry.world.Build;
+import mindustry.world.Tile;
+import mindustry.world.blocks.environment.Floor;
+import mindustry.world.blocks.payloads.BuildPayload;
+import mindustry.world.blocks.payloads.Payload;
+import mindustry.world.blocks.payloads.UnitPayload;
 
 import static mindustry.Vars.world;
 
@@ -36,6 +46,28 @@ public class HoverPayloadUnit extends ElevationMoveUnit implements Payloadc, Wat
     @Override
     public Seq<Payload> payloads(){
         return payloads;
+    }
+
+    @Override
+    public boolean canDropPayload() {
+        if (payloads.isEmpty()) return false;
+
+        Payload payload = payloads.peek();
+        Tile on = tileOn();
+
+        if (on != null && on.build != null && on.build.team == team && on.build.acceptPayload(on.build, payload))
+            return true;
+
+        if (payload instanceof BuildPayload b) {
+            Building tile = b.build;
+            int tx = World.toTile(x - tile.block.offset), ty = World.toTile(y - tile.block.offset);
+            on = Vars.world.tile(tx, ty);
+            return on != null && Build.validPlace(tile.block, tile.team, tx, ty, tile.rotation, false);
+        } else if (payload instanceof UnitPayload p) {
+            var u = p.unit;
+            return !(!u.canPass(World.toTile(x + Tmp.v1.x), World.toTile(y + Tmp.v1.y)) || Units.count(x, y, u.physicSize(), o -> o.isGrounded() && o.hitSize > 14f) > 1);
+        }
+        return false;
     }
 
     @Override

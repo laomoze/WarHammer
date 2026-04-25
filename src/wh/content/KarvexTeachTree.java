@@ -435,8 +435,10 @@ public final class KarvexTeachTree{
     private static void buildPowerBranch(){
         node(WHBlocks.powerNode, () -> {
             node(WHBlocks.t2PowerNode, () -> {
-                node(WHBlocks.compositeNode, () -> node(WHBlocks.armorPowerTower, () -> {
-                }));
+                node(WHBlocks.compositeNode, () -> {
+                    node(WHBlocks.armorPowerTower, () -> {
+                    });
+                });
             });
 
             node(WHBlocks.smallBattery, () -> {
