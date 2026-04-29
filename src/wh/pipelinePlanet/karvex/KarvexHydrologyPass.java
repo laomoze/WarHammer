@@ -1,16 +1,24 @@
 package wh.pipelinePlanet.karvex;
 
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.noise.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.world.*;
-import wh.content.*;
-import wh.pipelinePlanet.core.*;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
+import arc.math.geom.Vec3;
+import arc.struct.FloatSeq;
+import arc.struct.IntSeq;
+import arc.struct.Seq;
+import arc.util.noise.Simplex;
+import mindustry.Vars;
+import mindustry.content.Blocks;
+import mindustry.content.Liquids;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import wh.content.WHBlocksEnvironment;
+import wh.pipelinePlanet.core.GenContext;
+import wh.pipelinePlanet.core.GenPass;
 
-import java.util.*;
+import java.util.Arrays;
 
 /**
  * Lake-focused hydrology pass with controlled count and irregular shorelines.
@@ -601,13 +609,13 @@ public class KarvexHydrologyPass implements GenPass{
                 }
             }else{
                 if(radius == 1){
-                    next[idx] = eff >= 8 ? WHBlocksEnvironment.mineralSandstone.id : WHBlocksEnvironment.mineralSand.id;
+                    next[idx] = eff >= 8 ? WHBlocksEnvironment.darkMineralSandstone.id : WHBlocksEnvironment.mineralSand.id;
                 }else if(ctx.rand.chance((eff >= 4 ? 0.88f : 0.56f) * mul)){
                     float salt = sample(ctx, ctx.seed + 917, tile.x + 71f, tile.y - 43f, 1, 1f, 27f);
                     if(eff >= 9 && salt > 0.84f){
                         next[idx] = WHBlocksEnvironment.oreSalt.id;
                     }else{
-                        next[idx] = eff >= 7 ? WHBlocksEnvironment.mineralSand.id : WHBlocksEnvironment.mineralSandstone.id;
+                        next[idx] = eff >= 7 ? WHBlocksEnvironment.mineralSand.id : WHBlocksEnvironment.darkMineralSandstone.id;
                     }
                 }
             }
@@ -675,7 +683,7 @@ public class KarvexHydrologyPass implements GenPass{
             if(eff >= 10 && field > 0.78f){
                 next[idx] = WHBlocksEnvironment.oreSalt.id;
             }else if(eff >= 7 && field < -0.34f){
-                next[idx] = WHBlocksEnvironment.mineralSandstone.id;
+                next[idx] = WHBlocksEnvironment.darkMineralSandstone.id;
             }else{
                 next[idx] = WHBlocksEnvironment.mineralSand.id;
             }

@@ -1,13 +1,14 @@
 package wh.pipelinePlanet.karvex;
 
-import arc.graphics.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.noise.*;
-import mindustry.type.*;
-import mindustry.world.*;
-import wh.content.*;
+import arc.graphics.Color;
+import arc.math.Mathf;
+import arc.math.geom.Vec3;
+import arc.struct.ObjectMap;
+import arc.struct.Seq;
+import arc.util.noise.Simplex;
+import mindustry.type.Sector;
+import mindustry.world.Block;
+import wh.content.WHBlocksEnvironment;
 
 /**
  * Serpulo-equivalent terrain logic using mod floors.
@@ -21,13 +22,15 @@ public class KarvexSurfaceProfile{
     public final Block[][] arr = createSurfaceLut();
 
     public final ObjectMap<Block, Block> decorationByFloor = new ObjectMap<Block, Block>(){{
-        put(WHBlocksEnvironment.apatite, WHBlocksEnvironment.apatiteBoulder);
-        put(WHBlocksEnvironment.cementFloor, WHBlocksEnvironment.apatiteBoulder);
-        put(WHBlocksEnvironment.gravel, WHBlocksEnvironment.mineralSandBoulder);
-        put(WHBlocksEnvironment.mineralFloor, WHBlocksEnvironment.mineralSandBoulder);
+        put(WHBlocksEnvironment.quartzSand, WHBlocksEnvironment.quartzSandBoulder);
+        put(WHBlocksEnvironment.cementFloor, WHBlocksEnvironment.quartzSandBoulder);
+        put(WHBlocksEnvironment.gravel, WHBlocksEnvironment.darkMineralSandBoulder);
+        put(WHBlocksEnvironment.darkMineralFloor, WHBlocksEnvironment.darkMineralSandBoulder);
         put(WHBlocksEnvironment.mineralSandFloor, WHBlocksEnvironment.mineralSandFloorBoulder);
-        put(WHBlocksEnvironment.mineralSand, WHBlocksEnvironment.mineralSandBoulder);
-        put(WHBlocksEnvironment.mineralSandstone, WHBlocksEnvironment.mineralSandBoulder);
+        put(WHBlocksEnvironment.mineralSand, WHBlocksEnvironment.darkMineralSandBoulder);
+        put(WHBlocksEnvironment.darkMineralSandstone, WHBlocksEnvironment.darkMineralSandBoulder);
+        put(WHBlocksEnvironment.scorchedEarth, WHBlocksEnvironment.scorchedEarthBoulder);
+        put(WHBlocksEnvironment.scorchedStone, WHBlocksEnvironment.scorchedEarthBoulder);
         put(WHBlocksEnvironment.quartzSand, WHBlocksEnvironment.quartzCrystalCluster);
         put(WHBlocksEnvironment.darkRock, WHBlocksEnvironment.darkRockBoulder);
         put(WHBlocksEnvironment.darkHotRock, WHBlocksEnvironment.darkRockBoulder);
@@ -139,8 +142,8 @@ public class KarvexSurfaceProfile{
 
         if(floor == WHBlocksEnvironment.mineralSand){
             if(field > 0.62f) return WHBlocksEnvironment.mineralSandFloor;
-            if(field > 0.46f) return WHBlocksEnvironment.mineralFloor;
-            if(field < -0.70f) return WHBlocksEnvironment.mineralSandstone;
+            if (field > 0.46f) return WHBlocksEnvironment.darkMineralFloor;
+            if (field < -0.70f) return WHBlocksEnvironment.darkMineralSandstone;
             if(field < -0.92f && temp < 0.55f && height > seaLevel + 0.01f) return WHBlocksEnvironment.oreSalt;
             if(field > 1.08f && temp < 0.44f && height > seaLevel + 0.02f) return WHBlocksEnvironment.quartzSand;
             return floor;
@@ -151,15 +154,15 @@ public class KarvexSurfaceProfile{
             if(field > 0.64f) return WHBlocksEnvironment.mineralSandFloor;
             if(field > 1.03f && temp < 0.40f && height > seaLevel + 0.04f) return WHBlocksEnvironment.quartzSand;
             if(field < -0.50f) return WHBlocksEnvironment.gravel;
-            if(field < -0.68f) return WHBlocksEnvironment.apatite;
+            if (field < -0.68f) return WHBlocksEnvironment.quartzSand;
             if(field < -0.94f && temp < 0.50f && height > seaLevel + 0.01f) return WHBlocksEnvironment.oreSalt;
             if(field < -0.84f && temp < 0.55f) return WHBlocksEnvironment.cementFloor;
             return floor;
         }
 
-        if(floor == WHBlocksEnvironment.mineralSandstone){
+        if (floor == WHBlocksEnvironment.darkMineralSandstone) {
             if(field > 0.70f) return WHBlocksEnvironment.mineralSandFloor;
-            if(field > 0.62f) return WHBlocksEnvironment.mineralFloor;
+            if (field > 0.62f) return WHBlocksEnvironment.darkMineralFloor;
             if(field > 0.52f) return WHBlocksEnvironment.mineralSand;
             if(field < -0.60f && temp < 0.62f) return WHBlocksEnvironment.trachyte;
             if(field < -0.74f && temp < 0.58f) return WHBlocksEnvironment.oreSalt;
@@ -221,13 +224,13 @@ public class KarvexSurfaceProfile{
         Block rrf = WHBlocksEnvironment.radiationRockFloor;
         Block rrc = WHBlocksEnvironment.radiationCraters;
 
-        Block ap = WHBlocksEnvironment.apatite;
+        Block ap = WHBlocksEnvironment.quartzSand;
         Block ce = WHBlocksEnvironment.cementFloor;
         Block gv = WHBlocksEnvironment.gravel;
 
-        Block mf = WHBlocksEnvironment.mineralFloor;
+        Block mf = WHBlocksEnvironment.darkMineralFloor;
         Block ms = WHBlocksEnvironment.mineralSand;
-        Block mss = WHBlocksEnvironment.mineralSandstone;
+        Block mss = WHBlocksEnvironment.darkMineralSandstone;
 
         Block os = WHBlocksEnvironment.oreSalt;
         Block tr = WHBlocksEnvironment.trachyte;
@@ -264,3 +267,4 @@ public class KarvexSurfaceProfile{
         };
     }
 }
+

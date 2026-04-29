@@ -14,13 +14,13 @@ import mindustry.gen.UnitEntity;
 import mindustry.io.TypeIO;
 
 public class CarrierFighterUnit extends UnitEntity {
-    public static final float dodgeChance = 0.2f;
-    public static final float dodgeCooldown = 12f;
-    public static final float dodgeBoostDuration = 60f;
+    public static final float dodgeChance = 0.25f;
+    public static final float dodgeCooldown = 20;
+    public static final float dodgeBoostDuration = 120;
     public static final float dodgeBoostMultiplier = 1.45f;
     public static final float dodgeBoostAccel = 0.22f;
     public static final float dodgeImpulseScale = 1.65f;
-    public static final float dodgeIFrameDuration = 3f;
+    public static final float dodgeIFrameDuration = 5f;
 
     public float dodgeCooldownTimer = 0f;
     public float dodgeBoostTimer = 0f;

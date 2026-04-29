@@ -1,22 +1,27 @@
 package wh.pipelinePlanet.karvex;
 
-import arc.*;
-import arc.files.*;
-import arc.graphics.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.noise.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.game.*;
-import mindustry.mod.*;
-import mindustry.type.*;
-import mindustry.world.*;
-import wh.content.*;
-import wh.core.*;
-import wh.pipelinePlanet.core.*;
+import arc.Core;
+import arc.files.Fi;
+import arc.graphics.Color;
+import arc.math.Mathf;
+import arc.math.geom.Vec3;
+import arc.struct.Seq;
+import arc.util.Nullable;
+import arc.util.noise.Ridged;
+import arc.util.noise.Simplex;
+import mindustry.Vars;
+import mindustry.content.Blocks;
+import mindustry.game.Schematic;
+import mindustry.game.Schematics;
+import mindustry.mod.Mods;
+import mindustry.type.Sector;
+import mindustry.world.Block;
+import mindustry.world.TileGen;
+import wh.content.WHBlocksEnvironment;
+import wh.core.WarHammerMod;
+import wh.pipelinePlanet.core.PassRunner;
+import wh.pipelinePlanet.core.PipelinePlanetGenerator;
+import wh.pipelinePlanet.core.TilePassStage;
 import wh.pipelinePlanet.passes.*;
 
 public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
@@ -213,10 +218,10 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
 
         if(WHBlocksEnvironment.isMineralCoreFloor(floor)
         || floor == WHBlocksEnvironment.quartzSand
-        || floor == WHBlocksEnvironment.apatite
+                || floor == WHBlocksEnvironment.quartzSand
         || floor == WHBlocksEnvironment.cementFloor
         || floor == WHBlocksEnvironment.mineralSand
-        || floor == WHBlocksEnvironment.mineralSandstone
+                || floor == WHBlocksEnvironment.darkMineralSandstone
         || floor == WHBlocksEnvironment.gravel
         || floor == WHBlocksEnvironment.oreSalt){
             return Blocks.air;
@@ -267,3 +272,4 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
         || block == WHBlocksEnvironment.mineralSandEffluentWater;
     }
 }
+

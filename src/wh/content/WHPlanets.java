@@ -1,13 +1,15 @@
 package wh.content;
 
-import arc.graphics.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
+import arc.graphics.Color;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Mat3D;
+import arc.math.geom.Vec3;
+import arc.struct.Seq;
 import mindustry.graphics.g3d.*;
-import mindustry.type.*;
-import mindustry.world.*;
-import wh.pipelinePlanet.karvex.*;
+import mindustry.type.Planet;
+import mindustry.world.Block;
+import wh.pipelinePlanet.karvex.KarvexPlanetGenerator;
 
 import static mindustry.content.Planets.sun;
 
@@ -15,7 +17,7 @@ public final class WHPlanets{
     public static Planet karvex;
 
     public static void load(){
-        karvex = new Planet("karvex", sun, 1f, 2){{
+        karvex = new Planet("karvex", sun, 1f, 3) {{
             generator = new KarvexPlanetGenerator();
 
             Color radiation = colorOf(WHBlocksEnvironment.radiationWater, "4f8d86");
@@ -33,7 +35,7 @@ public final class WHPlanets{
                 meshes.add(new HexMesh(this, 6));
 
                 // Single visual asteroid belt around Karvex (no extra planets in the sidebar).
-                int beltPieces = 28;
+                int beltPieces = 8;
                 float beltRadius = this.radius + 0.82f;
                 float beltThickness = 0.14f;
                 float beltHeight = 0.12f;

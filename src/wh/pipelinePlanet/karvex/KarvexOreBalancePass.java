@@ -1,14 +1,22 @@
 package wh.pipelinePlanet.karvex;
 
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.noise.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.world.*;
-import wh.content.*;
-import wh.pipelinePlanet.core.*;
+import arc.math.Mathf;
+import arc.math.Rand;
+import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
+import arc.math.geom.Vec3;
+import arc.struct.IntSeq;
+import arc.struct.IntSet;
+import arc.struct.ObjectIntMap;
+import arc.struct.Seq;
+import arc.util.noise.Simplex;
+import mindustry.Vars;
+import mindustry.content.Blocks;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import wh.content.WHBlocksEnvironment;
+import wh.pipelinePlanet.core.GenContext;
+import wh.pipelinePlanet.core.GenPass;
 
 /**
  * Erekir-inspired coherent ore fields (chunky deposits, not speckles).
@@ -865,7 +873,7 @@ public class KarvexOreBalancePass implements GenPass{
                     }
                 }else if(floor == WHBlocksEnvironment.chromiteFloor){
                     if(chromite == 0 && metal <= 2 && ctx.rand.chance(0.55f)){
-                        next[idx] = WHBlocksEnvironment.mineralSandstone.id;
+                        next[idx] = WHBlocksEnvironment.darkMineralSandstone.id;
                     }
                 }else if(!isMetalFamily(floor)){
                     if(chromite >= 5 && ctx.rand.chance(0.34f)){
@@ -1086,9 +1094,9 @@ public class KarvexOreBalancePass implements GenPass{
     private boolean isBoundaryHost(Block floor){
         return WHBlocksEnvironment.isMineralCoreFloor(floor)
         || floor == WHBlocksEnvironment.mineralSand
-        || floor == WHBlocksEnvironment.mineralSandstone
+                || floor == WHBlocksEnvironment.darkMineralSandstone
         || floor == WHBlocksEnvironment.gravel
-        || floor == WHBlocksEnvironment.apatite
+                || floor == WHBlocksEnvironment.quartzSand
         || floor == WHBlocksEnvironment.oreSalt;
     }
 
@@ -1253,7 +1261,7 @@ public class KarvexOreBalancePass implements GenPass{
     private boolean isMetalThemeHost(Block floor){
         return WHBlocksEnvironment.isMineralCoreFloor(floor)
         || floor == WHBlocksEnvironment.mineralSand
-        || floor == WHBlocksEnvironment.mineralSandstone
+                || floor == WHBlocksEnvironment.darkMineralSandstone
         || floor == WHBlocksEnvironment.darkRock
         || floor == WHBlocksEnvironment.trachyte
         || floor == WHBlocksEnvironment.oreShale
@@ -1285,7 +1293,7 @@ public class KarvexOreBalancePass implements GenPass{
     private boolean isCoalFallbackFloor(Block floor){
         return WHBlocksEnvironment.isMineralCoreFloor(floor)
         || floor == WHBlocksEnvironment.mineralSand
-        || floor == WHBlocksEnvironment.mineralSandstone
+                || floor == WHBlocksEnvironment.darkMineralSandstone
         || floor == WHBlocksEnvironment.darkRock
         || floor == WHBlocksEnvironment.trachyte;
     }
@@ -1301,10 +1309,10 @@ public class KarvexOreBalancePass implements GenPass{
         if(ore == WHBlocksEnvironment.manganeseOre){
             return WHBlocksEnvironment.isMineralCoreFloor(floor)
             || floor == WHBlocksEnvironment.mineralSand
-            || floor == WHBlocksEnvironment.mineralSandstone
+                    || floor == WHBlocksEnvironment.darkMineralSandstone
             || floor == WHBlocksEnvironment.quartzSand
             || floor == WHBlocksEnvironment.gravel
-            || floor == WHBlocksEnvironment.apatite
+                    || floor == WHBlocksEnvironment.quartzSand
             || floor == WHBlocksEnvironment.cementFloor
             || floor == WHBlocksEnvironment.manganeseFloor
             || floor == WHBlocksEnvironment.manganeseStone
@@ -1322,7 +1330,7 @@ public class KarvexOreBalancePass implements GenPass{
             || floor == WHBlocksEnvironment.darkRock
             || floor == WHBlocksEnvironment.trachyte
             || floor == WHBlocksEnvironment.oreShale
-            || floor == WHBlocksEnvironment.mineralSandstone;
+                    || floor == WHBlocksEnvironment.darkMineralSandstone;
         }
 
         if(ore == WHBlocksEnvironment.cobaltOre){
@@ -1416,3 +1424,4 @@ public class KarvexOreBalancePass implements GenPass{
         return Simplex.noise3d(seed, octaves, falloff, 1f / scl, v.x, v.y, v.z);
     }
 }
+

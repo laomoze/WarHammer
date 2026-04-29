@@ -1,17 +1,24 @@
 package wh.entities.world.blocks.distribution;
 
-import arc.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.world.*;
-import mindustry.world.blocks.distribution.*;
-import wh.util.*;
+import arc.Core;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
+import arc.util.Eachable;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.entities.units.BuildPlan;
+import mindustry.gen.Building;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.world.Tile;
+import mindustry.world.blocks.distribution.StackConveyor;
+import wh.util.WHUtils;
 
 import static mindustry.Vars.*;
 
@@ -122,40 +129,52 @@ public class TubeStackConveyor extends StackConveyor{
         public float heat;
 
         public boolean checkBuild(TubeStackConveyorBuild b){
-            if(b.link == -1) return false;
-            return b.block.name.equals(this.block.name) && b.rotation == rotation
-            && b.shouldDrawCover && !b.backCapped && !b.capped && b.blendbits == this.blendbits;
+            return b != null && b.block == this.block && b.rotation == rotation && b.shouldDrawCover;
+        }
+
+        public void updateCoverState() {
+            if (!drawCover) {
+                shouldDrawCover = false;
+                return;
+            }
+
+            int maxCoverStep = Math.max(1, Mathf.round(coverLength));
+            Point2 back = Geometry.d4(rotation + 2);
+            boolean hasCover = false;
+
+            // Continue cover chain only when there is already a support anchor maxCoverStep tiles behind.
+            for (int r = 1; r <= maxCoverStep; r++) {
+                Tile other = tile.nearby(back.x * r, back.y * r);
+                if (other != null && other.build != this && other.build instanceof TubeStackConveyorBuild b && checkBuild(b)) {
+                    if (r >= maxCoverStep) {
+                        hasCover = true;
+                        break;
+                    }
+                }
+            }
+
+            // If there is no previous support anchor, allow starting from capped/back-capped endpoints.
+            if (!hasCover) {
+                for (int r = 1; r <= maxCoverStep; r++) {
+                    Tile backCap = tile.nearby(back.x * r, back.y * r);
+                    if (backCap != null && backCap.build != this && backCap.build instanceof TubeStackConveyorBuild a
+                            && a.block == this.block && a.rotation == rotation
+                            && ((a.blendbits == 1 || a.blendbits == 3) || a.capped || a.backCapped)) {
+                        if (r >= maxCoverStep) {
+                            hasCover = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            shouldDrawCover = hasCover;
         }
 
         @Override
         public void created(){
             super.created();
-            if(!drawCover) return;
-            boolean hasCover = false;
-            for(int r = 1; r <= coverLength; r++){
-                Tile other = tile.nearby(Geometry.d4(rotation + 2).x * r, Geometry.d4(rotation + 2).y * r);
-                if(other != null && other.build != this
-                && other.build instanceof TubeStackConveyorBuild b && checkBuild(b)){
-                    float dist = Math.max(Math.abs(b.tileX() - tile.x), Math.abs(b.tileY() - tile.y));
-                    if(dist >= coverLength){
-                        shouldDrawCover = true;
-                        return;
-                    }
-                }
-            }
-            for(int r = 1; r <= coverLength; r++){
-                Tile backCap = tile.nearby(Geometry.d4(rotation + 2).x * r, Geometry.d4(rotation + 2).y * r);
-                if(!hasCover && (backCap != null && backCap.build != this
-                && backCap.build instanceof TubeStackConveyorBuild a
-                && a.block.name.equals(this.block.name) && rotation == a.rotation &&
-                ((a.blendbits == 1 || a.blendbits == 3 && a.link != -1) || a.capped || a.backCapped))){
-                    float dist = Math.max(Math.abs(a.tileX() - tile.x), Math.abs(a.tileY() - tile.y));
-                    if(dist >= coverLength){
-                        hasCover = true;
-                    }
-                }
-            }
-            shouldDrawCover = hasCover;
+            updateCoverState();
         }
 
         @Override

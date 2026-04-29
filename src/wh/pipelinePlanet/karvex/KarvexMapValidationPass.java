@@ -1,15 +1,20 @@
 package wh.pipelinePlanet.karvex;
 
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.noise.*;
-import mindustry.content.*;
-import mindustry.world.*;
-import wh.content.*;
-import wh.pipelinePlanet.core.*;
-import wh.pipelinePlanet.data.*;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
+import arc.math.geom.Vec3;
+import arc.util.noise.Simplex;
+import mindustry.content.Blocks;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import wh.content.WHBlocksEnvironment;
+import wh.pipelinePlanet.core.GenContext;
+import wh.pipelinePlanet.core.GenPass;
+import wh.pipelinePlanet.data.RoomAnchor;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.content;
+import static mindustry.Vars.world;
 
 /**
  * Final map sanity pass with trimDark border and wall cleanup.
@@ -206,11 +211,11 @@ public class KarvexMapValidationPass implements GenPass{
             if(field > 0.82f){
                 next[idx] = WHBlocksEnvironment.mineralSand.id;
             }else if(field > 0.62f){
-                next[idx] = WHBlocksEnvironment.mineralSandstone.id;
+                next[idx] = WHBlocksEnvironment.darkMineralSandstone.id;
             }else if(field < -0.82f){
                 next[idx] = WHBlocksEnvironment.trachyte.id;
             }else if(field < -0.62f){
-                next[idx] = WHBlocksEnvironment.mineralSandstone.id;
+                next[idx] = WHBlocksEnvironment.darkMineralSandstone.id;
             }else if(field > 0.30f && ctx.rand.chance(0.55f)){
                 next[idx] = WHBlocksEnvironment.mineralSand.id;
             }

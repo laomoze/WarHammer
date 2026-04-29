@@ -2,6 +2,7 @@
 package wh.content;
 
 import arc.Core;
+import arc.audio.Sound;
 import arc.graphics.Blending;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
@@ -185,6 +186,7 @@ public final class WHBlocks {
             t2Module, t3Module, t4Module, t5Module, t6Module, jumpBeacon, energyWarpGate, airborneDeploymentBeacon,
             t2PayloadMassDriver, MechanicalArm,
             armorPayloadConveyor, armorPayloadRouter,
+            mechaAssembler,
             serpuloT6Assembler;
 
     //walls
@@ -211,7 +213,7 @@ public final class WHBlocks {
     Hector, Mezoa;
 
     //TEST
-    public static Block randomer, sb1, sb2, sb3, sb6, sb7, sb10;
+    public static Block randomer, sb1, sb2, sb3, sb6, sb7, sb10, sbSound;
 
 
     private WHBlocks() {
@@ -561,8 +563,8 @@ public final class WHBlocks {
 
         waterPurifier = new GenericCrafter("water-purifier") {
             {
-                requirements(Category.crafting, with(WHItems.manganeseSteel, 50, WHItems.cobalt, 80, Items.plastanium, 50));
-                health = 600;
+                requirements(Category.crafting, with(WHItems.manganeseSteel, 50, WHItems.cobalt, 80, Items.plastanium, 70));
+                health = 800;
                 hasItems = hasPower = hasLiquids = true;
                 craftTime = 120;
                 itemCapacity = 12;
@@ -800,7 +802,7 @@ public final class WHBlocks {
                 size = 3;
                 consumePower(5);
                 consumeItems(with(WHItems.manganese, 6, WHItems.chromium, 3, Items.metaglass, 2));
-                consumeLiquid(Liquids.water, 6 / 60f);
+                consumeLiquid(Liquids.water, 15 / 60f);
                 outputItem = new ItemStack(WHItems.manganeseSteel, 4);
                 drawer = new DrawMulti(
                         new DrawRegion("-bottom"),
@@ -1484,6 +1486,7 @@ public final class WHBlocks {
                 fuelItem = WHItems.uranium;
                 consumeLiquid(Liquids.water, 20 / 60f).update(false);
                 drawer = new DrawMulti(
+                        new DrawRegion("-bottom"),
                         new DrawCrucibleFlame(),
                         new DrawDefault(),
                         new DrawHeatOutput());
@@ -2035,7 +2038,7 @@ public final class WHBlocks {
 
         steelBridgeConduit = new LiquidBridge("steel-bridge-conduit") {
             {
-                requirements(Category.liquid, with(WHItems.manganese, 10, WHItems.chromium, 5, Items.metaglass, 5));
+                requirements(Category.liquid, with(WHItems.manganese, 10, WHItems.chromium, 10, Items.metaglass, 20));
                 armor = 2;
                 rotate = false;
                 range = 7;
@@ -2052,7 +2055,7 @@ public final class WHBlocks {
 
         lowResistanceConduit = new LiquidBridge("low-resistance-conduit") {
             {
-                requirements(Category.liquid, with(Items.metaglass, 15, WHItems.manganeseSteel, 5, WHItems.resonantCrystal, 5, WHItems.cobaltNitride, 5));
+                requirements(Category.liquid, with(Items.metaglass, 30, WHItems.manganeseSteel, 15, WHItems.resonantCrystal, 5, WHItems.cobaltNitride, 5));
                 rotate = false;
                 range = 18;
                 pulse = true;
@@ -2070,7 +2073,7 @@ public final class WHBlocks {
 
         basicPump = new Pump("basic-pump") {
             {
-                requirements(Category.liquid, with(WHItems.manganese, 10, WHItems.chromium, 10, Items.metaglass, 20));
+                requirements(Category.liquid, with(WHItems.chromium, 15, Items.metaglass, 15));
                 size = 1;
                 squareSprite = false;
                 drawer = new DrawMulti(new DrawRegion("-liquid"), new DrawPumpLiquidTile(4 / 8f), new DrawDefault());
@@ -2083,7 +2086,7 @@ public final class WHBlocks {
 
         steelPump = new Pump("steel-pump") {
             {
-                requirements(Category.liquid, with(Items.metaglass, 50, WHItems.armorAlloy, 30, WHItems.manganeseSteel, 30, Items.silicon, 50));
+                requirements(Category.liquid, with(Items.metaglass, 50, WHItems.cobaltNitride, 20, WHItems.manganeseSteel, 30, Items.silicon, 50));
                 health = 320;
                 size = 2;
 
@@ -2091,7 +2094,7 @@ public final class WHBlocks {
                 liquidCapacity = 200;
                 hasLiquids = hasPower = true;
                 pumpAmount = 100f / 4f / 60f;
-                consumePower(1);
+                consumePower(1.5f);
                 researchCostMultiplier = 0.45f;
             }
         };
@@ -2167,7 +2170,7 @@ public final class WHBlocks {
             hasItems = true;
             itemCapacity = 2;
             researchCostMultiplier = 1;
-            //钢质导轨
+            // conveyor tuning note
         }};
 
         armorJunction = new Junction("armor-junction") {{
@@ -2266,7 +2269,7 @@ public final class WHBlocks {
             speed = 120 / 40f / 60f;
             itemCapacity = 40;
             researchCostMultiplier = 1;
-            //陶钢打包带
+            // stack conveyor behavior note
         }};
 
         armorCoverStackBelt = new TubeStackConveyor("armor-cover-stack-belt") {
@@ -2447,7 +2450,8 @@ public final class WHBlocks {
                 size = 2;
                 maxNodes = 20;
                 laserRange = 24;
-                /*      consumePowerBuffered(15 * 1000f);*/
+                consumesPower = outputsPower = true;
+                consumePowerBuffered(15 * 1000f);
                 laserScale = 0.4f;
                 researchCostMultiplier = 0.8f;
             }
@@ -2491,7 +2495,7 @@ public final class WHBlocks {
                     new DrawRegion("-top"));
 
             hasLiquids = true;
-            outputLiquid = new LiquidStack(Liquids.water, 60f / 60f / 9f);
+            outputLiquid = new LiquidStack(WHLiquids.swageWater, 60f / 60f / 9f);
             liquidCapacity = 120f;
             fogRadius = 3;
 
@@ -2774,7 +2778,7 @@ public final class WHBlocks {
                 explodeEffect = WHFx.promethiunmRectorExplosion;
                 explodeSound = explosionReactor;
                 researchCostMultiplier = 0.8f;
-                //钷素反应堆
+                // promethium reaction note
             }
         };
 
@@ -3058,7 +3062,7 @@ public final class WHBlocks {
                 researchCostMultiplier = 0.8f;
                 destroyBullet = WHBullets.warpBreak.copy();
                 destroyBullet.hitColor = lightColor = lightningColor = WHPal.WHYellow;
-                //MK3强化电池
+                //MK3閻庢鍠栭幖顐も偓鍨叀閹粙宕归銈嗗缓
             }
         };*/
 
@@ -3630,10 +3634,10 @@ public final class WHBlocks {
                         Draw.scl(1.5f);
                         Draw.rect(arrowRegion, Tmp.v1.x + Tmp.v2.x + b.x, Tmp.v1.y + Tmp.v2.y + b.y, arrowRegion.width * b.warmup * Draw.scl * f, arrowRegion.height * b.warmup * Draw.scl * f, 180f + 90 * m);
                     }
-                    Tmp.v2.trns(90, m * 2f * tilesize);//上下对称
+                    Tmp.v2.trns(90, m * 2f * tilesize);//婵炴垶鎸搁敃锝囩箔閸涱垪鍋撻棃娑欒础鐞?
                     Lines.stroke((1.5f + Mathf.absin(Time.time, 8.0F, 1)) * b.warmup);
                     for (int m1 : Mathf.signs) {
-                        Tmp.v3.trns(180, m1 * 3f * tilesize * b.warmup);//左右对称
+                        Tmp.v3.trns(180, m1 * 3f * tilesize * b.warmup);//閻庡綊娼荤粻鎴ｃ亹閸濄儮鍋撻棃娑欒础鐞?
                         Lines.lineAngle(Tmp.v1.x + Tmp.v2.x + Tmp.v3.x + b.x, Tmp.v1.y + Tmp.v2.y + Tmp.v3.y + b.y, 180 * m, m1 * tilesize * 7f * b.warmup);
                     }
                 }
@@ -3737,6 +3741,27 @@ public final class WHBlocks {
             underBullets = true;
         }};
 
+        mechaAssembler = new ConfigurableUnitAssembler("mecha-assembler") {{
+            requirements(Category.units, with(WHItems.cobaltNitride, 300, WHItems.ceramite, 500, WHItems.resonantCrystal, 300));
+            size = 5;
+            droneType = WHUnitTypes.mechaAssemblerDrone;
+            plans.addAll(
+                    new AssemblerUnitPlan(WHUnitTypes.M4B, 60f * 40f, PayloadStack.list(WHUnitTypes.M4A, 1)) {{
+                        itemReq = with(WHItems.sealedPromethium, 50, WHItems.entanglement, 50, WHItems.armorAlloy, 100);
+                    }},
+                    new AssemblerUnitPlan(WHUnitTypes.M4C, 60f * 40f, PayloadStack.list(WHUnitTypes.M4A, 1)) {{
+                        itemReq = with(WHItems.sealedPromethium, 100, WHItems.armorAlloy, 100);
+                    }},
+                    new AssemblerUnitPlan(WHUnitTypes.M4D, 60f * 40f, PayloadStack.list(WHUnitTypes.M4A, 1)) {{
+                        itemReq = with(WHItems.culverCrystal, 70, WHItems.armorAlloy, 100);
+                    }}
+            );
+            areaSize = 8;
+            researchCostMultiplier = 0.4f;
+
+            consumePower(1500 / 60f);
+            consumeLiquid(Liquids.cryofluid, 30 / 60f);
+        }};
 
         serpuloT6Assembler = new ConfigurableUnitAssembler("t6-assembler") {{
             requirements(Category.units, with(Items.silicon, 6000, Items.thorium, 3000, Items.plastanium, 1500, Items.phaseFabric, 1500, Items.surgeAlloy, 1500));
@@ -4764,7 +4789,7 @@ public final class WHBlocks {
             recoil = 4;
             liquidCapacity = 100;
             coolantMultiplier = 3.5f;
-            shootSound = WHSounds.hugeShoot;
+            shootSound = WHSounds.laser4;
             chargeSound = chargeLancer;
             rotateSpeed = 2.5f;
             cooldownTime = 110;
@@ -6556,8 +6581,142 @@ public final class WHBlocks {
                 }};
             }
         };
+        sbSound = new WHItemTurret("test-sound-turret") {
+            private final BulletType copperBullet = testSoundBullet();
+            private final BulletType leadBullet = testSoundBullet();
+            private final BulletType graphiteBullet = testSoundBullet();
+            private final BulletType siliconBullet = testSoundBullet();
+            private final BulletType titaniumBullet = testSoundBullet();
+            private final BulletType thoriumBullet = testSoundBullet();
+            private final BulletType manganeseBullet = testSoundBullet();
+            private final BulletType chromiumBullet = testSoundBullet();
+            private final BulletType manganeseSteelBullet = testSoundBullet();
+            private final BulletType cobaltBullet = testSoundBullet();
+            private final BulletType cobaltNitrideBullet = testSoundBullet();
+            private final BulletType ceramiteBullet = testSoundBullet();
+            private final BulletType refineCeramiteBullet = testSoundBullet();
+            private final BulletType sealedPromethiumBullet = testSoundBullet();
+            private final BulletType metaglassBullet = testSoundBullet();
+            private final BulletType plastaniumBullet = testSoundBullet();
+            private final BulletType carbideBullet = testSoundBullet();
+            private final BulletType surgeAlloyBullet = testSoundBullet();
+            private final BulletType phaseFabricBullet = testSoundBullet();
+            private final BulletType sandBullet = testSoundBullet();
+            private final BulletType scrapBullet = testSoundBullet();
+            private final BulletType coalBullet = testSoundBullet();
+            private final BulletType pyratiteBullet = testSoundBullet();
+            private final BulletType blastCompoundBullet = testSoundBullet();
+            private final BulletType sporePodBullet = testSoundBullet();
+            private final BulletType berylliumBullet = testSoundBullet();
+            private final BulletType tungstenBullet = testSoundBullet();
+            private final BulletType oxideBullet = testSoundBullet();
 
-        sb7 = new OverheatGenericCrafter("过热工厂") {
+            private BulletType testSoundBullet() {
+                return new BasicBulletType(6f, 35f) {{
+                    width = 7f;
+                    height = 9f;
+                    lifetime = 45f;
+                    shootEffect = Fx.shootSmall;
+                    smokeEffect = Fx.shootSmallSmoke;
+                    hitEffect = Fx.hitBulletSmall;
+                    despawnEffect = Fx.none;
+                }};
+            }
+
+            {
+                requirements(Category.turret, BuildVisibility.sandboxOnly, with(Items.copper, 1));
+                buildVisibility = BuildVisibility.sandboxOnly;
+                alwaysUnlocked = true;
+                size = 2;
+                health = 300;
+                range = 220f;
+                reload = 15f;
+                recoil = 0.6f;
+                rotateSpeed = 12f;
+                shootCone = 20f;
+                inaccuracy = 2f;
+                shootY = 6f;
+                shootSound = Sounds.none;
+                coolant = consumeCoolant(0.2f);
+                buildType = SoundTestTurretBuild::new;
+                maxAmmo = 200;
+                ammoPerShot = 1;
+
+                ammo(
+                        Items.copper, copperBullet,
+                        Items.lead, leadBullet,
+                        Items.graphite, graphiteBullet,
+                        Items.silicon, siliconBullet,
+                        Items.titanium, titaniumBullet,
+                        Items.thorium, thoriumBullet,
+                        WHItems.manganese, manganeseBullet,
+                        WHItems.chromium, chromiumBullet,
+                        WHItems.manganeseSteel, manganeseSteelBullet,
+                        WHItems.cobalt, cobaltBullet,
+                        WHItems.cobaltNitride, cobaltNitrideBullet,
+                        WHItems.ceramite, ceramiteBullet,
+                        WHItems.refineCeramite, refineCeramiteBullet,
+                        WHItems.sealedPromethium, sealedPromethiumBullet,
+                        Items.metaglass, metaglassBullet,
+                        Items.plastanium, plastaniumBullet,
+                        Items.carbide, carbideBullet,
+                        Items.surgeAlloy, surgeAlloyBullet,
+                        Items.phaseFabric, phaseFabricBullet,
+                        Items.sand, sandBullet,
+                        Items.scrap, scrapBullet,
+                        Items.coal, coalBullet,
+                        Items.pyratite, pyratiteBullet,
+                        Items.blastCompound, blastCompoundBullet,
+                        Items.sporePod, sporePodBullet,
+                        Items.beryllium, berylliumBullet,
+                        Items.tungsten, tungstenBullet,
+                        Items.oxide, oxideBullet
+                );
+            }
+
+            public class SoundTestTurretBuild extends ItemTurretBuild {
+                private final ObjectMap<BulletType, Sound> soundByBullet = ObjectMap.of(
+                        copperBullet, WHSounds.alert2,
+                        leadBullet, WHSounds.launch,
+                        graphiteBullet, WHSounds.hugeBlast,
+                        /*   siliconBullet, WHSounds.hugeShoot,*/
+                        /*  titaniumBullet, WHSounds.shock,*/
+                        thoriumBullet, WHSounds.jump,
+                        /*  manganeseBullet, WHSounds.lightningShoot,*/
+                        chromiumBullet, WHSounds.blast,
+                        manganeseSteelBullet, WHSounds.energyShoot,
+                        cobaltNitrideBullet, WHSounds.machineGunShoot,
+                        ceramiteBullet, WHSounds.sniperShoot,
+                        refineCeramiteBullet, WHSounds.rifleLaser,
+                        /*    sealedPromethiumBullet, WHSounds.shootGunDouble,*/
+                        metaglassBullet, WHSounds.laser2,
+                        plastaniumBullet, WHSounds.laser3,
+                        carbideBullet, WHSounds.laser4,
+                        surgeAlloyBullet, WHSounds.laser5,
+                        phaseFabricBullet, WHSounds.largeBeam,
+                        sandBullet, WHSounds.abyssalGlareLoop,
+                        scrapBullet, WHSounds.cryoflamerLoop,
+                        coalBullet, WHSounds.heavyAdjudicatorFire01,
+                        pyratiteBullet, WHSounds.highIntensLaserLoop,
+                        blastCompoundBullet, WHSounds.hypervelDriverFire01,
+                        sporePodBullet, WHSounds.kineticBlaster01,
+                        /*   berylliumBullet, WHSounds.plasmaCannonFire01,*/
+                        tungstenBullet, WHSounds.pulseLaserFire01,
+                        oxideBullet, WHSounds.voltaicCannonFire01
+                );
+
+                @Override
+                protected void shoot(BulletType type) {
+                    super.shoot(type);
+                    Sound sound = soundByBullet.get(type);
+                    if (sound != null) {
+                        sound.at(x, y, Mathf.random(0.95f, 1.05f), 1f);
+                    }
+                }
+            }
+        };
+
+        sb7 = new OverheatGenericCrafter("overheat-crafter-test") {
             {
                 requirements(Category.crafting, with(WHItems.manganese, 200, WHItems.manganese, 120, Items.silicon, 90));
                 buildVisibility = BuildVisibility.sandboxOnly;
@@ -6574,7 +6733,7 @@ public final class WHBlocks {
             }
         };
 
-        sb10 = new OverheatBooster("过热助推器") {
+        sb10 = new OverheatBooster("overheat-booster-test") {
             {
                 requirements(Category.crafting, with(WHItems.manganese, 200, WHItems.manganese, 120, Items.silicon, 90));
                 buildVisibility = BuildVisibility.sandboxOnly;
@@ -6590,7 +6749,7 @@ public final class WHBlocks {
             }
         };
 
-        //来自EU
+        // from EU
         randomer = new Randomer("randomer1") {
             {
                 requirements(Category.distribution, with(Items.silicon, 1));
@@ -6638,3 +6797,5 @@ public final class WHBlocks {
         return new FlameTrailData(length, b.owner instanceof Turret.TurretBuild turret ? turret : null);
     }
 }
+
+

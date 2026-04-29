@@ -34,7 +34,6 @@ import mindustry.graphics.Trail;
 import mindustry.type.UnitType;
 import mindustry.world.meta.BlockGroup;
 import wh.content.WHBullets;
-import wh.content.WHSounds;
 import wh.entities.WHUnitSorts;
 import wh.entities.world.entities.PesterUnitType;
 import wh.graphics.Drawn;
@@ -298,7 +297,6 @@ public class PesterUnit extends UnitEntity implements Pesterc {
         checked.clear();
         nextTargets.clear();
         if (!Vars.headless && itr > 0) {
-            WHSounds.hugeShoot.at(ex, ey);
             /* WHFx.crossSpinBlast.at(ex, ey, 0.0F, team.color, this);*/
         }
         if (!Vars.headless &&  isBoss) {

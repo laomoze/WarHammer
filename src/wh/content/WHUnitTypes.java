@@ -127,7 +127,7 @@ public final class WHUnitTypes {
     MEn1,
             airD1, airD2;
     //核心机
-    public static UnitType t6AssemblyDrone, reborn, recovery, restore;
+    public static UnitType t6AssemblyDrone, mechaAssemblerDrone, reborn, recovery, restore;
     //原版
     public static UnitType airS6, airSGreen6, mechaS6, mechaSGreen6, meshSPurple6, navyS6, navySGreen6, carrierTest, carrierTestFighter;
     //空袭&&其他
@@ -750,7 +750,7 @@ public final class WHUnitTypes {
                         ejectEffect = none;
                         shootCone = 30.0F;
                         shoot.firstShotDelay = 180.0F;
-                        shootSound = WHSounds.hugeShoot;
+                        shootSound = WHSounds.laser5;
                         shootStatus = StatusEffects.unmoving;
                         shootStatusDuration = 180.0F;
                         bullet = new BasicBulletType() {
@@ -1109,7 +1109,7 @@ public final class WHUnitTypes {
                     reload = 30;
                     ejectEffect = Fx.none;
                     recoil = 2f;
-                    shootSound = WHSounds.LaserGatling;
+                    shootSound = WHSounds.laser3;
                     velocityRnd = 0.15f;
                     inaccuracy = 2f;
 
@@ -2576,6 +2576,7 @@ public final class WHUnitTypes {
 
                         float f1 = Mathf.curve(f, 0.4f, 1f);
                         Draw.z(Layer.bullet);
+                        Drawn.wireTorus(unit.x + Tmp.v1.x, unit.y + Tmp.v1.y, 75 * f1, 50, Time.time, 2, heatColor);
                         Draw.color(heatColor);
 
                         Tmp.v6.set(mount.aimX, mount.aimY).sub(unit);
@@ -3291,7 +3292,7 @@ public final class WHUnitTypes {
                         reload = 200;
                         layerOffset = -0.1f;
                         shootY = 24 / 4f;
-                        shootSound = beamMeltdown;
+                        shootSound = WHSounds.highIntensLaserLoop;
                         continuous = true;
                         bullet = new LaserBeamBulletType(120) {{
 
@@ -3409,7 +3410,7 @@ public final class WHUnitTypes {
                             x = 118f / 4f;
                             reload = 90;
                             recoil = 2f;
-                            shootSound = WHSounds.machineGunShoot;
+                            shootSound = shootScepter;
                             inaccuracy = 4f;
                             velocityRnd = 0.15f;
                             xRand = 0.1f;
@@ -3600,7 +3601,7 @@ public final class WHUnitTypes {
                         shoot.shots = 6;
                         shoot.shotDelay = 5;
                         inaccuracy = 5f;
-                        shootSound = shootMissile;
+                        shootSound = WHSounds.laser5;
                         velocityRnd = 0.07f;
                         shootCone = 20f;
 
@@ -3800,7 +3801,7 @@ public final class WHUnitTypes {
                         shoot.shots = 4;
                         shoot.shotDelay = 6;
                         inaccuracy = 4;
-                        shootSound = shootMissile;
+                        shootSound = WHSounds.laser5;
                         velocityRnd = 0.1f;
 
                         bullet = new CritBulletType(8, 50, "circle") {
@@ -3862,7 +3863,7 @@ public final class WHUnitTypes {
                             shotDelay = 8;
                         }};
                         inaccuracy = 5;
-                        shootSound = shootMissileLong;
+                        shootSound = shootMissileSmall;
                         velocityRnd = 0.1f;
                         bullet = new CritMissileBulletType(6, 90, name("large-missile")) {{
 
@@ -4531,7 +4532,6 @@ public final class WHUnitTypes {
 
             initialFighterCount = 12;
             maxDeployedFighters = 12;
-            // Max airborne sortie time before recall; 60f = 1 second.
             sortieDuration = 25 * 60f;
 
             regroupOnAnyLoss = true;
@@ -4789,7 +4789,7 @@ public final class WHUnitTypes {
                 rotateSpeed = 0.8f;
                 accel = 0.05f;
                 drag = 0.017f;
-                health = 80000;
+                health = 85000;
                 armor = 25;
                 engineLayer = Layer.flyingUnitLow - 1f;
                 engineOffset = 225 / 4f;
@@ -4864,7 +4864,7 @@ public final class WHUnitTypes {
                             layerOffset = -0.1f;
                             ejectEffect = Fx.none;
                             recoil = 2f;
-                            shootSound = WHSounds.machineGunShoot;
+                            shootSound = WHSounds.kineticBlaster01;
                             inaccuracy = 3f;
                             shoot = new ShootAlternate() {{
                                 shots = 6;
@@ -4974,7 +4974,7 @@ public final class WHUnitTypes {
                             rotationLimit = 30;
                             rotateSpeed = 0.5f;
                             shootCone = 15f;
-                            shootSound = shootRipple;
+                            shootSound = WHSounds.laser5;
                             velocityRnd = 0.03f;
                             layerOffset = 0.15f;
                             parentizeEffects = true;
@@ -5290,7 +5290,7 @@ public final class WHUnitTypes {
                             reload = 60;
                             ejectEffect = Fx.none;
                             recoil = 2f;
-                            shootSound = WHSounds.LaserGatling;
+                            shootSound = WHSounds.laser5;
                             inaccuracy = 0f;
                             shoot = new ShootHelix(4, 1) {{
                                 shots = 3;
@@ -5329,6 +5329,7 @@ public final class WHUnitTypes {
                             reload = 12;
                             targetInterval = 10f;
                             targetSwitchInterval = 15f;
+                            shootSound = WHSounds.laser5;
 
                             bullet = new BulletType() {{
                                 hitColor = WHPal.thurmixRed;
@@ -5343,7 +5344,7 @@ public final class WHUnitTypes {
                             x = 64f / 4f;
                             ejectEffect = Fx.none;
                             recoil = 2f;
-                            shootSound = WHSounds.LaserGatling;
+                            shootSound = WHSounds.laser3;
                             velocityRnd = 0.15f;
                             inaccuracy = 2f;
 
@@ -5454,7 +5455,7 @@ public final class WHUnitTypes {
                             reload = 15;
                             ejectEffect = Fx.none;
                             recoil = 2f;
-                            shootSound = WHSounds.LaserGatling;
+                            shootSound = WHSounds.kineticBlaster01;
                             inaccuracy = 1f;
                             shoot.shots = 3;
                             shoot.shotDelay = 5;
@@ -5492,7 +5493,7 @@ public final class WHUnitTypes {
                             reload = 30;
                             ejectEffect = Fx.none;
                             recoil = 2f;
-                            shootSound = WHSounds.LaserGatling;
+                            shootSound = WHSounds.laser5;
                             velocityRnd = 0.15f;
                             inaccuracy = 2f;
 
@@ -5625,7 +5626,7 @@ public final class WHUnitTypes {
                             reload = 60;
                             ejectEffect = Fx.none;
                             recoil = 2f;
-                            shootSound = shootMissile;
+                            shootSound = WHSounds.kineticBlaster01;
                             velocityRnd = 0.12f;
                             inaccuracy = 2f;
                             alternate = true;
@@ -5700,7 +5701,7 @@ public final class WHUnitTypes {
                             recoil = 0;
                         }},
                         new Weapon(name(name + "-weapon3")) {{
-                            shootSound = shootLaser;
+                            shootSound = WHSounds.laser3;
                             reload = 140;
                             x = y = 0f;
                             shootY = 46 / 8f;
@@ -5771,7 +5772,7 @@ public final class WHUnitTypes {
                     reload = 12;
                     ejectEffect = Fx.none;
                     recoil = 2f;
-                    shootSound = shootMissile;
+                    shootSound = WHSounds.kineticBlaster01;
                     velocityRnd = 0.15f;
                     inaccuracy = 3f;
                     alternate = true;
@@ -6581,7 +6582,7 @@ public final class WHUnitTypes {
                         reload = 90;
                         rotate = true;
                         rotateSpeed = 2;
-                        shootSound = shootLaser;
+                        shootSound = WHSounds.laser4;
                         recoil = 1;
                         shoot.firstShotDelay = 30;
                         shoot.shots = 3;
@@ -6760,7 +6761,7 @@ public final class WHUnitTypes {
                         recoilTime = 90f;
                         mirror = false;
                         inaccuracy = 0;
-                        shootSound = shootRipple;
+                        shootSound = shootConquer;
                         shake = 8;
 
                         shootWarmupSpeed = 0.2f;
@@ -6912,7 +6913,7 @@ public final class WHUnitTypes {
                         cooldownTime = 45;
                         heatColor = WHPal.Heat;
                         shootCone = 15;
-                        shootSound = shootSpectre;
+                        shootSound = WHSounds.laser4;
                         shoot = new ShootAlternate() {
                             {
                                 barrels = 3;
@@ -7013,7 +7014,7 @@ public final class WHUnitTypes {
                         mirror = false;
                         inaccuracy = 0;
                         reload = 120;
-                        shootSound = explosion;
+                        shootSound = WHSounds.laser4;
 
                         bullet = new DelayedPointBulletType() {
                             {
@@ -7025,7 +7026,7 @@ public final class WHUnitTypes {
                                 damage = 500;
                                 splashDamage = damage * 0.7f;
                                 splashDamageRadius = 40;
-                                shootSound = shootLaser;
+                                despawnSound = explosion;
                                 hitSound = WHSounds.blast;
                                 smokeEffect = smokeCloud;
                                 width = 25;
@@ -7136,7 +7137,7 @@ public final class WHUnitTypes {
                         shootStatusDuration = shoot.firstShotDelay = 60;
                         shootStatus = WHStatusEffects.powerReduce2;
                         chargeSound = chargeCorvus;
-                        shootSound = shootMeltdown;
+                        shootSound = WHSounds.largeBeam;
                         continuous = true;
                         cooldownTime = 200;
                         heatColor = WHPal.Heat;
@@ -7373,6 +7374,7 @@ public final class WHUnitTypes {
                                         WHFx.generalExplosion(50, hitColor, splashDamageRadius, 10, false),
                                         tank3sExplosionSmoke
                                 );
+                                despawnSound = WHSounds.blast;
                                 fragBullets = 7;
                                 fragBullet = new BasicBulletType(3, 100) {
                                     {
@@ -7540,6 +7542,7 @@ public final class WHUnitTypes {
                         rotateSpeed = 1.2f;
                         cooldownTime = 150;
                         heatColor = WHPal.Heat;
+                        shootSound = shootRipple;
                         recoil = 3;
                         reload = 200;
                         inaccuracy = 3;
@@ -7578,7 +7581,7 @@ public final class WHUnitTypes {
                         reload = 60;
                         ejectEffect = Fx.none;
                         recoil = 2f;
-                        shootSound = WHSounds.machineGunShoot;
+                        shootSound = WHSounds.laser3;
                         shoot = new ShootAlternate() {{
                             shotDelay = 8;
                             shots = 4;
@@ -7653,7 +7656,7 @@ public final class WHUnitTypes {
                         rotationLimit = 90;
                         rotateSpeed = 1;
                         inaccuracy = 2;
-                        shootSound = shootSpectre;
+                        shootSound = WHSounds.pulseLaserFire01;
                         shootCone = 25;
                         bullet = new CritBulletType() {{
                             damage = 40;
@@ -7799,7 +7802,7 @@ public final class WHUnitTypes {
                                         WHFx.shoot3DWave(30, hitColor, 50, 5),
                                         WHFx.shootLine(30, 30));
 
-                                hitSound = Sounds.none;
+                                despawnSound = hitSound = Sounds.none;
 
                                 smokeEffect = smokeCloud;
 
@@ -7867,6 +7870,7 @@ public final class WHUnitTypes {
                                                 unit.apply(WHStatusEffects.rock, 180);
                                             }
                                         });
+                                        WHSounds.blast.at(v.x, v.y, hitSoundPitch + Mathf.range(hitSoundPitchRange), hitSoundVolume);
                                     }
 
                                     @Override
@@ -8141,7 +8145,7 @@ public final class WHUnitTypes {
                                 mirror = false;
                                 recoil = 2f;
                                 recoilTime = 60;
-                                shootSound = shootLaser;
+                                shootSound = WHSounds.laser5;
                                 heatColor = WHPal.thurmixRed;
 
                                 rotate = true;
@@ -8332,7 +8336,7 @@ public final class WHUnitTypes {
                             mirror = false;
                             ejectEffect = casing3Double;
                             recoil = 2f;
-                            shootSound = WHSounds.machineGunShoot;
+                            shootSound = Sounds.shootDisperse;
                             inaccuracy = 4f;
                             velocityRnd = 0.15f;
                             xRand = 0.3f;
@@ -8444,7 +8448,7 @@ public final class WHUnitTypes {
                         reload = 80;
                         ejectEffect = Fx.none;
                         recoil = 2f;
-                        shootSound = WHSounds.machineGunShoot;
+                        shootSound = WHSounds.laser3;
                         shoot = new ShootAlternate() {{
                             shotDelay = 8;
                             shots = 2;
@@ -8552,7 +8556,7 @@ public final class WHUnitTypes {
                         velocityRnd = 0.1f;
                         xRand = 3;
 
-                        shootSound = explosion;
+                        shootSound = shootMissileLarge;
 
 
                         shoot = new ShootMulti(
@@ -8606,6 +8610,7 @@ public final class WHUnitTypes {
                                 statusDuration = 5;
                                 status = WHStatusEffects.melta;
 
+
                                 splashDamage = damage / 2;
                                 splashDamageRadius = 50;
                                 homingDelay = 25;
@@ -8620,6 +8625,7 @@ public final class WHUnitTypes {
                                         WHFx.hitCircle(40, Pal.lightishGray, Pal.gray, 10, splashDamageRadius, 6),
                                         WHFx.lineCircleOut(5, hitColor, splashDamageRadius, 5)
                                 );
+                                despawnSound = explosionDull;
                                 smokeEffect = hugeSmoke;
                                 shootEffect = shootBigColor;
                                 lightningDamage = 20;
@@ -8828,6 +8834,7 @@ public final class WHUnitTypes {
                 stepShake = 2;
                 mechFrontSway = 1.5f;
                 mechSideSway = 1.3F;
+                stepSound = Sounds.mechStepHeavy;
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
@@ -8869,7 +8876,7 @@ public final class WHUnitTypes {
                         recoilTime = 120;
                         shootCone = 20f;
                         inaccuracy = 0;
-                        shootSound = beamMeltdown;
+                        shootSound = WHSounds.abyssalGlareLoop;
                         shake = 5;
 
                         shootY = 175 / 4f;
@@ -8936,7 +8943,7 @@ public final class WHUnitTypes {
 
                         shootCone = 20f;
                         inaccuracy = 2;
-                        shootSound = shootLaser;
+                        shootSound = WHSounds.laser4;
                         shake = 2;
 
                         shootY = 100 / 4f;
@@ -9045,7 +9052,7 @@ public final class WHUnitTypes {
                         velocityRnd = 0.1f;
                         cooldownTime = 30;
                         shootY = 51 / 4f;
-                        shootSound = WHSounds.launch;
+                        shootSound = Sounds.shootDiffuse;
 
                         shoot = new ShootMulti(
                                 new ShootAlternate() {{
@@ -9193,6 +9200,7 @@ public final class WHUnitTypes {
                 drownTimeMultiplier = 0.5f;
                 mechFrontSway = 1.5f;
                 mechSideSway = 1;
+                stepSound = Sounds.mechStepHeavy;
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
@@ -9227,7 +9235,8 @@ public final class WHUnitTypes {
                         shootCone = 20f;
                         rotationLimit = 35;
                         inaccuracy = 3;
-                        shootSound = explosionTitan;
+                        shootSound = Sounds.shootTank;
+                        ;
                         shake = 5;
                         bullet = new CritBulletType(15, 900, "missile-large") {
                             {
@@ -9310,7 +9319,7 @@ public final class WHUnitTypes {
                         recoilTime = 45f;
                         mirror = false;
                         inaccuracy = 0;
-                        shootSound = shootRipple;
+                        shootSound = shootReign;
                         heatColor = WHPal.Heat;
                         cooldownTime = 45f;
                         shoot = new ShootAlternate() {{
@@ -9371,7 +9380,7 @@ public final class WHUnitTypes {
                                             reload = 25f;
                                             rotate = true;
                                             rotateSpeed = 1.5f;
-                                            shootSound = WHSounds.launch;
+                                            shootSound = shootMissile;
                                             inaccuracy = 6;
                                             alternate = true;
                                             shoot = new ShootAlternate() {{
@@ -9442,6 +9451,7 @@ public final class WHUnitTypes {
                 drownTimeMultiplier = 0.5f;
                 mechFrontSway = 0.8f;
                 mechSideSway = 0.5f;
+                stepSound = Sounds.mechStep;
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
@@ -9554,7 +9564,7 @@ public final class WHUnitTypes {
                         reload = 110;
                         rotate = true;
                         rotateSpeed = 1.6f;
-                        shootSound = shootLaser;
+                        shootSound = WHSounds.laser4;
                         recoil = 1;
                         bullet = new LightingLaserBulletType() {
                             {
@@ -9593,6 +9603,7 @@ public final class WHUnitTypes {
                 health = 22000;
                 armor = 18f;
                 mechFrontSway = 1f;
+                stepSound = Sounds.mechStep;
                 ammoType = new ItemAmmoType(WHItems.sealedPromethium);
 
                 stepShake = 0.15f;
@@ -9643,7 +9654,7 @@ public final class WHUnitTypes {
                     {
                         x = 36 / 4f;
                         y = -8 / 4f;
-                        reload = 240;
+                        reload = 300;
                         cooldownTime = 100;
                         mirror = false;
                         shootY = 60 / 4f;
@@ -9653,7 +9664,10 @@ public final class WHUnitTypes {
                         rotateSpeed = 0.8f;
                         rotationLimit = 90f;
                         shoot.firstShotDelay = 70f;
-                        bullet = new BasicBulletType(4, 200, "large-orb") {{
+                        chargeSound = chargeLancer;
+                        shootSound = WHSounds.voltaicCannonFire01;
+
+                        bullet = new BasicBulletType(4, 450, "large-orb") {{
                             collidesAir = hittable = false;
                             height = width = 36;
                             drag = -0.01f;
@@ -9667,7 +9681,7 @@ public final class WHUnitTypes {
                             splashDamageRadius = 80;
                             splashDamage = 300;
                             shieldDamageMultiplier = 4f;
-                            buildingDamageMultiplier = 1.3f;
+                            buildingDamageMultiplier = 2f;
 
                             chargeEffect = new MultiEffect(
                                     WHFx.trailCharge(shoot.firstShotDelay + 1, frontColor, 12, 2, 100, 2).followParent(true),
@@ -9684,8 +9698,7 @@ public final class WHUnitTypes {
                             intervalRandomSpread = 360;
                             intervalSpread = 20;
                             intervalAngle = 0;
-                            chargeSound = chargeLancer;
-                            shootSound = shootMissilePlasma;
+
                             intervalBullet = new LightningBulletType() {
                                 {
                                     damage = 36;
@@ -9738,7 +9751,7 @@ public final class WHUnitTypes {
                             fragVelocityMin = 0.6f;
                             fragVelocityMax = 1.5f;
                             fragRandomSpread = 90f;
-                            fragBullet = new BasicBulletType(3, 80, "large-orb") {{
+                            fragBullet = new CritBulletType(3, 100, "large-orb") {{
                                 hitSound = explosionPlasmaSmall;
                                 lifetime = 20;
                                 splashDamagePierce = true;
@@ -9775,7 +9788,7 @@ public final class WHUnitTypes {
                                 new ShootSpread(5, 2) {{
                                     shotDelay = 6;
                                 }});
-                        shootSound = shootCyclone;
+                        shootSound = Sounds.shootReign;
                         shootY = (60 - 10) / 4f;
                         recoil = 5;
                         inaccuracy = 3;
@@ -9784,7 +9797,7 @@ public final class WHUnitTypes {
                         layerOffset = -0.001f;
                         xRand = 0.1f;
                         velocityRnd = 0.1f;
-                        bullet = new CritBulletType(25, 90, name("pierce")) {{
+                        bullet = new CritBulletType(25, 110, name("pierce")) {{
                             lifetime = 22;
                             drag = 0.06f;
                             speed = 25;
@@ -9796,7 +9809,6 @@ public final class WHUnitTypes {
                             trailLength = 6;
                             pierceCap = 2;
                             pierce = true;
-                            pierceArmor = true;
                             pierceBuilding = pierceArmor = true;
                             shootEffect = new MultiEffect(
                                     shootBigColor, WHFx.shootLine(20, 20)
@@ -9823,7 +9835,6 @@ public final class WHUnitTypes {
                                         WHFx.generalExplosion(20, hitColor, splashDamageRadius, 10, false)
                                 );
                             }};
-
                         }};
                     }
                 });
@@ -9841,6 +9852,7 @@ public final class WHUnitTypes {
                 armor = 12f;
                 mechFrontSway = 0.55f;
                 drownTimeMultiplier = 0.5f;
+                stepSound = Sounds.walkerStep;
                 ammoType = new ItemAmmoType(WHItems.ceramite);
 
                 immunities.addAll(StatusEffects.burning, WHStatusEffects.plasmaFireBurn);
@@ -9865,7 +9877,7 @@ public final class WHUnitTypes {
 
                         x = 69 / 4f;
                         y = -1f / 4f;
-                        reload = 90;
+                        reload = 80;
                         shoot = new ShootAlternate() {{
                             barrels = 2;
                             spread = 8 / 4f;
@@ -9882,13 +9894,13 @@ public final class WHUnitTypes {
                         recoil = 4;
                         recoilTime = 60f;
                         inaccuracy = 5;
-                        shootSound = explosion;
+                        shootSound = Sounds.shootScepter;
                         rotate = false;
                         layerOffset = -0.0001f;
                         alternate = true;
                         xRand = 0.3f;
                         velocityRnd = 0.05f;
-                        markBullet = bullet = new CritBulletType(8, 80, "circle-bullet") {
+                        markBullet = bullet = new CritBulletType(8, 90, "circle-bullet") {
                             {
                                 buildingDamageMultiplier = 2f;
                                 makePlaFire = true;
@@ -9928,7 +9940,7 @@ public final class WHUnitTypes {
                     {
                         x = 48 / 4f;
                         y = -23 / 4f;
-                        reload = 14;
+                        reload = 12;
                         shootY = 37 / 4f;
                         rotate = true;
                         rotateSpeed = 1.2f;
@@ -10018,7 +10030,7 @@ public final class WHUnitTypes {
                         mirror = false;
                         rotate = false;
                         rotationLimit = 45;
-                        shootSound = shootMissile;
+                        shootSound = shootMissileSmall;
                         reload = 210;
                         cooldownTime = 180;
                         heatColor = WHPal.Heat;
@@ -10063,7 +10075,7 @@ public final class WHUnitTypes {
                         mirror = false;
                         rotate = false;
                         inaccuracy = 3;
-                        shootSound = shootSpectre;
+                        shootSound = Sounds.explosionDull;
                         ejectEffect = casing4;
                         layerOffset = -0.0001f;
                         bullet = new CritBulletType(8, 70) {
@@ -10079,6 +10091,7 @@ public final class WHUnitTypes {
                                 trailLength = 5;
                                 trailWidth = width / 2.7f;
                                 hitColor = backColor = trailColor = WHPal.ShootOrange;
+                                despawnSound = Sounds.explosionDull;
                                 hitEffect = despawnEffect = new MultiEffect(
                                         hitBulletColor, hitSquaresColor
                                 );
@@ -10134,7 +10147,7 @@ public final class WHUnitTypes {
                             recoilTime = 90;
                             shake = 2f;
                             ejectEffect = Fx.casing4;
-                            shootSound = shootSmite;
+                            shootSound = Sounds.shootCollaris;
 
                             shoot = new ShootPattern() {{
                                 shots = 2;
@@ -10194,6 +10207,7 @@ public final class WHUnitTypes {
                                             WHFx.lineCircleOut(60, hitColor, splashDamageRadius / 2, 4),
                                             WHFx.trailCircleHitSpark(90, hitColor, 8, splashDamageRadius * 2, 1.6f, 15)
                                     );
+                                    despawnSound = Sounds.explosionDull;
                                 }
                             };
                         }}
@@ -10328,7 +10342,7 @@ public final class WHUnitTypes {
                                 layerOffset = 0.001f;
                                 ejectEffect = Fx.none;
                                 recoil = 2f;
-                                shootSound = WHSounds.machineGunShoot;
+                                shootSound = WHSounds.voltaicCannonFire01;
                                 inaccuracy = 3f;
                                 mirror = false;
                                 shoot = new ShootAlternate() {{
@@ -10415,7 +10429,7 @@ public final class WHUnitTypes {
 
                             inaccuracy = 3f;
 
-                            shootSound = WHSounds.LaserGatling;
+                            shootSound = WHSounds.laser3;
 
                             float reY = -8f / 4f, reRot = -6f;
                             float bw = 8 / 4f, bh = 54 / 4f;
@@ -10441,6 +10455,9 @@ public final class WHUnitTypes {
                                             swingFront = false;
 
                                             layerOffset = -0.01f;
+
+                                            shootSound = WHSounds.rifleLaser;
+                                            shootSoundVolume = 0.2f;
 
                                             moves.add(new UnitPartMove(UnitPartProgress.recoil.curve(Interp.smooth), 0, reY, 0));
                                             children.addAll(
@@ -10582,7 +10599,8 @@ public final class WHUnitTypes {
                                 rotate = true;
                                 mirror = false;
                                 rotateSpeed = 1.5f;
-                                shootSound = WHSounds.launch;
+                                shootSound = Sounds.shootMissileSmall;
+                                shootSoundVolume = 0.05f;
                                 inaccuracy = 6;
                                 shootY = 15 / 4f;
 
@@ -10702,7 +10720,7 @@ public final class WHUnitTypes {
                             shootWarmupSpeed = 0.09f;
                             minWarmup = 0.99f;
 
-                            shootSound = shootCyclone;
+                            shootSound = Sounds.explosionDull;
 
                             float reY = -8f / 4f, reRot = -6f;
                             PowerArmourWeaponData.of(this).unitParts.addAll(
@@ -10848,7 +10866,6 @@ public final class WHUnitTypes {
                                 smokeEffect = shootSmallSmoke;
 
                                 ejectEffect = casing4;
-
                                 shootEffect = new MultiEffect(
                                         Fx.shootBig,
                                         WHFx.shootLine(30, 30)
@@ -10863,6 +10880,7 @@ public final class WHUnitTypes {
                                         WHFx.square(10, hitColor, 4, 25, 4),
                                         WHFx.trailHitSpark(20, hitColor, 5, splashDamageRadius, 1.5f, 10),
                                         WHFx.hitSpark(20, WHPal.ShootOrange, 4, 25, 2, 8));
+                                despawnSound = Sounds.explosionDull;
                             }};
                         }}
                 );
@@ -10914,7 +10932,10 @@ public final class WHUnitTypes {
                             shootWarmupSpeed = 0.09f;
                             minWarmup = 0.99f;
 
-                            shootSound = shootCyclone;
+                            shootSound = Sounds.shootSublimate;
+                            soundPitchMin = soundPitchMax = 0.5f;
+                            initialShootSound = Sounds.shootCorvus;
+                            shootSoundVolume = 0.1f;
 
                             float reY = -13f / 4f, reRot = 0f;
                             PowerArmourWeaponData.of(this).unitParts.addAll(
@@ -11044,7 +11065,7 @@ public final class WHUnitTypes {
                             continuous = true;
 
                             bullet = new LaserBeamBulletType() {{
-                                damage = 75;
+                                damage = 80;
                                 armorMultiplier = 0.5f;
                                 width = 12;
                                 length = 50;
@@ -11118,7 +11139,8 @@ public final class WHUnitTypes {
                             shootWarmupSpeed = 0.09f;
                             minWarmup = 0.99f;
 
-                            shootSound = shootCyclone;
+                            shootSound = Sounds.shootMalign;
+                            chargeSound = Sounds.chargeLancer;
 
                             float reY = -14f / 4f, reRot = -10f;
                             PowerArmourWeaponData.of(this).unitParts.addAll(
@@ -11285,6 +11307,7 @@ public final class WHUnitTypes {
                                     splashDamage = damage * 0.4f;
                                     splashDamageRadius = 40;
                                     splashDamagePierce = true;
+                                    despawnSound = Sounds.explosionDull;
 
                                     hitEffect = new MultiEffect(
                                             WHFx.generalExplosion(10, hitColor, 60, 10, false),
@@ -11357,6 +11380,7 @@ public final class WHUnitTypes {
                             shootWarmupSpeed = 0.12f;
                             minWarmup = 0.95f;
 
+                            shootSound = Sounds.shootFlame;
                             shootStatus = slow;
 
                             PowerArmourWeaponData.of(this).unitParts.addAll(
@@ -11513,12 +11537,20 @@ public final class WHUnitTypes {
                                 absorbable = hittable = collidesAir = false;
                                 lifetime = 15;
                                 lightningColor = hitColor = WHPal.SkyBlue;
+                                despawnSound = Sounds.explosionCleroi;
                                 smokeEffect = shootEffect = none;
                                 hitEffect = new MultiEffect(
                                         WHFx.generalExplosion(10, hitColor, splashDamageRadius, 5, false),
                                         WHFx.shuttle(30, WHPal.SkyBlue, hitColor, true, 30, 30));
-                                //standard bullet damage is far too much for lightning
-                            }};
+                            }
+
+                                @Override
+                                public void despawned(Bullet b) {
+                                    b.fdata = 1f;
+                                    despawnSound.at(b, 1f + Mathf.range(hitSoundPitchRange));
+                                    Effect.shake(despawnShake, despawnShake, b);
+                                }
+                            };
                         }}
                 );
             }
@@ -11557,8 +11589,8 @@ public final class WHUnitTypes {
                             shootWarmupSpeed = 0.09f;
                             minWarmup = 0.99f;
 
-                            chargeSound = chargeLancer;
-                            shootSound = shootLaser;
+                            shootSound = Sounds.shootLancer;
+                            chargeSound = Sounds.chargeLancer;
 
                             float reY = -5f / 4f, reRot = -10f;
                             PowerArmourWeaponData.of(this).unitParts.addAll(
@@ -11706,7 +11738,8 @@ public final class WHUnitTypes {
                             shootWarmupSpeed = 0.09f;
                             minWarmup = 0.99f;
 
-                            shootSound = shootLaser;
+                            shootSound = Sounds.shootLocus;
+                            soundPitchMax = 1.2f;
 
                             float reY = -5f / 4f, reRot = -10f;
                             PowerArmourWeaponData.of(this).unitParts.addAll(
@@ -11885,7 +11918,7 @@ public final class WHUnitTypes {
                             shootWarmupSpeed = 0.09f;
                             minWarmup = 0.99f;
 
-                            shootSound = shootTank;
+                            shootSound = WHSounds.pulseLaserFire01;
 
                             float reY = -3f / 4f, reRot = -5;
                             PowerArmourWeaponData.of(this).unitParts.addAll(
@@ -11951,7 +11984,7 @@ public final class WHUnitTypes {
                             shoot.firstShotDelay = 20;
                             parentizeEffects = true;
 
-                            bullet = new CritBulletType(6, 20) {{
+                            bullet = new CritBulletType(6, 23) {{
                                 sprite = "missile-large";
                                 smokeEffect = Fx.shootBigSmoke;
                                 shootEffect = Fx.shootBigColor;
@@ -12221,7 +12254,7 @@ public final class WHUnitTypes {
             drag = 0.06f;
             accel = 0.11f;
             speed = 1.3f;
-            health = 200;
+            health = 500;
             engineSize = 2f;
             engineOffset = 6.5f;
             payloadCapacity = 0f;
@@ -12229,6 +12262,34 @@ public final class WHUnitTypes {
             bounded = false;
 
             outlineColor = WHPal.OutlineS;
+            isEnemy = false;
+            hidden = true;
+            useUnitCap = false;
+            logicControllable = false;
+            playerControllable = false;
+            allowedInPayloads = false;
+            createWreck = false;
+            envEnabled = Env.any;
+            envDisabled = Env.none;
+        }};
+
+        mechaAssemblerDrone = new UnitType("mecha-assembler-drone") {{
+            constructor = BuildingTetherPayloadUnit::create;
+            controller = u -> new AssemblerAI();
+
+            flying = true;
+            drag = 0.06f;
+            accel = 0.11f;
+            speed = 1.3f;
+            health = 1000;
+            engineSize = 2f;
+            engineOffset = 18 / 4f;
+            payloadCapacity = 0f;
+            buildBeamOffset = 8 / 4f;
+            targetable = false;
+            bounded = false;
+
+            outlineColor = WHPal.Outline;
             isEnemy = false;
             hidden = true;
             useUnitCap = false;

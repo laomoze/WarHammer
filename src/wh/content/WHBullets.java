@@ -5,32 +5,56 @@
 
 package wh.content;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.pooling.*;
-import mindustry.*;
-import mindustry.content.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.Rand;
+import arc.math.geom.Position;
+import arc.math.geom.Vec2;
+import arc.struct.Seq;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.pooling.Pool;
+import arc.util.pooling.Pools;
+import mindustry.Vars;
+import mindustry.content.Fx;
+import mindustry.content.Items;
+import mindustry.content.StatusEffects;
+import mindustry.content.UnitTypes;
 import mindustry.entities.*;
 import mindustry.entities.bullet.*;
-import mindustry.entities.effect.*;
-import mindustry.entities.part.*;
-import mindustry.entities.pattern.*;
-import mindustry.game.*;
+import mindustry.entities.effect.ExplosionEffect;
+import mindustry.entities.effect.MultiEffect;
+import mindustry.entities.effect.WaveEffect;
+import mindustry.entities.effect.WrapEffect;
+import mindustry.entities.part.FlarePart;
+import mindustry.entities.pattern.ShootAlternate;
+import mindustry.entities.pattern.ShootBarrel;
+import mindustry.entities.pattern.ShootPattern;
+import mindustry.entities.pattern.ShootSpread;
+import mindustry.game.Team;
 import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import mindustry.world.blocks.*;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.graphics.Trail;
+import mindustry.type.StatusEffect;
+import mindustry.world.blocks.ControlBlock;
 import wh.entities.bullet.*;
-import wh.entities.bullet.laser.*;
-import wh.entities.world.blocks.defense.turrets.HeatTurret.*;
-import wh.entities.world.blocks.defense.turrets.ShootMatchTurret.*;
-import wh.gen.*;
+import wh.entities.bullet.laser.DelayedPointBulletType;
+import wh.entities.bullet.laser.LightingLaserBulletType;
+import wh.entities.bullet.laser.LightningLinkerBulletType;
+import wh.entities.bullet.laser.SizeDamageBullet;
+import wh.entities.world.blocks.defense.turrets.HeatTurret.HeatBulletType;
+import wh.entities.world.blocks.defense.turrets.ShootMatchTurret.ShootMatchTurretBuild;
+import wh.gen.PlasmaFire;
 import wh.graphics.*;
-import wh.util.*;
+import wh.util.WHUtils;
 
 import static arc.graphics.g2d.Draw.color;
 import static arc.graphics.g2d.Lines.*;
@@ -121,6 +145,7 @@ public class WHBullets{
     public static BulletType PyrosBulletEnhance1Main;
     public static BulletType PyrosBulletEnhance2;
 
+    //55
     public static BulletType CollapseResonantCrystal;
     public static BulletType CollapseCulverCrystal;
 
@@ -137,6 +162,7 @@ public class WHBullets{
     public static BulletType SacramentCulverCrystal;
     public static BulletType SacramentRefineCeramite;
 
+    //66
     public static BulletType ColossusCeramite;
     public static BulletType ColossusCulverCrystal;
     public static BulletType ColossusMolybdenumAlloy;
@@ -5158,6 +5184,8 @@ public class WHBullets{
                 trailLength = 11;
 
                 pierceCap = 2;
+                armorMultiplier = 0.5f;
+
                 status = WHStatusEffects.radiation;
                 statusDuration = 20f;
                 shootEffect = Fx.shootBigColor;

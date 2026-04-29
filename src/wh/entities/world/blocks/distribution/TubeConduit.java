@@ -1,19 +1,24 @@
 package wh.entities.world.blocks.distribution;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.world.*;
-import mindustry.world.blocks.liquid.*;
-import wh.util.*;
+import arc.Core;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
+import arc.util.Eachable;
+import arc.util.Tmp;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.entities.TargetPriority;
+import mindustry.entities.units.BuildPlan;
+import mindustry.gen.Building;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.world.Tile;
+import mindustry.world.blocks.liquid.Conduit;
+import wh.util.WHUtils;
 
 import static mindustry.Vars.renderer;
 import static mindustry.type.Liquid.animationFrames;
@@ -307,13 +312,21 @@ public class TubeConduit extends Conduit{
             blending = bits[4];
 
             int mask = 1 << rotation;
+
+            // bits[3] 的 rel 位表示“相对当前朝向 rel 方向有连接”。
+            // 需要把相对方向转回绝对方向：abs = mod(rotation - rel, 4)
+            // 然后将该绝对方向对应的 bit OR 到 mask 里。
             for(int rel = 0; rel < 4; rel++){
                 if((bits[3] & (1 << rel)) != 0){
                     mask |= 1 << Mathf.mod(rotation - rel, 4);
                 }
             }
-            tiling = mask;
+            // 例子：
+            // rotation=1，且 bits[3] 只有 rel=1 连通（bits[3]=0b0010）：
+            // abs = mod(1 - 1, 4) = 0
+            // mask: 0b0010 | (1 << 0) = 0b0011 => tiling=3
 
+            tiling = mask;
             Building next = front(), prev = back();
             capped = next == null || next.team != team || !next.block.hasLiquids;
             backCapped = blendbits == 0 && (prev == null || prev.team != team || !prev.block.hasLiquids);

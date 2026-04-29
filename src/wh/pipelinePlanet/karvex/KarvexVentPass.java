@@ -1,13 +1,16 @@
 package wh.pipelinePlanet.karvex;
 
-import arc.math.*;
-import arc.math.geom.*;
-import mindustry.content.*;
-import mindustry.world.*;
-import mindustry.world.blocks.environment.*;
-import mindustry.world.meta.*;
-import wh.content.*;
-import wh.pipelinePlanet.core.*;
+import arc.math.Mathf;
+import arc.math.geom.Point2;
+import mindustry.content.Blocks;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import mindustry.world.blocks.environment.Floor;
+import mindustry.world.blocks.environment.SteamVent;
+import mindustry.world.meta.Attribute;
+import wh.content.WHBlocksEnvironment;
+import wh.pipelinePlanet.core.GenContext;
+import wh.pipelinePlanet.core.GenPass;
 
 /**
  * Places geothermal vents on coherent floor regions.
@@ -83,8 +86,8 @@ public class KarvexVentPass implements GenPass{
         || floor == WHBlocksEnvironment.radiationCraters){
             return WHBlocksEnvironment.radiationRockVent;
         }
-        if(floor == WHBlocksEnvironment.apatite){
-            return WHBlocksEnvironment.apatiteVent;
+        if (floor == WHBlocksEnvironment.quartzSand) {
+            return WHBlocksEnvironment.quartzSandVent;
         }
         return null;
     }
@@ -136,3 +139,4 @@ public class KarvexVentPass implements GenPass{
         }
     }
 }
+

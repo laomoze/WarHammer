@@ -1,12 +1,14 @@
 package wh.pipelinePlanet.karvex;
 
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.noise.*;
-import mindustry.content.*;
-import mindustry.world.*;
-import wh.content.*;
-import wh.pipelinePlanet.core.*;
+import arc.math.Mathf;
+import arc.math.geom.Vec3;
+import arc.util.noise.Simplex;
+import mindustry.content.Blocks;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import wh.content.WHBlocksEnvironment;
+import wh.pipelinePlanet.core.GenContext;
+import wh.pipelinePlanet.core.TilePass;
 
 /**
  * Optional tile-level ore painter used by decoration stages.
@@ -64,7 +66,7 @@ public class KarvexOreTilePass implements TilePass{
     private boolean canHostCoal(Block floor){
         return WHBlocksEnvironment.isMineralCoreFloor(floor)
         || floor == WHBlocksEnvironment.mineralSand
-        || floor == WHBlocksEnvironment.mineralSandstone
+                || floor == WHBlocksEnvironment.darkMineralSandstone
         || floor == WHBlocksEnvironment.gravel
         || floor == WHBlocksEnvironment.trachyte
         || floor == WHBlocksEnvironment.oreShale
@@ -74,7 +76,7 @@ public class KarvexOreTilePass implements TilePass{
     private boolean canHostManganese(Block floor){
         return WHBlocksEnvironment.isMineralCoreFloor(floor)
         || floor == WHBlocksEnvironment.mineralSand
-        || floor == WHBlocksEnvironment.mineralSandstone
+                || floor == WHBlocksEnvironment.darkMineralSandstone
         || floor == WHBlocksEnvironment.manganeseFloor
         || floor == WHBlocksEnvironment.manganeseStone
         || floor == WHBlocksEnvironment.darkRock;

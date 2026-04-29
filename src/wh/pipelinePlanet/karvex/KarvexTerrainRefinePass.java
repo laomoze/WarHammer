@@ -1,13 +1,17 @@
 package wh.pipelinePlanet.karvex;
 
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.noise.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.world.*;
-import wh.content.*;
-import wh.pipelinePlanet.core.*;
+import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
+import arc.math.geom.Vec3;
+import arc.struct.ObjectIntMap;
+import arc.util.noise.Simplex;
+import mindustry.Vars;
+import mindustry.content.Blocks;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import wh.content.WHBlocksEnvironment;
+import wh.pipelinePlanet.core.GenContext;
+import wh.pipelinePlanet.core.GenPass;
 
 /**
  * Keeps terrain transitions broad and coherent after base LUT assignment.
@@ -48,14 +52,14 @@ public class KarvexTerrainRefinePass implements GenPass{
                 }else if(field < -0.58f){
                     next = WHBlocksEnvironment.cementFloor;
                 }else if(field < -0.38f){
-                    next = WHBlocksEnvironment.apatite;
+                    next = WHBlocksEnvironment.quartzSand;
                 }else if(Math.abs(field) < 0.10f && detail > 0.06f){
                     next = WHBlocksEnvironment.gravel;
                 }
             }else if(floor == WHBlocksEnvironment.mineralSand){
-                if(field < -0.34f) next = WHBlocksEnvironment.mineralSandstone;
+                if (field < -0.34f) next = WHBlocksEnvironment.darkMineralSandstone;
                 if(field > 0.62f) next = WHBlocksEnvironment.quartzSand;
-            }else if(floor == WHBlocksEnvironment.mineralSandstone){
+            } else if (floor == WHBlocksEnvironment.darkMineralSandstone) {
                 if(field < -0.62f) next = WHBlocksEnvironment.oreSalt;
                 if(field > 0.56f) next = WHBlocksEnvironment.trachyte;
             }else if(floor == WHBlocksEnvironment.trachyte){
@@ -140,22 +144,22 @@ public class KarvexTerrainRefinePass implements GenPass{
 
     private void enforceMineralMainland(GenContext ctx, float targetRatio){
         int surface = 0;
-        int mineralFloor = 0;
+        int darkMineralFloor = 0;
 
         for(Tile tile : ctx.tiles){
             if(tile.block() != Blocks.air) continue;
             if(!tile.floor().hasSurface() || tile.floor().isLiquid) continue;
             surface++;
-            if(WHBlocksEnvironment.isMineralCoreFloor(tile.floor())) mineralFloor++;
+            if (WHBlocksEnvironment.isMineralCoreFloor(tile.floor())) darkMineralFloor++;
         }
 
         if(surface <= 0) return;
         int target = Math.round(surface * targetRatio);
-        if(mineralFloor >= target) return;
+        if (darkMineralFloor >= target) return;
 
-        for(float threshold = 0.70f; threshold >= -0.25f && mineralFloor < target; threshold -= 0.10f){
+        for (float threshold = 0.70f; threshold >= -0.25f && darkMineralFloor < target; threshold -= 0.10f) {
             for(Tile tile : ctx.tiles){
-                if(mineralFloor >= target) break;
+                if (darkMineralFloor >= target) break;
                 if(tile.block() != Blocks.air) continue;
                 if(!tile.floor().hasSurface() || tile.floor().isLiquid) continue;
                 if(WHBlocksEnvironment.isMineralCoreFloor(tile.floor())) continue;
@@ -167,7 +171,7 @@ public class KarvexTerrainRefinePass implements GenPass{
                 if(field < threshold) continue;
 
                 tile.setFloor(WHBlocksEnvironment.defaultMineralFloor().asFloor());
-                mineralFloor++;
+                darkMineralFloor++;
             }
         }
     }
@@ -185,7 +189,7 @@ public class KarvexTerrainRefinePass implements GenPass{
             if(isHeatFloor(floor) && similar <= 1){
                 next[idx] = WHBlocksEnvironment.darkRock.id;
             }else if(isRadiationFloor(floor) && similar <= 1){
-                next[idx] = WHBlocksEnvironment.mineralSandstone.id;
+                next[idx] = WHBlocksEnvironment.darkMineralSandstone.id;
             }
         }
 
@@ -265,3 +269,4 @@ public class KarvexTerrainRefinePass implements GenPass{
         return Simplex.noise3d(seed, octaves, falloff, 1f / scl, v.x, v.y, v.z);
     }
 }
+

@@ -1,14 +1,18 @@
 package wh.pipelinePlanet.karvex;
 
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.noise.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.world.*;
-import wh.content.*;
-import wh.pipelinePlanet.core.*;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
+import arc.math.geom.Vec3;
+import arc.struct.IntSeq;
+import arc.util.noise.Simplex;
+import mindustry.Vars;
+import mindustry.content.Blocks;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import wh.content.WHBlocksEnvironment;
+import wh.pipelinePlanet.core.GenContext;
+import wh.pipelinePlanet.core.GenPass;
 
 /**
  * Hazard shaping pass:
@@ -425,7 +429,7 @@ public class KarvexHazardBasinPass implements GenPass{
             if(rad >= 1){
                 next[idx] = rad >= 3 ? WHBlocksEnvironment.radiationRockFloor.id : WHBlocksEnvironment.radiationSand.id;
             }else if(eff >= 1){
-                next[idx] = eff >= 3 ? WHBlocksEnvironment.mineralSandstone.id : WHBlocksEnvironment.mineralSand.id;
+                next[idx] = eff >= 3 ? WHBlocksEnvironment.darkMineralSandstone.id : WHBlocksEnvironment.mineralSand.id;
             }
         }
 
@@ -459,7 +463,7 @@ public class KarvexHazardBasinPass implements GenPass{
                 || tile.floor() == Blocks.tar
                 || tile.floor() == WHBlocksEnvironment.darkMagmaRock
                 || tile.floor() == WHBlocksEnvironment.darkHotRock){
-                    tile.setFloor(WHBlocksEnvironment.mineralSandstone.asFloor());
+                    tile.setFloor(WHBlocksEnvironment.darkMineralSandstone.asFloor());
                 }
             }
         }
@@ -662,7 +666,7 @@ public class KarvexHazardBasinPass implements GenPass{
 
     private boolean isPromethiumHost(Block floor){
         return floor == WHBlocksEnvironment.mineralSand
-        || floor == WHBlocksEnvironment.mineralSandstone
+                || floor == WHBlocksEnvironment.darkMineralSandstone
         || floor == WHBlocksEnvironment.darkRock
         || floor == WHBlocksEnvironment.scorchedEarth
         || floor == WHBlocksEnvironment.quartzSand;

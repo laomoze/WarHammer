@@ -500,16 +500,14 @@ public final class KarvexTeachTree{
             });
 
             node(WHBlocks.wrapProjector, () -> {
-                // wrapOverdrive is enemy-only; keep it out of player tree.
-                if(WHBlocks.selectProjector != null){
-                    node(WHBlocks.selectProjector, () -> {
-                    });
-                }
-                node(WHBlocks.shelterDome, () -> {
+                node(WHBlocks.ionShield, () -> node(WHBlocks.voidShield, () -> {
+                }));
+                node(WHBlocks.selectProjector, () -> {
                 });
+
                 node(WHBlocks.repairTower, () -> {
-                    node(WHBlocks.voidShield, () -> node(WHBlocks.ionShield, () -> {
-                    }));
+                    node(WHBlocks.shelterDome, () -> {
+                    });
                 });
             });
 
@@ -586,12 +584,6 @@ public final class KarvexTeachTree{
                                 });
                             });
                         });
-                        node(WHUnitTypes.M4B, () -> {
-                        });
-                        node(WHUnitTypes.M4C, () -> {
-                        });
-                        node(WHUnitTypes.M4D, () -> {
-                        });
                     });
                 });
             });
@@ -665,14 +657,23 @@ public final class KarvexTeachTree{
                         });
                     });
                     node(WHBlocks.t4Module, () -> {
+
+                        node(WHBlocks.mechaAssembler, () -> {
+                            node(WHUnitTypes.M4B, () -> {
+                            });
+                            node(WHUnitTypes.M4C, () -> {
+                            });
+                            node(WHUnitTypes.M4D, () -> {
+                            });
+                        });
+
                         node(WHBlocks.t5Module, () -> {
                             node(WHBlocks.jumpBeacon, () -> {
                                 node(WHUnitTypes.tankD1, () -> {
                                 });
                                 node(WHUnitTypes.tankD2, () -> {
                                 });
-                                node(WHUnitTypes.MEn1, () -> {
-                                });
+                                /*   node(WHUnitTypes.MEn1, () -> {});*/
                             });
                             node(WHBlocks.t6Module, () -> {
                                 node(WHBlocks.airborneDeploymentBeacon, () -> {

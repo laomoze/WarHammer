@@ -1,19 +1,21 @@
 package wh.gen;
 
-import arc.graphics.g2d.*;
-import arc.struct.*;
-import mindustry.content.*;
-import mindustry.entities.effect.*;
-import mindustry.entities.pattern.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import wh.content.*;
-import wh.entities.bullet.*;
-import wh.entities.world.drawer.part.*;
-import wh.entities.world.entities.*;
-import wh.graphics.*;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.TextureRegion;
+import arc.struct.Seq;
+import mindustry.content.Fx;
+import mindustry.entities.effect.MultiEffect;
+import mindustry.entities.pattern.ShootAlternate;
+import mindustry.entities.units.WeaponMount;
+import mindustry.gen.Sounds;
+import mindustry.gen.Unit;
+import mindustry.graphics.MultiPacker;
+import mindustry.type.Weapon;
+import wh.content.WHFx;
+import wh.entities.bullet.CritBulletType;
+import wh.entities.world.drawer.part.BarrelPart;
+import wh.entities.world.entities.WHUnitType;
+import wh.graphics.WHPal;
 
 import static wh.core.WarHammerMod.name;
 
@@ -28,7 +30,7 @@ public class TankEn2UnitType extends WHUnitType{
         x = 0;
         reload = 6;
         mirror = false;
-        shootSound = WHSounds.machineGunShoot;
+        shootSound = Sounds.shootScepter;
         inaccuracy = 4f;
         velocityRnd = 0.15f;
         xRand = 0.3f;
