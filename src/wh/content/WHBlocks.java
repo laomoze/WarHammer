@@ -1735,7 +1735,7 @@ public final class WHBlocks {
         }};
 
         lavaDrill = new Drill("lava-drill") {{
-            requirements(Category.production, with(WHItems.manganese, 70, WHItems.uranium, 70, WHItems.armorAlloy, 25, WHItems.cobaltNitride, 25));
+            requirements(Category.production, with(WHItems.manganeseSteel, 50, WHItems.uranium, 70, WHItems.cobaltNitride, 25));
             drillTime = 320;
             size = 4;
             drawRim = true;
@@ -1753,13 +1753,18 @@ public final class WHBlocks {
 
             liquidBoostIntensity = 2;
 
+            drillMultipliers.put(Items.coal, 1.5f);
+            drillMultipliers.put(WHItems.cobalt, 1.2f);
+            drillMultipliers.put(WHItems.chromium, 1.3f);
+            drillMultipliers.put(WHItems.manganese, 1.4f);
+
             consumePower(3f);
             consumeLiquid(Liquids.slag, 10 / 60f).boost();
         }};
 
         heavyCuttingDrill = new BurstDrill("heavy-cutting-drill") {
             {
-                requirements(Category.production, with(Items.plastanium, 50, Items.silicon, 100, WHItems.manganeseSteel, 100, WHItems.cobaltNitride, 30));
+                requirements(Category.production, with(Items.plastanium, 50, Items.silicon, 100, WHItems.manganeseSteel, 100, WHItems.armorAlloy, 40, WHItems.cobaltNitride, 30));
 
                 health = 2900;
                 size = 4;
@@ -1776,6 +1781,11 @@ public final class WHBlocks {
                 hasItems = hasPower = hasLiquids = true;
                 consumePower(5);
                 consumeLiquid(Liquids.water, 20 / 60f);
+
+                drillMultipliers.put(WHItems.cobalt, 1.2f);
+                drillMultipliers.put(WHItems.chromium, 1.3f);
+                drillMultipliers.put(WHItems.manganese, 1.4f);
+
                 drillTime = 100;
                 drillEffect = new MultiEffect(Fx.mineImpact, Fx.drillSteam, Fx.mineImpactWave.wrap(Pal.redLight, 40f));
                 researchCostMultiplier = 0.6f;
@@ -4095,8 +4105,6 @@ public final class WHBlocks {
                     WHItems.manganese, WHBullets.CrushBulletManganese,
                     Items.metaglass, WHBullets.CrushBulletMetaGlass,
                     Items.plastanium, WHBullets.CrushBulletPlastanium);
-
-            alwaysUnlocked = true;
         }};
 
         AutoGun = new WHItemTurret("Auto-gun") {{

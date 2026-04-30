@@ -1,36 +1,59 @@
 package wh.ui;
 
-import arc.*;
-import arc.audio.*;
+import arc.Core;
+import arc.audio.Sound;
 import arc.func.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.input.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.actions.*;
-import arc.scene.event.*;
-import arc.scene.style.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.graphics.g2d.TextureRegion;
+import arc.input.KeyCode;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.geom.Point2;
+import arc.math.geom.Vec2;
+import arc.scene.actions.Actions;
+import arc.scene.event.InputEvent;
+import arc.scene.event.InputListener;
+import arc.scene.event.Touchable;
+import arc.scene.style.Drawable;
+import arc.scene.style.TextureRegionDrawable;
 import arc.scene.ui.*;
-import arc.scene.ui.TextButton.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
+import arc.scene.ui.TextButton.TextButtonStyle;
+import arc.scene.ui.layout.Cell;
+import arc.scene.ui.layout.Collapser;
+import arc.scene.ui.layout.Table;
+import arc.struct.ObjectMap;
+import arc.struct.Seq;
 import arc.util.*;
-import mindustry.content.*;
-import mindustry.core.*;
-import mindustry.ctype.*;
-import mindustry.entities.bullet.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import mindustry.ui.*;
-import mindustry.world.blocks.defense.turrets.*;
+import mindustry.content.StatusEffects;
+import mindustry.core.World;
+import mindustry.ctype.UnlockableContent;
+import mindustry.entities.bullet.BulletType;
+import mindustry.entities.bullet.EmpBulletType;
+import mindustry.entities.bullet.LaserBulletType;
+import mindustry.entities.bullet.MultiBulletType;
+import mindustry.gen.Icon;
+import mindustry.gen.Sounds;
+import mindustry.gen.Tex;
+import mindustry.graphics.Pal;
+import mindustry.type.Item;
+import mindustry.type.ItemStack;
+import mindustry.type.StatusEffect;
+import mindustry.type.UnitType;
+import mindustry.ui.Fonts;
+import mindustry.ui.Styles;
+import mindustry.world.blocks.defense.turrets.Turret;
 import mindustry.world.meta.*;
-import wh.content.*;
+import wh.content.WHContent;
 import wh.entities.bullet.*;
-import wh.entities.bullet.laser.*;
+import wh.entities.bullet.laser.ChainLightingBulletType;
+import wh.entities.bullet.laser.LaserBeamBulletType;
+import wh.entities.bullet.laser.LightningLinkerBulletType;
+import wh.entities.bullet.laser.PositionLightningBulletType;
 
-import java.text.*;
+import java.text.DecimalFormat;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -823,11 +846,11 @@ public final class UIUtils{
                         sep(bt, "@bullet.armorpierce");
                     }
 
-                    if(type.armorMultiplier != 1f){
+                    if (type.armorMultiplier != 1f && !type.pierceArmor) {
                         if(type.armorMultiplier > 1f){
-                            sep(bt, Core.bundle.format("bullet.armorweakness", (int)(type.armorMultiplier * 100)));
+                            sep(bt, Core.bundle.format("bullet.armorweakness", (type.armorMultiplier)));
                         }else if(Mathf.sign(type.armorMultiplier) == 1){
-                            sep(bt, Core.bundle.format("bullet.armorpiercing", (int)((1 - type.armorMultiplier) * 100)));
+                            sep(bt, Core.bundle.format("bullet.partialarmorpierce", (int) ((1 - type.armorMultiplier) * 100)));
                         }else{
                             sep(bt, Core.bundle.format("bullet.antiarmor", (-type.armorMultiplier)));
                         }

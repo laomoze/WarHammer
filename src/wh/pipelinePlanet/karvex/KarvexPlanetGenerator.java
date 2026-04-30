@@ -48,7 +48,7 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
         config.enemyRoomScale = 1f;
 
         config.enableLakes = false;
-        config.enableTechGrid = false;
+        config.enableTechGrid = true;
         config.techGridCellSize = 20;
         config.techGridThresholdA = 0.63f;
         config.techGridThresholdB = 0.6f;
@@ -74,6 +74,7 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
         .add(new GameplayFixPass())
         .add(new KarvexVentPass())
         .add(new KarvexMapValidationPass())
+                .add(new TechGridPass())
         .add(decoration)
         .add(new KarvexFinalizePass(defaultLoadout));
     }
@@ -272,4 +273,3 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
         || block == WHBlocksEnvironment.mineralSandEffluentWater;
     }
 }
-

@@ -1,7 +1,9 @@
 package wh.content;
 
-import mindustry.content.*;
-import mindustry.type.*;
+import mindustry.content.Blocks;
+import mindustry.content.Items;
+import mindustry.content.UnitTypes;
+import mindustry.type.Weapon;
 
 public class WHOverride{
     private WHOverride(){
@@ -43,5 +45,7 @@ public class WHOverride{
         Weapon quasarWeapon1 = UnitTypes.quasar.weapons.get(0);
         quasarWeapon1.x = 29 / 4f;
         quasarWeapon1.y = -4 / 4f;
+
+        Items.graphite.hardness = 2;
     }
 }

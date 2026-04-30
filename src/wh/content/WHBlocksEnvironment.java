@@ -4,34 +4,35 @@ import arc.graphics.Color;
 import mindustry.content.Items;
 import mindustry.content.StatusEffects;
 import mindustry.graphics.CacheLayer;
+import mindustry.graphics.MultiPacker;
 import mindustry.graphics.Pal;
 import mindustry.world.Block;
 import mindustry.world.blocks.environment.*;
 import mindustry.world.meta.Attribute;
 import wh.entities.world.blocks.Road;
 
-public class WHBlocksEnvironment{
+public class WHBlocksEnvironment {
     public static final Attribute hasPromethium = Attribute.add("promethium");
     public static Block road;
     //ore
     public static Block promethium,
             graphiticOre, manganeseOre, chromiumOre, cobaltOre, uraniumOre, molybdenumOre, vibraniumOre,
-    mineralSand, quartzSand, promethiumSand, radiationSand;
+            mineralSand, quartzSand, promethiumSand, radiationSand;
     //liquid
     public static Block radiationWater, radiationWaterDeep, effluent, effluentDeep, mineralSandEffluentWater, mineralSandRadiationWater, radiationSandWater;
     //Floor
     public static Block cementFloor, darkHotRock, darkMagmaRock, darkRock, gravel, darkMineralSandstone, darkMineralFloor, mineralSandFloor, chromiteStone, chromiteFloor, chromiteFloorDark, manganeseStone, manganeseFloor, cobaltStone, cobaltFloor,
-    trachyte, oreShale, oreSalt, radiationCraters, radiationRockFloor,
-    scorchedEarth, scorchedStone;
+            trachyte, oreShale, oreSalt, radiationCraters, radiationRockFloor,
+            scorchedEarth, scorchedStone;
     //Wall
     public static Block mineralSandWall, quartzSandWall, cementWall, darkRockWall, darkMineralSandstoneWall, chromiteWall, manganeseWall, cobaltWall,
             oreShaleWall, oreSaltWall, radiationRockWall,
-    scorchedEarthWall, trachyteWall;
+            scorchedEarthWall, trachyteWall;
     //MeltaFloor
     public static Block darkMetalFloor1, darkMetalFloor2, darkMetalFloor3, darkMetalFloor4, darkMetalFloor5, darkMetalFloor6,
-    darkMetalFloorDamage,
-    darkTile1, darkTile2, darkTile3, metalTile1, metalTile2, metalTile31, metalTile32, metalTile33,
-    metalTile34, metalTile4, metalTile5, metalMesh;
+            darkMetalFloorDamage,
+            darkTile1, darkTile2, darkTile3, metalTile1, metalTile2, metalTile31, metalTile32, metalTile33,
+            metalTile34, metalTile4, metalTile5, metalMesh;
     //AutoTileFloor
     public static Block cementTile1, cementTile2, cementTile3, cementTile4;
     //Vents
@@ -41,36 +42,36 @@ public class WHBlocksEnvironment{
             darkMineralSandBoulder, scorchedEarthBoulder, darkStoneCrystalCluster, quartzCrystalCluster;
 
 
-    public static void load(){
+    public static void load() {
         road = new Road("road-autotile");
 
         graphiticOre = new OreBlock("graphitic-ore", Items.graphite) {{
             variants = 4;
         }};
 
-        manganeseOre = new OreBlock("manganese-ore", WHItems.manganese){{
+        manganeseOre = new OreBlock("manganese-ore", WHItems.manganese) {{
             variants = 4;
         }};
 
         chromiumOre = new OreBlock("chromium-ore", WHItems.chromium);
 
-        cobaltOre = new OreBlock("cobalt-ore", WHItems.cobalt){{
+        cobaltOre = new OreBlock("cobalt-ore", WHItems.cobalt) {{
             variants = 4;
         }};
 
-        uraniumOre = new OreBlock("uranium-ore", WHItems.uranium){{
+        uraniumOre = new OreBlock("uranium-ore", WHItems.uranium) {{
             variants = 4;
         }};
 
-        molybdenumOre = new OreBlock("molybdenum-ore", WHItems.molybdenum){{
+        molybdenumOre = new OreBlock("molybdenum-ore", WHItems.molybdenum) {{
             variants = 3;
         }};
 
-        vibraniumOre = new OreBlock("vibranium-ore", WHItems.vibranium){{
+        vibraniumOre = new OreBlock("vibranium-ore", WHItems.vibranium) {{
             variants = 4;
         }};
 
-        promethium = new Floor("promethium"){{
+        promethium = new Floor("promethium") {{
             speedMultiplier = 0.2f;
             variants = 0;
             status = StatusEffects.tarred;
@@ -81,36 +82,46 @@ public class WHBlocksEnvironment{
             obstructsLight = true;
         }};
 
-        mineralSand = new Floor("mineral-sand"){{
-            variants = 5;
-            itemDrop = WHItems.oreSand;
-            playerUnmineable = true;
-            attributes.set(Attribute.oil, 0.5f);
-            attributes.set(hasPromethium, 0.5f);
-        }};
+        mineralSand = new Floor("mineral-sand") {
+            {
+                variants = 5;
+                itemDrop = WHItems.oreSand;
+                playerUnmineable = true;
+                attributes.set(Attribute.oil, 0.5f);
+                attributes.set(hasPromethium, 0.5f);
+                hasColor = true;
+            }
 
-        quartzSand = new Floor("quartz-sand"){{
+            @Override
+            public void createIcons(MultiPacker packer) {
+                super.createIcons(packer);
+                mapColor.set(Color.valueOf("CDB99FF").lerp(WHItems.oreSand.color.cpy(), 0.35f)
+                        .lerp(Color.gray.cpy(), 0.2f).rgba());
+            }
+        };
+
+        quartzSand = new Floor("quartz-sand") {{
             variants = 4;
             itemDrop = Items.sand;
             playerUnmineable = true;
             attributes.set(Attribute.oil, 0.5f);
         }};
 
-        promethiumSand = new Floor("promethium-sand"){{
+        promethiumSand = new Floor("promethium-sand") {{
             itemDrop = WHItems.oreSand;
             playerUnmineable = true;
             attributes.set(Attribute.oil, 1.5f);
             attributes.set(hasPromethium, 1f);
         }};
 
-        radiationSand = new Floor("radiation-sand"){{
+        radiationSand = new Floor("radiation-sand") {{
             itemDrop = WHItems.oreSand;
             playerUnmineable = true;
             attributes.set(hasPromethium, 1f);
         }};
 
 
-        radiationWaterDeep = new Floor("radio-water-deep"){{
+        radiationWaterDeep = new Floor("radio-water-deep") {{
             speedMultiplier = 0.2f;
             variants = 0;
             liquidDrop = WHLiquids.swageWater;
@@ -124,7 +135,7 @@ public class WHBlocksEnvironment{
             supportsOverlay = true;
         }};
 
-        radiationWater = new Floor("radio-water"){{
+        radiationWater = new Floor("radio-water") {{
             speedMultiplier = 0.5f;
             variants = 0;
             status = WHStatusEffects.rust;
@@ -136,7 +147,7 @@ public class WHBlocksEnvironment{
             supportsOverlay = true;
         }};
 
-        effluentDeep = new Floor("effluent-deep"){{
+        effluentDeep = new Floor("effluent-deep") {{
             speedMultiplier = 0.2f;
             variants = 0;
             liquidDrop = WHLiquids.swageWater;
@@ -150,7 +161,7 @@ public class WHBlocksEnvironment{
             supportsOverlay = true;
         }};
 
-        effluent = new Floor("effluent"){{
+        effluent = new Floor("effluent") {{
             speedMultiplier = 0.5f;
             variants = 0;
             status = WHStatusEffects.rust;
@@ -162,7 +173,7 @@ public class WHBlocksEnvironment{
             supportsOverlay = true;
         }};
 
-        mineralSandEffluentWater = new ShallowLiquid("mineral-sand-swagewater"){{
+        mineralSandEffluentWater = new ShallowLiquid("mineral-sand-swagewater") {{
             speedMultiplier = 0.8f;
             statusDuration = 50f;
             albedo = 0.9f;
@@ -170,9 +181,9 @@ public class WHBlocksEnvironment{
             mapColor.set(Color.valueOf("5e7087"));
         }};
 
-        ((ShallowLiquid)mineralSandEffluentWater).set(effluent, mineralSand);
+        ((ShallowLiquid) mineralSandEffluentWater).set(effluent, mineralSand);
 
-        mineralSandRadiationWater = new ShallowLiquid("mineral-sand-radiowater"){{
+        mineralSandRadiationWater = new ShallowLiquid("mineral-sand-radiowater") {{
             speedMultiplier = 0.8f;
             statusDuration = 50f;
             albedo = 0.9f;
@@ -180,9 +191,9 @@ public class WHBlocksEnvironment{
             mapColor.set(Color.valueOf("4f8497"));
         }};
 
-        ((ShallowLiquid)mineralSandRadiationWater).set(radiationWater, mineralSand);
+        ((ShallowLiquid) mineralSandRadiationWater).set(radiationWater, mineralSand);
 
-        radiationSandWater = new ShallowLiquid("radiation-sandwater"){{
+        radiationSandWater = new ShallowLiquid("radiation-sandwater") {{
             speedMultiplier = 0.8f;
             statusDuration = 50f;
             albedo = 0.9f;
@@ -190,18 +201,18 @@ public class WHBlocksEnvironment{
             mapColor.set(Color.valueOf("6d89a1"));
         }};
 
-        ((ShallowLiquid)radiationSandWater).set(radiationWater, radiationSand);
+        ((ShallowLiquid) radiationSandWater).set(radiationWater, radiationSand);
 
-        cementFloor = new Floor("cement-floor"){{
+        cementFloor = new Floor("cement-floor") {{
             variants = 5;
         }};
 
-        darkRock = new Floor("dark-rock"){{
+        darkRock = new Floor("dark-rock") {{
             attributes.set(Attribute.water, -0.25f);
             variants = 4;
         }};
 
-        darkHotRock = new Floor("dark-hot-rock"){{
+        darkHotRock = new Floor("dark-hot-rock") {{
             attributes.set(Attribute.heat, 0.6f);
             attributes.set(Attribute.water, -0.5f);
             blendGroup = darkRock;
@@ -211,7 +222,7 @@ public class WHBlocksEnvironment{
             lightColor = Color.orange.cpy().lerp(Pal.slagOrange, 0.15f).a(0.15f);
         }};
 
-        darkMagmaRock = new Floor("dark-magma-rock"){{
+        darkMagmaRock = new Floor("dark-magma-rock") {{
             attributes.set(Attribute.heat, 0.8f);
             attributes.set(Attribute.water, -0.75f);
             blendGroup = darkRock;
@@ -221,7 +232,7 @@ public class WHBlocksEnvironment{
             lightColor = Color.orange.cpy().lerp(Pal.slagOrange, 0.15f).a(0.3f);
         }};
 
-        gravel = new Floor("gravel"){{
+        gravel = new Floor("gravel") {{
             variants = 3;
             attributes.set(Attribute.water, -0.2f);
         }};
@@ -231,7 +242,14 @@ public class WHBlocksEnvironment{
             playerUnmineable = true;
             attributes.set(Attribute.oil, 0.4f);
             attributes.set(hasPromethium, 0.4f);
-        }};
+        }
+
+            @Override
+            public void createIcons(MultiPacker packer) {
+                super.createIcons(packer);
+                mapColor.cpy().lerp(Pal.coalBlack, 0.5f);
+            }
+        };
 
         darkMineralFloor = new Floor("dark-mineral-floor") {{
             variants = 4;
@@ -239,70 +257,69 @@ public class WHBlocksEnvironment{
             attributes.set(hasPromethium, 0.25f);
         }};
 
-        mineralSandFloor = new Floor("mineral-sand-floor"){{
+        mineralSandFloor = new Floor("mineral-sand-floor") {{
             variants = 5;
             attributes.set(Attribute.oil, 0.33f);
             attributes.set(hasPromethium, 0.22f);
         }};
 
-        chromiteStone = new Floor("chromite-stone"){{
+        chromiteStone = new Floor("chromite-stone") {{
             variants = 3;
         }};
 
-        chromiteFloor = new Floor("chromite-floor"){{
+        chromiteFloor = new Floor("chromite-floor") {{
             variants = 5;
         }};
 
-        chromiteFloorDark = new Floor("chromite-floor-dark"){{
-            variants = 3;
-            blendGroup = chromiteFloor;
-        }};
-
-        manganeseStone = new Floor("manganese-stone"){{
+        chromiteFloorDark = new Floor("chromite-floor-dark") {{
             variants = 3;
         }};
 
-        manganeseFloor = new Floor("manganese-floor"){{
+        manganeseStone = new Floor("manganese-stone") {{
+            variants = 3;
+        }};
+
+        manganeseFloor = new Floor("manganese-floor") {{
             variants = 4;
         }};
 
-        cobaltStone = new Floor("cobalt-stone"){{
+        cobaltStone = new Floor("cobalt-stone") {{
             variants = 3;
         }};
 
-        cobaltFloor = new Floor("cobalt-floor"){{
+        cobaltFloor = new Floor("cobalt-floor") {{
             variants = 4;
         }};
 
-        trachyte = new Floor("trachyte"){{
+        trachyte = new Floor("trachyte") {{
             variants = 5;
         }};
 
-        oreShale = new Floor("ore-shale"){{
+        oreShale = new Floor("ore-shale") {{
             variants = 4;
         }};
 
-        oreSalt = new Floor("ore-salt"){{
+        oreSalt = new Floor("ore-salt") {{
             variants = 0;
             attributes.set(Attribute.water, 0.25f);
             attributes.set(Attribute.oil, 0.3f);
         }};
 
-        radiationRockFloor = new Floor("radiation-rock-floor"){{
+        radiationRockFloor = new Floor("radiation-rock-floor") {{
             attributes.set(Attribute.water, -1f);
         }};
 
-        radiationCraters = new Floor("radiation-craters"){{
+        radiationCraters = new Floor("radiation-craters") {{
             attributes.set(Attribute.water, -1f);
             blendGroup = radiationRockFloor;
         }};
 
-        scorchedEarth = new Floor("scorched-earth"){{
+        scorchedEarth = new Floor("scorched-earth") {{
             attributes.set(Attribute.water, 0.3f);
             variants = 6;
         }};
 
-        scorchedStone = new Floor("scorched-stone"){{
+        scorchedStone = new Floor("scorched-stone") {{
             attributes.set(Attribute.water, -1);
         }};
 
@@ -311,37 +328,37 @@ public class WHBlocksEnvironment{
             attributes.set(Attribute.steam, 1f);
         }};
 
-        cementVent = new SteamVent("cement-vent"){{
+        cementVent = new SteamVent("cement-vent") {{
             parent = blendGroup = cementFloor;
             attributes.set(Attribute.steam, 1f);
         }};
 
-        darkRockVent = new SteamVent("dark-rock-vent"){{
+        darkRockVent = new SteamVent("dark-rock-vent") {{
             parent = blendGroup = darkRock;
             attributes.set(Attribute.steam, 1f);
         }};
 
-        chromiteVent = new SteamVent("chromite-vent"){{
+        chromiteVent = new SteamVent("chromite-vent") {{
             parent = blendGroup = chromiteStone;
             attributes.set(Attribute.steam, 1f);
         }};
 
-        manganeseVent = new SteamVent("manganese-vent"){{
+        manganeseVent = new SteamVent("manganese-vent") {{
             parent = blendGroup = manganeseStone;
             attributes.set(Attribute.steam, 1f);
         }};
 
-        cobaltVent = new SteamVent("cobalt-vent"){{
+        cobaltVent = new SteamVent("cobalt-vent") {{
             parent = blendGroup = cobaltStone;
             attributes.set(Attribute.steam, 1f);
         }};
 
-        radiationRockVent = new SteamVent("radiation-rock-vent"){{
+        radiationRockVent = new SteamVent("radiation-rock-vent") {{
             parent = blendGroup = radiationRockFloor;
             attributes.set(Attribute.steam, 1f);
         }};
 
-        scorchedEarthVent = new SteamVent("scorched-earth-vent"){{
+        scorchedEarthVent = new SteamVent("scorched-earth-vent") {{
             parent = blendGroup = scorchedEarth;
             attributes.set(Attribute.steam, 1f);
         }};
@@ -365,11 +382,11 @@ public class WHBlocksEnvironment{
             quartzSand.asFloor().wall = this;
         }};
 
-        cementWall = new StaticWall("cement-wall"){{
+        cementWall = new StaticWall("cement-wall") {{
             cementFloor.asFloor().wall = this;
         }};
 
-        darkRockWall = new StaticWall("dark-rock-wall"){{
+        darkRockWall = new StaticWall("dark-rock-wall") {{
             darkRock.asFloor().wall = darkMagmaRock.asFloor().wall = darkHotRock.asFloor().wall = this;
         }};
 
@@ -377,36 +394,36 @@ public class WHBlocksEnvironment{
             darkMineralSandstone.asFloor().wall = this;
         }};
 
-        chromiteWall = new StaticWall("chromite-wall"){{
+        chromiteWall = new StaticWall("chromite-wall") {{
             variants = 3;
             chromiteStone.asFloor().wall = this;
         }};
 
-        manganeseWall = new StaticWall("manganese-wall"){{
+        manganeseWall = new StaticWall("manganese-wall") {{
             variants = 3;
             manganeseStone.asFloor().wall = this;
         }};
 
-        cobaltWall = new StaticWall("cobalt-wall"){{
+        cobaltWall = new StaticWall("cobalt-wall") {{
             variants = 3;
             cobaltStone.asFloor().wall = this;
         }};
 
-        oreShaleWall = new StaticWall("ore-shale-wall"){{
+        oreShaleWall = new StaticWall("ore-shale-wall") {{
             variants = 2;
             oreShale.asFloor().wall = this;
         }};
 
-        oreSaltWall = new StaticWall("ore-salt-wall"){{
+        oreSaltWall = new StaticWall("ore-salt-wall") {{
             variants = 2;
             oreSalt.asFloor().wall = this;
         }};
 
-        radiationRockWall = new StaticWall("radiation-rock-wall"){{
+        radiationRockWall = new StaticWall("radiation-rock-wall") {{
             radiationSand.asFloor().wall = radiationRockFloor.asFloor().wall = this;
         }};
 
-        scorchedEarthWall = new StaticWall("scorched-earth-wall"){{
+        scorchedEarthWall = new StaticWall("scorched-earth-wall") {{
             scorchedStone.asFloor().wall = scorchedEarth.asFloor().wall = this;
         }};
 
@@ -414,7 +431,7 @@ public class WHBlocksEnvironment{
             titaniumCrystalStone.asFloor().wall = titaniumCrystal.asFloor().wall = this;
         }};*/
 
-        trachyteWall = new StaticWall("trachyte-wall"){{
+        trachyteWall = new StaticWall("trachyte-wall") {{
             trachyte.asFloor().wall = this;
         }};
 
@@ -423,22 +440,22 @@ public class WHBlocksEnvironment{
             quartzSand.asFloor().decoration = this;
         }};
 
-        chromiteBoulder = new Prop("chromite-boulder"){{
+        chromiteBoulder = new Prop("chromite-boulder") {{
             variants = 3;
             chromiteStone.asFloor().decoration = this;
         }};
 
-        cobaltBoulder = new Prop("cobalt-boulder"){{
+        cobaltBoulder = new Prop("cobalt-boulder") {{
             variants = 3;
             cobaltStone.asFloor().decoration = this;
         }};
 
-        darkRockBoulder = new Prop("dark-rock-boulder"){{
+        darkRockBoulder = new Prop("dark-rock-boulder") {{
             variants = 3;
             darkRock.asFloor().decoration = darkHotRock.asFloor().decoration = darkMagmaRock.asFloor().decoration = this;
         }};
 
-        manganeseBoulder = new Prop("manganese-boulder"){{
+        manganeseBoulder = new Prop("manganese-boulder") {{
             variants = 3;
             manganeseStone.asFloor().decoration = this;
         }};
@@ -448,12 +465,12 @@ public class WHBlocksEnvironment{
             darkMineralFloor.asFloor().decoration = darkMineralSandstone.asFloor().decoration = this;
         }};
 
-        mineralSandFloorBoulder = new Prop("mineral-sand-floor-boulder"){{
+        mineralSandFloorBoulder = new Prop("mineral-sand-floor-boulder") {{
             variants = 3;
             mineralSandFloor.asFloor().decoration = this;
         }};
 
-        radiationBoulder = new Prop("radiation-boulder"){{
+        radiationBoulder = new Prop("radiation-boulder") {{
             variants = 2;
             radiationSand.asFloor().decoration = radiationRockFloor.asFloor().decoration = radiationCraters.asFloor().decoration = this;
         }};
@@ -463,14 +480,14 @@ public class WHBlocksEnvironment{
             scorchedEarth.asFloor().decoration = scorchedStone.asFloor().decoration = this;
         }};
 
-        darkStoneCrystalCluster = new TallBlock("dark-stone-crystal-cluster"){{
+        darkStoneCrystalCluster = new TallBlock("dark-stone-crystal-cluster") {{
             variants = 3;
             customShadow = true;
             clipSize = 128f;
             oreShale.asFloor().decoration = this;
         }};
 
-        quartzCrystalCluster = new TallBlock("quartz-crystal-cluster"){{
+        quartzCrystalCluster = new TallBlock("quartz-crystal-cluster") {{
             variants = 3;
             customShadow = true;
             clipSize = 128f;
@@ -507,36 +524,36 @@ public class WHBlocksEnvironment{
         }};
 
 
-        cementTile1 = new Floor("cement-tile-autotile-1"){{
+        cementTile1 = new Floor("cement-tile-autotile-1") {{
             autotile = true;
             drawEdgeOut = true;
             drawEdgeIn = false;
         }};
 
-        cementTile2 = new Floor("cement-tile-autotile-2"){{
+        cementTile2 = new Floor("cement-tile-autotile-2") {{
             autotile = true;
             drawEdgeOut = true;
             drawEdgeIn = false;
         }};
 
-        cementTile3 = new Floor("cement-tile-autotile-3"){{
+        cementTile3 = new Floor("cement-tile-autotile-3") {{
             autotile = true;
             drawEdgeOut = true;
             drawEdgeIn = false;
         }};
 
-        cementTile4 = new Floor("cement-tile-autotile-4"){{
+        cementTile4 = new Floor("cement-tile-autotile-4") {{
             autotile = true;
             drawEdgeOut = true;
             drawEdgeIn = false;
         }};
     }
 
-    public static boolean isMineralCoreFloor(Block floor){
+    public static boolean isMineralCoreFloor(Block floor) {
         return floor == darkMineralFloor || floor == mineralSandFloor;
     }
 
-    public static Block defaultMineralFloor(){
+    public static Block defaultMineralFloor() {
         return mineralSandFloor != null ? mineralSandFloor : darkMineralFloor;
     }
 }

@@ -5,25 +5,40 @@
 
 package wh.core;
 
-import arc.*;
-import arc.scene.ui.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.game.*;
-import mindustry.game.EventType.*;
-import mindustry.gen.*;
-import mindustry.mod.*;
-import mindustry.net.*;
-import mindustry.ui.*;
-import mindustry.ui.dialogs.*;
+import arc.Core;
+import arc.Events;
+import arc.func.Prov;
+import arc.scene.ui.Button;
+import arc.scene.ui.Label;
+import arc.util.Align;
+import arc.util.Log;
+import arc.util.Strings;
+import arc.util.Time;
+import mindustry.Vars;
+import mindustry.game.EventType;
+import mindustry.game.EventType.Trigger;
+import mindustry.gen.Icon;
+import mindustry.io.JsonIO;
+import mindustry.maps.Maps;
+import mindustry.maps.filters.GenerateFilter;
+import mindustry.maps.filters.WhTechFilter;
+import mindustry.mod.Mod;
+import mindustry.net.Net;
+import mindustry.ui.Styles;
+import mindustry.ui.WarningBar;
+import mindustry.ui.dialogs.BaseDialog;
 import wh.content.*;
-import wh.entities.*;
-import wh.entities.event.logic.*;
-import wh.entities.event.objective.*;
-import wh.entities.event.ui.*;
-import wh.gen.*;
-import wh.graphics.*;
-import wh.net.packet.*;
+import wh.entities.WorldRegister;
+import wh.entities.event.logic.WHLogicStatements;
+import wh.entities.event.objective.WHObjectiveUI;
+import wh.entities.event.ui.ActionContext;
+import wh.gen.EntityRegister;
+import wh.graphics.MainRenderer;
+import wh.graphics.WHShaders;
+import wh.net.packet.AlertToastPacket;
+import wh.net.packet.WarnHUDPacket;
+
+import java.util.Arrays;
 
 public class WarHammerMod extends Mod {
     public static String ModName = "wh";
@@ -40,6 +55,7 @@ public class WarHammerMod extends Mod {
         Net.registerPacket(AlertToastPacket::new);
         /* WHClassMap.load();*/
         WHSettings.load();
+        registerEditorGenerateFilters();
         Events.on(EventType.FileTreeInitEvent.class, (e) -> {
             if (!Vars.headless) {
                 WHSounds.load();
@@ -180,6 +196,31 @@ public class WarHammerMod extends Mod {
             out = out.replace("{" + i + "}", String.valueOf(args[i]));
         }
         return out;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void registerEditorGenerateFilters() {
+        if (Vars.headless) return;
+
+        try {
+            JsonIO.classTag("whTech", WhTechFilter.class);
+
+            for (Prov<GenerateFilter> provider : Maps.allFilterTypes) {
+                if (provider == null) continue;
+                try {
+                    if (provider.get() instanceof WhTechFilter) {
+                        return;
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+
+            Prov<GenerateFilter>[] appended = Arrays.copyOf(Maps.allFilterTypes, Maps.allFilterTypes.length + 1);
+            appended[appended.length - 1] = WhTechFilter::new;
+            Maps.allFilterTypes = appended;
+        } catch (Throwable t) {
+            Log.err(t);
+        }
     }
 
     @Override
