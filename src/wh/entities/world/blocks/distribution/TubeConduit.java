@@ -303,28 +303,34 @@ public class TubeConduit extends Conduit{
             }
         }
 
+        private int nonSquareLiquidBlendMask() {
+            int result = 0;
+            for (int rel = 0; rel < 4; rel++) {
+                int realDir = Mathf.mod(rotation - rel, 4);
+                Building other = nearby(realDir);
+                if (other != null && other.team == team && other.block.hasLiquids && !other.block.squareSprite) {
+                    result |= 1 << rel;
+                }
+            }
+            return result;
+        }
+
         @Override
         public void onProximityUpdate(){
             int[] bits = buildBlending(tile, rotation, null, true);
             blendbits = bits[0];
             xscl = bits[1];
             yscl = bits[2];
-            blending = bits[4];
+            blending = bits[4] | nonSquareLiquidBlendMask();
 
             int mask = 1 << rotation;
 
-            // bits[3] 的 rel 位表示“相对当前朝向 rel 方向有连接”。
-            // 需要把相对方向转回绝对方向：abs = mod(rotation - rel, 4)
-            // 然后将该绝对方向对应的 bit OR 到 mask 里。
+            // bits[3] uses relative directions; convert each relative bit back to absolute.
             for(int rel = 0; rel < 4; rel++){
                 if((bits[3] & (1 << rel)) != 0){
                     mask |= 1 << Mathf.mod(rotation - rel, 4);
                 }
             }
-            // 例子：
-            // rotation=1，且 bits[3] 只有 rel=1 连通（bits[3]=0b0010）：
-            // abs = mod(1 - 1, 4) = 0
-            // mask: 0b0010 | (1 << 0) = 0b0011 => tiling=3
 
             tiling = mask;
             Building next = front(), prev = back();

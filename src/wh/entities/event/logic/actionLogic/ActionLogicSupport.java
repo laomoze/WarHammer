@@ -1,32 +1,37 @@
 package wh.entities.event.logic.actionLogic;
 
-import arc.audio.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.core.*;
-import mindustry.ctype.*;
-import mindustry.entities.bullet.*;
-import mindustry.game.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.logic.*;
-import mindustry.type.*;
-import mindustry.world.blocks.logic.*;
-import wh.content.*;
-import wh.entities.event.ui.*;
+import arc.audio.Sound;
+import arc.graphics.Color;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Mathf;
+import arc.util.Strings;
+import arc.util.Time;
+import mindustry.Vars;
+import mindustry.content.StatusEffects;
+import mindustry.content.UnitTypes;
+import mindustry.core.World;
+import mindustry.ctype.UnlockableContent;
+import mindustry.entities.bullet.BulletType;
+import mindustry.game.Team;
+import mindustry.gen.Sounds;
+import mindustry.graphics.Pal;
+import mindustry.logic.LExecutor;
+import mindustry.logic.LVar;
+import mindustry.type.StatusEffect;
+import mindustry.type.UnitType;
+import wh.content.WHBullets;
+import wh.content.WHContent;
+import wh.content.WHSounds;
+import wh.entities.event.ui.ActionContext;
+import wh.entities.event.ui.MarkStyle;
 
-import java.util.*;
+import java.util.Locale;
 
 /**
  * Action 逻辑公共工具类。
  * 负责参数解析、资源映射与过场 UI 辅助。
  */
 public final class ActionLogicSupport{
-    private static final int MAX_PARSE_DEPTH = 3;
     private static int overlayPulseToken = 0;
 
     private ActionLogicSupport(){
@@ -75,43 +80,17 @@ public final class ActionLogicSupport{
         return raw.replace("[n]", "\n");
     }
 
-    /** 解析浮点数；支持常量、变量名、全局变量与 `@N` 逻辑内存索引。 */
-    public static float parseFloat(String raw, float fallback, LExecutor exec){
-        return parseFloatInternal(raw, fallback, exec, 0);
+    /**
+     * 解析浮点数；仅支持字面量。
+     */
+    public static float parseFloat(String raw, float fallback, LExecutor exec) {
+        Float parsed = tryParseFloatToken(raw);
+        return parsed == null ? fallback : parsed;
     }
 
-    /** Parse float directly from a logic variable to avoid text round-trip. */
+    /** Parse float directly from a logic variable. */
     public static float parseFloat(LVar value, float fallback, LExecutor exec){
-        return parseFloatVarInternal(value, fallback, exec, 0);
-    }
-
-    private static float parseFloatInternal(String raw, float fallback, LExecutor exec, int depth){
-        if(raw == null) return fallback;
-        String token = raw.trim();
-        if(token.isEmpty()) return fallback;
-        if(depth > MAX_PARSE_DEPTH) return fallback;
-
-        Float direct = tryParseFloatToken(token);
-        if(direct != null) return direct;
-
-        Float memoryValue = tryReadMemoryToken(token, exec);
-        if(memoryValue != null) return memoryValue;
-
-        LVar ref = resolveVarToken(token, exec);
-        if(ref != null){
-            return parseFloatVarInternal(ref, fallback, exec, depth + 1);
-        }
-
-        if(token.startsWith("$") && token.length() > 1){
-            return parseFloatInternal(token.substring(1), fallback, exec, depth + 1);
-        }
-
-        return fallback;
-    }
-
-    private static float parseFloatVarInternal(LVar value, float fallback, LExecutor exec, int depth){
         if(value == null) return fallback;
-        if(depth > MAX_PARSE_DEPTH) return fallback;
 
         if(!value.isobj){
             return value.numf();
@@ -127,80 +106,16 @@ public final class ActionLogicSupport{
         if(obj instanceof Team team){
             return team.id;
         }
-        if(obj instanceof String text){
-            return parseFloatInternal(text, fallback, exec, depth + 1);
+        if(obj instanceof String text) {
+            Float parsed = tryParseFloatToken(text);
+            return parsed == null ? fallback : parsed;
         }
         if(obj != null){
             Float parsedObj = tryParseFloatToken(String.valueOf(obj).trim());
-            if(parsedObj != null){
-                return parsedObj;
-            }
-            return fallback;
+            return parsedObj == null ? fallback : parsedObj;
         }
 
-        String name = value.name == null ? "" : value.name.trim();
-        if(name.isEmpty()) return fallback;
-        return parseFloatInternal(name, fallback, exec, depth + 1);
-    }
-
-    private static Float tryParseFloatToken(String token){
-        if(token == null) return null;
-        String t = token.trim();
-        if(t.isEmpty()) return null;
-        if(t.equalsIgnoreCase("true")) return 1f;
-        if(t.equalsIgnoreCase("false")) return 0f;
-        try{
-            return Float.parseFloat(t);
-        }catch(Exception ignored){
-            return null;
-        }
-    }
-
-    private static Float tryReadMemoryToken(String token, LExecutor exec){
-        if(token == null || !token.startsWith("@") || exec == null || exec.build == null) return null;
-        try{
-            int memoryIndex = Integer.parseInt(token.substring(1));
-            Building memoryBuild = Vars.world.build(exec.build.tileX(), exec.build.tileY() - 1);
-            if(memoryBuild instanceof MemoryBlock.MemoryBuild memory){
-                if(memoryIndex >= 0 && memoryIndex < memory.memory.length){
-                    return (float)memory.memory[memoryIndex];
-                }
-            }
-        }catch(Exception ignored){
-        }
-        return null;
-    }
-
-    private static LVar resolveVarToken(String token, LExecutor exec){
-        if(token == null) return null;
-        String key = token.trim();
-        if(key.isEmpty()) return null;
-
-        if(key.startsWith("$") && key.length() > 1){
-            key = key.substring(1).trim();
-        }
-        if(key.isEmpty()) return null;
-
-        if(exec != null){
-            LVar local = exec.optionalVar(key);
-            if(local != null) return local;
-            if(!key.startsWith("@")){
-                LVar localAt = exec.optionalVar("@" + key);
-                if(localAt != null) return localAt;
-            }
-        }
-
-        if(Vars.logicVars != null){
-            boolean privileged = exec != null && exec.privileged;
-            LVar global = Vars.logicVars.get(key, privileged);
-            if(global != null) return global;
-            if(!key.startsWith("@")){
-                LVar globalAt = Vars.logicVars.get("@" + key, privileged);
-                if(globalAt != null) return globalAt;
-            }
-        }
-
-        return null;
+        return fallback;
     }
 
     /** Parse tile coordinate and convert to world coordinate via World.unconv(). */
@@ -350,26 +265,24 @@ public final class ActionLogicSupport{
         return Mathf.round(resolved);
     }
 
-    /** 安全解析 `int`，支持变量名/内存索引解析。 */
-    public static int parseInt(String raw, int fallback, LExecutor exec){
-        if(raw == null) return fallback;
-        String token = raw.trim();
-        if(token.isEmpty()) return fallback;
-        try{
-            return Integer.parseInt(token);
-        }catch(Exception ignored){
-        }
+    /** 安全解析 `int`。 */
+    public static int parseInt(String raw, int fallback, LExecutor exec) {
+        Float parsed = tryParseFloatToken(raw);
+        if (parsed == null || Float.isNaN(parsed) || Float.isInfinite(parsed)) return fallback;
+        return Mathf.round(parsed);
+    }
 
-        Float direct = tryParseFloatToken(token);
-        if(direct != null){
-            return Mathf.round(direct);
+    private static Float tryParseFloatToken(String token) {
+        if (token == null) return null;
+        String t = token.trim();
+        if (t.isEmpty()) return null;
+        if (t.equalsIgnoreCase("true")) return 1f;
+        if (t.equalsIgnoreCase("false")) return 0f;
+        try {
+            return Float.parseFloat(t);
+        }catch(Exception ignored) {
+            return null;
         }
-
-        float resolved = parseFloat(token, Float.NaN, exec);
-        if(Float.isNaN(resolved) || Float.isInfinite(resolved)){
-            return fallback;
-        }
-        return Mathf.round(resolved);
     }
 
     /** 解析队伍标识（名称或数字 ID）。 */

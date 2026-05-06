@@ -11,11 +11,13 @@ import arc.math.Mathf;
 import arc.scene.Element;
 import arc.scene.Group;
 import arc.scene.event.Touchable;
-import arc.scene.style.TextureRegionDrawable;
+import arc.scene.ui.Image;
 import arc.scene.ui.ImageButton;
+import arc.scene.ui.Label;
 import arc.scene.ui.ScrollPane;
 import arc.scene.ui.layout.Stack;
 import arc.scene.ui.layout.Table;
+import arc.util.Align;
 import arc.util.Log;
 import arc.util.Reflect;
 import mindustry.core.UI;
@@ -396,34 +398,53 @@ public final class WHObjectiveUI{
     }
 
     public static Stack objectiveTable(TextureRegion region, Intp value, Intp target, Prov<CharSequence> info, Boolp checked, boolean appendProgress){
-        return new Stack(
-        new Table(table -> table.add(new Bar(
-        () -> buildText(info, value, target, appendProgress),
+        Bar bar = new Bar(
+                () -> "",
         () -> checked.get() ? Pal.heal : Pal.accent,
         () -> {
             int tar = Math.max(1, target.get());
             return Mathf.clamp((float)value.get() / (float)tar);
         }
-        )).padLeft(20f).height(40f).expandX().fillX()),
-        new Table(image -> image.image(region).size(32f).padTop(4f).padBottom(4f).padLeft(56f).padRight(8f)).left(),
-        new Table(sign -> sign.image(new TextureRegionDrawable(Icon.ok.getRegion()))
-        .size(16f)
-        .expandX()
-        .left()
-        .padLeft(10f)
-        .color(Color.white))
         );
+
+        Table barLayer = new Table(table -> table.add(bar).height(40f).expandX().fillX());
+
+        Table contentLayer = new Table(content -> {
+            content.left();
+            content.image(region).size(30f).padTop(4f).padBottom(4f).padLeft(30f).padRight(8f);
+
+            Label infoLabel = content.label(() -> buildInfoText(info)).left().growX().padRight(8f).get();
+            infoLabel.setWrap(false);
+            infoLabel.setEllipsis(true);
+            infoLabel.setAlignment(Align.left);
+
+            content.label(() -> appendProgress ? buildProgressText(value, target) : "").right().padRight(10f);
+        });
+
+        Table signLayer = new Table(sign -> {
+            Image status = sign.image(Icon.cancel).size(16f).expandX().left().padLeft(10f).get();
+            sign.update(() -> {
+                boolean done = checked.get();
+                status.setDrawable(done ? Icon.ok : Icon.cancel);
+                status.setColor(done ? Pal.heal : Color.lightGray);
+            });
+        });
+
+        return new Stack(barLayer, contentLayer, signLayer);
     }
 
     public static Stack objectiveTable(TextureRegion region, Intp value, Intp target, Prov<CharSequence> info, Boolp checked){
         return objectiveTable(region, value, target, info, checked, true);
     }
 
-    private static CharSequence buildText(Prov<CharSequence> info, Intp value, Intp target, boolean appendProgress){
-        if(!appendProgress){
-            return "        " + info.get();
-        }
-        return "        " + info.get() + value.get() + "/" + target.get();
+    private static CharSequence buildInfoText(Prov<CharSequence> info) {
+        if (info == null) return "";
+        CharSequence text = info.get();
+        return text == null ? "" : text;
+    }
+
+    private static String buildProgressText(Intp value, Intp target) {
+        return Math.max(0, value.get()) + "/" + Math.max(0, target.get());
     }
 
     public static float getHeight(){

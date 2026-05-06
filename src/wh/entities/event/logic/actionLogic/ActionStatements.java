@@ -1,32 +1,46 @@
 package wh.entities.event.logic.actionLogic;
 
-import arc.*;
-import arc.flabel.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.actions.*;
-import arc.scene.style.*;
+import arc.Core;
+import arc.flabel.FLabel;
+import arc.graphics.Blending;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
+import arc.scene.actions.Actions;
+import arc.scene.style.Drawable;
+import arc.scene.style.TextureRegionDrawable;
 import arc.scene.ui.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.entities.bullet.*;
-import mindustry.game.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
+import arc.scene.ui.layout.Table;
+import arc.struct.Seq;
+import arc.util.Log;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.Vars;
+import mindustry.entities.bullet.BulletType;
+import mindustry.game.Team;
+import mindustry.gen.Call;
+import mindustry.gen.Icon;
+import mindustry.gen.Sounds;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
 import mindustry.logic.*;
-import mindustry.type.*;
-import mindustry.ui.*;
-import wh.entities.*;
-import wh.entities.event.logic.*;
-import wh.entities.event.objective.*;
-import wh.entities.event.ui.*;
-import wh.graphics.*;
-import wh.math.*;
-import wh.ui.*;
+import mindustry.type.StatusEffect;
+import mindustry.type.UnitType;
+import mindustry.ui.Styles;
+import wh.entities.AirborneSpawner;
+import wh.entities.RiftSpawner;
+import wh.entities.Spawner;
+import wh.entities.event.logic.WHLogicStatements;
+import wh.entities.event.objective.JumpInTriggerObjective;
+import wh.entities.event.ui.ActionContext;
+import wh.graphics.Drawn;
+import wh.math.WHInterp;
+import wh.ui.UIUtils;
 
 import static mindustry.Vars.tilesize;
 import static wh.entities.event.logic.WHLogicStatements.registerStatement;
@@ -228,6 +242,30 @@ public final class ActionStatements{
                 builder.append(" ").append(ActionLogicSupport.safeToken(arg, "_"));
             }
             builder.append(" ").append(ActionLogicSupport.safeToken(out, "result"));
+        }
+
+        /**
+         * 通用写回格式：opcode run arg...（不写 out，用于避免 token 上限）。
+         */
+        protected void writeCommonNoOut(StringBuilder builder, String opcode, String... args) {
+            builder.append(opcode).append(" ");
+            builder.append(ActionLogicSupport.safeToken(run, "1"));
+            for (String arg : args) {
+                builder.append(" ").append(ActionLogicSupport.safeToken(arg, "_"));
+            }
+        }
+
+        protected float autoDelaySecFromHitSize(float hitSize) {
+            float sizeNorm = Mathf.clamp(hitSize / 4f);
+            float base = Mathf.clamp(sizeNorm, 5f, 15f);
+            return base * Mathf.random(1f, 1.5f);
+        }
+
+        /**
+         * Auto spread radius by unit size: clamp(hitSize / 5, [15, 50]).
+         */
+        protected float autoSpreadFromHitSize(float hitSize) {
+            return Mathf.clamp(hitSize / 5f, 15f, 50f);
         }
 
         @Override
@@ -917,13 +955,13 @@ public final class ActionStatements{
         public String x = "0";
         public String y = "0";
         public String angle = "90";
-        public String delaySec = "5";
-        public String inaccuracy = "0";
         public String shield = "-1";
         public String status = "@none";
         public String statusDuration = "0";
         public String spawnerCount = "1";
         public String spawnerIntervalSec = "0";
+        // optional output variable for spawned unit object; "_" means disabled
+        public String unitOut = "_";
 
         public JumpInStatement(){
         }
@@ -935,14 +973,13 @@ public final class ActionStatements{
             x = tok(tokens, 4, x);
             y = tok(tokens, 5, y);
             angle = tok(tokens, 6, angle);
-            delaySec = tok(tokens, 7, delaySec);
-            inaccuracy = tok(tokens, 8, inaccuracy);
-            shield = tokNum(tokens, 9, shield);
-            status = tok(tokens, 10, status);
-            statusDuration = tokNum(tokens, 11, statusDuration);
-            spawnerCount = tokNum(tokens, 12, spawnerCount);
-            spawnerIntervalSec = tokNum(tokens, 13, spawnerIntervalSec);
-            out = tok(tokens, 14, out);
+            shield = tokNum(tokens, 7, shield);
+            status = tok(tokens, 8, status);
+            statusDuration = tokNum(tokens, 9, statusDuration);
+            spawnerCount = tokNum(tokens, 10, spawnerCount);
+            spawnerIntervalSec = tokNum(tokens, 11, spawnerIntervalSec);
+            unitOut = tok(tokens, 12, unitOut);
+            out = tok(tokens, 13, out);
         }
 
         @Override
@@ -973,9 +1010,6 @@ public final class ActionStatements{
             fieldLabeled(table, " y ", y, v -> y = v, 82f);
             fieldLabeled(table, " ang ", angle, v -> angle = v, 82f);
             table.row();
-            fieldLabeled(table, "delay ", delaySec, v -> delaySec = v, 90f);
-            fieldLabeled(table, " spread ", inaccuracy, v -> inaccuracy = v, 90f);
-            table.row();
             fieldLabeled(table, " shield ", shield, v -> shield = v, 84f);
             fieldLabeled(table, " status ", status, v -> status = v, 110f);
             TextButton statusPick = new TextButton("pick", Styles.logict);
@@ -989,7 +1023,7 @@ public final class ActionStatements{
             fieldLabeled(table, " count ", spawnerCount, v -> spawnerCount = v, 72f);
             fieldLabeled(table, " IntervalSec ", spawnerIntervalSec, v -> spawnerIntervalSec = v, 72f);
             table.row();
-            fieldLabeled(table, " result ", out, v -> out = v, 90f);
+            fieldLabeled(table, " unitOut ", unitOut, v -> unitOut = v, 100f);
         }
 
         @Override
@@ -1000,14 +1034,14 @@ public final class ActionStatements{
             final LVar vx = builder.var(x);
             final LVar vy = builder.var(y);
             final LVar va = builder.var(angle);
-            final LVar vd = builder.var(delaySec);
-            final LVar vi = builder.var(inaccuracy);
             final LVar vShield = builder.var(shield);
             final LVar vStatus = builder.var(status);
             final LVar vStatusDur = builder.var(statusDuration);
             final LVar vSpawnerCount = builder.var(spawnerCount);
             final LVar vSpawnerInterval = builder.var(spawnerIntervalSec);
             final LVar vo = builder.var(out);
+            final String unitOutToken = unitOut == null ? "" : unitOut.trim();
+            final LVar vUnitOut = unitOutToken.isEmpty() || unitOutToken.equals("_") ? null : builder.var(unitOutToken);
             final String autoTimerKeyBase = "jumpin-" + Math.abs((unit + "|" + team + "|" + x + "|" + y + "|" + angle + "|" + shield + "|" + status + "|" + statusDuration + "|" + spawnerCount + "|" + spawnerIntervalSec).hashCode());
             return new ActionInstruction(vr, vo){
                 @Override
@@ -1017,14 +1051,17 @@ public final class ActionStatements{
                     float worldX = ActionLogicSupport.parseWorldCoord(vx, 0f, exec);
                     float worldY = ActionLogicSupport.parseWorldCoord(vy, 0f, exec);
                     float angleVal = ActionLogicSupport.parseFloat(va, 0f, exec);
-                    float delay = ActionLogicSupport.parseFloat(vd, 0f, exec) * Time.toSeconds;
-                    float spread = ActionLogicSupport.parseFloat(vi, 0f, exec);
+                    float delay = autoDelaySecFromHitSize(unitType.hitSize) * Time.toSeconds;
+                    float spread = autoSpreadFromHitSize(unitType.hitSize);
                     float shieldVal = ActionLogicSupport.parseFloat(vShield, -1f, exec);
                     StatusEffect statusVal = ActionLogicSupport.parseStatusEffect(ActionLogicSupport.valueText(vStatus), null);
                     float statusDurVal = Math.max(0f, ActionLogicSupport.parseFloat(vStatusDur, 0f, exec));
                     int waves = Math.max(1, ActionLogicSupport.parseInt(vSpawnerCount, 1, exec));
                     float intervalSec = Math.max(0f, ActionLogicSupport.parseFloat(vSpawnerInterval, 0f, exec));
                     float intervalTicks = intervalSec * Time.toSeconds;
+                    if (vUnitOut != null) {
+                        vUnitOut.setobj(null);
+                    }
 
                     Runnable spawnOne = () -> {
                         Spawner spawner = new Spawner();
@@ -1033,6 +1070,8 @@ public final class ActionStatements{
                         spawner.setShieldToApply(shieldVal);
                         spawner.setStatus(statusVal, statusDurVal);
                         spawner.add();
+                        spawner.onSpawned(unit -> vUnitOut.setobj(unit));
+                        Log.info("unit  "+unit+"  name  "+unitType.name);
                     };
 
                     for(int i = 0; i < waves; i++){
@@ -1056,8 +1095,8 @@ public final class ActionStatements{
         }
 
         @Override
-        public void write(StringBuilder builder){
-            writeCommon(builder, "wh-jump-in", unit, team, x, y, angle, delaySec, inaccuracy, shield, status, statusDuration, spawnerCount, spawnerIntervalSec);
+        public void write(StringBuilder builder) {
+            writeCommon(builder, "wh-jump-in", unit, team, x, y, angle, shield, status, statusDuration, spawnerCount, spawnerIntervalSec, unitOut);
         }
     }
 
@@ -1073,13 +1112,13 @@ public final class ActionStatements{
         public String x = "0";
         public String y = "0";
         public String angle = "90";
-        public String delaySec = "10";
-        public String inaccuracy = "10";
         public String shield = "-1";
         public String status = "@none";
         public String statusDuration = "0";
         public String spawnerCount = "1";
         public String spawnerIntervalSec = "2";
+        // optional output variable for spawned unit object; "_" means disabled
+        public String unitOut = "_";
 
         public RiftSpawnerStatement(){
         }
@@ -1091,14 +1130,13 @@ public final class ActionStatements{
             x = tok(tokens, 4, x);
             y = tok(tokens, 5, y);
             angle = tok(tokens, 6, angle);
-            delaySec = tok(tokens, 7, delaySec);
-            inaccuracy = tok(tokens, 8, inaccuracy);
-            shield = tokNum(tokens, 9, shield);
-            status = tok(tokens, 10, status);
-            statusDuration = tokNum(tokens, 11, statusDuration);
-            spawnerCount = tokNum(tokens, 12, spawnerCount);
-            spawnerIntervalSec = tokNum(tokens, 13, spawnerIntervalSec);
-            out = tok(tokens, 14, out);
+            shield = tokNum(tokens, 7, shield);
+            status = tok(tokens, 8, status);
+            statusDuration = tokNum(tokens, 9, statusDuration);
+            spawnerCount = tokNum(tokens, 10, spawnerCount);
+            spawnerIntervalSec = tokNum(tokens, 11, spawnerIntervalSec);
+            unitOut = tok(tokens, 12, unitOut);
+            out = tok(tokens, 13, out);
         }
 
         @Override
@@ -1129,9 +1167,6 @@ public final class ActionStatements{
             fieldLabeled(table, " y ", y, v -> y = v, 82f);
             fieldLabeled(table, " ang ", angle, v -> angle = v, 82f);
             table.row();
-            fieldLabeled(table, "delay ", delaySec, v -> delaySec = v, 90f);
-            fieldLabeled(table, " spread ", inaccuracy, v -> inaccuracy = v, 90f);
-            table.row();
             fieldLabeled(table, " shield ", shield, v -> shield = v, 84f);
             fieldLabeled(table, " status ", status, v -> status = v, 110f);
             TextButton statusPick = new TextButton("pick", Styles.logict);
@@ -1145,7 +1180,7 @@ public final class ActionStatements{
             fieldLabeled(table, " count ", spawnerCount, v -> spawnerCount = v, 72f);
             fieldLabeled(table, " IntervalSec ", spawnerIntervalSec, v -> spawnerIntervalSec = v, 72f);
             table.row();
-            fieldLabeled(table, " result ", out, v -> out = v, 90f);
+            fieldLabeled(table, " unitOut ", unitOut, v -> unitOut = v, 100f);
         }
 
         @Override
@@ -1156,14 +1191,14 @@ public final class ActionStatements{
             final LVar vx = builder.var(x);
             final LVar vy = builder.var(y);
             final LVar va = builder.var(angle);
-            final LVar vd = builder.var(delaySec);
-            final LVar vi = builder.var(inaccuracy);
             final LVar vShield = builder.var(shield);
             final LVar vStatus = builder.var(status);
             final LVar vStatusDur = builder.var(statusDuration);
             final LVar vSpawnerCount = builder.var(spawnerCount);
             final LVar vSpawnerInterval = builder.var(spawnerIntervalSec);
             final LVar vo = builder.var(out);
+            final String unitOutToken = unitOut == null ? "" : unitOut.trim();
+            final LVar vUnitOut = unitOutToken.isEmpty() || unitOutToken.equals("_") ? null : builder.var(unitOutToken);
             final String autoTimerKeyBase = "riftspawner-" + Math.abs((unit + "|" + team + "|" + x + "|" + y + "|" + angle + "|" + shield + "|" + status + "|" + statusDuration + "|" + spawnerCount + "|" + spawnerIntervalSec).hashCode());
             return new ActionInstruction(vr, vo){
                 @Override
@@ -1173,14 +1208,17 @@ public final class ActionStatements{
                     float worldX = ActionLogicSupport.parseWorldCoord(vx, 0f, exec);
                     float worldY = ActionLogicSupport.parseWorldCoord(vy, 0f, exec);
                     float angleVal = ActionLogicSupport.parseFloat(va, 0f, exec);
-                    float delay = ActionLogicSupport.parseFloat(vd, 0f, exec) * Time.toSeconds;
-                    float spread = ActionLogicSupport.parseFloat(vi, 0f, exec);
+                    float delay = autoDelaySecFromHitSize(unitType.hitSize) * Time.toSeconds;
+                    float spread = autoSpreadFromHitSize(unitType.hitSize);
                     float shieldVal = ActionLogicSupport.parseFloat(vShield, -1f, exec);
                     StatusEffect statusVal = ActionLogicSupport.parseStatusEffect(ActionLogicSupport.valueText(vStatus), null);
                     float statusDurVal = Math.max(0f, ActionLogicSupport.parseFloat(vStatusDur, 0f, exec));
                     int waves = Math.max(1, ActionLogicSupport.parseInt(vSpawnerCount, 1, exec));
                     float intervalSec = Math.max(0f, ActionLogicSupport.parseFloat(vSpawnerInterval, 0f, exec));
                     float intervalTicks = intervalSec * Time.toSeconds;
+                    if (vUnitOut != null) {
+                        vUnitOut.setobj(null);
+                    }
 
                     Runnable spawnOne = () -> {
                         RiftSpawner spawner = new RiftSpawner();
@@ -1188,6 +1226,9 @@ public final class ActionStatements{
                         spawner.init(unitType, teamVal, new Vec2(worldX + Tmp.v1.x, worldY + Tmp.v1.y), angleVal, delay);
                         spawner.setShieldToApply(shieldVal);
                         spawner.setStatus(statusVal, statusDurVal);
+                        if (vUnitOut != null) {
+                            spawner.onSpawned(unit -> vUnitOut.setobj(unit));
+                        }
                         spawner.add();
                     };
 
@@ -1197,6 +1238,13 @@ public final class ActionStatements{
                             spawnOne.run();
                         }else{
                             Time.run(spawnDelayTicks, spawnOne);
+                        }
+                    }
+
+                    if (vUnitOut != null) {
+                        float waitTicks = delay + Math.max(0, waves - 1) * intervalTicks + 1f;
+                        if (waitTicks > 0f) {
+                            startTimed(waitTicks);
                         }
                     }
 
@@ -1212,8 +1260,8 @@ public final class ActionStatements{
         }
 
         @Override
-        public void write(StringBuilder builder){
-            writeCommon(builder, "wh-rift-spawn", unit, team, x, y, angle, delaySec, inaccuracy, shield, status, statusDuration, spawnerCount, spawnerIntervalSec);
+        public void write(StringBuilder builder) {
+            writeCommon(builder, "wh-rift-spawn", unit, team, x, y, angle, shield, status, statusDuration, spawnerCount, spawnerIntervalSec, unitOut);
         }
     }
 
@@ -1225,13 +1273,13 @@ public final class ActionStatements{
         public String team = "@crux";
         public String x = "0";
         public String y = "0";
-        public String delaySec = "5";
-        public String inaccuracy = "10";
         public String shield = "100";
         public String status = "@none";
         public String statusDuration = "120";
         public String spawnerCount = "3";
         public String spawnerIntervalSec = "3";
+        // optional output variable for spawned unit object; "_" means disabled
+        public String unitOut = "_";
 
         public AirborneJumpInStatement(){
         }
@@ -1242,14 +1290,13 @@ public final class ActionStatements{
             team = tok(tokens, 3, team);
             x = tok(tokens, 4, x);
             y = tok(tokens, 5, y);
-            delaySec = tok(tokens, 6, delaySec);
-            inaccuracy = tok(tokens, 7, inaccuracy);
-            shield = tokNum(tokens, 8, shield);
-            status = tok(tokens, 9, status);
-            statusDuration = tokNum(tokens, 10, statusDuration);
-            spawnerCount = tokNum(tokens, 11, spawnerCount);
-            spawnerIntervalSec = tokNum(tokens, 12, spawnerIntervalSec);
-            out = tok(tokens, 13, out);
+            shield = tokNum(tokens, 6, shield);
+            status = tok(tokens, 7, status);
+            statusDuration = tokNum(tokens, 8, statusDuration);
+            spawnerCount = tokNum(tokens, 9, spawnerCount);
+            spawnerIntervalSec = tokNum(tokens, 10, spawnerIntervalSec);
+            unitOut = tok(tokens, 11, unitOut);
+            out = tok(tokens, 12, out);
         }
 
         @Override
@@ -1288,9 +1335,7 @@ public final class ActionStatements{
             table.row();
             fieldLabeled(table, "x ", x, v -> x = v, 82f);
             fieldLabeled(table, " y ", y, v -> y = v, 82f);
-            fieldLabeled(table, "delay ", delaySec, v -> delaySec = v, 90f);
             table.row();
-            fieldLabeled(table, " spread ", inaccuracy, v -> inaccuracy = v, 90f);
             fieldLabeled(table, " shield ", shield, v -> shield = v, 70);
             fieldLabeled(table, " status ", status, v -> status = v, 100);
             TextButton statusPick = new TextButton("pick", Styles.logict);
@@ -1304,7 +1349,7 @@ public final class ActionStatements{
             fieldLabeled(table, " count ", spawnerCount, v -> spawnerCount = v, 72f);
             fieldLabeled(table, " IntervalSec ", spawnerIntervalSec, v -> spawnerIntervalSec = v, 72f);
             table.row();
-            fieldLabeled(table, " result ", out, v -> out = v, 90f);
+            fieldLabeled(table, " unitOut ", unitOut, v -> unitOut = v, 100f);
         }
 
         private arc.struct.Seq<UnitType> parseUnitList(String raw){
@@ -1376,14 +1421,14 @@ public final class ActionStatements{
             final LVar vt = builder.var(team);
             final LVar vx = builder.var(x);
             final LVar vy = builder.var(y);
-            final LVar vd = builder.var(delaySec);
-            final LVar vi = builder.var(inaccuracy);
             final LVar vShield = builder.var(shield);
             final LVar vStatus = builder.var(status);
             final LVar vStatusDur = builder.var(statusDuration);
             final LVar vSpawnerCount = builder.var(spawnerCount);
             final LVar vSpawnerInterval = builder.var(spawnerIntervalSec);
             final LVar vo = builder.var(out);
+            final String unitOutToken = unitOut == null ? "" : unitOut.trim();
+            final LVar vUnitOut = unitOutToken.isEmpty() || unitOutToken.equals("_") ? null : builder.var(unitOutToken);
             final String autoTimerKeyBase = "airborne-jumpin-" + Math.abs((units + "|" + team + "|" + x + "|" + y + "|" + shield + "|" + status + "|" + statusDuration + "|" + spawnerCount + "|" + spawnerIntervalSec).hashCode());
 
             return new ActionInstruction(vr, vo){
@@ -1392,20 +1437,27 @@ public final class ActionStatements{
                     Team teamVal = ActionLogicSupport.parseTeam(ActionLogicSupport.valueText(vt), Team.derelict);
                     float worldX = ActionLogicSupport.parseWorldCoord(vx, 0f, exec);
                     float worldY = ActionLogicSupport.parseWorldCoord(vy, 0f, exec);
-                    float delay = ActionLogicSupport.parseFloat(vd, 0f, exec) * Time.toSeconds;
-                    float spread = ActionLogicSupport.parseFloat(vi, 0f, exec);
                     float shieldVal = ActionLogicSupport.parseFloat(vShield, -1f, exec);
                     StatusEffect statusVal = ActionLogicSupport.parseStatusEffect(ActionLogicSupport.valueText(vStatus), null);
                     float statusDurVal = Math.max(0f, ActionLogicSupport.parseFloat(vStatusDur, 0f, exec));
                     int waves = Math.max(1, ActionLogicSupport.parseInt(vSpawnerCount, 1, exec));
                     float intervalSec = Math.max(0f, ActionLogicSupport.parseFloat(vSpawnerInterval, 0f, exec));
                     float intervalTicks = intervalSec * Time.toSeconds;
+                    if (vUnitOut != null) {
+                        vUnitOut.setobj(null);
+                    }
 
                     Seq<UnitType> types = parseUnitList(ActionLogicSupport.valueText(vus));
                     UnitType[] typeArray = new UnitType[Math.min(types.size, MAX_AIRBORNE_UNITS)];
                     for(int i = 0; i < typeArray.length; i++){
                         typeArray[i] = types.get(i);
                     }
+                    float maxHitSize = 8f;
+                    for (UnitType t : typeArray) {
+                        if (t != null) maxHitSize = Math.max(maxHitSize, t.hitSize);
+                    }
+                    float delay = autoDelaySecFromHitSize(maxHitSize) * Time.toSeconds;
+                    float spread = autoSpreadFromHitSize(maxHitSize);
 
                     Runnable spawnOne = () -> {
                         AirborneSpawner spawner = new AirborneSpawner();
@@ -1413,6 +1465,9 @@ public final class ActionStatements{
                         spawner.init(teamVal, new Vec2(worldX + Tmp.v1.x, worldY + Tmp.v1.y), 0f, delay, typeArray);
                         spawner.setShieldToApply(shieldVal);
                         spawner.setStatus(statusVal, statusDurVal);
+                        if (vUnitOut != null) {
+                            spawner.onSpawned(unit -> vUnitOut.setobj(unit));
+                        }
                         spawner.add();
                     };
 
@@ -1422,6 +1477,13 @@ public final class ActionStatements{
                             spawnOne.run();
                         }else{
                             Time.run(spawnDelayTicks, spawnOne);
+                        }
+                    }
+
+                    if (vUnitOut != null) {
+                        float waitTicks = delay + Math.max(0, waves - 1) * intervalTicks + 1f;
+                        if (waitTicks > 0f) {
+                            startTimed(waitTicks);
                         }
                     }
 
@@ -1437,8 +1499,8 @@ public final class ActionStatements{
         }
 
         @Override
-        public void write(StringBuilder builder){
-            writeCommon(builder, "wh-airborne-in", units, team, x, y, delaySec, inaccuracy, shield, status, statusDuration, spawnerCount, spawnerIntervalSec);
+        public void write(StringBuilder builder) {
+            writeCommon(builder, "wh-airborne-in", units, team, x, y, shield, status, statusDuration, spawnerCount, spawnerIntervalSec, unitOut);
         }
     }
 

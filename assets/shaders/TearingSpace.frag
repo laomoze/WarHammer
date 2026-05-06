@@ -1,6 +1,7 @@
 #define HIGHP
 
 #define HALFPI 3.1415926535897932384626433832795 / 2.0
+#define MAX_UV_SHIFT 0.10
 
 uniform sampler2D u_texture;
 
@@ -39,8 +40,8 @@ float interp(float a){
 }
 
 void main() {
-    vec2 c = v_texCoords.xy;
-    vec2 coords = (c * u_resolution) + u_campos;
+    vec2 uv = v_texCoords.xy;
+    vec2 coords = (uv * u_resolution) + u_campos;
 
     vec2 offset = vec2(0.0);
     for(int i = 0; i < u_blackholecount; ++i){
@@ -71,6 +72,10 @@ void main() {
         }
     }
 
+    vec2 maxShift = u_resolution * MAX_UV_SHIFT;
+    offset = clamp(offset, -maxShift, maxShift);
+
     coords += offset;
-    gl_FragColor = texture2D(u_texture, (coords - u_campos) / u_resolution);
+    vec2 sampleUv = clamp((coords - u_campos) / u_resolution, 0.0, 1.0);
+    gl_FragColor = texture2D(u_texture, sampleUv);
 }

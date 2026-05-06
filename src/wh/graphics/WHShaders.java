@@ -5,23 +5,32 @@
 
 package wh.graphics;
 
-import arc.*;
-import arc.files.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.graphics.gl.*;
-import arc.math.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.game.EventType.*;
-import mindustry.graphics.*;
-import mindustry.graphics.Shaders.*;
-import wh.*;
+import arc.Core;
+import arc.Events;
+import arc.files.Fi;
+import arc.graphics.Blending;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.graphics.gl.FrameBuffer;
+import arc.graphics.gl.Shader;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.scene.ui.layout.Scl;
+import arc.struct.FloatSeq;
+import arc.util.Log;
+import arc.util.Nullable;
+import arc.util.Time;
+import mindustry.Vars;
+import mindustry.game.EventType.Trigger;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.graphics.Shaders.LoadShader;
+import wh.WHVars;
 
 import static arc.Core.files;
-import static mindustry.Vars.*;
+import static mindustry.Vars.state;
+import static mindustry.Vars.tree;
 
 public class WHShaders{
     public static @Nullable HexagonalTextureShieldShader hexagonalShield;
@@ -321,6 +330,9 @@ public class WHShaders{
     public static class RectLensShader extends LoadShader{
         static final int rectMax = 64;
         static final int rectSize = 8;
+        static final float minSize = 0.001f;
+        static final float minStrength = 0.0001f;
+        static final int idxX = 0, idxY = 1, idxLength = 2, idxWidth = 3, idxRotation = 4, idxLife = 5, idxLifetime = 6, idxStrength = 7;
 
         //x y length width rotation life[1-0] lifetime strength
         protected FloatSeq rectData = new FloatSeq();
@@ -347,9 +359,9 @@ public class WHShaders{
 
                 var rectItems = rectData.items;
                 for(int i = 0; i < rectData.size; i += rectSize){
-                    rectItems[i + 5] -= Time.delta / rectItems[i + 6];
+                    rectItems[i + idxLife] -= Time.delta / rectItems[i + idxLifetime];
 
-                    if(rectItems[i + 5] <= 0f){
+                    if (rectItems[i + idxLife] <= 0f) {
                         if(rectData.size > rectSize){
                             System.arraycopy(rectItems, rectData.size - rectSize, rectItems, i, rectSize);
                         }
@@ -370,8 +382,6 @@ public class WHShaders{
         public void apply(){
             refreshCameraSnapshot();
 
-            int rectCount = Math.min(rectData.size / rectSize, rectMax);
-
             float screenW = Core.graphics.getWidth();
             float screenH = Core.graphics.getHeight();
             setUniformf("u_screen", screenW, screenH);
@@ -380,50 +390,12 @@ public class WHShaders{
             float camHeight = hasSnapshot ? snapHeight : Math.max(Core.camera.height, 0.0001f);
             float camLeft = hasSnapshot ? snapLeft : (Core.camera.position.x - camWidth / 2f);
             float camBottom = hasSnapshot ? snapBottom : (Core.camera.position.y - camHeight / 2f);
-            float invCamWidth = screenW / camWidth;
-            float invCamHeight = screenH / camHeight;
+            float worldToScreenX = screenW / camWidth;
+            float worldToScreenY = screenH / camHeight;
 
             rectUniformA.clear();
             rectUniformB.clear();
-            int rectPacked = 0;
-
-            if(rectCount > 0){
-                var rectItems = rectData.items;
-                for(int i = 0; i < rectCount; i++){
-                    int offset = i * rectSize;
-                    float life = Mathf.clamp(rectItems[offset + 5]);
-                    float worldLen = rectItems[offset + 2];
-                    float worldWid = rectItems[offset + 3];
-                    float localStrength = rectItems[offset + 7] * life;
-
-                    if(worldLen <= 0.001f || worldWid <= 0.001f || localStrength <= 0.0001f) continue;
-
-                    float sx = (rectItems[offset] - camLeft) * invCamWidth;
-                    float sy = (rectItems[offset + 1] - camBottom) * invCamHeight;
-                    float halfLen = worldLen * invCamWidth * 0.5f;
-                    float halfWid = worldWid * invCamHeight * 0.5f;
-
-                    float bound = Mathf.sqrt(halfLen * halfLen + halfWid * halfWid);
-                    if(sx + bound < 0f || sx - bound > screenW || sy + bound < 0f || sy - bound > screenH) continue;
-
-                    float rad = rectItems[offset + 4] * Mathf.degRad;
-                    float cos = Mathf.cos(rad), sin = Mathf.sin(rad);
-
-                    rectUniformA.add(
-                    sx, sy,
-                    halfLen,
-                    halfWid
-                    );
-                    rectUniformB.add(
-                    cos, sin,
-                    localStrength,
-                    0f
-                    );
-
-                    rectPacked++;
-                    if(rectPacked >= rectMax) break;
-                }
-            }
+            int rectPacked = packVisibleRects(screenW, screenH, camLeft, camBottom, worldToScreenX, worldToScreenY);
 
             setUniformi("u_rect_count", rectPacked);
             if(rectPacked <= 0) return;
@@ -450,6 +422,39 @@ public class WHShaders{
             }
         }
 
+        private int packVisibleRects(float screenW, float screenH, float camLeft, float camBottom, float worldToScreenX, float worldToScreenY) {
+            int maxRects = Math.min(rectData.size / rectSize, rectMax);
+            var rectItems = rectData.items;
+            int packed = 0;
+
+            for (int i = 0; i < maxRects; i++) {
+                int offset = i * rectSize;
+                float life = Mathf.clamp(rectItems[offset + idxLife]);
+                float worldLen = rectItems[offset + idxLength];
+                float worldWid = rectItems[offset + idxWidth];
+                float localStrength = rectItems[offset + idxStrength] * life;
+
+                if (worldLen <= minSize || worldWid <= minSize || localStrength <= minStrength) continue;
+
+                float sx = (rectItems[offset + idxX] - camLeft) * worldToScreenX;
+                float sy = (rectItems[offset + idxY] - camBottom) * worldToScreenY;
+                float halfLen = worldLen * worldToScreenX * 0.5f;
+                float halfWid = worldWid * worldToScreenY * 0.5f;
+
+                float bound = Mathf.sqrt(halfLen * halfLen + halfWid * halfWid);
+                if (sx + bound < 0f || sx - bound > screenW || sy + bound < 0f || sy - bound > screenH) continue;
+
+                float rad = rectItems[offset + idxRotation] * Mathf.degRad;
+                rectUniformA.add(sx, sy, halfLen, halfWid);
+                rectUniformB.add(Mathf.cos(rad), Mathf.sin(rad), localStrength, 0f);
+
+                packed++;
+                if (packed >= rectMax) break;
+            }
+
+            return packed;
+        }
+
         private void refreshCameraSnapshot(){
             if(Core.camera == null) return;
 
@@ -465,22 +470,22 @@ public class WHShaders{
         }
 
         public void addRect(float x, float y, float length, float width, float rotation, float lifetime, float strength){
-            float safeLength = Math.max(length, 0.001f);
-            float safeWidth = Math.max(width, 0.001f);
+            float safeLength = Math.max(length, minSize);
+            float safeWidth = Math.max(width, minSize);
             float safeLifetime = Math.max(lifetime, 1f);
             float safeStrength = Math.max(strength, 0f);
 
             if(rectData.size / rectSize >= rectMax){
                 var items = rectData.items;
                 int offset = (replaceCursor++ % rectMax) * rectSize;
-                items[offset] = x;
-                items[offset + 1] = y;
-                items[offset + 2] = safeLength;
-                items[offset + 3] = safeWidth;
-                items[offset + 4] = rotation;
-                items[offset + 5] = 1f;
-                items[offset + 6] = safeLifetime;
-                items[offset + 7] = safeStrength;
+                items[offset + idxX] = x;
+                items[offset + idxY] = y;
+                items[offset + idxLength] = safeLength;
+                items[offset + idxWidth] = safeWidth;
+                items[offset + idxRotation] = rotation;
+                items[offset + idxLife] = 1f;
+                items[offset + idxLifetime] = safeLifetime;
+                items[offset + idxStrength] = safeStrength;
             }else{
                 rectData.addAll(x, y, safeLength, safeWidth, rotation, 1f, safeLifetime, safeStrength);
             }

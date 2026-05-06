@@ -5,12 +5,12 @@
 
 package wh.content;
 
-import arc.graphics.*;
-import arc.struct.*;
-import mindustry.content.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import wh.graphics.*;
+import arc.graphics.Color;
+import arc.struct.Seq;
+import mindustry.content.Items;
+import mindustry.graphics.Pal;
+import mindustry.type.Item;
+import wh.graphics.WHPal;
 
 public final class WHItems{
     public static Item imperium;
@@ -40,7 +40,7 @@ public final class WHItems{
         }};
 
         oreSand = new Item("ore-sand", Color.valueOf("998165FF")){{
-            hidden = true;
+            hidden = false;
             hardness = 1;
             alwaysUnlocked = true;
         }};

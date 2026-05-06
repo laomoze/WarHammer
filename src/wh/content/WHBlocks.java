@@ -107,7 +107,7 @@ import static wh.graphics.WHPal.*;
 import static wh.util.WHUtils.rand;
 
 public final class WHBlocks {
-    public final static float FACTORY_PAD_33 = 3;
+    public final static float FACTORY_PAD_33 = 4;
 
     //factory
     public static Block
@@ -155,7 +155,7 @@ public final class WHBlocks {
             armorUnderflowGate, armorRouter,
             basicBridge, lowResistanceBridge,
             ceramiteConveyor, armorCoverStackBelt, stackBridge,
-            steelUnloader, trackDriver, trackDriverPoint;
+            basicUnloader, steelUnloader, trackDriver, trackDriverPoint;
 
     //logic
     public static Block
@@ -1720,7 +1720,7 @@ public final class WHBlocks {
 
             areaSize = 11;
             liquidBoostIntensity = 1.5f;
-            mineTime = 450;
+            mineTime = 500;
 
             tier = 4;
 
@@ -1735,7 +1735,7 @@ public final class WHBlocks {
         }};
 
         lavaDrill = new Drill("lava-drill") {{
-            requirements(Category.production, with(WHItems.manganeseSteel, 50, WHItems.uranium, 70, WHItems.cobaltNitride, 25));
+            requirements(Category.production, with(WHItems.manganeseSteel, 50, Items.carbide, 25, WHItems.cobaltNitride, 25));
             drillTime = 320;
             size = 4;
             drawRim = true;
@@ -1753,7 +1753,7 @@ public final class WHBlocks {
 
             liquidBoostIntensity = 2;
 
-            drillMultipliers.put(Items.coal, 1.5f);
+            drillMultipliers.put(Items.coal, 2);
             drillMultipliers.put(WHItems.cobalt, 1.2f);
             drillMultipliers.put(WHItems.chromium, 1.3f);
             drillMultipliers.put(WHItems.manganese, 1.4f);
@@ -1780,11 +1780,11 @@ public final class WHBlocks {
                 drawRim = true;
                 hasItems = hasPower = hasLiquids = true;
                 consumePower(5);
-                consumeLiquid(Liquids.water, 20 / 60f);
+                consumeLiquid(Liquids.water, 15 / 60f);
 
-                drillMultipliers.put(WHItems.cobalt, 1.2f);
-                drillMultipliers.put(WHItems.chromium, 1.3f);
-                drillMultipliers.put(WHItems.manganese, 1.4f);
+                drillMultipliers.put(WHItems.cobalt, 1.3f);
+                drillMultipliers.put(WHItems.chromium, 1.4f);
+                drillMultipliers.put(WHItems.manganese, 1.5f);
 
                 drillTime = 100;
                 drillEffect = new MultiEffect(Fx.mineImpact, Fx.drillSteam, Fx.mineImpactWave.wrap(Pal.redLight, 40f));
@@ -2315,6 +2315,16 @@ public final class WHBlocks {
             }
 
         };
+        basicUnloader = new UnloaderF("basic-unloader") {{
+
+            requirements(Category.distribution, with(Items.silicon, 10, WHItems.manganeseSteel, 10));
+            size = 1;
+            update = true;
+            hasItems = true;
+            health = 300;
+            speed = 8 / 60f;
+            researchCostMultiplier = 1;
+        }};
 
         steelUnloader = new UnloaderF("steel-unloader") {{
 
@@ -3304,7 +3314,7 @@ public final class WHBlocks {
                 health = 5000;
                 itemCapacity = 2000;
                 size = 4;
-                unitCapModifier = 10;
+                unitCapModifier = 15;
                 researchCostMultiplier = 0.3f;
             }
         };
@@ -3317,7 +3327,7 @@ public final class WHBlocks {
                 health = 12000;
                 itemCapacity = 15000;
                 size = 5;
-                unitCapModifier = 15;
+                unitCapModifier = 25;
                 researchCostMultiplier = 0.3f;
             }
         };
@@ -3331,7 +3341,7 @@ public final class WHBlocks {
                 health = 30000;
                 itemCapacity = 40000;
                 size = 6;
-                unitCapModifier = 15;
+                unitCapModifier = 25;
                 researchCostMultiplier = 0.3f;
             }
         };

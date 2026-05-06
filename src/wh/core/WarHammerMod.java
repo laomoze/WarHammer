@@ -21,7 +21,6 @@ import mindustry.gen.Icon;
 import mindustry.io.JsonIO;
 import mindustry.maps.Maps;
 import mindustry.maps.filters.GenerateFilter;
-import mindustry.maps.filters.WhTechFilter;
 import mindustry.mod.Mod;
 import mindustry.net.Net;
 import mindustry.ui.Styles;
@@ -35,6 +34,7 @@ import wh.entities.event.ui.ActionContext;
 import wh.gen.EntityRegister;
 import wh.graphics.MainRenderer;
 import wh.graphics.WHShaders;
+import wh.maps.filters.WhTechFilter;
 import wh.net.packet.AlertToastPacket;
 import wh.net.packet.WarnHUDPacket;
 

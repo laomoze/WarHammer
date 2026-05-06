@@ -219,21 +219,24 @@ public class MainRenderer{
 
     private void advancedDraw(){
         if(settings.getBool("pixelate") || holes.size >= 512){
-            holes.clear();
+            clearQueuedHoles();
             return;
         }
         Draw.draw(Layer.floor - 8, () -> {
             buffer.resize(graphics.getWidth(), graphics.getHeight());
-            if(!buffer.isBound()) buffer.begin();
+            if (!buffer.isBound()) buffer.begin(Color.clear);
         });
 
         Draw.draw(Layer.space + 16, () -> {
             int holeCount = holes.size;
             if(holeCount >= WHShaders.MaxCont) WHShaders.createHoleShader();
 
-            //Keep black core circles inside the source buffer so post effects don't overwrite them.
-            if(!buffer.isBound()) buffer.begin();
-            if(buffer.isBound()) buffer.end();
+            //The capture buffer must be bound from the floor pass; otherwise skip to avoid stale-frame artifacts.
+            if (!buffer.isBound()) {
+                clearQueuedHoles();
+                return;
+            }
+            buffer.end();
 
             buffer2.resize(graphics.getWidth(), graphics.getHeight());
             buffer2.begin(Color.clear);
@@ -286,6 +289,13 @@ public class MainRenderer{
             Draw.color();
             holes.clear();
         });
+    }
+
+    private void clearQueuedHoles() {
+        for (int i = 0; i < holes.size; i++) {
+            holePool.free(holes.get(i));
+        }
+        holes.clear();
     }
 
     private void addHole(float x, float y, float inRadius, float outRadius, float alpha, float strength){

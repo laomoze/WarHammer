@@ -1,30 +1,51 @@
 package wh.entities;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.*;
-import mindustry.ai.types.*;
-import mindustry.audio.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
-import mindustry.game.*;
+import arc.Events;
+import arc.func.Cons;
+import arc.graphics.Blending;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.Scaled;
+import arc.math.geom.Position;
+import arc.math.geom.Vec2;
+import arc.struct.Seq;
+import arc.util.Interval;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.ai.types.CommandAI;
+import mindustry.audio.SoundLoop;
+import mindustry.content.Fx;
+import mindustry.content.StatusEffects;
+import mindustry.content.UnitTypes;
+import mindustry.entities.Effect;
+import mindustry.entities.Units;
+import mindustry.entities.units.StatusEntry;
+import mindustry.game.EventType;
+import mindustry.game.Team;
 import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.io.*;
-import mindustry.type.*;
-import mindustry.ui.*;
-import wh.content.*;
-import wh.gen.*;
-import wh.graphics.*;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.graphics.Trail;
+import mindustry.io.TypeIO;
+import mindustry.type.StatusEffect;
+import mindustry.type.UnitType;
+import mindustry.ui.Fonts;
+import wh.content.WHFx;
+import wh.gen.EntityRegister;
+import wh.graphics.Drawn;
 
-import java.nio.*;
+import java.nio.FloatBuffer;
 
 import static mindustry.Vars.headless;
 import static wh.util.WHUtils.rand;
@@ -58,6 +79,7 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
     public SoundLoop soundLoop;
     public Unit toSpawn;
     public Vec2 commandPos = new Vec2(Float.NaN, Float.NaN);
+    public @Nullable Cons<Unit> onSpawned;
 
     public final Seq<Trail> trails = Seq.with(new Trail(30), new Trail(50), new Trail(70));
     public final Seq<Trail> trails2 = Seq.with(new Trail(40), new Trail(50), new Trail(70));
@@ -80,6 +102,7 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
         this.team = team;
         this.drawSize = type.hitSize;
         this.trailWidth = Mathf.clamp(drawSize / 15f, 1.25f, 4f);
+        this.onSpawned = null;
         set(pos);
         return this;
     }
@@ -115,6 +138,14 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
         return this;
     }
 
+    /**
+     * Optional callback when this spawner creates its unit.
+     */
+    public RiftSpawner onSpawned(@Nullable arc.func.Cons<Unit> callback) {
+        this.onSpawned = callback;
+        return this;
+    }
+
     @Override
     public void add(){
         super.add();
@@ -140,6 +171,7 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
     public void remove(){
         super.remove();
         effectTriggered = false;
+        onSpawned = null;
         Groups.sync.remove(this);
 
         if(Vars.net.client()){
@@ -383,6 +415,10 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
                 ai.commandPosition(commandPos);
                 toSpawn.controller(ai);
             }
+        }
+
+        if (onSpawned != null) {
+            onSpawned.get(toSpawn);
         }
 
         Events.fire(new EventType.UnitCreateEvent(toSpawn, null));

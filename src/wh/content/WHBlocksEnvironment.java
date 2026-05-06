@@ -39,7 +39,8 @@ public class WHBlocksEnvironment {
     public static Block quartzSandVent, cementVent, darkRockVent, radiationRockVent, scorchedEarthVent, chromiteVent, manganeseVent, cobaltVent;
     //Boulders/Props
     public static Block quartzSandBoulder, chromiteBoulder, cobaltBoulder, darkRockBoulder, manganeseBoulder, mineralSandFloorBoulder, radiationBoulder,
-            darkMineralSandBoulder, scorchedEarthBoulder, darkStoneCrystalCluster, quartzCrystalCluster;
+            darkMineralSandBoulder, scorchedEarthBoulder, darkStoneCrystalCluster, quartzCrystalCluster,
+            chromiteBlock, cobaltBlock, darkMineralSandBlock, manganeseBlock, mineralSandBlock;
 
 
     public static void load() {
@@ -492,6 +493,36 @@ public class WHBlocksEnvironment {
             customShadow = true;
             clipSize = 128f;
             quartzSand.asFloor().decoration = this;
+        }};
+
+        chromiteBlock = new TallBlock("chromite-block") {{
+            variants = 2;
+            customShadow = true;
+            clipSize = 128f;
+        }};
+
+        cobaltBlock = new TallBlock("cobalt-block") {{
+            variants = 2;
+            customShadow = true;
+            clipSize = 128f;
+        }};
+
+        darkMineralSandBlock = new TallBlock("dark-mineral-sand-block") {{
+            variants = 2;
+            customShadow = true;
+            clipSize = 128f;
+        }};
+
+        manganeseBlock = new TallBlock("manganese-block") {{
+            variants = 2;
+            customShadow = true;
+            clipSize = 128f;
+        }};
+
+        mineralSandBlock = new TallBlock("mineral-sand-block") {{
+            variants = 2;
+            customShadow = true;
+            clipSize = 128f;
         }};
 
 

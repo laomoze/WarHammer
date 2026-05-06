@@ -1,4 +1,4 @@
-package mindustry.maps.filters;
+package wh.maps.filters;
 
 import arc.Core;
 import arc.func.*;
@@ -14,6 +14,8 @@ import arc.util.Strings;
 import mindustry.content.Blocks;
 import mindustry.gen.Icon;
 import mindustry.gen.Iconc;
+import mindustry.maps.filters.FilterOption;
+import mindustry.maps.filters.GenerateFilter;
 import mindustry.ui.Styles;
 import mindustry.ui.dialogs.BaseDialog;
 import mindustry.world.Block;

@@ -12,14 +12,14 @@ import mindustry.type.UnitType;
 import static mindustry.content.TechTree.TechNode;
 import static mindustry.content.TechTree.nodeRoot;
 
-public final class KarvexTeachTree{
+public final class KarvexTeachTree {
     public static TechNode context = null;
 
-    private KarvexTeachTree(){
+    private KarvexTeachTree() {
     }
 
-    public static void load(){
-        if(WHPlanets.karvex == null) return;
+    public static void load() {
+        if (WHPlanets.karvex == null) return;
 
         applyKarvexPlanetToVanillaContent();
         applyKarvexUnlockTuning();
@@ -43,14 +43,14 @@ public final class KarvexTeachTree{
         extendSerpuloTechTree();
     }
 
-    private static void applyKarvexUnlockTuning(){
+    private static void applyKarvexUnlockTuning() {
         // Spike should not be pre-unlocked at campaign start.
-        if(WHBlocks.Spike != null){
+        if (WHBlocks.Spike != null) {
             WHBlocks.Spike.alwaysUnlocked = false;
         }
     }
 
-    private static void applyKarvexPlanetToVanillaContent(){
+    private static void applyKarvexPlanetToVanillaContent() {
         addPlanetTab(Items.coal);
         addPlanetTab(Items.graphite);
         addPlanetTab(Items.tungsten);
@@ -65,13 +65,13 @@ public final class KarvexTeachTree{
         addPlanetTab(Liquids.cryofluid);
     }
 
-    private static void addPlanetTab(UnlockableContent content){
-        if(content == null || WHPlanets.karvex == null) return;
+    private static void addPlanetTab(UnlockableContent content) {
+        if (content == null || WHPlanets.karvex == null) return;
         content.shownPlanets.add(WHPlanets.karvex);
         content.databaseTabs.add(WHPlanets.karvex);
     }
 
-    private static void buildItemBranch(){
+    private static void buildItemBranch() {
         // ores
         nodeProduce(WHItems.manganese, () -> {
             nodeProduce(WHItems.oreSand, () -> {
@@ -156,11 +156,11 @@ public final class KarvexTeachTree{
         });
     }
 
-    private static void extendSerpuloTechTree(){
-        if(Planets.serpulo == null || Planets.serpulo.techTree == null) return;
+    private static void extendSerpuloTechTree() {
+        if (Planets.serpulo == null || Planets.serpulo.techTree == null) return;
 
         // Add mod assembler after Serpulo reconstructor chain.
-        if(WHBlocks.serpuloT6Assembler != null && !hasChildNode(Blocks.tetrativeReconstructor, WHBlocks.serpuloT6Assembler)){
+        if (WHBlocks.serpuloT6Assembler != null && !hasChildNode(Blocks.tetrativeReconstructor, WHBlocks.serpuloT6Assembler)) {
             vanillaNode(Blocks.tetrativeReconstructor, () -> node(WHBlocks.serpuloT6Assembler, () -> {
             }));
         }
@@ -175,26 +175,26 @@ public final class KarvexTeachTree{
         addSerpuloT6UnitAfter(UnitTypes.navanax, WHUnitTypes.navySGreen6);
     }
 
-    private static void addSerpuloT6UnitAfter(UnitType parent, UnitType child){
-        if(parent == null || child == null || hasChildNode(parent, child)) return;
+    private static void addSerpuloT6UnitAfter(UnitType parent, UnitType child) {
+        if (parent == null || child == null || hasChildNode(parent, child)) return;
 
         vanillaNode(parent, () -> {
-            if(WHBlocks.serpuloT6Assembler == null){
+            if (WHBlocks.serpuloT6Assembler == null) {
                 node(child, () -> {
                 });
-            }else{
+            } else {
                 node(child, Seq.with(new Research(WHBlocks.serpuloT6Assembler)), () -> {
                 });
             }
         });
     }
 
-    private static boolean hasChildNode(UnlockableContent parent, UnlockableContent child){
+    private static boolean hasChildNode(UnlockableContent parent, UnlockableContent child) {
         TechNode parentNode = TechTree.all.find(t -> t.content == parent);
         return parentNode != null && parentNode.children.contains(n -> n.content == child);
     }
 
-    private static void buildLogisticsBranch(){
+    private static void buildLogisticsBranch() {
         node(WHBlocks.basicDust, () -> {
             node(WHBlocks.armorJunction, () -> {
                 node(WHBlocks.armorRouter, () -> {
@@ -222,21 +222,22 @@ public final class KarvexTeachTree{
                 });
 
             });
-
-            node(WHBlocks.steelUnloader, () -> {
-                node(WHBlocks.armoredContainer, () -> {
-                    node(WHBlocks.armoredVault, () -> {
+            node(WHBlocks.basicUnloader, () -> {
+                node(WHBlocks.steelUnloader, () -> {
+                    node(WHBlocks.armoredContainer, () -> {
+                        node(WHBlocks.armoredVault, () -> {
+                        });
                     });
-                });
-                node(WHBlocks.landingPad, () -> {
-                });
-                node(WHBlocks.launchPad, () -> {
+                    node(WHBlocks.landingPad, () -> {
+                    });
+                    node(WHBlocks.launchPad, () -> {
+                    });
                 });
             });
         });
     }
 
-    private static void buildLiquidBranch(){
+    private static void buildLiquidBranch() {
         node(WHBlocks.lightConduit, () -> {
             node(WHBlocks.armorFluidRouter, () -> {
                 node(WHBlocks.armorFluidJunction, () -> {
@@ -260,7 +261,7 @@ public final class KarvexTeachTree{
         });
     }
 
-    private static void buildHeatBranch(){
+    private static void buildHeatBranch() {
         node(WHBlocks.combustionHeater, () -> {
             node(WHBlocks.slagHeatMaker, () -> {
                 node(WHBlocks.decayHeater, () -> {
@@ -283,7 +284,7 @@ public final class KarvexTeachTree{
         });
     }
 
-    private static void buildPayloadBranch(){
+    private static void buildPayloadBranch() {
         node(WHBlocks.armorPayloadConveyor, () -> {
             node(WHBlocks.armorPayloadRouter, () -> {
             });
@@ -294,7 +295,7 @@ public final class KarvexTeachTree{
         });
     }
 
-    private static void buildLogicBranch(){
+    private static void buildLogicBranch() {
         node(WHBlocks.holographyMessage, () -> {
             node(WHBlocks.switchBlock, () -> {
                 node(WHBlocks.logicDisplay, () -> {
@@ -315,7 +316,7 @@ public final class KarvexTeachTree{
         });
     }
 
-    private static void buildProductionBranch(){
+    private static void buildProductionBranch() {
         node(WHBlocks.electronicPneumaticDrill, () -> {
             // mining line
             node(WHBlocks.MechanicalQuarry, () -> {
@@ -432,7 +433,7 @@ public final class KarvexTeachTree{
         });
     }
 
-    private static void buildPowerBranch(){
+    private static void buildPowerBranch() {
         node(WHBlocks.powerNode, () -> {
             node(WHBlocks.t2PowerNode, () -> {
                 node(WHBlocks.compositeNode, () -> {
@@ -470,7 +471,7 @@ public final class KarvexTeachTree{
         });
     }
 
-    private static void buildDefenseBranch(){
+    private static void buildDefenseBranch() {
         node(WHBlocks.Spike, () -> {
 
 
@@ -521,12 +522,12 @@ public final class KarvexTeachTree{
                     node(WHBlocks.SSWord, () -> {
                         node(WHBlocks.Blade, () -> {
                             node(WHBlocks.Prevent, () ->
-                            node(WHBlocks.Crumble, () -> {
-                                node(WHBlocks.Collapse, () -> {
-                                });
-                                node(WHBlocks.Reckoning, () -> {
-                                });
-                            }));
+                                    node(WHBlocks.Crumble, () -> {
+                                        node(WHBlocks.Collapse, () -> {
+                                        });
+                                        node(WHBlocks.Reckoning, () -> {
+                                        });
+                                    }));
                             node(WHBlocks.Deflection, () -> {
                             });
                             node(WHBlocks.RoaringFlame, () -> {
@@ -572,7 +573,7 @@ public final class KarvexTeachTree{
         });
     }
 
-    private static void buildUnitBranch(){
+    private static void buildUnitBranch() {
         node(WHBlocks.groundFactory, () -> {
             // ground line
             node(WHUnitTypes.M1, () -> {
@@ -698,29 +699,29 @@ public final class KarvexTeachTree{
         });
     }
 
-    public static void vanillaNode(UnlockableContent content, Runnable children){
+    public static void vanillaNode(UnlockableContent content, Runnable children) {
         context = TechTree.all.find(t -> t.content == content);
         children.run();
     }
 
-    public static void removeNode(UnlockableContent content){
+    public static void removeNode(UnlockableContent content) {
         context = TechTree.all.find(t -> t.content == content);
-        if(context != null){
+        if (context != null) {
             context.remove();
         }
     }
 
-    public static void node(UnlockableContent content, Runnable children){
+    public static void node(UnlockableContent content, Runnable children) {
         node(content, content.researchRequirements(), children);
     }
 
-    public static void node(UnlockableContent content, ItemStack[] requirements, Runnable children){
+    public static void node(UnlockableContent content, ItemStack[] requirements, Runnable children) {
         node(content, requirements, null, children);
     }
 
-    public static void node(UnlockableContent content, ItemStack[] requirements, Seq<Objective> objectives, Runnable children){
+    public static void node(UnlockableContent content, ItemStack[] requirements, Seq<Objective> objectives, Runnable children) {
         TechNode node = new TechNode(context, content, requirements);
-        if(objectives != null) node.objectives.addAll(objectives);
+        if (objectives != null) node.objectives.addAll(objectives);
 
         TechNode prev = context;
         context = node;
@@ -728,15 +729,15 @@ public final class KarvexTeachTree{
         context = prev;
     }
 
-    public static void node(UnlockableContent content, Seq<Objective> objectives, Runnable children){
+    public static void node(UnlockableContent content, Seq<Objective> objectives, Runnable children) {
         node(content, content.researchRequirements(), objectives, children);
     }
 
-    public static void nodeProduce(UnlockableContent content, Seq<Objective> objectives, Runnable children){
+    public static void nodeProduce(UnlockableContent content, Seq<Objective> objectives, Runnable children) {
         node(content, content.researchRequirements(), objectives.add(new Produce(content)), children);
     }
 
-    public static void nodeProduce(UnlockableContent content, Runnable children){
+    public static void nodeProduce(UnlockableContent content, Runnable children) {
         nodeProduce(content, new Seq<>(), children);
     }
 }
