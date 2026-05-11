@@ -7,17 +7,21 @@ import arc.math.Mathf;
 import arc.math.geom.Vec3;
 import arc.struct.Seq;
 import arc.util.Nullable;
+import arc.util.Time;
 import arc.util.noise.Ridged;
 import arc.util.noise.Simplex;
 import mindustry.Vars;
 import mindustry.content.Blocks;
+import mindustry.game.Rules;
 import mindustry.game.Schematic;
 import mindustry.game.Schematics;
 import mindustry.mod.Mods;
 import mindustry.type.Sector;
+import mindustry.type.Weather.WeatherEntry;
 import mindustry.world.Block;
 import mindustry.world.TileGen;
 import wh.content.WHBlocksEnvironment;
+import wh.content.WHWeathers;
 import wh.core.WarHammerMod;
 import wh.pipelinePlanet.core.PassRunner;
 import wh.pipelinePlanet.core.PipelinePlanetGenerator;
@@ -106,6 +110,30 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
             return Schematics.read(file);
         }catch(Throwable ignored){
             return null;
+        }
+    }
+
+    @Override
+    public void addWeather(Sector sector, Rules rules) {
+        super.addWeather(sector, rules);
+        if (WHWeathers.acidRain != null && !rules.weather.contains(e -> e.weather == WHWeathers.acidRain)) {
+            WeatherEntry acid = new WeatherEntry(
+                    WHWeathers.acidRain,
+                    2f * Time.toMinutes, 4f * Time.toMinutes,
+                    2f * Time.toMinutes, 4f * Time.toMinutes
+            );
+            acid.intensity = 1f;
+            rules.weather.add(acid);
+        }
+
+        if (WHWeathers.radiationSandstorm != null && !rules.weather.contains(e -> e.weather == WHWeathers.radiationSandstorm)) {
+            WeatherEntry radiation = new WeatherEntry(
+                    WHWeathers.radiationSandstorm,
+                    4f * Time.toMinutes, 8f * Time.toMinutes,
+                    2f * Time.toMinutes, 4f * Time.toMinutes
+            );
+            radiation.intensity = 0.95f;
+            rules.weather.add(radiation);
         }
     }
 

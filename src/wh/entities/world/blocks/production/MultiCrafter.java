@@ -1,32 +1,50 @@
 package wh.entities.world.blocks.production;
 
-import arc.*;
-import arc.func.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.style.*;
-import arc.scene.ui.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.content.*;
-import mindustry.core.*;
-import mindustry.ctype.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.logic.*;
+import arc.Core;
+import arc.func.Boolf;
+import arc.func.Func;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.scene.style.TextureRegionDrawable;
+import arc.scene.ui.ImageButton;
+import arc.scene.ui.ScrollPane;
+import arc.scene.ui.layout.Table;
+import arc.struct.EnumSet;
+import arc.struct.ObjectMap;
+import arc.struct.OrderedMap;
+import arc.struct.Seq;
+import arc.util.Eachable;
+import arc.util.Nullable;
+import arc.util.Structs;
+import arc.util.Time;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.content.Fx;
+import mindustry.core.UI;
+import mindustry.ctype.UnlockableContent;
+import mindustry.entities.Effect;
+import mindustry.entities.units.BuildPlan;
+import mindustry.gen.Building;
+import mindustry.gen.Icon;
+import mindustry.gen.Sounds;
+import mindustry.graphics.Pal;
+import mindustry.logic.LAccess;
 import mindustry.type.*;
-import mindustry.ui.*;
-import mindustry.world.*;
+import mindustry.ui.Bar;
+import mindustry.ui.Styles;
+import mindustry.world.blocks.heat.HeatBlock;
+import mindustry.world.blocks.heat.HeatConsumer;
+import mindustry.world.blocks.payloads.Payload;
+import mindustry.world.blocks.payloads.PayloadBlock;
 import mindustry.world.consumers.*;
-import mindustry.world.draw.*;
+import mindustry.world.draw.DrawBlock;
+import mindustry.world.draw.DrawDefault;
 import mindustry.world.meta.*;
-import wh.ui.*;
+import wh.ui.UIUtils;
 
 import static mindustry.Vars.tilesize;
 
@@ -37,13 +55,13 @@ import static mindustry.Vars.tilesize;
  * @see CraftPlan craftPlan type
  * @since 1.0.6
  */
-public class MultiCrafter extends Block {
+public class MultiCrafter extends PayloadBlock {
     /** Recipe {@link CraftPlan}. */
     public Seq<CraftPlan> craftPlans = new Seq<>();
     /** If {@link MultiCrafter#useBlockDrawer} is false, use the drawer in the recipe for the block. */
     public DrawBlock drawer = new DrawDefault();
     /** Do you want to use the {@link MultiCrafter#drawer} inside the block itself. */
-    public boolean useBlockDrawer = true;
+    public boolean useBlockDrawer = false;
     /** Whether multiple liquid outputs require different directions, please refer to {@link CraftPlan#liquidOutputDirections} to determine the value of this parameter. */
     public boolean hasDoubleOutput = false;
     /** Automatically add bar to liquid. */
@@ -52,6 +70,14 @@ public class MultiCrafter extends Block {
     public boolean useLiquidTable = true;
     /** How many formulas can be displayed at most once. */
     public int maxList = 4;
+    /**
+     * Maximum payload size accepted by this block.
+     */
+    public float maxPayloadSize = 4f;
+    /**
+     * Maximum number of payload entries stored for recipes.
+     */
+    public int payloadCapacity = 20;
 
     public MultiCrafter(String name) {
         super(name);
@@ -95,6 +121,10 @@ public class MultiCrafter extends Block {
                 hasPower = true;
                 consumesPower = true;
             }
+            if (craftPlan.consPayload != null) {
+                acceptsPayload = true;
+                acceptsUnitPayloads = true;
+            }
             if (craftPlan.powerProduction > 0) {
                 hasPower = true;
                 outputsPower = true;
@@ -120,6 +150,17 @@ public class MultiCrafter extends Block {
                             Core.bundle.get("bar.power"),
                     () -> Pal.powerBar,
                     () -> Mathf.zero(consPower.requestedPower(entity)) && entity.power.graph.getPowerProduced() + entity.power.graph.getBatteryStored() > 0f ? 1f : entity.power.status)
+            );
+        }
+
+        if (craftPlans.contains(c -> c.heatRequirement > 0f)) {
+            addBar("heat", (MultiCrafterBuild entity) -> new Bar(
+                    "bar.heat",
+                    Pal.lightOrange,
+                    () -> {
+                        float req = entity.heatRequirement();
+                        return req <= 0f ? 1f : Mathf.clamp(entity.heat / req, 0f, 1f);
+                    })
             );
         }
 
@@ -189,11 +230,14 @@ public class MultiCrafter extends Block {
         return useBlockDrawer ? drawer.icons(this) : craftPlans.any() ? craftPlans.get(0).drawer.icons(this) : super.icons();
     }
 
-    public class MultiCrafterBuild extends Building {
+    public class MultiCrafterBuild extends PayloadBlockBuild<Payload> implements HeatBlock, HeatConsumer {
         public CraftPlan craftPlan = craftPlans.any() ? craftPlans.get(0) : null;
         public float progress;
         public float totalProgress;
         public float warmup;
+        public float heat;
+        public float[] sideHeat = new float[4];
+        public PayloadSeq payloads = new PayloadSeq();
 
         public int[] configs = {0, 0};
         public int lastRotation = -1;
@@ -237,6 +281,44 @@ public class MultiCrafter extends Block {
 
             return consumePower.usage;
 
+        }
+
+        public float heatEfficiency() {
+            heat = calculateHeat(sideHeat);
+            if (craftPlan == null || craftPlan.heatRequirement <= 0f) return 1f;
+            return Mathf.clamp(heat / craftPlan.heatRequirement, 0f, Math.max(craftPlan.maxHeatEfficiency, 0f));
+        }
+
+        @Override
+        public float efficiencyScale() {
+            return heatEfficiency();
+        }
+
+        @Override
+        public float[] sideHeat() {
+            return sideHeat;
+        }
+
+        @Override
+        public float heatRequirement() {
+            return craftPlan == null ? 0f : craftPlan.heatRequirement;
+        }
+
+        @Override
+        public float heat() {
+            if (craftPlan == null || craftPlan.heatOutput <= 0f) return 0f;
+            return craftPlan.heatOutput * warmup;
+        }
+
+        @Override
+        public float heatFrac() {
+            if (craftPlan == null || craftPlan.heatOutput <= 0f) return 0f;
+            return Mathf.clamp(heat() / craftPlan.heatOutput, 0f, 1f);
+        }
+
+        @Override
+        public PayloadSeq getPayloads() {
+            return payloads;
         }
 
         @Override
@@ -374,6 +456,31 @@ public class MultiCrafter extends Block {
         public boolean acceptLiquid(Building source, Liquid liquid) {
             if (craftPlan == null) return false;
             return block.hasLiquids && craftPlan.getConsumeLiquid(liquid);
+        }
+
+        @Override
+        public boolean acceptPayload(Building source, Payload payload) {
+            if (craftPlan == null || payload == null) return false;
+            if (!block.acceptsPayload || !payload.fits(maxPayloadSize)) return false;
+
+            UnlockableContent content = payload.content();
+            if (content == null) return false;
+
+            int need = craftPlan.payloadNeed(content, this);
+            return need > 0 && payloads.get(content) < need && payloads.total() < payloadCapacity;
+        }
+
+        @Override
+        public void handlePayload(Building source, Payload payload) {
+            if (craftPlan == null || payload == null) return;
+
+            UnlockableContent content = payload.content();
+            if (content == null) return;
+
+            int need = craftPlan.payloadNeed(content, this);
+            if (need <= 0 || payloads.get(content) >= need || payloads.total() >= payloadCapacity) return;
+
+            payloads.add(content);
         }
 
         @Override
@@ -640,12 +747,18 @@ public class MultiCrafter extends Block {
         }
 
         @Override
+        public byte version() {
+            return 1;
+        }
+
+        @Override
         public void write(Writes write) {
             super.write(write);
             write.f(progress);
             write.f(warmup);
             write.i(lastRotation);
             write.i(craftPlan == null || !craftPlans.contains(craftPlan) ? -1 : craftPlans.indexOf(craftPlan));
+            payloads.write(write);
         }
 
         @Override
@@ -658,6 +771,11 @@ public class MultiCrafter extends Block {
             craftPlan = i == -1 ? null : craftPlans.get(i);
             configs[0] = rotation;
             configs[1] = i;
+            if (revision >= 1) {
+                payloads.read(read);
+            } else {
+                payloads.clear();
+            }
         }
     }
 
@@ -666,6 +784,10 @@ public class MultiCrafter extends Block {
         public Consume[] consumers = {}, optionalConsumers = {}, nonOptionalConsumers = {}, updateConsumers = {};
         /** The single power consumer, if applicable. */
         public @Nullable ConsumePower consPower = null;
+        /**
+         * The payload consumer, if applicable.
+         */
+        public @Nullable ConsumePayloads consPayload = null;
 
         public float craftTime = 60f;
         /** Set to true if this formula has any consumers in its array. */
@@ -702,6 +824,10 @@ public class MultiCrafter extends Block {
         /** Consumption filters. */
         public ObjectMap<Item, Boolean> itemFilter = new ObjectMap<>();
         public ObjectMap<Liquid, Boolean> liquidFilter = new ObjectMap<>();
+        /**
+         * Payload requirements for this recipe.
+         */
+        public Seq<PayloadStack> payloadRequirements = new Seq<>();
 
         protected MultiCrafter owner = null;
 
@@ -780,6 +906,10 @@ public class MultiCrafter extends Block {
             if (!consumeBuilder.contains(c -> c instanceof ConsumePower)) {
                 consPower = null;
             }
+            if (!consumeBuilder.contains(c -> c instanceof ConsumePayloads)) {
+                consPayload = null;
+                payloadRequirements.clear();
+            }
         }
 
         public boolean getConsumeItem(Item item) {
@@ -788,6 +918,18 @@ public class MultiCrafter extends Block {
 
         public boolean getConsumeLiquid(Liquid liquid) {
             return liquidFilter.containsKey(liquid) && liquidFilter.get(liquid);
+        }
+
+        public int payloadNeed(UnlockableContent content, Building build) {
+            if (content == null || consPayload == null || payloadRequirements.isEmpty()) return 0;
+            float mult = consPayload.multiplier.get(build);
+            int need = 0;
+            for (PayloadStack stack : payloadRequirements) {
+                if (stack.item == content) {
+                    need += Math.round(stack.amount * mult);
+                }
+            }
+            return need;
         }
 
         public void consumeLiquid(Liquid liquid, float amount) {
@@ -802,6 +944,26 @@ public class MultiCrafter extends Block {
 
         public void consumePower(float powerPerTick) {
             consume(new ConsumePower(powerPerTick, 0.0f, false));
+        }
+
+        public void consumePayload(UnlockableContent content) {
+            consumePayload(content, 1);
+        }
+
+        public void consumePayload(UnlockableContent content, int amount) {
+            consumePayloads(PayloadStack.with(content, amount));
+        }
+
+        public void consumePayloads(PayloadStack... payloads) {
+            payloadRequirements.clear();
+            payloadRequirements.addAll(payloads);
+            consume(new ConsumePayloads(payloadRequirements));
+        }
+
+        public void consumePayloads(Seq<PayloadStack> payloads) {
+            payloadRequirements.clear();
+            payloadRequirements.addAll(payloads);
+            consume(new ConsumePayloads(payloadRequirements));
         }
 
         public void consumeItem(Item item) {
@@ -825,6 +987,12 @@ public class MultiCrafter extends Block {
             if (consume instanceof ConsumePower cons) {
                 consumeBuilder.removeAll(b -> b instanceof ConsumePower);
                 consPower = cons;
+            }
+            if (consume instanceof ConsumePayloads cons) {
+                consumeBuilder.removeAll(b -> b instanceof ConsumePayloads);
+                consPayload = cons;
+                payloadRequirements.clear();
+                payloadRequirements.addAll(cons.payloads);
             }
             consumeBuilder.add(consume);
         }

@@ -101,6 +101,7 @@ public class WHBullets{
 
     public static BulletType AutoGunGraphite;
     public static BulletType AutoGunChromium;
+    public static BulletType AutoGunManganeseSteel;
     public static BulletType AutoGunCombustible;
     public static BulletType AutoGunArmorAlloy;
 
@@ -1180,8 +1181,8 @@ public class WHBullets{
             }};
         }};
 
-        CrushBulletPlastanium = new FlakBulletType(6.5f, 30){{
-            reloadMultiplier = 1.15f;
+        CrushBulletPlastanium = new FlakBulletType(6.5f, 45) {{
+            reloadMultiplier = 1.5f;
             ammoMultiplier = 3;
             lifetime = 180f / speed;
             width = 6;
@@ -1192,13 +1193,13 @@ public class WHBullets{
             trailSinMag = 0.1f;
             hitColor = trailColor = backColor = Pal.plastaniumBack;
             frontColor = Pal.plastaniumFront;
-            damage = splashDamage = 45f;
-            explodeRange = splashDamageRadius = 28;
+            splashDamage = 45f;
+            explodeRange = splashDamageRadius = 32;
             shieldDamageMultiplier = 0.5f;
             shootEffect = Fx.shootSmallColor;
             hitEffect = new MultiEffect(Fx.plasticExplosion, Fx.shockwave);
             collidesGround = true;
-            fragBullet = new BasicBulletType(2.5f, 10, "bullet"){{
+            fragBullet = new CritBulletType(2.5f, 20, "bullet") {{
                 width = 10f;
                 height = 12f;
                 shrinkY = 1f;
@@ -1240,7 +1241,7 @@ public class WHBullets{
             }
         };
 
-        AutoGunChromium = new CritBulletType(8.5f, 40){
+        AutoGunChromium = new CritBulletType(8.5f, 35) {
             {
                 ammoMultiplier = 2;
                 critChance = 0.1f;
@@ -1257,7 +1258,7 @@ public class WHBullets{
                 homingPower = 0.01f;
                 homingRange = 20;
                 splashDamageRadius = 20;
-                splashDamage = 42;
+                splashDamage = 45;
                 trailChance = 0.1f;
                 critEffect = WHFx.square(20, Items.silicon.color, 1, 10, 3f);
                 shootEffect = Fx.shootBig;
@@ -1276,14 +1277,52 @@ public class WHBullets{
             }
         };
 
+        AutoGunManganeseSteel = new CritBulletType(8.5f, 40) {
+            {
+                ammoMultiplier = 3;
+                critChance = 0.18f;
+                critMultiplier = 1.4f;
+                rangeChange = 12f;
+                lifetime = (240 + 12) / 8.5f;
+                backColor = hitColor = trailColor = WHItems.chromium.color;
+                width = 3;
+                height = width * 4.5f;
+                trailWidth = 2f;
+                trailLength = 5;
+                trailSinScl = 12f;
+                trailSinMag = 0.08f;
+                homingDelay = 15;
+                homingPower = 0.01f;
+                homingRange = 20;
+                trailChance = 0.1f;
+                splashDamageRadius = 32;
+                splashDamage = 50;
+                critEffect = WHFx.square(20, Items.silicon.color, 1, 10, 3f);
+                shootEffect = Fx.shootBig;
+                smokeEffect = Fx.shootBigSmoke;
+                despawnEffect = hitEffect = Fx.explosion;
+            }
+
+            @Override
+            public void draw(Bullet b) {
+                Draw.color(backColor);
+                Lines.stroke(width);
+                Lines.lineAngleCenter(b.x, b.y, b.rotation(), height);
+                Draw.color(frontColor);
+                Lines.lineAngleCenter(b.x, b.y, b.rotation(), height / 2f);
+                Draw.reset();
+            }
+        };
+
         AutoGunCombustible = new CritBulletType(8.5f, 70){
             {
                 ammoMultiplier = 6f;
                 reloadMultiplier = 2;
                 rangeChange = 16f;
-                critChance = 0.2f;
-                critMultiplier = 1.5f;
+                critChance = 0.25f;
+                critMultiplier = 1.7f;
                 knockback = 0.8f;
+                armorMultiplier = 0.5f;
                 lifetime = 240 / 8.5f;
                 backColor = hitColor = trailColor = Items.pyratite.color;
                 width = 3;
@@ -1316,7 +1355,8 @@ public class WHBullets{
             {
                 ammoMultiplier = 4f;
                 reloadMultiplier = 1.5f;
-                critChance = 0.1f;
+                armorMultiplier = 0.5f;
+                critChance = 0.2f;
                 critMultiplier = 2f;
                 knockback = 0.8f;
                 lifetime = 240 / 8.5f;

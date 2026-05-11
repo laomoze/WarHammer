@@ -1,31 +1,50 @@
 package wh.entities.world.blocks.production;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.graphics.gl.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.core.*;
-import mindustry.entities.*;
-import mindustry.entities.effect.*;
-import mindustry.entities.units.*;
-import mindustry.game.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import mindustry.world.*;
+import arc.Core;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.graphics.g2d.TextureRegion;
+import arc.graphics.gl.FrameBuffer;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
+import arc.math.geom.Rect;
+import arc.math.geom.Vec2;
+import arc.struct.EnumSet;
+import arc.struct.ObjectFloatMap;
+import arc.struct.Seq;
+import arc.util.Eachable;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.content.Blocks;
+import mindustry.content.Fx;
+import mindustry.core.World;
+import mindustry.entities.Effect;
+import mindustry.entities.effect.MultiEffect;
+import mindustry.entities.units.BuildPlan;
+import mindustry.game.Team;
+import mindustry.gen.Building;
+import mindustry.gen.Sounds;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.type.Item;
+import mindustry.world.Block;
+import mindustry.world.Tile;
 import mindustry.world.meta.*;
-import wh.util.*;
+import wh.util.WorldDef;
 
-import static arc.Core.*;
+import static arc.Core.atlas;
+import static arc.Core.graphics;
 import static arc.graphics.g2d.Draw.color;
-import static arc.math.Mathf.*;
+import static arc.math.Mathf.clamp;
+import static arc.math.Mathf.rand;
 import static mindustry.Vars.*;
 
 public class Quarry extends Block {
@@ -54,6 +73,11 @@ public class Quarry extends Block {
     public int tier;
 
     protected float fulls = areaSize * tilesize / 2f;
+
+    /**
+     * Multipliers of drill speed for each item. Defaults to 1.
+     */
+    public ObjectFloatMap<Item> drillMultipliers = new ObjectFloatMap<>();
 
     private FrameBuffer shadow = null;
 
@@ -315,6 +339,21 @@ public class Quarry extends Block {
                                 Fx.itemTransfer.at(dx + Mathf.range(1f), dy + Mathf.range(1f), 0, tileItem.color, new Vec2(drillX + mx, drillY + my));
                                 Fx.itemTransfer.at(drillX + Mathf.range(1f) + mx, drillY + Mathf.range(1f) + my, 0, tileItem.color, new Vec2(x, y));
                                 offload(tileItem);
+                                float mul = drillMultipliers.get(tileItem, 1f);
+                               /* if(mul < 1f){
+                                    if(Mathf.chance(mul * 100f)){
+                                        offload(tileItem);
+                                    }
+                                }else{
+                                    int extra = Mathf.floor(mul);
+                                    float frac = mul - extra;
+                                    for(int n = 0; n < extra; n++){
+                                        if(items.total() < itemCapacity) offload(tileItem);
+                                    }
+                                    if(items.total() < itemCapacity && Mathf.chance(frac * 100f)){
+                                        offload(tileItem);
+                                    }
+                                }*/
                             }
                         }
                     }
@@ -385,10 +424,8 @@ public class Quarry extends Block {
                         Point2 p1 = Geometry.d8edge(i);
                         Point2 p2 = Geometry.d8edge(i + 1);
                         Lines.line(armRegion,
-                                mx + fulls * p1.x,
-                                my + fulls * p1.y,
-                                mx + fulls * p2.x,
-                                my + fulls * p2.y,
+                                mx + fulls * p1.x, my + fulls * p1.y,
+                                mx + fulls * p2.x, my + fulls * p2.y,
                                 false
                         );
                     }
@@ -419,19 +456,13 @@ public class Quarry extends Block {
                         false
                 );*/
                 Lines.line(armRegion,
-                        mx + drillX,
-                        my + fulls,
-                        mx + drillX,
-                        my - fulls,
-                        false
-                );
+                        mx + drillX, my + fulls,
+                        mx + drillX, my - fulls,
+                        false);
                 Lines.line(armRegion,
-                        mx + fulls,
-                        my + drillY,
-                        mx - fulls,
-                        my + drillY,
-                        false
-                );
+                        mx + fulls, my + drillY,
+                        mx - fulls, my + drillY,
+                        false);
             } else if (deployProgress > 2) {
                 for (int d : Mathf.zeroOne) {
                     for (int i : Mathf.signs) {

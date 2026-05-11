@@ -66,7 +66,7 @@ public final class WHItems{
         }};
 
         uranium = new Item("uranium", Color.valueOf("6A9A4DFF").lerp(Pal.plastaniumFront, 0.1f)){{
-            hardness = 5;
+            hardness = 6;
             explosiveness = 0.2f;
             radioactivity = 0.8f;
             cost = 1.3f;
@@ -74,14 +74,14 @@ public final class WHItems{
         }};
 
         molybdenum = new Item("molybdenum", Color.valueOf(" DF90CAFF")){{
-            hardness = 6;
+            hardness = 7;
             cost = 1.4f;
             healthScaling = 0.8f;
         }};
 
         vibranium = new Item("vibranium", Color.valueOf("85CBFFFF")){{
             cost = 4f;
-            hardness = 7;
+            hardness = 8;
             healthScaling = 1.4f;
         }};
 

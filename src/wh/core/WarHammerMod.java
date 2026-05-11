@@ -198,7 +198,6 @@ public class WarHammerMod extends Mod {
         return out;
     }
 
-    @SuppressWarnings("unchecked")
     private static void registerEditorGenerateFilters() {
         if (Vars.headless) return;
 
@@ -233,6 +232,8 @@ public class WarHammerMod extends Mod {
         WHItems.load();
         WHLiquids.load();
         WHStatusEffects.load();
+        WHWeathers.load();
+        WHTeams.load();
         WHBulletsOther.load();
         WHBullets.load();
         WHUnitTypes.load();

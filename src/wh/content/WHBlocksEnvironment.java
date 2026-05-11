@@ -6,10 +6,16 @@ import mindustry.content.StatusEffects;
 import mindustry.graphics.CacheLayer;
 import mindustry.graphics.MultiPacker;
 import mindustry.graphics.Pal;
+import mindustry.type.Category;
+import mindustry.type.ItemStack;
 import mindustry.world.Block;
+import mindustry.world.blocks.defense.Wall;
 import mindustry.world.blocks.environment.*;
 import mindustry.world.meta.Attribute;
+import mindustry.world.meta.BuildVisibility;
 import wh.entities.world.blocks.Road;
+
+import static mindustry.type.ItemStack.with;
 
 public class WHBlocksEnvironment {
     public static final Attribute hasPromethium = Attribute.add("promethium");
@@ -17,7 +23,7 @@ public class WHBlocksEnvironment {
     //ore
     public static Block promethium,
             graphiticOre, manganeseOre, chromiumOre, cobaltOre, uraniumOre, molybdenumOre, vibraniumOre,
-            mineralSand, quartzSand, promethiumSand, radiationSand;
+            mineralSand, quartzSand, promethiumSand, oilMineralSand, radiationSand;
     //liquid
     public static Block radiationWater, radiationWaterDeep, effluent, effluentDeep, mineralSandEffluentWater, mineralSandRadiationWater, radiationSandWater;
     //Floor
@@ -27,7 +33,8 @@ public class WHBlocksEnvironment {
     //Wall
     public static Block mineralSandWall, quartzSandWall, cementWall, darkRockWall, darkMineralSandstoneWall, chromiteWall, manganeseWall, cobaltWall,
             oreShaleWall, oreSaltWall, radiationRockWall,
-            scorchedEarthWall, trachyteWall;
+            scorchedEarthWall, trachyteWall, darkMeltaWall,
+            abandonedWall, abandonedWallLarge, abandonedFactory, abandonedFactoryBreak;
     //MeltaFloor
     public static Block darkMetalFloor1, darkMetalFloor2, darkMetalFloor3, darkMetalFloor4, darkMetalFloor5, darkMetalFloor6,
             darkMetalFloorDamage,
@@ -108,10 +115,17 @@ public class WHBlocksEnvironment {
             attributes.set(Attribute.oil, 0.5f);
         }};
 
+        oilMineralSand = new Floor("oil-mineral-sand1") {{
+            itemDrop = WHItems.oreSand;
+            playerUnmineable = true;
+            attributes.set(Attribute.oil, 2);
+            attributes.set(hasPromethium, 0.5f);
+        }};
+
         promethiumSand = new Floor("promethium-sand") {{
             itemDrop = WHItems.oreSand;
             playerUnmineable = true;
-            attributes.set(Attribute.oil, 1.5f);
+            attributes.set(Attribute.oil, 1f);
             attributes.set(hasPromethium, 1f);
         }};
 
@@ -324,6 +338,7 @@ public class WHBlocksEnvironment {
             attributes.set(Attribute.water, -1);
         }};
 
+
         quartzSandVent = new SteamVent("quartz-sand-vent") {{
             parent = blendGroup = quartzSand;
             attributes.set(Attribute.steam, 1f);
@@ -436,6 +451,37 @@ public class WHBlocksEnvironment {
             trachyte.asFloor().wall = this;
         }};
 
+        abandonedWall = new Wall("abandoned-wall") {{
+            health = 400;
+            variants = 5;
+            requirements(Category.defense, BuildVisibility.sandboxOnly, with(WHItems.manganese, 10, WHItems.chromium, 10));
+        }};
+
+        abandonedWallLarge = new Wall("abandoned-wall-large") {{
+            size = 2;
+            variants = 4;
+            health = abandonedWall.health * 4;
+            requirements(Category.defense, BuildVisibility.sandboxOnly, ItemStack.mult(abandonedWall.requirements, 4));
+        }};
+
+        abandonedFactory = new Wall("abandoned-factory") {{
+            size = 4;
+            health = 5500;
+            variants = 4;
+            requirements(Category.defense, BuildVisibility.sandboxOnly, ItemStack.mult(abandonedWall.requirements, 16));
+        }};
+
+        abandonedFactoryBreak = new Wall("abandoned-factory-break") {{
+            size = 4;
+            health = 5000;
+            variants = 4;
+            requirements(Category.defense, BuildVisibility.sandboxOnly, ItemStack.mult(abandonedWall.requirements, 14));
+        }};
+
+        darkMeltaWall = new StaticWall("dark-melta-wall") {{
+            variants = 4;
+        }};
+
         quartzSandBoulder = new Prop("quartz-sand-boulder") {{
             variants = 3;
             quartzSand.asFloor().decoration = this;
@@ -525,6 +571,22 @@ public class WHBlocksEnvironment {
             clipSize = 128f;
         }};
 
+        darkMetalFloor1 = new Floor("dark-melta-floor", 0);
+
+        darkMetalFloor2 = new Floor("dark-melta-floor-2", 0);
+
+        darkMetalFloor3 = new Floor("dark-melta-floor-3", 0);
+
+        darkMetalFloorDamage = new Floor("dark-melta-floor-damage", 3);
+
+        darkMetalFloor4 = darkMetalFloorDamage;
+
+        darkMetalFloor5 = new Floor("dark-melta-floor-2-damage", 3);
+
+        darkMetalFloor6 = new Floor("dark-melta-floor-3-damage", 3);
+
+        darkMetalFloor1.asFloor().wall = darkMeltaWall;
+
 
         darkTile1 = new Floor("dark-tile-1", 0);
 
@@ -546,7 +608,7 @@ public class WHBlocksEnvironment {
 
         metalTile4 = new Floor("metal-tile-4", 0);
 
-        metalTile5 = new Floor("metal-tile-5", 0);
+        /* metalTile5 = new Floor("metal-tile-5", 0);*/
 
         metalMesh = new Floor("metal-mesh-autotile") {{
             autotile = true;

@@ -200,6 +200,8 @@ public final class KarvexTeachTree {
                 node(WHBlocks.armorRouter, () -> {
                     node(WHBlocks.armorSorter, () -> node(WHBlocks.armorInvertedSorter, () -> {
                     }));
+                    node(WHBlocks.basicOverflowGate, () -> node(WHBlocks.basicUnderflowGate, () -> {
+                    }));
                     node(WHBlocks.armorOverflowGate, () -> node(WHBlocks.armorUnderflowGate, () -> {
                     }));
                 });
@@ -255,8 +257,10 @@ public final class KarvexTeachTree {
             node(WHBlocks.steelConduit, () -> {
                 node(WHBlocks.mixedFluidJunction, () -> {
                 });
-                node(WHBlocks.T2LiquidTank, () -> node(WHBlocks.armorLiquidTank, () -> {
-                }));
+                node(WHBlocks.basicLiquidContainer, () ->
+                        node(WHBlocks.steelLiquidTank, () ->
+                                node(WHBlocks.armorLiquidTank, () -> {
+                                })));
             });
         });
     }

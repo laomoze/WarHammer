@@ -17,7 +17,6 @@ import arc.scene.style.TextureRegionDrawable;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.Table;
 import arc.struct.Seq;
-import arc.util.Log;
 import arc.util.Time;
 import arc.util.Tmp;
 import mindustry.Vars;
@@ -1069,9 +1068,11 @@ public final class ActionStatements{
                         spawner.init(unitType, teamVal, new Vec2(worldX + Tmp.v1.x, worldY + Tmp.v1.y), angleVal, delay, false);
                         spawner.setShieldToApply(shieldVal);
                         spawner.setStatus(statusVal, statusDurVal);
+                        if (vUnitOut != null) {
+                            spawner.onSpawned(unit -> vUnitOut.setobj(unit));
+                        }
                         spawner.add();
-                        spawner.onSpawned(unit -> vUnitOut.setobj(unit));
-                        Log.info("unit  "+unit+"  name  "+unitType.name);
+                        /*    Log.info("unit  "+unit+"  name  "+unitType.name);*/
                     };
 
                     for(int i = 0; i < waves; i++){

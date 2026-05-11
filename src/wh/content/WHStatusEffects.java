@@ -1,28 +1,38 @@
 package wh.content;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.util.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
-import mindustry.game.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import wh.graphics.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.content.Fx;
+import mindustry.content.Items;
+import mindustry.content.StatusEffects;
+import mindustry.entities.Effect;
+import mindustry.entities.units.StatusEntry;
+import mindustry.game.Team;
+import mindustry.gen.Unit;
+import mindustry.graphics.Pal;
+import mindustry.type.StatusEffect;
+import wh.graphics.Drawn;
+import wh.graphics.WHPal;
 
-import static arc.graphics.g2d.Draw.*;
-import static arc.graphics.g2d.Lines.*;
+import static arc.graphics.g2d.Draw.alpha;
+import static arc.graphics.g2d.Draw.color;
+import static arc.graphics.g2d.Lines.lineAngle;
+import static arc.graphics.g2d.Lines.stroke;
 import static arc.math.Angles.randLenVectors;
 import static wh.content.WHFx.rand;
 public final class WHStatusEffects{
     public static StatusEffect
     powerEnhance1, powerEnhance2,
     powerReduce1, powerReduce2,
-    rust, radiation,
-    assault, bless, energyAmplification, protection,
+            rust, radiation, acidRain,
+            assault, bless, energyAmplification, weaponCharge, protection,
     tear, armorFracture, rock,
     scare,
     distort, forcesOfChaos, melta, palsy, plasma, plasmaFireBurn;
@@ -118,6 +128,23 @@ public final class WHStatusEffects{
                 });
             });
         }};
+
+        weaponCharge = new StatusEffect("weapon-charge") {{
+            color = Pal.techBlue.cpy();
+            reloadMultiplier = 1.2f;
+            damageMultiplier = 1.5f;
+            speedMultiplier = 0.75f;
+            effectChance = 0.1f;
+            parentizeEffect = true;
+            effect = new Effect(35f, e -> {
+                color(e.color);
+                rand.setSeed(e.id);
+                randLenVectors(e.id, 2, 1f + e.fout() * 15 * rand.random(0.5f, 1), (x, y) -> {
+                    Fill.square(e.x + x, e.y + y, e.fout() * 3 * Mathf.curve(e.fin(), 0, 0.25f) + 0.5f);
+                });
+            });
+        }};
+
         protection = new StatusEffect("protection"){
             {
                 color = Pal.accent.cpy().lerp(Pal.slagOrange, 0.3f);
@@ -326,6 +353,25 @@ public final class WHStatusEffects{
                         unit.damage(transitionDamage);
                     });
                     opposite(forcesOfChaos, bless, palsy);
+                });
+            }
+        };
+
+        acidRain = new StatusEffect("acid-rain") {
+            {
+                color = WHLiquids.swageWater.color.cpy().lerp(Pal.coalBlack, 0.2f);
+                speedMultiplier = 0.7f;
+                dragMultiplier = 1.25f;
+                effectChance = 0.09f;
+                effect = new Effect(90, e -> {
+                    if (!(e.data instanceof Unit u)) return;
+                    rand.setSeed(e.id);
+                    color(color, Color.white, e.fout() * 0.3F);
+                    stroke(e.fout() * 1.5f);
+                    randLenVectors(e.id, 5, e.finpow() * u.hitSize / 2 + rand.random(0.4f, 0.8f) * u.hitSize * 0.5f, e.rotation, 360.0F, (x, y) -> {
+                        float ang = Mathf.angle(x, y);
+                        lineAngle(e.x + x, e.y + y, ang, e.fout() * 10 * 0.85F + 10 * 0.15F);
+                    });
                 });
             }
         };

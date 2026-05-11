@@ -119,13 +119,13 @@ public final class WHBlocks {
             carbideCrucible, waterPurifier,
 
     T2sandSeparator, cobaltNitrideChamber, petroleumConverter,
-            armorCompressor, LiquidNitrogenPlant,
-            ceramiteSteelFoundry, cryofluidMixer, combustibleCrafter,
+            armorCompressor, ceramiteSteelFoundry, cryofluidMixer, combustibleCrafter,
             entanglementSynthesizer, T2ManganeseSteelFurnace, promethiumRefinery,
 
     heatSiliconSmelter, T2WaterPurifier, combustibleSeparator,
             crystalEngraver, pressureReactionChamber,
 
+    LiquidNitrogenPlant,
     moSurgeSmelter, largeArmorSmelter, sealedPromethiumMill,
 
     T2ceramiteSteelFoundry, laserEngraver,
@@ -146,13 +146,15 @@ public final class WHBlocks {
             armorFluidJunction, mixedFluidJunction,
             steelBridgeConduit, lowResistanceConduit,
             basicPump, steelPump, gravityPump,
-            T2LiquidTank, armorLiquidTank;
+            basicLiquidContainer, steelLiquidTank, armorLiquidTank;
 
     //distribution
     public static Block
             basicDust, steelDust,
-            armorInvertedSorter, armorSorter, armorJunction, armorOverflowGate,
-            armorUnderflowGate, armorRouter,
+            armorInvertedSorter, armorSorter, armorJunction,
+            basicOverflowGate, basicUnderflowGate,
+            armorOverflowGate, armorUnderflowGate,
+            armorRouter,
             basicBridge, lowResistanceBridge,
             ceramiteConveyor, armorCoverStackBelt, stackBridge,
             basicUnloader, steelUnloader, trackDriver, trackDriverPoint;
@@ -341,7 +343,7 @@ public final class WHBlocks {
 
         sandSeparator = new GenericCrafter("sand-separator") {
             {
-                requirements(Category.crafting, with(WHItems.chromium, 40, Items.graphite, 40, WHItems.manganeseSteel, 20));
+                requirements(Category.crafting, with(WHItems.chromium, 50, Items.graphite, 40));
                 health = 300;
                 hasItems = hasPower = hasLiquids = true;
                 craftTime = 60;
@@ -374,7 +376,7 @@ public final class WHBlocks {
         plastaniumCompressor = new GenericCrafter("plastanium-compressor") {
             {
 
-                requirements(Category.crafting, with(WHItems.chromium, 80, Items.graphite, 120, WHItems.manganeseSteel, 110));
+                requirements(Category.crafting, with(WHItems.chromium, 80, Items.graphite, 120, WHItems.manganeseSteel, 70));
                 size = 3;
                 health = 650;
                 hasItems = hasPower = hasLiquids = true;
@@ -396,12 +398,12 @@ public final class WHBlocks {
         atmosphericSeparator = new HeatCrafter("atmospheric-separator") {
             {
 
-                requirements(Category.crafting, with(Items.graphite, 50, Items.silicon, 100, WHItems.manganeseSteel, 70));
+                requirements(Category.crafting, with(Items.graphite, 80, Items.silicon, 100, WHItems.manganeseSteel, 70));
 
                 hasItems = false;
                 hasPower = hasLiquids = true;
                 size = 3;
-                health = 900;
+                health = 1000;
                 craftTime = 60;
                 liquidCapacity = 100;
                 updateEffect = Fx.none;
@@ -440,8 +442,8 @@ public final class WHBlocks {
                 rotate = true;
                 invertFlip = true;
                 consumePower(2f);
-                consumeLiquid(WHLiquids.swageWater, 1f);
-                outputLiquids = LiquidStack.with(Liquids.ozone, 30f / 60, Liquids.hydrogen, 45f / 60);
+                consumeLiquid(Liquids.water, 1f);
+                outputLiquids = LiquidStack.with(Liquids.ozone, 15f / 60, Liquids.hydrogen, 30f / 60);
                 drawer = new DrawMulti(
                         new DrawRegion("-bottom"),
                         new DrawLiquidTile(WHLiquids.swageWater, FACTORY_PAD_33) {{
@@ -469,7 +471,7 @@ public final class WHBlocks {
         };
 
         coalCentrifuge = new GenericCrafter("coal-centrifuge") {{
-            requirements(Category.crafting, with(WHItems.cobalt, 20, Items.graphite, 40, WHItems.molybdenumAlloy, 20));
+            requirements(Category.crafting, with(WHItems.cobalt, 20, Items.graphite, 40, WHItems.manganeseSteel, 20));
             craftEffect = Fx.coalSmeltsmoke;
             outputItem = new ItemStack(Items.coal, 2);
             craftTime = 30f;
@@ -546,12 +548,12 @@ public final class WHBlocks {
 
         carbideCrucible = new HeatCrafter("carbide-crucible") {{
 
-            requirements(Category.crafting, with(WHItems.chromium, 100, Items.graphite, 80, WHItems.manganeseSteel, 50));
+            requirements(Category.crafting, with(Items.tungsten, 40, Items.graphite, 80, WHItems.manganeseSteel, 50));
             size = 3;
             health = 1200;
             itemCapacity = 30;
             craftTime = 120;
-            heatRequirement = 8;
+            heatRequirement = 6;
             maxEfficiency = 3f;
             hasItems = hasPower = true;
             consumePower(300 / 60f);
@@ -563,7 +565,7 @@ public final class WHBlocks {
 
         waterPurifier = new GenericCrafter("water-purifier") {
             {
-                requirements(Category.crafting, with(WHItems.manganeseSteel, 50, WHItems.cobalt, 80, Items.plastanium, 70));
+                requirements(Category.crafting, with(WHItems.manganeseSteel, 50, Items.silicon, 50, Items.plastanium, 70));
                 health = 800;
                 hasItems = hasPower = hasLiquids = true;
                 craftTime = 120;
@@ -571,9 +573,9 @@ public final class WHBlocks {
                 liquidCapacity = 300;
                 size = 3;
                 consumePower(8);
-                consumeItems(with(WHItems.oreSand, 2, Items.graphite, 2));
+                consumeItems(with(WHItems.oreSand, 2, Items.graphite, 4));
                 consumeLiquid(WHLiquids.swageWater, 100 / 60f);
-                outputLiquid = new LiquidStack(Liquids.water, 70 / 60f);
+                outputLiquid = new LiquidStack(Liquids.water, 50 / 60f);
                 drawer = new DrawMulti(new DrawRegion("-bottom"),
                         new DrawLiquidTile(WHLiquids.swageWater),
                         new DrawLiquidTile(Liquids.water),
@@ -656,7 +658,7 @@ public final class WHBlocks {
                 dumpExtraLiquid = true;
                 ignoreLiquidFullness = true;
                 consumePower(4);
-                heatOutput = 2;
+                heatOutput = 4;
                 consumeItems(with(WHItems.oreSand, 15));
                 outputItem = new ItemStack(Items.sand, 12);
                 outputLiquid = new LiquidStack(Liquids.slag, 40 / 60f);
@@ -696,11 +698,11 @@ public final class WHBlocks {
 
         LiquidNitrogenPlant = new GenericCrafter("Liquid-nitrogen-plant") {{
 
-            requirements(Category.crafting, with(WHItems.armorAlloy, 80, Items.plastanium, 60, WHItems.ceramite, 40));
+            requirements(Category.crafting, with(WHItems.armorAlloy, 50, WHItems.cobaltNitride, 40, WHItems.ceramite, 40));
 
             size = 2;
             craftTime = 60f;
-            health = 550;
+            health = 1000;
             hasPower = hasLiquids = true;
             liquidCapacity = 120;
             consumePower(4f);
@@ -723,14 +725,14 @@ public final class WHBlocks {
             {
                 requirements(Category.crafting, with(WHItems.cobalt, 40, Items.plastanium, 40, Items.metaglass, 40, WHItems.manganeseSteel, 40));
                 size = 3;
-                health = 750;
+                health = 1200;
                 hasPower = hasLiquids = true;
                 craftTime = 120;
                 liquidCapacity = 60;
                 itemCapacity = 15;
                 consumePower(4);
-                consumeLiquid(Liquids.nitrogen, 20f / 4f / 60f);
-                consumeItems(with(WHItems.cobalt, 3, Items.silicon, 2, WHItems.manganese, 2));
+                consumeLiquid(Liquids.nitrogen, 10 / 60f);
+                consumeItems(with(WHItems.cobalt, 2, Items.silicon, 4, WHItems.manganeseSteel, 1));
                 outputItems = with(WHItems.cobaltNitride, 2);
                 drawer = new DrawMulti(
                         new DrawRegion("-bottom"),
@@ -759,7 +761,7 @@ public final class WHBlocks {
 
             size = 2;
             craftTime = 300;
-            health = 550;
+            health = 800;
             hasPower = hasLiquids = true;
             liquidCapacity = 120;
             consumePower(2f);
@@ -795,7 +797,7 @@ public final class WHBlocks {
             {
                 Color color = WHPal.MnSteelColor;
                 requirements(Category.crafting, with(Items.silicon, 100, WHItems.ceramite, 70, WHItems.manganeseSteel, 70));
-                health = 700;
+                health = 2000;
                 hasItems = hasPower = true;
                 craftTime = 60;
                 itemCapacity = 40;
@@ -824,7 +826,7 @@ public final class WHBlocks {
         cryofluidMixer = new GenericCrafter("cryofluid-mixer") {
             {
                 requirements(Category.crafting, with(Items.tungsten, 80, WHItems.manganeseSteel, 50, WHItems.cobaltNitride, 40));
-                health = 600;
+                health = 1200;
                 hasItems = hasPower = hasLiquids = true;
                 craftTime = 60;
                 itemCapacity = 20;
@@ -845,7 +847,7 @@ public final class WHBlocks {
 
         combustibleCrafter = new GenericCrafter("combustible-crafter") {
             {
-                requirements(Category.crafting, with(WHItems.chromium, 80, Items.carbide, 50, WHItems.manganeseSteel, 50));
+                requirements(Category.crafting, with(WHItems.cobalt, 80, Items.carbide, 50, WHItems.manganeseSteel, 50));
 
                 size = 3;
                 craftTime = 120;
@@ -860,6 +862,88 @@ public final class WHBlocks {
                             rotateSpeed = 2;
                             rotateDraw = true;
                         }}, new DrawDefault());
+
+                PartProgress pg = PartProgress.reload.inv();
+                PartProgress pg0 = pg.compress(0f, 0.2f);
+                PartProgress pg1 = pg.compress(0.2f, 0.5f);
+                PartProgress pg2 = pg.compress(0.5f, 0.7f);
+                PartProgress pg3 = pg.compress(0.7f, 1f);
+
+                drawer = new DrawMulti(
+                        new DrawRegion("-bottom"),
+                        new DrawLiquidTile(Liquids.hydrogen),
+                        new DrawRegion("-mid1"),
+                        new DrawRegion("-rotator", -2) {{
+                            spinSprite = true;
+                            x = -3 / 4f;
+                            y = -13 / 4f;
+                        }},
+                        new DrawRegion("-rotator", 2) {{
+                            spinSprite = true;
+                            x = -24 / 4f;
+                            y = -26 / 4f;
+                        }},
+                        new DrawRegion("-mid2"),
+                        new DrawRegion("-rotator2", 3) {{
+                            spinSprite = true;
+                            x = 27 / 4f;
+                            y = -28 / 4f;
+                        }},
+                        new DrawBlockParts() {
+                            {
+                                parts.addAll(
+                                        new RegionPart("-item2") {
+                                            {
+                                                x = 29 / 4f;
+                                                y = 31 / 4f;
+                                                color = new Color(1f, 1f, 1f, 0f);
+                                                colorTo = Color.white;
+                                                moves.addAll(new PartMove(pg1, 0f, -38 / 4f, 0));
+                                                progress = pg0.apply(pg1.curve(Interp.pow5In).inv(), (t, ot) -> t * ot);
+                                            }
+                                        },
+                                        new RegionPart("-item1") {
+                                            {
+                                                x = 29 / 4f;
+                                                y = 31 / 4f;
+                                                color = new Color(1f, 1f, 1f, 0f);
+                                                colorTo = Color.white;
+                                                moves.addAll(new PartMove(pg3, 0f, -38 / 4f, 0));
+                                                progress = pg2.apply(pg3.curve(Interp.pow5In).inv(), (t, ot) -> t * ot);
+                                            }
+                                        },
+                                        new EffectSpawnerPart() {{
+                                            x = -14 / 4f;
+                                            y = -16 / 4f;
+                                            progress = pg.apply(PartProgress.warmup, (t, ot) -> t * ot);
+                                            rotation = 15;
+                                            effectColor = Pal.bulletYellowBack;
+                                            effect = Fx.disperseTrail;
+                                        }},
+                                        new EffectSpawnerPart() {{
+                                            x = -14 / 4f;
+                                            y = -16 / 4f;
+                                            progress = pg.apply(PartProgress.warmup, (t, ot) -> t * ot);
+                                            rotation = 195;
+                                            effectColor = Pal.bulletYellowBack;
+                                            effect = Fx.disperseTrail;
+                                        }});
+                            }
+
+                            @Override
+                            public void draw(Building build) {
+                                if (parts.size > 0) {
+                                    float progress = build.progress();
+
+                                    var params = DrawPart.params.set(build.warmup(), 1f - progress, 1f - progress, 0f, 0f, 0f, build.x, build.y, build.rotdeg() + 90);
+
+                                    for (var part : parts) {
+                                        part.draw(params);
+                                    }
+                                }
+                            }
+                        }, new DrawDefault());
+
                 outputItem = new ItemStack(WHItems.combustible, 1);
 
                 updateEffect = new ExplosionEffect();
@@ -878,7 +962,7 @@ public final class WHBlocks {
             squareSprite = false;
             size = 3;
             consumePower(5);
-            consumeLiquid(Liquids.ozone, 30f / 2 / 60f);
+            consumeLiquid(Liquids.ozone, 15f / 2 / 60f);
             consumeItems(with(WHItems.uranium, 4, Items.metaglass, 5, Items.sand, 4));
             outputItem = new ItemStack(WHItems.entanglement, 2);
             drawer = new DrawMulti(new DrawRegion("-bottom"),
@@ -1524,7 +1608,7 @@ public final class WHBlocks {
 
         heatBelt = new HeatBelt("Heat-Belt") {
             {
-                requirements(Category.distribution, with(WHItems.cobalt, 2, Items.graphite, 2, WHItems.manganeseSteel, 2));
+                requirements(Category.distribution, with(WHItems.cobalt, 2, Items.graphite, 3, WHItems.manganeseSteel, 2));
                 researchCostMultiplier = 10f;
                 rotate = true;
                 hasPower = false;
@@ -1537,7 +1621,7 @@ public final class WHBlocks {
         smallHeatRouter = new ConfigurableHeatRouter("small-heat-router") {
             {
 
-                requirements(Category.distribution, with(WHItems.manganese, 15, WHItems.cobalt, 10, Items.graphite, 10));
+                requirements(Category.distribution, with(WHItems.manganese, 15, WHItems.cobalt, 10, Items.graphite, 15));
 
                 researchCostMultiplier = 2f;
 
@@ -1554,7 +1638,7 @@ public final class WHBlocks {
         heatBridge = new HeatDirectionBridge("heat-bridge") {
 
             {
-                requirements(Category.distribution, with(WHItems.cobaltNitride, 3, WHItems.manganeseSteel, 5, Items.graphite, 10));
+                requirements(Category.distribution, with(WHItems.cobaltNitride, 3, WHItems.manganeseSteel, 5, Items.graphite, 30));
                 size = 1;
                 range = 4;
                 health = 100;
@@ -1568,7 +1652,7 @@ public final class WHBlocks {
 
         T2heatBridge = new HeatDirectionBridge("t2-heat-bridge") {
             {
-                requirements(Category.distribution, with(WHItems.resonantCrystal, 10, WHItems.armorAlloy, 5, WHItems.manganeseSteel, 10));
+                requirements(Category.distribution, with(WHItems.resonantCrystal, 10, WHItems.armorAlloy, 15, WHItems.manganeseSteel, 10));
                 size = 1;
                 range = 10;
                 health = 200;
@@ -1710,7 +1794,7 @@ public final class WHBlocks {
         }};
         MechanicalQuarry = new Quarry("mechanical-quarry") {{
 
-            requirements(Category.production, with(Items.graphite, 30, WHItems.manganeseSteel, 30, Items.silicon, 60));
+            requirements(Category.production, with(Items.graphite, 50, WHItems.manganeseSteel, 30, Items.silicon, 60));
 
             health = 300;
             size = 3;
@@ -1723,6 +1807,7 @@ public final class WHBlocks {
             mineTime = 500;
 
             tier = 4;
+            drillMultipliers.put(Items.coal, 2);
 
             drawDrill = true;
             deploySpeed = 0.015f;
@@ -1742,7 +1827,7 @@ public final class WHBlocks {
             heatColor = Color.valueOf("ff5512").a(0.5f);
             hasPower = true;
             squareSprite = false;
-            tier = 5;
+            tier = 6;
             updateEffect = Fx.pulverizeRed;
             updateEffectChance = 0.03f;
             drillEffect = Fx.mineHuge;
@@ -1768,7 +1853,7 @@ public final class WHBlocks {
 
                 health = 2900;
                 size = 4;
-                tier = 6;
+                tier = 7;
                 arrowOffset = 0;
                 arrowSpacing = 13 / 4f;
                 arrows = 2;
@@ -1800,7 +1885,7 @@ public final class WHBlocks {
                 health = 3200;
                 drillTime = 40;
                 size = 4;
-                tier = 7;
+                tier = 10;
                 itemCapacity = 120;
                 liquidCapacity = 80;
                 mineOffset = -2;
@@ -1835,7 +1920,7 @@ public final class WHBlocks {
 
                 health = 4000;
                 size = 5;
-                tier = 20;
+                tier = 114514;
                 arrowOffset = 2;
                 arrowSpacing = 13 / 4f;
                 arrows = 2;
@@ -1874,7 +1959,7 @@ public final class WHBlocks {
 
                 extractorItem = Items.plastanium;
                 itemUseTime = 240;
-                consumeItems(with(Items.graphite, 1));
+                consumeItems(with(Items.graphite, 2));
                 consumeItems(with(extractorItem, 1)).boost();
                 consumePower(7f);
                 researchCostMultiplier = 0.5f;
@@ -2125,13 +2210,22 @@ public final class WHBlocks {
                 researchCostMultiplier = 0.36f;
             }
         };
-
-
-        T2LiquidTank = new LiquidRouter("steel-liquid-tank") {
+        basicLiquidContainer = new LiquidRouter("basic-liquid-container") {
             {
-                requirements(Category.liquid, with(WHItems.manganese, 150, WHItems.manganeseSteel, 100, Items.plastanium, 80));
+                requirements(Category.liquid, with(Items.metaglass, 50, WHItems.manganeseSteel, 40));
+                size = 2;
+                scaledHealth = 100;
+                liquidCapacity = 1000;
+                researchCostMultiplier = 0.36f;
+            }
+        };
+
+        steelLiquidTank = new LiquidRouter("steel-liquid-tank") {
+            {
+                requirements(Category.liquid, with(Items.metaglass, 150, WHItems.manganeseSteel, 100, Items.plastanium, 80));
                 size = 3;
                 liquidCapacity = 6000;
+                scaledHealth = 300;
                 absorbLasers = true;
                 researchCostMultiplier = 0.36f;
             }
@@ -2142,6 +2236,7 @@ public final class WHBlocks {
                 requirements(Category.liquid, with(WHItems.manganese, 150, WHItems.manganeseSteel, 100, Items.plastanium, 80, WHItems.ceramite, 50));
                 armor = 10;
                 size = 3;
+                scaledHealth = 300;
                 liquidCapacity = 8000;
                 absorbLasers = true;
                 squareSprite = false;
@@ -2158,7 +2253,7 @@ public final class WHBlocks {
             underBullets = true;
             hasShadow = true;
             size = 1;
-            speed = 15f / 138f;//why?
+            speed = 16f / 138f;//why?
             displayedSpeed = 15;
             hasItems = true;
             itemCapacity = 2;
@@ -2175,7 +2270,7 @@ public final class WHBlocks {
             placeableLiquid = true;
             size = 1;
 
-            speed = 30f / 138f;//why?
+            speed = 32f / 138f;//why?
             displayedSpeed = 30;
             hasItems = true;
             itemCapacity = 2;
@@ -2213,21 +2308,40 @@ public final class WHBlocks {
             speed = 12;
         }};
 
-        armorOverflowGate = new OverflowDuct("armor-overflow-gate") {{
-            requirements(Category.distribution, with(WHItems.manganese, 4, WHItems.chromium, 2, Items.graphite, 4));
+        basicOverflowGate = new OverflowGate("basic-overflow-gate") {{
+            requirements(Category.distribution, with(WHItems.manganese, 5, Items.graphite, 5));
             armor = 2;
             speed = 2f;
             solid = false;
             researchCostMultiplier = 2f;
         }};
 
-        armorUnderflowGate = new OverflowDuct("armor-underflow-gate") {{
-            requirements(Category.distribution, with(WHItems.manganese, 4, WHItems.chromium, 2, Items.graphite, 4));
+        basicUnderflowGate = new OverflowGate("basic-underflow-gate") {{
+            requirements(Category.distribution, with(WHItems.manganese, 5, Items.graphite, 5));
             armor = 2;
             speed = 2f;
             solid = false;
             invert = true;
             researchCostMultiplier = 2f;
+        }};
+
+        armorOverflowGate = new OverflowDuct("armor-overflow-gate") {{
+            requirements(Category.distribution, with(WHItems.manganeseSteel, 10, WHItems.chromium, 10, Items.graphite, 10));
+            armor = 2;
+            speed = 2f;
+            solid = false;
+            itemCapacity = 5;
+            researchCostMultiplier = 3f;
+        }};
+
+        armorUnderflowGate = new OverflowDuct("armor-underflow-gate") {{
+            requirements(Category.distribution, with(WHItems.manganeseSteel, 10, WHItems.chromium, 10, Items.graphite, 10));
+            armor = 2;
+            speed = 2f;
+            solid = false;
+            invert = true;
+            itemCapacity = 5;
+            researchCostMultiplier = 3f;
         }};
 
 
@@ -2322,7 +2436,7 @@ public final class WHBlocks {
             update = true;
             hasItems = true;
             health = 300;
-            speed = 8 / 60f;
+            speed = 60f / 10f;
             researchCostMultiplier = 1;
         }};
 
@@ -4086,7 +4200,7 @@ public final class WHBlocks {
 
             size = 2;
             range = 180;
-            reload = 30;
+            reload = 20;
             maxAmmo = 30;
             inaccuracy = 3;
             xRand = 0.1f;
@@ -4158,6 +4272,7 @@ public final class WHBlocks {
             ammo(
                     Items.graphite, WHBullets.AutoGunGraphite,
                     WHItems.chromium, WHBullets.AutoGunChromium,
+                    WHItems.manganeseSteel, WHBullets.AutoGunChromium,
                     WHItems.combustible, WHBullets.AutoGunCombustible,
                     WHItems.armorAlloy, WHBullets.AutoGunArmorAlloy
             );
