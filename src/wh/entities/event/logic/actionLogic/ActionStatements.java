@@ -969,7 +969,7 @@ public final class ActionStatements{
             run = tok(tokens, 1, run);
             unit = tok(tokens, 2, unit);
             team = tok(tokens, 3, team);
-            x = tok(tokens, 4, x);
+            x = tok(tokens, 4, x);   
             y = tok(tokens, 5, y);
             angle = tok(tokens, 6, angle);
             shield = tokNum(tokens, 7, shield);
