@@ -62,18 +62,16 @@ import static mindustry.world.meta.StatValues.*;
 public final class UIUtils{
     public static final float LEN = 60f;
     public static final float OFFSET = 12f;
-    public static final TextArea textArea = headless ? null : new TextArea("");
+    public static @Nullable TextArea textArea;
     //only allocate once, dont break unit tests
     static @Nullable TextureRegionDrawable noteIcon = Icon.arrowNoteSmall != null ? new TextureRegionDrawable(Icon.arrowNoteSmall) : null;
 
     private static final Vec2 ctrlVec = new Vec2();
     private static final DecimalFormat df = new DecimalFormat("######0.0");
     private static final Vec2 point = new Vec2(-1, -1);
-    private static final Table starter = new Table(Tex.paneSolid){
-    };
 
     private static long lastToast;
-    private static Table pTable = new Table(), floatTable = new Table();
+    private static @Nullable Table pTable, floatTable;
 
     private UIUtils(){
     }
@@ -221,9 +219,10 @@ public final class UIUtils{
 
         parentT.touchablility = () -> Touchable.disabled;
 
-        if(!pTable.hasParent()) ctrlVec.set(camera.unproject(input.mouse()));
+        boolean createTables = pTable == null || !pTable.hasParent();
+        if (createTables) ctrlVec.set(camera.unproject(input.mouse()));
 
-        if(!pTable.hasParent()) pTable = new Table(Tex.clear){
+        if (createTables) pTable = new Table(Tex.clear) {
             {
                 update(() -> {
                     if(state.isMenu()){
@@ -253,7 +252,7 @@ public final class UIUtils{
             }
         };
 
-        if(!pTable.hasParent()) floatTable = new Table(Tex.clear){{
+        if (createTables || floatTable == null || !floatTable.hasParent()) floatTable = new Table(Tex.clear) {{
             update(() -> {
                 if(state.isMenu()) remove();
             });
@@ -269,12 +268,13 @@ public final class UIUtils{
             });
         }};
 
+        pTable.clearChildren();
         pTable.button(Icon.cancel, Styles.emptyi, () -> {
             cons.get(Tmp.p1.set(World.toTile(ctrlVec.x), World.toTile(ctrlVec.y)));
             parentT.touchablility = original;
             parentT.touchable = parentTouchable;
-            pTable.remove();
-            floatTable.remove();
+            if (pTable != null) pTable.remove();
+            if (floatTable != null) floatTable.remove();
         }).center();
 
         scene.root.addChildAt(Math.max(parentT.getZIndex() - 1, 0), pTable);
@@ -287,10 +287,11 @@ public final class UIUtils{
         var parentTouchable = parentT.touchable;
         parentT.touchablility = () -> Touchable.disabled;
 
-        if(!pTable.hasParent()) ctrlVec.set(camera.unproject(input.mouse()));
+        boolean createTables = pTable == null || !pTable.hasParent();
+        if (createTables) ctrlVec.set(camera.unproject(input.mouse()));
 
 
-        if(!pTable.hasParent()) pTable = new Table(Tex.clear){
+        if (createTables) pTable = new Table(Tex.clear) {
             {
                 update(() -> {
                     if(state.isMenu()){
@@ -320,7 +321,7 @@ public final class UIUtils{
             }
         };
 
-        if(!pTable.hasParent()) floatTable = new Table(Tex.clear){{
+        if (createTables || floatTable == null || !floatTable.hasParent()) floatTable = new Table(Tex.clear) {{
             update(() -> {
                 if(state.isMenu()) remove();
             });
@@ -337,6 +338,7 @@ public final class UIUtils{
         }};
 
         final Point2[] firstPos = {new Point2()};
+        pTable.clearChildren();
         pTable.table(buttons -> {
             buttons.button("1", new TextButtonStyle(Styles.nonet){{
                 font = Fonts.tech;
@@ -357,8 +359,8 @@ public final class UIUtils{
                     cons.get(firstPos[0], secondPos);
                     parentT.touchablility = original;
                     parentT.touchable = parentTouchable;
-                    pTable.remove();
-                    floatTable.remove();
+                    if (pTable != null) pTable.remove();
+                    if (floatTable != null) floatTable.remove();
                 });
             }).size(90).center();
 

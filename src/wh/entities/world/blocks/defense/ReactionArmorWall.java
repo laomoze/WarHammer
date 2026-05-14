@@ -1,20 +1,30 @@
 package wh.entities.world.blocks.defense;
 
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.struct.*;
-import arc.util.io.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.world.blocks.defense.*;
-import mindustry.world.meta.*;
-import wh.content.*;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.math.Mathf;
+import arc.struct.Queue;
+import arc.struct.Seq;
+import arc.util.Time;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.gen.Building;
+import mindustry.gen.Bullet;
+import mindustry.gen.Call;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.world.blocks.defense.Wall;
+import mindustry.world.meta.Stat;
+import mindustry.world.meta.StatUnit;
+import wh.content.WHFx;
+import wh.content.WHStats;
 
 import static mindustry.Vars.*;
 
 public class ReactionArmorWall extends Wall{
     public int frequency = 10;
     public int immunityAccount = 2;
+    public float immunityDuration = 120f;
     public float damageReduction = 0.03f;
     public float maxShareStep = 2f;
     public boolean shareDamage = false;
@@ -40,6 +50,7 @@ public class ReactionArmorWall extends Wall{
     public class ReactionArmorWallBuild extends WallBuild{
         public int hitCount, immunity;
         public boolean isImmune;
+        public transient float immunityTimer;
         public Seq<Building> toDamage = new Seq<>();
         public Queue<Building> queue = new Queue<Building>();
 
@@ -48,12 +59,26 @@ public class ReactionArmorWall extends Wall{
             hitCount = 0;
             immunity = 0;
             isImmune = false;
+            immunityTimer = 0f;
         }
 
         @Override
         public void damage(float damage){
             if(!isImmune){
                 super.damage(damage);
+            }
+        }
+
+        @Override
+        public void updateTile() {
+            super.updateTile();
+            if (isImmune && immunityDuration > 0f) {
+                immunityTimer -= Time.delta;
+                if (immunityTimer <= 0f) {
+                    immunity = 0;
+                    isImmune = false;
+                    immunityTimer = 0f;
+                }
             }
         }
 
@@ -67,6 +92,7 @@ public class ReactionArmorWall extends Wall{
                 if(immunity <= 0){
                     immunity = 0;
                     isImmune = false;
+                    immunityTimer = 0f;
                 }
                 return collided;
             }
@@ -77,6 +103,7 @@ public class ReactionArmorWall extends Wall{
                 hitCount = 0;
                 immunity = Math.max(0, immunityAccount);
                 isImmune = immunity > 0;
+                immunityTimer = isImmune ? Math.max(immunityDuration, 0f) : 0f;
             }
             return collided;
         }

@@ -187,6 +187,15 @@ public class MultiCrafter extends PayloadBlock {
                     if ((hasItems && itemCapacity > 0) || craftPlan.outputItems.length > 0)
                         stat.add(Stat.productionTime, craftPlan.craftTime / 60f, StatUnit.seconds);
 
+                    if (craftPlan.heatRequirement > 0f) {
+                        stat.add(Stat.input, craftPlan.heatRequirement, StatUnit.heatUnits);
+                        stat.add(Stat.maxEfficiency, (int) (craftPlan.maxHeatEfficiency * 100f), StatUnit.percent);
+                    }
+
+                    if (craftPlan.heatOutput > 0f) {
+                        stat.add(Stat.output, craftPlan.heatOutput, StatUnit.heatUnits);
+                    }
+
                     if (craftPlan.outputItems.length > 0)
                         stat.add(Stat.output, StatValues.items(craftPlan.craftTime, craftPlan.outputItems));
 
@@ -323,7 +332,8 @@ public class MultiCrafter extends PayloadBlock {
 
         @Override
         public float getPowerProduction() {
-            return craftPlan != null ? craftPlan.powerProduction : 0f;
+            if (craftPlan == null || !enabled) return 0f;
+            return craftPlan.powerProduction * efficiency;
         }
 
         @Override
@@ -334,19 +344,24 @@ public class MultiCrafter extends PayloadBlock {
             }
 
             if (craftPlan == null) return;
-            if (efficiency > 0) {
-                progress += getProgressIncrease(craftPlan.craftTime, craftPlan);
-                warmup = Mathf.approachDelta(warmup, warmupTarget(), craftPlan.warmupSpeed);
+            if (efficiency > 0f) {
+                float progressIncrease = getProgressIncrease(craftPlan.craftTime, craftPlan);
+                if (progressIncrease > 0f) {
+                    progress += progressIncrease;
+                    warmup = Mathf.approachDelta(warmup, warmupTarget(), craftPlan.warmupSpeed);
 
-                if (craftPlan.outputLiquids.length > 0) {
-                    float inc = getProgressIncrease(1f);
-                    for (LiquidStack output : craftPlan.outputLiquids) {
-                        handleLiquid(this, output.liquid, Math.min(output.amount * inc, liquidCapacity - liquids.get(output.liquid)));
+                    if (craftPlan.outputLiquids.length > 0) {
+                        float inc = getProgressIncrease(1f);
+                        for (LiquidStack output : craftPlan.outputLiquids) {
+                            handleLiquid(this, output.liquid, Math.min(output.amount * inc, liquidCapacity - liquids.get(output.liquid)));
+                        }
                     }
-                }
 
-                if (wasVisible && Mathf.chanceDelta(craftPlan.updateEffectChance)) {
-                    craftPlan.updateEffect.at(x + Mathf.range(size * 4f), y + Mathf.range(size * 4));
+                    if (wasVisible && Mathf.chanceDelta(craftPlan.updateEffectChance)) {
+                        craftPlan.updateEffect.at(x + Mathf.range(size * 4f), y + Mathf.range(size * 4));
+                    }
+                } else {
+                    warmup = Mathf.approachDelta(warmup, 0f, craftPlan.warmupSpeed);
                 }
             } else {
                 warmup = Mathf.approachDelta(warmup, 0f, craftPlan.warmupSpeed);
@@ -369,6 +384,11 @@ public class MultiCrafter extends PayloadBlock {
         @Override
         public float progress() {
             return progress;
+        }
+
+        @Override
+        public float warmup() {
+            return warmup;
         }
 
         public float getProgressIncrease(float baseTime, CraftPlan craftPlan) {
@@ -686,10 +706,20 @@ public class MultiCrafter extends PayloadBlock {
                                 for (Consume c : craftPlan.consumers) {
                                     c.display(stat);
                                 }
+                            if (craftPlan.heatRequirement > 0f) {
+                                stat.add(Stat.input, craftPlan.heatRequirement, StatUnit.heatUnits);
+                                stat.add(Stat.maxEfficiency, (int) (craftPlan.maxHeatEfficiency * 100f), StatUnit.percent);
+                            }
                             UIUtils.statToTable(stat, from);
                         }).left().pad(6);
                         info.row();
                         info.table(to -> {
+                            if (craftPlan.heatOutput > 0f) {
+                                StatValues.number(craftPlan.heatOutput, StatUnit.heatUnits).display(to);
+                            }
+                            if (craftPlan.powerProduction > 0f) {
+                                StatValues.number(craftPlan.powerProduction * 60f, StatUnit.powerSecond).display(to);
+                            }
                             if (craftPlan.outputItems.length > 0) {
                                 StatValues.items(craftPlan.craftTime, craftPlan.outputItems).display(to);
                             }
@@ -957,13 +987,17 @@ public class MultiCrafter extends PayloadBlock {
         public void consumePayloads(PayloadStack... payloads) {
             payloadRequirements.clear();
             payloadRequirements.addAll(payloads);
-            consume(new ConsumePayloads(payloadRequirements));
+            Seq<PayloadStack> requirements = new Seq<>();
+            requirements.addAll(payloadRequirements);
+            consume(new ConsumePayloads(requirements));
         }
 
         public void consumePayloads(Seq<PayloadStack> payloads) {
             payloadRequirements.clear();
             payloadRequirements.addAll(payloads);
-            consume(new ConsumePayloads(payloadRequirements));
+            Seq<PayloadStack> requirements = new Seq<>();
+            requirements.addAll(payloadRequirements);
+            consume(new ConsumePayloads(requirements));
         }
 
         public void consumeItem(Item item) {

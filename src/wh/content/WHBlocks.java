@@ -111,6 +111,7 @@ public final class WHBlocks {
 
     //factory
     public static Block
+            converter,
             manganeseSteelFurnace,
             arcKiln, multiPress, siliconMixFurnace, sandSeparator, scrapFurance, heatIncinerator,
 
@@ -126,7 +127,7 @@ public final class WHBlocks {
             crystalEngraver, pressureReactionChamber,
 
     LiquidNitrogenPlant,
-    moSurgeSmelter, largeArmorSmelter, sealedPromethiumMill,
+            moSurgeSmelter, largeArmorSmelter, sealedPromethiumMill,
 
     T2ceramiteSteelFoundry, laserEngraver,
 
@@ -222,6 +223,255 @@ public final class WHBlocks {
     }
 
     public static void load() {
+        converter = new MultiCrafter("converter") {{
+            requirements(Category.crafting, with(Items.graphite, 50, Items.silicon, 40));
+
+            size = 2;
+            health = 700;
+            hasPower = true;
+            itemCapacity = 30;
+            maxList = 8;
+            useBlockDrawer = true;
+
+            craftPlans = Seq.with(
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeLiquid(Liquids.water, 1);
+                        outputLiquids = LiquidStack.with(WHLiquids.swageWater, 1);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.sand, 2));
+                        outputItems = with(WHItems.oreSand, 1);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.scrap, 2));
+                        outputItems = with(WHItems.oreSand, 1);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.copper, 2, Items.lead, 2));
+                        outputItems = with(WHItems.manganese, 1);
+                        craftEffect = Fx.smeltsmoke;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawGlowRegion("-glow") {{
+                                    color = WHItems.manganese.color.cpy();
+                                    rotateSpeed = 1;
+                                    alpha = 0.5f;
+                                    glowIntensity = 0.35f;
+                                    glowScale = 8f;
+                                }}
+                        );
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItem(Items.beryllium, 2);
+                        outputItems = with(WHItems.manganese, 1);
+                        craftEffect = Fx.smeltsmoke;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawCrucibleFlame() {{
+                                    flameColor = midColor = WHItems.manganese.color.cpy();
+                                    flameRadiusScl = 5;
+                                    particles = 10;
+                                    particleRad = 3;
+                                }},
+                                new DrawGlowRegion("-glow") {{
+                                    color = WHItems.manganese.color.cpy();
+                                    rotateSpeed = 1;
+                                    alpha = 0.5f;
+                                    glowIntensity = 0.35f;
+                                    glowScale = 8f;
+                                }}
+                        );
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItem(Items.thorium, 1);
+                        outputItems = with(Items.tungsten, 1);
+                        craftEffect = Fx.smeltsmoke;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawCrucibleFlame() {{
+                                    flameColor = midColor = Items.tungsten.color.cpy();
+                                    flameRadiusScl = 5;
+                                    particles = 10;
+                                    particleRad = 3;
+                                }},
+                                new DrawGlowRegion("-glow") {{
+                                    color = Items.tungsten.color.cpy();
+                                    rotateSpeed = 1;
+                                    alpha = 0.5f;
+                                    glowIntensity = 0.35f;
+                                    glowScale = 8f;
+                                }}
+                        );
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(2f);
+                        consumeItem(Items.beryllium, 1);
+                        outputItems = with(WHItems.cobalt, 1);
+                        craftEffect = Fx.smeltsmoke;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawCrucibleFlame() {{
+                                    flameColor = midColor = WHItems.cobalt.color.cpy();
+                                    flameRadiusScl = 5;
+                                    particles = 10;
+                                    particleRad = 3;
+                                }},
+                                new DrawGlowRegion("-glow") {{
+                                    color = WHItems.cobalt.color.cpy();
+                                    rotateSpeed = 1;
+                                    alpha = 0.5f;
+                                    glowIntensity = 0.35f;
+                                    glowScale = 8f;
+                                }}
+                        );
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(2f);
+                        consumeItem(Items.tungsten, 1);
+                        outputItems = with(WHItems.cobalt, 1);
+                        craftEffect = Fx.smeltsmoke;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawCrucibleFlame() {{
+                                    flameColor = midColor = WHItems.cobalt.color.cpy();
+                                    flameRadiusScl = 5;
+                                    particles = 10;
+                                    particleRad = 3;
+                                }},
+                                new DrawGlowRegion("-glow") {{
+                                    color = WHItems.cobalt.color.cpy();
+                                    rotateSpeed = 1;
+                                    alpha = 0.5f;
+                                    glowIntensity = 0.35f;
+                                    glowScale = 8f;
+                                }}
+                        );
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(2f);
+                        consumeItem(Items.titanium, 2);
+                        outputItems = with(WHItems.cobalt, 1);
+                        craftEffect = Fx.smeltsmoke;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawArcSmelt() {{
+                                    flameColor = midColor = WHItems.cobalt.color.cpy().a(0.5f);
+                                    flameRadiusScl = 5;
+                                    particles = 10;
+                                    particleRad = 3;
+                                }},
+                                new DrawGlowRegion("-glow") {{
+                                    color = WHItems.cobalt.color.cpy();
+                                    rotateSpeed = 1;
+                                    alpha = 0.5f;
+                                    glowIntensity = 0.35f;
+                                    glowScale = 8f;
+                                }}
+                        );
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 60;
+                        consumePower(2f);
+                        consumeItem(Items.thorium, 2);
+                        outputItems = with(WHItems.uranium, 1);
+                        craftEffect = Fx.smeltsmoke;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawBlockParts() {{
+                                    parts.addAll(new EffectSpawnerPart() {{
+                                        width = height = 10;
+                                        effectColor = WHItems.uranium.color.cpy();
+                                        effect = WHFx.hitSpark(30, effectColor, 4, 10, 0.5f, 3f);
+                                    }});
+                                }},
+                                new DrawArcSmelt() {{
+                                    flameColor = midColor = WHItems.uranium.color.cpy().a(0.5f);
+                                    flameRadiusScl = 5;
+                                    particles = 10;
+                                    particleRad = 3;
+                                }},
+                                new DrawGlowRegion("-glow") {{
+                                    color = WHItems.uranium.color.cpy();
+                                    rotateSpeed = 1;
+                                    alpha = 0.5f;
+                                    glowIntensity = 0.35f;
+                                    glowScale = 8f;
+                                }}
+                        );
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 60;
+                        consumePower(2f);
+                        consumeItem(Items.surgeAlloy, 2);
+                        outputItems = with(WHItems.molybdenum, 1);
+                        craftEffect = Fx.smeltsmoke;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawArcSmelt() {{
+                                    flameColor = midColor = WHItems.molybdenum.color.cpy().a(0.5f);
+                                    flameRadiusScl = 5;
+                                    particles = 10;
+                                    particleRad = 3;
+                                }},
+                                new DrawGlowRegion("-glow") {{
+                                    color = WHItems.molybdenum.color.cpy().a(0.5f);
+                                    rotateSpeed = 1;
+                                    alpha = 0.5f;
+                                    glowIntensity = 0.35f;
+                                    glowScale = 8f;
+                                }}
+                        );
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 180;
+                        consumePower(4f);
+                        consumeItem(WHItems.molybdenumAlloy, 2);
+                        outputItems = with(WHItems.vibranium, 1);
+                        craftEffect = Fx.smeltsmoke;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawCrucibleFlame() {{
+                                    flameColor = midColor = WHItems.vibranium.color.cpy();
+                                    flameRadiusScl = 5;
+                                    particles = 10;
+                                    particleRad = 3;
+                                }},
+                                new DrawGlowRegion("-glow") {{
+                                    color = WHItems.vibranium.color.cpy();
+                                    rotateSpeed = 1;
+                                    alpha = 0.5f;
+                                    glowIntensity = 0.35f;
+                                    glowScale = 8f;
+                                }}
+                        );
+                    }}
+            );
+
+            useBlockDrawer = false;
+
+
+            ambientSound = loopSmelter;
+            ambientSoundVolume = 0.09f;
+            researchCostMultiplier = 0.5f;
+        }};
         scrapFurance = new GenericCrafter("scrap-furance") {{
             requirements(Category.crafting, with(WHItems.manganeseSteel, 30, WHItems.chromium, 40, Items.plastanium, 30));
             health = 800;
@@ -4152,7 +4402,6 @@ public final class WHBlocks {
             );
 
             researchCostMultiplier = 0.05f;
-            alwaysUnlocked = true;
         }};
 
         Ray = new PowerTurret("Ray") {
@@ -4464,7 +4713,7 @@ public final class WHBlocks {
             size = 3;
             range = 420;
             shootSound = shootMissile;
-            reload = 180f;
+            reload = 200f;
             fogRadiusMultiplier = 0.35f;
             maxAmmo = 50;
             ammoPerShot = 4;
@@ -4507,7 +4756,7 @@ public final class WHBlocks {
         Blade = new WHItemTurret("Blade") {{
             requirements(Category.turret, with(Items.carbide, 80, WHItems.uranium, 80, WHItems.cobaltNitride, 50));
 
-            reload = 25;
+            reload = 20;
             range = 240;
             size = 3;
             recoil = 1.5f;
@@ -4539,7 +4788,7 @@ public final class WHBlocks {
                 }
             }};
 
-            coolantMultiplier = 2.5f;
+            coolantMultiplier = 3f;
             coolant = consumeCoolant(20 / 60f);
 
             ammo(
@@ -4864,7 +5113,6 @@ public final class WHBlocks {
                 inaccuracy = 3;
                 recoil = 2;
                 liquidCapacity = 60;
-                recoilTime = 60;
                 reload = 60;
                 rotateSpeed = 2;
                 range = 320;
@@ -4873,34 +5121,53 @@ public final class WHBlocks {
                 shootSound = shootArc;
                 heatColor = WHPal.Heat.cpy().lerp(WHPal.SkyBlue, 0.5f);
 
+                shoot = new ShootAlternate(13 / 2f) {{
+                    shots = 1;
+                }};
+
                 cooldownTime = 150;
                 velocityRnd = 0.1f;
 
                 consumePower(1200 / 60f);
                 coolant = consumeCoolant(20 / 60f);
 
+                recoils = 2;
+                recoilTime = 20;
                 drawer = new DrawTurret(WarHammerMod.name("turret-")) {{
-                    parts.add(new RegionPart("-side") {{
-                        mirror = true;
-                        layerOffset = -0.01f;
-                        moveY = -0.3f;
-                        moveX = 2f * 4f / 3f;
-                        moveRot = -30;
-                        heatColor = WHPal.Heat.cpy().lerp(WHPal.SkyBlue, 0.5f);
-                        heatProgress = PartProgress.heat;
-                    }});
+                    parts.add(
+                            new RegionPart("-barrel-l") {{
+                                recoilIndex = 0;
+                                under = true;
+                                moveY = -3;
+                                heatColor = WHPal.Heat.cpy().lerp(WHPal.SkyBlue, 0.5f);
+                                heatProgress = progress = PartProgress.recoil;
+                            }},
+                            new RegionPart("-barrel-r") {{
+                                recoilIndex = 1;
+                                under = true;
+                                moveY = -3;
+                                heatColor = WHPal.Heat.cpy().lerp(WHPal.SkyBlue, 0.5f);
+                                heatProgress = progress = PartProgress.recoil;
+                            }}, new RegionPart("-side") {{
+                                mirror = true;
+                                layerOffset = -0.01f;
+                                moveY = -0.3f;
+                                moveX = 2f * 4f / 3f;
+                                moveRot = -30;
+                                heatColor = WHPal.Heat.cpy().lerp(WHPal.SkyBlue, 0.5f);
+                                heatProgress = PartProgress.heat;
+                            }});
                 }};
-                shootType = new ChainLightingBulletType(90f) {
+                shootType = new ChainLightingBulletType(60) {
                     {
                         armorMultiplier = 0.5f;
                         maxHit = 3;
-                        chainRange = 45;
+                        chainRange = 60;
                         maxRange = length = 320;
                         hitColor = lightningColor = Pal.lancerLaser;
-                        lightningDamage = 50;
-                        lightning = 3;
-                        lightningLength = 6;
-                        lightningLengthRand = 6;
+                        lightningDamage = 30;
+                        lightning = 2;
+                        lightningLengthRand = lightningLength = 4;
                         hitEffect = WHFx.lightningSpark;
                     }
                 };
@@ -5810,7 +6077,7 @@ public final class WHBlocks {
                 shootType = new LaserBeamBulletType() {
                     {
                         lifetime = d;
-                        damage = 250;
+                        damage = 270;
                         damageInterval = 6;
                         damageMult = 8;
                         length = r / 1.3f;
@@ -5847,9 +6114,10 @@ public final class WHBlocks {
 
                     @Override
                     public void update(Bullet b) {
-                        super.update(b);
-                        updateTrailEffects(b);
-                        if (b.timer(3, damageInterval)) {
+                        if (!(b instanceof LaserDataBullet data)) return;
+                        super.update(data);
+                        updateTrailEffects(data);
+                        if (b.timer(1, damageInterval)) {
                             WHFx.hitSpark(30, Pal.meltdownHit, 8, 30, 1.4f, 8)
                                     .at(b.x, b.y);
                         }
@@ -5873,7 +6141,8 @@ public final class WHBlocks {
                         }
 
                         if (trailInterval > 0f && canSpawn) {
-                            if (b.timer(1, trailInterval)) {
+                            // continuous beam damage uses timer index 1; avoid sharing it with trail timing
+                            if (b.timer(3, trailInterval)) {
                                 if (trailSpread > 0) {
                                     Tmp.v1.rnd(Mathf.random(trailSpread));
                                 } else {
@@ -6028,8 +6297,8 @@ public final class WHBlocks {
                 xRand = 3;
                 velocityRnd = 0.21f;
                 rotateSpeed = 1.5f;
-                reload = 60;
-                ammoPerShot = 4;
+                reload = 45;
+                ammoPerShot = 2;
                 maxAmmo = ammoPerShot * 12;
                 cooldownTime = 30f;
 
@@ -6881,6 +7150,91 @@ public final class WHBlocks {
 
             }
         };
+
+        sb1 = new MultiCrafter("multi-crafter-test") {{
+            requirements(Category.crafting, BuildVisibility.sandboxOnly, with(Items.copper, 1));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            alwaysUnlocked = true;
+            size = 3;
+            health = 1200;
+            hasDoubleOutput = true;
+            rotate = true;
+            rotateDraw = true;
+            itemCapacity = 80;
+            liquidCapacity = 180f;
+            maxList = 6;
+            useBlockDrawer = false;
+
+            craftPlans = Seq.with(
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 90f;
+                        consumeItems(with(Items.copper, 2, Items.lead, 1));
+                        consumeLiquid(Liquids.water, 10f / 60f);
+                        consumePower(2f);
+                        outputItems = with(Items.graphite, 2);
+                        outputLiquids = LiquidStack.with(Liquids.slag, 8f / 60f);
+                        craftEffect = Fx.smeltsmoke;
+                        drawer = new DrawMulti(new DrawDefault(), new DrawFlame(Pal.slagOrange));
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 120f;
+                        consumeItem(Items.sand, 3);
+                        consumeLiquids(LiquidStack.with(Liquids.water, 12f / 60f, Liquids.oil, 8f / 60f));
+                        consumePower(3f);
+                        outputItems = with(Items.scrap, 1);
+                        outputLiquids = LiquidStack.with(Liquids.hydrogen, 12f / 60f, Liquids.ozone, 6f / 60f);
+                        liquidOutputDirections = new int[]{0, 2};
+                        updateEffect = Fx.bubble;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawLiquidTile(Liquids.water),
+                                new DrawBubbles(Liquids.ozone.color)
+                        );
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 180f;
+                        consumeItem(Items.silicon, 2);
+                        consumePower(1f);
+                        consumePayloads(PayloadStack.with(Blocks.router, 1));
+                        outputItems = with(Items.phaseFabric, 1);
+                        outputLiquids = LiquidStack.with(Liquids.cryofluid, 6f / 60f);
+                        powerProduction = 2f;
+                        updateEffect = Fx.generatespark;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawCircles() {{
+                                    color = Pal.techBlue;
+                                    amount = 3;
+                                    radius = 8f;
+                                }}
+                        );
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 150f;
+                        heatRequirement = 8f;
+                        maxHeatEfficiency = 2f;
+                        consumeItems(with(Items.thorium, 2, Items.tungsten, 2));
+                        consumeLiquid(Liquids.slag, 10f / 60f);
+                        outputItems = with(Items.surgeAlloy, 1);
+                        heatOutput = 4f;
+                        powerProduction = 10;
+                        craftEffect = Fx.surgeCruciSmoke;
+                        drawer = new DrawMulti(new DrawDefault(), new DrawHeatInput(), new DrawHeatOutput());
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 150f;
+                        heatRequirement = 8f;
+                        maxHeatEfficiency = 2f;
+                        consumePayloads(PayloadStack.with(Blocks.copperWall, 1));
+                        consumeItems(with(Items.thorium, 2, Items.tungsten, 2));
+                        outputItems = with(Items.surgeAlloy, 1);
+                        heatOutput = 4f;
+                        powerProduction = 10;
+                        craftEffect = Fx.surgeCruciSmoke;
+                        drawer = new DrawMulti(new DrawDefault(), new DrawHeatInput(), new DrawHeatOutput());
+                    }}
+            );
+        }};
 
         // from EU
         randomer = new Randomer("randomer1") {

@@ -97,8 +97,8 @@ public class LaserBeamTurret extends PowerTurret{
             entry.bullet.rotation(angle);
             entry.bullet.owner = this;
 
-            float effScale = Mathf.clamp(efficiency, 0.00001f, 1f);
-            entry.life -= delta() / effScale;
+            // match vanilla LaserTurret: beam lifetime scales with timescale, inversely with efficiency
+            entry.life -= delta() / Math.max(efficiency, 0.00001f);
 
             if(entry.bullet.type instanceof ContinuousBulletType){
                 entry.bullet.lifetime = shootDuration;
@@ -124,7 +124,7 @@ public class LaserBeamTurret extends PowerTurret{
                 wasShooting = true;
                 heat = 1f;
                 curRecoil = 1f;
-            }if(reloadCounter > 0){
+            } else if (reloadCounter > 0) {
 
                 if(coolant != null){
                     //TODO does not handle multi liquid req?

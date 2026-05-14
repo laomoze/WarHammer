@@ -13,12 +13,18 @@ public final class WHSettings{
     public static final String distortionEnabledKey = "wh-distortion-enabled";
     public static final String distortionStrengthKey = "wh-distortion-strength";
     public static final String carrierDebugHudKey = "wh-carrier-debug-hud";
+    public static final String fullTechCoverageKey = "wh-full-tech-coverage";
+    public static final String[] multiplayerForcedKeys = {fullTechCoverageKey};
     private static final String categoryName = "WarHammer设置";
 
     private WHSettings(){
     }
 
     public static void load(){
+        initDefaults();
+        if (Vars.headless) {
+            forceMultiplayerSettings();
+        }
         Events.on(ClientLoadEvent.class, event -> Core.app.post(WHSettings::register));
     }
 
@@ -31,7 +37,67 @@ public final class WHSettings{
             table.checkPref(distortionEnabledKey, true);
             table.sliderPref(distortionStrengthKey, 100, 0, 100, 5, i -> i + "%");
             table.checkPref(carrierDebugHudKey, false);
+            table.checkPref(fullTechCoverageKey, true);
         });
+    }
+
+    private static void initDefaults() {
+        setDefault(effectEnabledKey, true);
+        setDefault(regularEffectScaleKey, 100);
+        setDefault(distortionEnabledKey, true);
+        setDefault(distortionStrengthKey, 100);
+        setDefault(carrierDebugHudKey, false);
+        setDefault(fullTechCoverageKey, true);
+    }
+
+    private static void setDefault(String key, Object value) {
+        if (!Core.settings.has(key)) {
+            Core.settings.put(key, value);
+        }
+    }
+
+    public static void forceMultiplayerSettings() {
+        for (String key : multiplayerForcedKeys) {
+            Core.settings.put(key, true);
+        }
+    }
+
+    public static String overrideStatus() {
+        StringBuilder builder = new StringBuilder();
+        for (String key : multiplayerForcedKeys) {
+            builder.append(key).append(":").append(Core.settings.getBool(key, true)).append("|");
+        }
+        return builder.toString();
+    }
+
+    public static String mismatchedSettings(String status) {
+        if (status == null || status.isEmpty()) return "";
+
+        StringBuilder mismatched = new StringBuilder();
+        for (String entry : status.split("\\|")) {
+            if (entry.isEmpty()) continue;
+
+            int split = entry.indexOf(':');
+            if (split <= 0 || split >= entry.length() - 1) continue;
+
+            String key = entry.substring(0, split);
+            boolean requiredValue = Boolean.parseBoolean(entry.substring(split + 1));
+            if (Core.settings.getBool(key, false) != requiredValue) {
+                if (mismatched.length() > 0) {
+                    mismatched.append("\n");
+                }
+                mismatched.append(settingDisplayName(key));
+            }
+        }
+        return mismatched.toString();
+    }
+
+    private static String settingDisplayName(String key) {
+        String bundleKey = "setting." + key + ".name";
+        if (Core.bundle != null && Core.bundle.has(bundleKey)) {
+            return Core.bundle.get(bundleKey);
+        }
+        return key;
     }
 
     public static boolean effectEnabled(){
@@ -61,6 +127,10 @@ public final class WHSettings{
 
     public static boolean carrierDebugHud(){
         return Core.settings.getBool(carrierDebugHudKey, false);
+    }
+
+    public static boolean fullTechCoverage() {
+        return Core.settings.getBool(fullTechCoverageKey, true);
     }
 
     public static boolean laserDebugLengths() {

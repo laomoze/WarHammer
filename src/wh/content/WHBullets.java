@@ -3977,8 +3977,8 @@ public class WHBullets{
                 smokeEffect = Fx.smokeCloud;
 
                 damage = 1500;
-                splashDamage = damage * 0.4f;
-                splashDamageRadius = 40;
+                splashDamage = damage;
+                splashDamageRadius = 48;
                 buildingDamageMultiplier = 0.2f;
                 pierceDamageFactor = 1f;
                 despawnEffect = new MultiEffect(
@@ -4117,14 +4117,14 @@ public class WHBullets{
             }
         };
 
-        SacramentCulverCrystal = new CritBulletType(8, 1200){
+        SacramentCulverCrystal = new CritBulletType(8, 1500) {
             {
                 ammoMultiplier = 4f;
 
                 critChance = 0.3f;
                 critMultiplier = 1.5f;
                 armorMultiplier = 0.5f;
-                pierceCap = 5;
+                pierceCap = 3;
 
                 knockback = 0.2f;
                 width = 15;
@@ -4147,8 +4147,8 @@ public class WHBullets{
 
                 trailLength = -1;
                 lightning = 3;
-                lightningDamage = 35;
-                lightningLength = lightningLengthRand = 12;
+                lightningDamage = 50;
+                lightningLength = lightningLengthRand = 9;
                 splashDamageRadius = 60;
 
                 lifetime = 700 / speed;
@@ -4185,7 +4185,7 @@ public class WHBullets{
                 );
 
                 fragBullets = 3;
-                fragBullet = new CritBulletType(3.4f, 120){
+                fragBullet = new CritBulletType(3.4f, 300) {
                     {
                         critMultiplier = 1.5f;
                         buildingDamageMultiplier = 0.1f;
@@ -4287,9 +4287,9 @@ public class WHBullets{
                 pierceEffect = hitEffect = WHFx.instHit(hitColor, false, 3, 40);
                 smokeEffect = Fx.smokeCloud;
 
-                damage = 3800;
-                splashDamage = damage * 0.2f;
-                splashDamageRadius = 50;
+                damage = 3000;
+                splashDamage = damage * 0.5f;
+                splashDamageRadius = 80;
                 buildingDamageMultiplier = 0.2f;
                 pierceDamageFactor = 0.5f;
                 despawnEffect = new MultiEffect(

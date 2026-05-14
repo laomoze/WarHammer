@@ -1,18 +1,20 @@
 package wh.content;
 
 import arc.struct.Seq;
+import mindustry.Vars;
 import mindustry.content.*;
 import mindustry.ctype.UnlockableContent;
 import mindustry.game.Objectives.Objective;
 import mindustry.game.Objectives.Produce;
 import mindustry.game.Objectives.Research;
-import mindustry.type.ItemStack;
-import mindustry.type.UnitType;
+import mindustry.type.*;
+import wh.core.WHSettings;
 
 import static mindustry.content.TechTree.TechNode;
 import static mindustry.content.TechTree.nodeRoot;
 
 public final class KarvexTeachTree {
+    private static final String MOD_NAME = "wh";
     public static TechNode context = null;
 
     private KarvexTeachTree() {
@@ -22,7 +24,6 @@ public final class KarvexTeachTree {
         if (WHPlanets.karvex == null) return;
 
         applyKarvexPlanetToVanillaContent();
-        applyKarvexUnlockTuning();
 
         WHPlanets.karvex.techTree = nodeRoot("[yellow]IMPERIUM", WHItems.imperium, () -> {
         });
@@ -43,14 +44,17 @@ public final class KarvexTeachTree {
         extendSerpuloTechTree();
     }
 
-    private static void applyKarvexUnlockTuning() {
-        // Spike should not be pre-unlocked at campaign start.
-        if (WHBlocks.Spike != null) {
-            WHBlocks.Spike.alwaysUnlocked = false;
-        }
+    public static void forceFullTechCoverage() {
+        if (WHPlanets.karvex == null) return;
+        applyFullTechCoverage();
     }
 
     private static void applyKarvexPlanetToVanillaContent() {
+        if (WHSettings.fullTechCoverage()) {
+            applyFullTechCoverage();
+            return;
+        }
+
         addPlanetTab(Items.coal);
         addPlanetTab(Items.graphite);
         addPlanetTab(Items.tungsten);
@@ -66,9 +70,58 @@ public final class KarvexTeachTree {
     }
 
     private static void addPlanetTab(UnlockableContent content) {
-        if (content == null || WHPlanets.karvex == null) return;
-        content.shownPlanets.add(WHPlanets.karvex);
-        content.databaseTabs.add(WHPlanets.karvex);
+        addPlanetTab(content, WHPlanets.karvex);
+    }
+
+    private static void addPlanetTab(UnlockableContent content, Planet planet) {
+        if (content == null || planet == null) return;
+        if (!content.shownPlanets.contains(planet)) {
+            content.shownPlanets.add(planet);
+        }
+        if (!content.databaseTabs.contains(planet)) {
+            content.databaseTabs.add(planet);
+        }
+    }
+
+    private static void applyFullTechCoverage() {
+        addAllResourcesToPlanet(WHPlanets.karvex);
+        addKarvexResourcesToVanillaPlanets();
+    }
+
+    private static void addAllResourcesToPlanet(Planet planet) {
+        if (planet == null) return;
+        for (Item item : Vars.content.items()) {
+            addPlanetTab(item, planet);
+        }
+        for (Liquid liquid : Vars.content.liquids()) {
+            addPlanetTab(liquid, planet);
+        }
+    }
+
+    private static void addKarvexResourcesToVanillaPlanets() {
+        for (Item item : Vars.content.items()) {
+            if (isKarvexResource(item)) {
+                addPlanetTab(item, Planets.serpulo);
+                addPlanetTab(item, Planets.erekir);
+            }
+        }
+
+        for (Liquid liquid : Vars.content.liquids()) {
+            if (isKarvexResource(liquid)) {
+                addPlanetTab(liquid, Planets.serpulo);
+                addPlanetTab(liquid, Planets.erekir);
+            }
+        }
+    }
+
+    private static boolean hasPlanetTab(UnlockableContent content, Planet planet) {
+        if (content == null || planet == null) return false;
+        return content.shownPlanets.contains(planet) || content.databaseTabs.contains(planet);
+    }
+
+    private static boolean isKarvexResource(UnlockableContent content) {
+        if (!hasPlanetTab(content, WHPlanets.karvex)) return false;
+        return content.minfo != null && content.minfo.mod != null && MOD_NAME.equals(content.minfo.mod.name);
     }
 
     private static void buildItemBranch() {

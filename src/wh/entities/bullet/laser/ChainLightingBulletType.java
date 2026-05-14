@@ -6,6 +6,7 @@
 package wh.entities.bullet.laser;
 
 import arc.func.Cons2;
+import arc.math.Angles;
 import arc.math.Mathf;
 import arc.math.geom.Position;
 import arc.math.geom.Vec2;
@@ -14,6 +15,7 @@ import arc.util.Tmp;
 import mindustry.Vars;
 import mindustry.content.Fx;
 import mindustry.entities.Damage;
+import mindustry.entities.Lightning;
 import mindustry.entities.Units;
 import mindustry.entities.bullet.BulletType;
 import mindustry.gen.Bullet;
@@ -82,9 +84,28 @@ public class ChainLightingBulletType extends BulletType{
             for(int i = 1; i < points.size; i++){
                 Position from = points.get(i - 1), to = points.get(i);
                 Position sureTarget = PositionLightning.findInterceptedPoint(from, to, b.team);
-                effectController.get(from, sureTarget);
+                float baseAngle = Angles.angle(from.getX(), from.getY(), sureTarget.getX(), sureTarget.getY());
 
-                lightningType.create(b, sureTarget.getX(), sureTarget.getY(), 0).damage(damage);
+                effectController.get(from, sureTarget);
+                Bullet hitBullet = lightningType.create(b, sureTarget.getX(), sureTarget.getY(), baseAngle);
+                if (hitBullet != null) {
+                    hitBullet.damage(damage);
+                }
+
+                for (int j = 0; j < lightning; j++) {
+                    Lightning.create(b, lightningColor, lightningDamage < 0f ? damage : lightningDamage, sureTarget.getX(), sureTarget.getY(),
+                            baseAngle + Mathf.range(lightningCone / 2f) + lightningAngle, lightningLength + Mathf.random(lightningLengthRand));
+                }
+
+                if (fragBullet != null && fragBullets > 0) {
+                    for (int j = 0; j < fragBullets; j++) {
+                        float len = Mathf.random(fragOffsetMin, fragOffsetMax);
+                        float angle = baseAngle + Mathf.range(fragRandomSpread / 2f) + fragAngle + fragSpread * j - (fragBullets - 1) * fragSpread / 2f;
+                        fragBullet.create(b, sureTarget.getX() + Angles.trnsx(angle, len), sureTarget.getY() + Angles.trnsy(angle, len),
+                                angle, Mathf.random(fragVelocityMin, fragVelocityMax), Mathf.random(fragLifeMin, fragLifeMax));
+                    }
+                }
+
                 hitEffect.at(sureTarget.getX(), sureTarget.getY(), hitColor);
 
                 if(sureTarget instanceof Unit)((Unit)sureTarget).apply(status, statusDuration);

@@ -17,6 +17,7 @@ import arc.util.Time;
 import mindustry.Vars;
 import mindustry.game.EventType;
 import mindustry.game.EventType.Trigger;
+import mindustry.gen.Call;
 import mindustry.gen.Icon;
 import mindustry.io.JsonIO;
 import mindustry.maps.Maps;
@@ -46,6 +47,7 @@ public class WarHammerMod extends Mod {
     private static final String qqGroupWebLink = "https://qun.qq.com/";
     private static final String qqButtonName = "wh-moddetail-qq-button";
     private static final String settingsButtonName = "wh-moddetail-settings-button";
+    private static final String forcedSettingPacketName = "wh-forced-setting-check";
     private static final long modDetailPollIntervalMs = 160L;
     private static long nextModDetailPollMs = 0L;
     private static BaseDialog lastSeenDialog = null;
@@ -55,6 +57,7 @@ public class WarHammerMod extends Mod {
         Net.registerPacket(AlertToastPacket::new);
         /* WHClassMap.load();*/
         WHSettings.load();
+        setupMultiplayerSettingSync();
         registerEditorGenerateFilters();
         Events.on(EventType.FileTreeInitEvent.class, (e) -> {
             if (!Vars.headless) {
@@ -89,6 +92,37 @@ public class WarHammerMod extends Mod {
                 ActionContext.cutsceneUI.drawMarks();
             }
         });
+    }
+
+    private static void setupMultiplayerSettingSync() {
+        Events.on(EventType.PlayerConnect.class, event -> {
+            WHSettings.forceMultiplayerSettings();
+            KarvexTeachTree.forceFullTechCoverage();
+            Call.clientPacketReliable(forcedSettingPacketName, WHSettings.overrideStatus());
+        });
+
+        if (!Vars.headless) {
+            Vars.netClient.addPacketHandler(forcedSettingPacketName, WarHammerMod::handleForcedSettingPacket);
+        }
+    }
+
+    private static void handleForcedSettingPacket(String status) {
+        try {
+            String mismatched = WHSettings.mismatchedSettings(status);
+            if (mismatched.isEmpty()) return;
+
+            if (Vars.ui != null) {
+                Vars.ui.showInfo(bundleFormat(
+                        "wh.settings.multiplayer.require",
+                        "当前房间要求启用以下设置：\n{0}\n请在模组设置里开启后重连。",
+                        mismatched
+                ));
+            }
+            Vars.net.disconnect();
+        } catch (Throwable t) {
+            Log.err(t);
+            Vars.net.disconnect();
+        }
     }
 
     public static String name(String add) {
