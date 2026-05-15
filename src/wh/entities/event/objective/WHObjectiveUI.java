@@ -411,7 +411,7 @@ public final class WHObjectiveUI{
 
         Table contentLayer = new Table(content -> {
             content.left();
-            content.image(region).size(30f).padTop(4f).padBottom(4f).padLeft(30f).padRight(8f);
+            content.image(WHContent.safeRegion(region)).size(30f).padTop(4f).padBottom(4f).padLeft(30f).padRight(8f);
 
             Label infoLabel = content.label(() -> buildInfoText(info)).left().growX().padRight(8f).get();
             infoLabel.setWrap(false);

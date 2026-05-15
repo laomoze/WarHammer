@@ -261,7 +261,9 @@ public class WarHammerMod extends Mod {
         super.loadContent();
         WorldRegister.load();
         EntityRegister.load();
-        WHContent.loadPriority();
+        if (!Vars.headless) {
+            WHContent.loadPriority();
+        }
 
         WHItems.load();
         WHLiquids.load();

@@ -1,19 +1,26 @@
 package wh.entities.event.mapmarker;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import mindustry.game.*;
-import wh.content.*;
-import wh.entities.event.objective.*;
-import wh.graphics.*;
+import arc.graphics.Blending;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.game.MapObjectives;
+import mindustry.game.Team;
+import wh.content.WHContent;
+import wh.entities.event.objective.RaidEventObjective;
+import wh.graphics.Drawn;
 
-import java.util.*;
-import java.util.concurrent.atomic.*;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.state;
+import static mindustry.Vars.tilesize;
 
 /**
  * NH-style raid marker bound to raid/trigger timer objectives.
@@ -98,7 +105,7 @@ public class RaidIndicator extends MapObjectives.PosMarker{
     }
 
     public void drawArrow(){
-        if(!enabled || WHContent.arrowRegion == null) return;
+        if (!enabled || !WHContent.hasRegion(WHContent.arrowRegion)) return;
 
         float ang = source.angleTo(target);
 

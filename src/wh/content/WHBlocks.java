@@ -222,7 +222,7 @@ public final class WHBlocks {
     private WHBlocks() {
     }
 
-    public static void load() {
+    private static void loadConverter() {
         converter = new MultiCrafter("converter") {{
             requirements(Category.crafting, with(Items.graphite, 50, Items.silicon, 40));
 
@@ -472,6 +472,12 @@ public final class WHBlocks {
             ambientSoundVolume = 0.09f;
             researchCostMultiplier = 0.5f;
         }};
+    }
+
+    public static void load() {
+        if (WHSettings.converterEnabled()) {
+            loadConverter();
+        }
         scrapFurance = new GenericCrafter("scrap-furance") {{
             requirements(Category.crafting, with(WHItems.manganeseSteel, 30, WHItems.chromium, 40, Items.plastanium, 30));
             health = 800;
@@ -3446,7 +3452,7 @@ public final class WHBlocks {
                 researchCostMultiplier = 0.8f;
                 destroyBullet = WHBullets.warpBreak.copy();
                 destroyBullet.hitColor = lightColor = lightningColor = WHPal.WHYellow;
-                //MK3閻庢鍠栭幖顐も偓鍨叀閹粙宕归銈嗗缓
+                //MK3闁诲孩顔栭崰鏍箹椤愩倐鍋撻崹顐ゅ弨闁诡喕绮欏畷褰掝敃閵堝棗缂?
             }
         };*/
 
@@ -4018,10 +4024,10 @@ public final class WHBlocks {
                         Draw.scl(1.5f);
                         Draw.rect(arrowRegion, Tmp.v1.x + Tmp.v2.x + b.x, Tmp.v1.y + Tmp.v2.y + b.y, arrowRegion.width * b.warmup * Draw.scl * f, arrowRegion.height * b.warmup * Draw.scl * f, 180f + 90 * m);
                     }
-                    Tmp.v2.trns(90, m * 2f * tilesize);//婵炴垶鎸搁敃锝囩箔閸涱垪鍋撻棃娑欒础鐞?
+                    Tmp.v2.trns(90, m * 2f * tilesize);//濠电偞鍨堕幐鎼佹晝閿濆洨绠旈柛娑卞灙閸嬫捇妫冨☉娆掔閻?
                     Lines.stroke((1.5f + Mathf.absin(Time.time, 8.0F, 1)) * b.warmup);
                     for (int m1 : Mathf.signs) {
-                        Tmp.v3.trns(180, m1 * 3f * tilesize * b.warmup);//閻庡綊娼荤粻鎴ｃ亹閸濄儮鍋撻棃娑欒础鐞?
+                        Tmp.v3.trns(180, m1 * 3f * tilesize * b.warmup);//闁诲骸缍婂鑽ょ不閹达絻浜归柛婵勫劗閸嬫捇妫冨☉娆掔閻?
                         Lines.lineAngle(Tmp.v1.x + Tmp.v2.x + Tmp.v3.x + b.x, Tmp.v1.y + Tmp.v2.y + Tmp.v3.y + b.y, 180 * m, m1 * tilesize * 7f * b.warmup);
                     }
                 }
@@ -4231,7 +4237,7 @@ public final class WHBlocks {
             size = 2;
             armor = 20;
             frequency = 20;
-            immunityAccount = 2;
+            immunityAccount = 3;
             chanceDeflect = 30;
 
             researchCostMultiplier = 0.6f;
@@ -4254,7 +4260,7 @@ public final class WHBlocks {
             insulated = true;
             absorbLasers = true;
 
-            frequency = 25;
+            frequency = 20;
             immunityAccount = 2;
 
             researchCostMultiplier = 0.6f;
@@ -4268,8 +4274,8 @@ public final class WHBlocks {
             insulated = true;
             absorbLasers = true;
 
-            frequency = 25;
-            immunityAccount = 2;
+            frequency = 20;
+            immunityAccount = 3;
 
             researchCostMultiplier = 0.6f;
         }};
@@ -4291,7 +4297,7 @@ public final class WHBlocks {
             armor = 8;
             insulated = true;
             frequency = 20;
-            immunityAccount = 2;
+            immunityAccount = 4;
             shareDamage = true;
             maxShareStep = 1;
             lightningChance = 0.1f;
@@ -4308,7 +4314,7 @@ public final class WHBlocks {
             size = 2;
             armor = 15;
             insulated = true;
-            frequency = 20;
+            frequency = 10;
             immunityAccount = 3;
             shareDamage = true;
             maxShareStep = 2;
@@ -4324,8 +4330,8 @@ public final class WHBlocks {
             requirements(Category.defense, with(WHItems.refineCeramite, 70, WHItems.sealedPromethium, 60, WHItems.protocolChip, 50));
             health = 13000;
             size = 2;
-            frequency = 13;
-            immunityAccount = 3;
+            frequency = 10;
+            immunityAccount = 4;
             shareDamage = false;
             shieldHealth = 8000;
             breakCooldown = 60 * 15f;
@@ -4346,7 +4352,7 @@ public final class WHBlocks {
             requirements(Category.defense, with(WHItems.adamantium, 80, WHItems.refineCeramite, 120, WHItems.sealedPromethium, 60, WHItems.protocolChip, 20));
             health = 28000;
             size = 2;
-            frequency = 15;
+            frequency = 10;
             immunityAccount = 2;
             shareDamage = true;
             maxShareStep = 2;

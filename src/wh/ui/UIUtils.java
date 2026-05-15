@@ -399,6 +399,7 @@ public final class UIUtils{
     public static void showFleetWarnHudCentered(TextureRegion region, Color color, String text, float duration){
         float width = Core.graphics.getWidth();
         float height = Core.graphics.getHeight() * 0.22f;
+        TextureRegion iconRegion = WHContent.safeRegion(region);
 
         Table warning = new Table(Tex.paneSolid);
         warning.touchable = Touchable.enabled;
@@ -406,7 +407,7 @@ public final class UIUtils{
         warning.table(t2 -> {
             t2.defaults().growY();
             t2.image().growX().height(Math.max(4f, height * 0.06f)).padRight(-10f).color(color);
-            t2.image(region).size(Math.min(height * 0.68f, 140f)).color(color);
+            t2.image(iconRegion).size(Math.min(height * 0.68f, 140f)).color(color);
             t2.image().growX().height(Math.max(4f, height * 0.06f)).padLeft(-10f).color(color);
         }).growX().growY().row();
 
@@ -491,7 +492,7 @@ public final class UIUtils{
 
     public static void showToastText(String text){
         if(headless || !hasText(text)) return;
-        TextureRegionDrawable fl = new TextureRegionDrawable(WHContent.fleet);
+        TextureRegionDrawable fl = new TextureRegionDrawable(WHContent.safeRegion(WHContent.fleet));
         showToast(fl, text, Sounds.none);
     }
 

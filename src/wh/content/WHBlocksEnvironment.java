@@ -25,7 +25,9 @@ public class WHBlocksEnvironment {
             graphiticOre, manganeseOre, chromiumOre, cobaltOre, uraniumOre, molybdenumOre, vibraniumOre,
             mineralSand, quartzSand, promethiumSand, oilMineralSand, radiationSand;
     //liquid
-    public static Block radiationWater, radiationWaterDeep, effluent, effluentDeep, mineralSandEffluentWater, mineralSandRadiationWater, radiationSandWater;
+    public static Block radiationWater, radiationWaterDeep, effluent, effluentDeep,
+            mineralSandEffluentWater, mineralSandRadiationWater, radiationSandWater,
+            oilMineralSandWater;
     //Floor
     public static Block cementFloor, darkHotRock, darkMagmaRock, darkRock, gravel, darkMineralSandstone, darkMineralFloor, mineralSandFloor, chromiteStone, chromiteFloor, chromiteFloorDark, manganeseStone, manganeseFloor, cobaltStone, cobaltFloor,
             trachyte, oreShale, oreSalt, radiationCraters, radiationRockFloor,
@@ -115,7 +117,7 @@ public class WHBlocksEnvironment {
             attributes.set(Attribute.oil, 0.5f);
         }};
 
-        oilMineralSand = new Floor("oil-mineral-sand1") {{
+        oilMineralSand = new Floor("oil-mineral-sand") {{
             itemDrop = WHItems.oreSand;
             playerUnmineable = true;
             attributes.set(Attribute.oil, 2);
@@ -188,6 +190,7 @@ public class WHBlocksEnvironment {
             supportsOverlay = true;
         }};
 
+
         mineralSandEffluentWater = new ShallowLiquid("mineral-sand-swagewater") {{
             speedMultiplier = 0.8f;
             statusDuration = 50f;
@@ -195,8 +198,6 @@ public class WHBlocksEnvironment {
             supportsOverlay = true;
             mapColor.set(Color.valueOf("5e7087"));
         }};
-
-        ((ShallowLiquid) mineralSandEffluentWater).set(effluent, mineralSand);
 
         mineralSandRadiationWater = new ShallowLiquid("mineral-sand-radiowater") {{
             speedMultiplier = 0.8f;
@@ -206,8 +207,6 @@ public class WHBlocksEnvironment {
             mapColor.set(Color.valueOf("4f8497"));
         }};
 
-        ((ShallowLiquid) mineralSandRadiationWater).set(radiationWater, mineralSand);
-
         radiationSandWater = new ShallowLiquid("radiation-sandwater") {{
             speedMultiplier = 0.8f;
             statusDuration = 50f;
@@ -216,7 +215,13 @@ public class WHBlocksEnvironment {
             mapColor.set(Color.valueOf("6d89a1"));
         }};
 
-        ((ShallowLiquid) radiationSandWater).set(radiationWater, radiationSand);
+        oilMineralSandWater = new ShallowLiquid("oil-mineral-sandwater") {{
+            speedMultiplier = 0.8f;
+            statusDuration = 50f;
+            albedo = 0.9f;
+            supportsOverlay = true;
+            mapColor.set(Color.valueOf("6d89a1"));
+        }};
 
         cementFloor = new Floor("cement-floor") {{
             variants = 5;
@@ -594,7 +599,7 @@ public class WHBlocksEnvironment {
 
         darkTile3 = new Floor("dark-tile-3", 0);
 
-        metalTile1 = new Floor("metal-tile-1", 0);
+      /*  metalTile1 = new Floor("metal-tile-1", 0);
 
         metalTile2 = new Floor("metal-tile-2", 0);
 
@@ -604,7 +609,7 @@ public class WHBlocksEnvironment {
 
         metalTile33 = new Floor("metal-tile-3-3", 0);
 
-        metalTile34 = new Floor("metal-tile-3-4", 0);
+        metalTile34 = new Floor("metal-tile-3-4", 0);*/
 
         metalTile4 = new Floor("metal-tile-4", 0);
 
@@ -615,7 +620,6 @@ public class WHBlocksEnvironment {
             drawEdgeOut = true;
             drawEdgeIn = false;
         }};
-
 
         cementTile1 = new Floor("cement-tile-autotile-1") {{
             autotile = true;
@@ -640,6 +644,11 @@ public class WHBlocksEnvironment {
             drawEdgeOut = true;
             drawEdgeIn = false;
         }};
+
+        ((ShallowLiquid) mineralSandEffluentWater).set(effluent, mineralSand);
+        ((ShallowLiquid) mineralSandRadiationWater).set(radiationWater, mineralSand);
+        ((ShallowLiquid) radiationSandWater).set(radiationWater, radiationSand);
+        ((ShallowLiquid) oilMineralSandWater).set(effluent, oilMineralSand);
     }
 
     public static boolean isMineralCoreFloor(Block floor) {

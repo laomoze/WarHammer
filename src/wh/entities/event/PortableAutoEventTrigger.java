@@ -1,24 +1,37 @@
 package wh.entities.event;
 
-import arc.*;
-import arc.audio.*;
-import arc.func.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.actions.*;
-import arc.scene.event.*;
-import arc.scene.ui.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.game.*;
-import mindustry.gen.*;
-import mindustry.type.*;
-import wh.content.*;
-import wh.ui.*;
+import arc.Core;
+import arc.Events;
+import arc.audio.Sound;
+import arc.func.Boolf;
+import arc.func.Cons;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
+import arc.scene.actions.Actions;
+import arc.scene.event.Touchable;
+import arc.scene.ui.Label;
+import arc.scene.ui.layout.Table;
+import arc.struct.ObjectIntMap;
+import arc.struct.ObjectMap;
+import arc.struct.ObjectSet;
+import arc.struct.Seq;
+import arc.util.Align;
+import arc.util.Log;
+import arc.util.Time;
+import mindustry.Vars;
+import mindustry.game.EventType;
+import mindustry.game.Team;
+import mindustry.gen.Groups;
+import mindustry.gen.Tex;
+import mindustry.type.StatusEffect;
+import mindustry.type.UnitType;
+import wh.content.WHContent;
+import wh.content.WHSounds;
+import wh.ui.UIUtils;
 
 /**
  * 基于实体序列化的便携式自动触发器。
@@ -763,7 +776,7 @@ public final class PortableAutoEventTrigger{
         warning.table(t2 -> {
             t2.defaults().growY();
             t2.image().growX().height(Math.max(4f, UIUtils.OFFSET / 2f)).pad(UIUtils.OFFSET / 3f).padRight(-9f).color(color);
-            t2.image(WHContent.fleet).size(UIUtils.LEN - UIUtils.OFFSET).color(color);
+            t2.image(WHContent.safeRegion(WHContent.fleet)).size(UIUtils.LEN - UIUtils.OFFSET).color(color);
             t2.image().growX().height(Math.max(4f, UIUtils.OFFSET / 2f)).pad(UIUtils.OFFSET / 3f).padLeft(-9f).color(color);
         }).width(bannerWidth).growX().pad(UIUtils.OFFSET / 2f).fillY().row();
 

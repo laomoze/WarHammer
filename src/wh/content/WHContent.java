@@ -5,15 +5,20 @@
 
 package wh.content;
 
-import arc.*;
-import arc.graphics.g2d.*;
-import mindustry.ctype.*;
-import mindustry.graphics.*;
-import wh.core.*;
+import arc.Core;
+import arc.graphics.Texture;
+import arc.graphics.g2d.TextureRegion;
+import mindustry.Vars;
+import mindustry.ctype.Content;
+import mindustry.ctype.ContentType;
+import mindustry.graphics.Layer;
+import wh.core.WarHammerMod;
 
 import static wh.core.WarHammerMod.name;
 
 public class WHContent extends Content{
+    private static final TextureRegion emptyRegion = new TextureRegion(new Texture("sprites/error.png"));
+
     public static TextureRegion arrowRegion,
     pointerRegion,
     strafeRegion, missileRegion, bombRegion, annihilateArrow,
@@ -31,11 +36,25 @@ public class WHContent extends Content{
         return ContentType.error;
     }
 
+    public static TextureRegion safeRegion(TextureRegion region) {
+        return region == null ? emptyRegion : region;
+    }
+
+    public static boolean hasRegion(TextureRegion region) {
+        return region != null && region.width > 0f && region.height > 0f;
+    }
+
     public static void loadPriority(){
+        if (Vars.headless) return;
+        if (Core.atlas == null) {
+            return;
+        }
         new WHContent().load();
     }
 
     public void load(){
+        if (Core.atlas == null) return;
+
         arrowRegion = Core.atlas.find(WarHammerMod.name("jump-gate-arrow"));
         pointerRegion = Core.atlas.find(WarHammerMod.name("jump-gate-pointer"));
         strafeRegion = Core.atlas.find(name("strafe-mode"));

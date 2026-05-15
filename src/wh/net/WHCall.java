@@ -1,13 +1,16 @@
 package wh.net;
 
-import arc.audio.*;
-import arc.scene.style.*;
-import mindustry.*;
-import mindustry.gen.*;
-import wh.content.*;
-import wh.entities.event.logic.*;
-import wh.net.packet.*;
-import wh.ui.*;
+import arc.audio.Sound;
+import arc.scene.style.Drawable;
+import arc.scene.style.TextureRegionDrawable;
+import mindustry.Vars;
+import mindustry.gen.Sounds;
+import wh.content.WHContent;
+import wh.content.WHSounds;
+import wh.entities.event.logic.DefaultRaids;
+import wh.net.packet.AlertToastPacket;
+import wh.net.packet.WarnHUDPacket;
+import wh.ui.UIUtils;
 
 import static mindustry.Vars.headless;
 
@@ -53,13 +56,13 @@ public class WHCall{
 
     public static Drawable getDrawable(int id){
         return switch(id){
-            case 0 -> new TextureRegionDrawable(WHContent.objective);
-            case 1 -> new TextureRegionDrawable(WHContent.fleet);
-            case 2 -> new TextureRegionDrawable(WHContent.airborne);
-            case 3 -> new TextureRegionDrawable(WHContent.strafeRegion);
-            case 4 -> new TextureRegionDrawable(WHContent.missileRegion);
-            case 5 -> new TextureRegionDrawable(WHContent.bombRegion);
-            default -> new TextureRegionDrawable(WHContent.bombard);
+            case 0 -> new TextureRegionDrawable(WHContent.safeRegion(WHContent.objective));
+            case 1 -> new TextureRegionDrawable(WHContent.safeRegion(WHContent.fleet));
+            case 2 -> new TextureRegionDrawable(WHContent.safeRegion(WHContent.airborne));
+            case 3 -> new TextureRegionDrawable(WHContent.safeRegion(WHContent.strafeRegion));
+            case 4 -> new TextureRegionDrawable(WHContent.safeRegion(WHContent.missileRegion));
+            case 5 -> new TextureRegionDrawable(WHContent.safeRegion(WHContent.bombRegion));
+            default -> new TextureRegionDrawable(WHContent.safeRegion(WHContent.bombard));
         };
     }
 

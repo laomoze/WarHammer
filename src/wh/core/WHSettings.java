@@ -14,6 +14,7 @@ public final class WHSettings{
     public static final String distortionStrengthKey = "wh-distortion-strength";
     public static final String carrierDebugHudKey = "wh-carrier-debug-hud";
     public static final String fullTechCoverageKey = "wh-full-tech-coverage";
+    public static final String converterEnabledKey = "wh-enable-converter";
     public static final String[] multiplayerForcedKeys = {fullTechCoverageKey};
     private static final String categoryName = "WarHammer设置";
 
@@ -38,6 +39,7 @@ public final class WHSettings{
             table.sliderPref(distortionStrengthKey, 100, 0, 100, 5, i -> i + "%");
             table.checkPref(carrierDebugHudKey, false);
             table.checkPref(fullTechCoverageKey, true);
+            table.checkPref(converterEnabledKey, false);
         });
     }
 
@@ -48,6 +50,7 @@ public final class WHSettings{
         setDefault(distortionStrengthKey, 100);
         setDefault(carrierDebugHudKey, false);
         setDefault(fullTechCoverageKey, true);
+        setDefault(converterEnabledKey, false);
     }
 
     private static void setDefault(String key, Object value) {
@@ -131,6 +134,10 @@ public final class WHSettings{
 
     public static boolean fullTechCoverage() {
         return Core.settings.getBool(fullTechCoverageKey, true);
+    }
+
+    public static boolean converterEnabled() {
+        return Core.settings.getBool(converterEnabledKey, false);
     }
 
     public static boolean laserDebugLengths() {
