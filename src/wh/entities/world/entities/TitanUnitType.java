@@ -17,7 +17,7 @@ public class TitanUnitType extends UnitType{
 
     public float longAxis = 500 / 4f, minorAxis = 400 / 4f;
     public float radius = 60f;
-    public float regen = 1100 / 60f, max = 13000, cooldown = 60 * 60f, restartRatio = 0.4f;
+    public float regen = 1050 / 60f, max = 13000, cooldown = 60 * 60f, restartRatio = 0.4f;
 
     public float reflectChance = 0.15f;
     public boolean shader = true;
@@ -27,7 +27,7 @@ public class TitanUnitType extends UnitType{
     public float percentRegenAmount = 0.05f;
 
     public float damageMax = 2000;
-    public float shieldDamageMaxPer = 2700;
+    public float shieldDamageMaxPer = 2500;
     public float accumulateDamage = 8000;
     public float fullAbsorbTime = 240;
 

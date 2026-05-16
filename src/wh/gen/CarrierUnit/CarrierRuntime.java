@@ -22,10 +22,7 @@ import mindustry.entities.Units;
 import mindustry.entities.units.WeaponMount;
 import mindustry.game.EventType.PayloadDropEvent;
 import mindustry.game.EventType.PickupEvent;
-import mindustry.gen.Building;
-import mindustry.gen.Groups;
-import mindustry.gen.Teamc;
-import mindustry.gen.Unit;
+import mindustry.gen.*;
 import mindustry.type.UnitType;
 import mindustry.world.blocks.payloads.Payload;
 import mindustry.world.blocks.payloads.UnitPayload;
@@ -50,19 +47,19 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
     public static class RunwayPayloadState{
         public int runway = 0;
-        public int localSlot = -1;//单位占用的槽位编号�?
+        public int localSlot = -1;//单位占用的槽位编号。
         public final Vec2 current = new Vec2();
         public final Vec2 target = new Vec2();
 
         /**
-         * [001] ：将当前可视位置直接对齐到目标位置，立即结束过渡�?
+         * [001] ：将当前可视位置直接对齐到目标位置，立即结束过渡。
          */
         public void snap(){
             current.set(target);
         }
 
         /**
-         * [002] ：按给定插值系数平滑推�?payload 的当前可视位置�?
+         * [002] ：按给定插值系数平滑推进 payload 的当前可视位置。
          */
         public void update(float alpha) {
             float amount = Mathf.clamp(alpha, 0f, 1f);
@@ -81,35 +78,38 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         public boolean launching = false;
 
         /**
-         * [003] ：创建并初始化指定跑道的运行时状态容器�?
+         * [003] ：创建并初始化指定跑道的运行时状态容器。
          */
         public RunwayLane(int runway){
             this.runway = runway;
         }
     }
 
-    // 甲板是否已完成初始装填�?
+    // 甲板是否已完成初始装填。
     public boolean deckInitialized = false;
-    // 已放飞战机的出击计时�?
+    // 已放飞战机的出击计时。
     public IntFloatMap sortieTimers = new IntFloatMap();
-    // 甲板战机的整�?回收冷却计时�?
+    // 甲板战机的整备/回收冷却计时。
     public IntFloatMap deckRefitTimers = new IntFloatMap();
-    // 甲板战机的维修回血计时�?
+    // 甲板战机的维修回血计时。
     public transient IntFloatMap deckHealTimers = new IntFloatMap();
-    // 各跑道的甲板、在空与回收占位状态�?
+    // 各跑道的甲板、在空与回收占位状态。
     public transient RunwayLane[] lanes = new RunwayLane[0];
-    // 无法归入跑道队列的额�?payload�?
+    // 无法归入跑道队列的额外 payload。
     public transient Seq<Payload> overflow = new Seq<>();
-    // 甲板 payload 的队�?槽位过渡状态�?
+    // 甲板 payload 的队列/槽位过渡状态。
     public transient ObjectMap<UnitPayload, RunwayPayloadState> payloadStates = new ObjectMap<>();
-    // 甲板 payload 的视觉位置缓存�?
+    // 甲板 payload 的视觉位置缓存。
     public transient ObjectMap<Payload, Vec2> payloadVisuals = new ObjectMap<>();
+    // Keep visual state stable across sync packets even when UnitPayload instances are replaced.
+    public transient ObjectMap<Integer, RunwayPayloadState> payloadStatesByFighterId = new ObjectMap<>();
+    public transient ObjectMap<Integer, Vec2> payloadVisualsByFighterId = new ObjectMap<>();
     public transient Interval runtimeIntervals = new Interval(4);
-    // 甲板队列�?payloads 是否需要重同步�?
+    // 甲板队列与 payloads 是否需要重同步。
     public transient boolean deckDirty = true;
-    // 视觉锚点是否已建立�?
+    // 视觉锚点是否已建立。
     public transient boolean visualAnchorValid = false;
-    // 上一帧视觉锚点位�?朝向�?
+    // 上一帧视觉锚点位置/朝向。
     public transient float visualAnchorX = 0f;
     public transient float visualAnchorY = 0f;
     public transient float visualAnchorRot = 0f;
@@ -125,21 +125,21 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return !Vars.net.client();
     }
 
-    // ===== 生命周期与入�?=====
+    // ===== 生命周期与入口 =====
 
-    /** [004] ：返回实体注�?ID，用于网络同步与序列化识别�?*/
+    /** [004] ：返回实体注册 ID，用于网络同步与序列化识别。 */
     @Override
     public int classId(){
         return EntityRegister.getId(getClass());
     }
 
-    /** [005] ：返回单位质量参数，供物理与碰撞系统使用�?*/
+    /** [005] ：返回单位质量参数，供物理与碰撞系统使用。 */
     @Override
     public float mass() {
         return 114514;
     }
 
-    /** [006] ：切换单位类型后重置甲板状态、计时器与瞬态缓存�?*/
+    /** [006] ：切换单位类型后重置甲板状态、计时器与瞬态缓存。 */
     @Override
     public void setType(UnitType type) {
         super.setType(type);
@@ -148,24 +148,24 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         deckRefitTimers.clear();
         deckHealTimers.clear();
         resetTransientState();
-        if (!Vars.net.client()) {
+        if (authoritative()) {
             trimPayloadsToDeckCapacity();
         } else {
             deckDirty = true;
         }
     }
 
-    /** [007] ：每帧驱动航母核心流程：同步、维护、起降与可视化�?*/
+    /** [007] ：每帧驱动航母核心流程：同步、维护、起降与可视化。 */
     @Override
     public void update(){
         super.update();
 
         CarrierUnitType ctype = carrierType();
         if(ctype == null) return;
-        boolean authoritative = !Vars.net.client();
 
+        // 主运行入口：维护跑道/甲板状态，处理在舰、回收、补充、起飞与可视化同步。
         ensureLanes();
-        if (authoritative) {
+        if (authoritative()) {
             trimPayloadsToDeckCapacity();
             if (!deckInitialized) {
                 initializeDeck(ctype);
@@ -174,7 +174,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
         ensureDeckQueuesSynced();
 
-        if (authoritative) {
+        if (!Vars.net.client()) {
             updateAirborneState();
             updateDeckMaintenance(ctype);
             updateRearm(ctype);
@@ -195,13 +195,15 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
     // ===== 运行时状态与甲板队列 =====
 
-    /** [008] ：清空所有瞬态缓存并恢复运行时标记到初始状态�?*/
+    /** [008] ：清空所有瞬态缓存并恢复运行时标记到初始状态。 */
     protected void resetTransientState() {
         deckHealTimers.clear();
         lanes = new RunwayLane[0];
         overflow.clear();
         payloadStates.clear();
         payloadVisuals.clear();
+        payloadStatesByFighterId.clear();
+        payloadVisualsByFighterId.clear();
         runtimeIntervals = new Interval(4);
         deckDirty = true;
         visualAnchorValid = false;
@@ -215,7 +217,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         staleStateScratch.clear();
     }
 
-    /** [009] ：确保跑道状态数组与当前跑道数量一致�?*/
+    /** [009] ：确保跑道状态数组与当前跑道数量一致。 */
     protected void ensureLanes() {
         int runways = runwayCount();
         if (lanes.length != runways) {
@@ -230,7 +232,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [010] ：获取并返回指定跑道状态，含索引钳制�?
+     * [010] ：获取并返回指定跑道状态，含索引钳制。
      */
     protected RunwayLane laneForRunway(int runway) {
         ensureLanes();
@@ -238,7 +240,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [011] ：在甲板为空时按跑道容量初始化舰载机�?
+     * [011] ：在甲板为空时按跑道容量初始化舰载机。
      */
     protected void initializeDeck(CarrierUnitType ctype) {
         ensureDeckQueuesSynced();
@@ -252,18 +254,18 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [012] ：确�?lane.deck、overflow �?payloads 三者数据一致�?
+     * [012] ：确保 lane.deck、overflow 与 payloads 三者数据一致。
      */
     protected void ensureDeckQueuesSynced() {
         ensureLanes();
-        // 保证 lane.deck / overflow / payloads 三者始终对应，必要时重建甲板队列�?
+        // 保证 lane.deck / overflow / payloads 三者始终对应，必要时重建甲板队列。
         if (deckDirty || !deckQueuesMatchPayloadStorage()) {
             rebuildRunwayDecksFromPayloadStorage();
         }
     }
 
     /**
-     * [013] ：检查当前跑道队列结构是否与 payload 存储一致�?
+     * [013] ：检查当前跑道队列结构是否与 payload 存储一致。
      */
     protected boolean deckQueuesMatchPayloadStorage() {
         int total = overflow.size;
@@ -272,16 +274,23 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
         if (total != payloads.size) return false;
 
-        for (Payload payload : payloads) {
-            if (overflow.contains(payload, true)) continue;
-            if (payload instanceof UnitPayload up && isPayloadInAnyRunwayDeck(up)) continue;
-            return false;
+        int index = 0;
+        for (RunwayLane lane : lanes) {
+            for (UnitPayload payload : lane.deck) {
+                if (index >= payloads.size || payloads.get(index) != payload) return false;
+                index++;
+            }
         }
-        return true;
+
+        for (Payload payload : overflow) {
+            if (index >= payloads.size || payloads.get(index) != payload) return false;
+            index++;
+        }
+        return index == payloads.size;
     }
 
     /**
-     * [014] ：判断目�?payload 是否存在于任意跑道队列中�?
+     * [014] ：判断目标 payload 是否存在于任意跑道队列中。
      */
     protected boolean isPayloadInAnyRunwayDeck(UnitPayload target) {
         for (RunwayLane lane : lanes) {
@@ -293,7 +302,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [015] ：根�?payload 存储重建各跑道队列与 overflow 分区�?
+     * [015] ：根据 payload 存储重建各跑道队列与 overflow 分区。
      */
     protected void rebuildRunwayDecksFromPayloadStorage() {
         ensureLanes();
@@ -319,7 +328,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [016] ：为 payload 内战机选择可用跑道与槽位�?
+     * [016] ：为 payload 内战机选择可用跑道与槽位。
      */
     protected int chooseRunwayForPayloadFighter(Unit fighter, int[] fill) {
         int runway = ownsFighter(fighter) ? fighterRunway(fighter) : 0;
@@ -333,11 +342,11 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [017] ：把跑道队列顺序回写�?payload 存储�?
+     * [017] ：把跑道队列顺序回写到 payload 存储。
      */
     protected void syncPayloadStorageFromRunwayDecks() {
         if (!authoritative()) return;
-        // 按各跑道队列重新拼出 payloads，保持实际存储顺序与跑道队列一致�?
+        // 按各跑道队列重新拼出 payloads，保持实际存储顺序与跑道队列一致。
         payloads.clear();
         for (RunwayLane lane : lanes) {
             for (UnitPayload payload : lane.deck) {
@@ -349,7 +358,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         trimPayloadsToDeckCapacity();
     }
 
-    /** [018] ：裁剪超出甲板容量的 payload 并清理关联状态�?*/
+    /** [018] ：裁剪超出甲板容量的 payload 并清理关联状态。 */
     protected void trimPayloadsToDeckCapacity() {
         if (!authoritative()) return;
         while (payloads.size > deckSlotCount() && !payloads.isEmpty()) {
@@ -369,7 +378,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [019] ：从 overflow 与所有跑道队列中移除指定 payload�?
+     * [019] ：从 overflow 与所有跑道队列中移除指定 payload。
      */
     protected void removePayloadFromDeckCollections(Payload payload) {
         overflow.remove(payload, true);
@@ -381,7 +390,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [020] ：从单个跑道队列中删除目�?UnitPayload�?
+     * [020] ：从单个跑道队列中删除目标 UnitPayload。
      */
     protected void removeUnitPayloadFromQueue(Queue<UnitPayload> queue, UnitPayload target) {
         if (queue.isEmpty()) return;
@@ -397,15 +406,15 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    // ===== 战机绑定与归�?=====
+    // ===== 战机绑定与归属 =====
 
-    /** [021] ：将战机绑定到当前航母和跑道，并切换为舰�?AI�?*/
+    /** [021] ：将战机绑定到当前航母和跑道，并切换为舰载 AI。 */
     protected void bindFighter(Unit fighter, int runway) {
         if (fighter == null) return;
 
         int r = clampRunway(runway);
         fighter.team = team;
-        // 把战机重新绑定到当前航母与指定跑道，并确保它使用舰载机专�?AI�?
+        // 把战机重新绑定到当前航母与指定跑道，并确保它使用舰载机专用 AI。
         if (fighter instanceof CarrierFighterUnit data) {
             data.setCarrierBinding(id, r);
         }
@@ -417,7 +426,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    /** [022] ：清除战机的航母绑定标记�?AI 绑定参数�?*/
+    /** [022] ：清除战机的航母绑定标记与 AI 绑定参数。 */
     protected void clearFighterBinding(Unit fighter) {
         if (fighter instanceof CarrierFighterUnit data) {
             data.clearCarrierBinding();
@@ -427,7 +436,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    /** [023] ：判断战机是否归属当前航母�?*/
+    /** [023] ：判断战机是否归属当前航母。 */
     @Override
     public boolean ownsFighter(Unit fighter) {
         if (fighter == null) return false;
@@ -437,7 +446,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return fighter.controller() instanceof CarrierFighterAI ai && ai.carrierId() == id;
     }
 
-    /** [024] ：获取战机当前绑定的跑道索引�?*/
+    /** [024] ：获取战机当前绑定的跑道索引。 */
     @Override
     public int fighterRunway(Unit fighter) {
         if (fighter instanceof CarrierFighterUnit data && data.carrierId == id) {
@@ -449,16 +458,16 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return 0;
     }
 
-    /** [025] ：读取战机当前出击累计时长�?*/
+    /** [025] ：读取战机当前出击累计时长。 */
     @Override
     public float fighterSortieTime(Unit fighter) {
         return fighter == null ? 0f : sortieTimers.get(fighter.id, 0f);
     }
 
-    // ===== 甲板槽位与跑道几�?=====
+    // ===== 甲板槽位与跑道几何 =====
 
     /**
-     * [026] ：统计指定跑道上甲板内已存放战机数量�?
+     * [026] ：统计指定跑道上甲板内已存放战机数量。
      */
     public int storedFighterCountInRunway(int runway) {
         ensureDeckQueuesSynced();
@@ -466,7 +475,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [027] ：统计指定跑道已分配战机总数（甲�?在空）�?
+     * [027] ：统计指定跑道已分配战机总数（甲板+在空）。
      */
     public int assignedFighterCountInRunway(int runway) {
         RunwayLane lane = laneForRunway(runway);
@@ -474,7 +483,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [028] ：将跑道局部槽位转换为世界坐标�?
+     * [028] ：将跑道局部槽位转换为世界坐标。
      */
     @Override
     public void deckSlotWorld(int runway, int localSlot, Vec2 out){
@@ -500,7 +509,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [029] ：对外查�?payload 对应的跑道索引�?
+     * [029] ：对外查询 payload 对应的跑道索引。
      */
     @Override
     public int deckRunwayForPayload(Payload payload) {
@@ -509,7 +518,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [030] ：对外查�?payload 对应的跑道局部槽位�?
+     * [030] ：对外查询 payload 对应的跑道局部槽位。
      */
     @Override
     public int deckLocalSlotForPayload(Payload payload) {
@@ -544,7 +553,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [031] ：内部解�?payload 跑道索引，支持状态缓存回退�?
+     * [031] ：内部解析 payload 跑道索引，支持状态缓存回退。
      */
     protected int deckRunwayForPayloadInternal(Payload payload) {
         if (payload == null || deckSlotCount() <= 0) return -1;
@@ -569,7 +578,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return runwayForDeckIndex(linear);
     }
 
-    /** [032] ：内部解�?payload 跑道局部槽位，支持状态缓存回退�?*/
+    /** [032] ：内部解析 payload 跑道局部槽位，支持状态缓存回退。 */
     protected int deckLocalSlotForPayloadInternal(Payload payload){
         if(payload == null || deckSlotCount() <= 0) return -1;
         if (overflow.contains(payload, true)) return -1;
@@ -597,7 +606,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [033] ：获�?payload 渲染坐标，优先使用视觉缓存�?
+     * [033] ：获取 payload 渲染坐标，优先使用视觉缓存。
      */
     @Override
     public void deckSlotWorldVisual(Payload payload, int runway, int localSlot, Vec2 out) {
@@ -616,19 +625,19 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    /** [032] ：返回战机整备剩余时间（绝对值）�?*/
+    /** [032] ：返回战机整备剩余时间（绝对值）。 */
     @Override
     public float deckRefitRemaining(int fighterId) {
         return fighterId < 0 ? 0f : Math.abs(deckRefitTimers.get(fighterId, 0f));
     }
 
-    /** [033] ：判断整备计时是否处于“建造显示”阶段�?*/
+    /** [033] ：判断整备计时是否处于“建造显示”阶段。 */
     @Override
     public boolean deckRefitShowsConstruct(int fighterId) {
         return fighterId >= 0 && deckRefitTimers.get(fighterId, 0f) > eps;
     }
 
-    /** [034] ：计算跑道前端世界坐标�?*/
+    /** [034] ：计算跑道前端世界坐标。 */
     @Override
     public void runwayFrontPoint(int runway, Vec2 out) {
         if (out == null) return;
@@ -649,7 +658,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         deckSlotWorld(runway, 0, out);
     }
 
-    /** [035] ：计算跑道后端世界坐标�?*/
+    /** [035] ：计算跑道后端世界坐标。 */
     public void runwayBackPoint(int runway, Vec2 out) {
         if (out == null) return;
         runwayFrontPoint(runway, out);
@@ -657,14 +666,14 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         out.sub(forward.x * runwayDeckDepth(runway), forward.y * runwayDeckDepth(runway));
     }
 
-    /** [036] ：计算跑道甲板纵向深度�?*/
+    /** [036] ：计算跑道甲板纵向深度。 */
     public float runwayDeckDepth(int runway){
         CarrierUnitType ctype = carrierType();
         if (ctype == null) return 0f;
         return Math.max(runwayCapacity(runway) - 1, 0) * ctype.runwaySlotSpacing(runway);
     }
 
-    /** [037] ：计算并归一化跑道朝向向量�?*/
+    /** [037] ：计算并归一化跑道朝向向量。 */
     public Vec2 runwayForwardVector(int runway, Vec2 out){
         if(out == null) out = Tmp.v1;
 
@@ -684,7 +693,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return out.nor();
     }
 
-    /** [038] ：计算战机起飞离舰目标点�?*/
+    /** [038] ：计算战机起飞离舰目标点。 */
     @Override
     public void launchExitPoint(int runway, Vec2 out) {
         if (out == null) return;
@@ -694,7 +703,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         out.add(forward.x * offset, forward.y * offset);
     }
 
-    /** [039] ：计算战机回收触地点（入舰点）�?*/
+    /** [039] ：计算战机回收触地点（入舰点）。 */
     @Override
     public void recoveryPoint(int runway, Vec2 out) {
         if (out == null) return;
@@ -716,12 +725,12 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    /** [040] ：按默认距离计算回收反向等待点�?*/
+    /** [040] ：按默认距离计算回收反向等待点。 */
     public void recoveryReversePoint(int runway, Vec2 out) {
         recoveryReversePoint(runway, 0f, out);
     }
 
-    /** [041] ：按指定距离计算回收反向等待点�?*/
+    /** [041] ：按指定距离计算回收反向等待点。 */
     public Vec2 recoveryReversePoint(int runway, float distance, Vec2 out){
         if(out == null) out = Tmp.v1;
 
@@ -744,7 +753,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return out.set(Tmp.v1.x + Tmp.v3.x * len, Tmp.v1.y + Tmp.v3.y * len);
     }
 
-    /** [042] ：计算回收排队插入点坐标�?*/
+    /** [042] ：计算回收排队插入点坐标。 */
     @Override
     public void runwayQueueInsertPoint(int runway, Vec2 out) {
         CarrierUnitType ctype = carrierType();
@@ -757,29 +766,29 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
     // ===== 目标选择 =====
 
-    /** [043] ：计算指挥目标有效性检测范围�?*/
+    /** [043] ：计算指挥目标有效性检测范围。 */
     protected float commandTargetCheckRange(@Nullable CarrierUnitType ctype) {
         return ctype == null ? Math.max(type.range, targetRangeBase) : Math.max(type.range, ctype.maxFighterDistance * targetRangeCarrierScale);
     }
 
-    /** [044] ：计算武器挂载目标检测范围�?*/
+    /** [044] ：计算武器挂载目标检测范围。 */
     protected float mountTargetCheckRange(@Nullable CarrierUnitType ctype) {
         return ctype == null ? (Math.max(type.range, mountRangeFloor) + mountRangePadding) : Math.max(type.range, ctype.maxFighterDistance * targetRangeCarrierScale);
     }
 
-    /** [045] ：计算主动索敌扫描范围�?*/
+    /** [045] ：计算主动索敌扫描范围。 */
     protected float bestTargetScanRange(@Nullable CarrierUnitType ctype) {
         return ctype == null ? Math.max(type.range, targetRangeBase) : Math.max(type.range, ctype.maxFighterDistance);
     }
 
-    /** [046] ：读取并验证指挥 AI 的攻击目标�?*/
+    /** [046] ：读取并验证指挥 AI 的攻击目标。 */
     protected @Nullable Teamc commandAttackTarget(float checkRange) {
         if (!(controller() instanceof CommandAI ai)) return null;
         Teamc target = ai.attackTarget;
         return Units.invalidateTarget(target, this, checkRange) ? null : target;
     }
 
-    /** [047] ：读取并验证武器挂载当前目标�?*/
+    /** [047] ：读取并验证武器挂载当前目标。 */
     protected @Nullable Teamc mountAttackTarget(float checkRange) {
         if (mounts == null) return null;
         for (WeaponMount mount : mounts) {
@@ -789,12 +798,12 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return null;
     }
 
-    /** [048] ：在给定范围内选择最优敌方目标�?*/
+    /** [048] ：在给定范围内选择最优敌方目标。 */
     protected @Nullable Teamc bestTargetInRange(float range) {
         return Units.bestTarget(team, x, y, range, u -> u.checkTarget(true, true), b -> true, UnitSorts.weakest);
     }
 
-    /** [049] ：在指挥落点附近寻找焦点敌人或敌方建筑�?*/
+    /** [049] ：在指挥落点附近寻找焦点敌人或敌方建筑。 */
     protected @Nullable Teamc focusEnemyNearCommandPos(CommandAI ai) {
         if (ai.targetPos == null || !Float.isFinite(ai.targetPos.x) || !Float.isFinite(ai.targetPos.y)) return null;
         float minFocus = Math.max(hitSize * 0.8f, focusMinDistance);
@@ -807,7 +816,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return tile != null && tile.team != team && tile.isValid() ? tile : null;
     }
 
-    /** [050] ：给舰载机返回当前优先锁定目标�?*/
+    /** [050] ：给舰载机返回当前优先锁定目标。 */
     @Override
     public @Nullable Teamc lockedTarget(){
         CarrierUnitType ctype = carrierType();
@@ -820,7 +829,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return bestTargetInRange(bestTargetScanRange(ctype));
     }
 
-    /** [051] ：给舰载机输出当前应聚焦的目标位置�?*/
+    /** [051] ：给舰载机输出当前应聚焦的目标位置。 */
     @Override
     public boolean focusPosition(Vec2 out){
         if(out == null) return false;
@@ -855,7 +864,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return false;
     }
 
-    /** [052] ：判断战机是否满足返航回收条件�?*/
+    /** [052] ：判断战机是否满足返航回收条件。 */
     @Override
     public boolean shouldRecallFighter(Unit fighter){
         CarrierUnitType ctype = carrierType();
@@ -867,15 +876,14 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
     // ===== 回收流程 =====
 
-    /** [053] ：判断指定跑道当前是否具备回收条件�?*/
+    /** [053] ：判断指定跑道当前是否具备回收条件。 */
     protected boolean canRunwayRecoverToDeck(int runway) {
         return payloads.size < deckSlotCount() && storedFighterCountInRunway(runway) < runwayCapacity(runway);
     }
 
-    /** [054] ：释放战机占用的跑道回收进场资格�?*/
+    /** [054] ：释放战机占用的跑道回收进场资格。 */
     @Override
     public void releaseRecoveryClaim(Unit fighter) {
-        if (!authoritative()) return;
         if (fighter == null) return;
         for (RunwayLane lane : lanes) {
             if (lane.recoveryClaim == fighter.id) {
@@ -884,12 +892,11 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    /** [055] ：清理失效、越界或过期的回收占位声明�?*/
+    /** [055] ：清理失效、越界或过期的回收占位声明。 */
     protected void cleanupStaleRecoveryClaims() {
-        if (!authoritative()) return;
         CarrierUnitType ctype = carrierType();
         if(ctype == null) return;
-        // 未开启逐架回收时，不需要维护跑道“最终进场资格”，直接清空所�?claim�?
+        // 未开启逐架回收时，不需要维护跑道“最终进场资格”，直接清空所有 claim。
         if (!ctype.oneByOneRecovery) {
             for (RunwayLane lane : lanes) lane.recoveryClaim = -1;
             return;
@@ -900,14 +907,14 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             if(claim < 0) continue;
 
             Unit fighter = Groups.unit.getByID(claim);
-            // 占位飞机不存在、已死亡、不再属于本航母、已经回收到甲板�?
-            // 或其当前分配跑道已变化时，这�?claim 就应立即失效�?
+            // 占位飞机不存在、已死亡、不再属于本航母、已经回收到甲板，
+            // 或其当前分配跑道已变化时，这个 claim 就应立即失效。
             if (fighter == null || fighter.dead() || !ownsFighter(fighter) || isFighterStoredOnDeck(claim) || fighterRunway(fighter) != lane.runway) {
                 lane.recoveryClaim = -1;
                 continue;
             }
-            // 只有仍由舰载�?AI 控制，且仍处于返�?降落流程中的飞机�?
-            // 才允许继续保留这条跑道的最终进场资格�?
+            // 只有仍由舰载机 AI 控制，且仍处于返航/降落流程中的飞机，
+            // 才允许继续保留这条跑道的最终进场资格。
             if (!(fighter.controller() instanceof CarrierBoundAIC ai) || (!ai.isReturning() && !ai.isLanding())) {
                 lane.recoveryClaim = -1;
                 continue;
@@ -915,15 +922,15 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
             runwayQueueInsertPoint(lane.runway, Tmp.v1);
             float radius = Math.max(ctype.recoverRadius * 4f, ctype.landingApproachRadius * 3f);
-            // 即便状态仍合法，只要飞机已经远离本跑道等待区，也释�?claim�?
-            // 避免旧占位长期卡住后续回收�?
+            // 即便状态仍合法，只要飞机已经远离本跑道等待区，也释放 claim，
+            // 避免旧占位长期卡住后续回收。
             if (!fighter.within(Tmp.v1, radius)) {
                 lane.recoveryClaim = -1;
             }
         }
     }
 
-    /** [056] ：判定战机是否允许进入最终回收进场阶段�?*/
+    /** [056] ：判定战机是否允许进入最终回收进场阶段。 */
     @Override
     public boolean allowRecoveryApproach(Unit fighter){
         if(fighter == null || fighter.dead()) return false;
@@ -932,18 +939,14 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
         int runway = fighterRunway(fighter);
         if (!canRunwayRecoverToDeck(runway)) return false;
-        // 未开�?oneByOneRecovery 时，只要基础条件满足就允许直接进入最后进场�?
+        // 未开启 oneByOneRecovery 时，只要基础条件满足就允许直接进入最后进场。
         if (!ctype.oneByOneRecovery) return true;
-        if (!authoritative()) {
-            int claim = laneForRunway(runway).recoveryClaim;
-            return claim < 0 || claim == fighter.id;
-        }
 
-        // 开启逐架回收时，同一跑道同一时刻只允许一架飞机占用最终进场资格�?
+        // 开启逐架回收时，同一跑道同一时刻只允许一架飞机占用最终进场资格。
         cleanupStaleRecoveryClaims();
         RunwayLane lane = laneForRunway(runway);
-        // recoveryClaim < 0 表示当前无人占位�?
-        // recoveryClaim == fighter.id 表示该资格本来就属于当前飞机，允许继续完成降落流程�?
+        // recoveryClaim < 0 表示当前无人占位；
+        // recoveryClaim == fighter.id 表示该资格本来就属于当前飞机，允许继续完成降落流程。
         if (lane.recoveryClaim < 0 || lane.recoveryClaim == fighter.id) {
             lane.recoveryClaim = fighter.id;
             return true;
@@ -951,23 +954,22 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return false;
     }
 
-    /** [057] ：计算回收触地判定半径�?*/
+    /** [057] ：计算回收触地判定半径。 */
     protected float recoveryTouchdownRadius(Unit fighter, CarrierUnitType ctype, int runway) {
         if (fighter == null || ctype == null) return 0f;
         return Math.max(3.5f, Math.max(ctype.runwaySlotSpacing(runway) * 0.18f, fighter.hitSize * 0.4f));
     }
 
-    /** [058] ：判断战机是否已进入回收触地点范围�?*/
+    /** [058] ：判断战机是否已进入回收触地点范围。 */
     protected boolean isNearRecoveryTouchdown(Unit fighter, int runway, float radius) {
         if (fighter == null) return false;
         recoveryPoint(runway, Tmp.v4);
         return !invalidLaunchPoint(Tmp.v4) && fighter.within(Tmp.v4.x, Tmp.v4.y, radius);
     }
 
-    /** [059] ：尝试把满足条件的战机回收到甲板�?*/
+    /** [059] ：尝试把满足条件的战机回收到甲板。 */
     @Override
     public boolean tryRecoverFighter(Unit fighter) {
-        if (!authoritative()) return false;
         if (fighter == null || !fighter.isValid() || fighter.dead()) return false;
         CarrierUnitType ctype = carrierType();
         if (ctype == null || !ownsFighter(fighter)) return false;
@@ -976,49 +978,63 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         if (!canRunwayRecoverToDeck(runway)) return false;
         if (!isNearRecoveryTouchdown(fighter, runway, recoveryTouchdownRadius(fighter, ctype, runway))) return false;
         // 战机 AI 会在真正接地时才允许回收；这里等于在航母侧再做一次最终确认，
-        // 避免飞机还没完成最后进场就被提前收入甲板�?
+        // 避免飞机还没完成最后进场就被提前收入甲板。
         if (fighter.controller() instanceof CarrierBoundAIC ai && !ai.canRecoverNow()) return false;
 
         recoverFighterToDeck(fighter, runway);
         return true;
     }
 
+    public static void unitDespawn(Unit unit) {
+        if (Vars.net.server() || !Vars.net.active()) {
+            if (unit == null) return;
+            unit.remove();
+        }
+
+        if (Vars.net.server()) {
+            UnitDespawnCallPacket packet = new UnitDespawnCallPacket();
+            packet.unit = unit;
+            Vars.net.send(packet, true);
+        }
+
+    }
+
     /**
-     * [060] ：执行战机入舰回收并重置其在舰状态�?
+     * [060] ：执行战机入舰回收并重置其在舰状态。
      */
     protected void recoverFighterToDeck(Unit fighter, int runway) {
-        if (!authoritative()) return;
-        int oldId = fighter.id;
-        // 将已接地战机从世界移回甲板，并重置其在舰整备相关状态�?
+        // 将已接地战机从世界移回甲板，并重置其在舰整备相关状态。
         if (fighter.isAdded()) {
             fighter.team.data().updateCount(fighter.type, 1);
         }
-        fighter.remove();
+        fighter.vel.setZero();
+        if (fighter.trail != null) {
+            fighter.trail.clear();
+        }
+        if (Vars.net.server()) {
+            // Ensure all clients remove the world fighter entity immediately when it is recovered into payload.
+            unitDespawn(fighter);
+        } else {
+            fighter.remove();
+        }
+        bindFighter(fighter, runway);
         releaseRecoveryClaim(fighter);
-        sortieTimers.remove(oldId, 0f);
-        deckHealTimers.remove(oldId, 0f);
-        deckRefitTimers.remove(oldId, 0f);
+        sortieTimers.remove(fighter.id, 0f);
+        deckHealTimers.remove(fighter.id, 0f);
 
         float refit = Math.max(carrierType() == null ? 0f : carrierType().recoverRefitTime, 0f);
-
-        for (RunwayLane lane : lanes) {
-            if (lane.recoveryClaim == oldId) {
-                lane.recoveryClaim = -1;
-            }
-            for (int i = lane.airborne.size - 1; i >= 0; i--) {
-                if (lane.airborne.get(i) == oldId) {
-                    lane.airborne.removeIndex(i);
-                }
-            }
-        }
-
-        // Keep the same ID while entering payload (world -> payload).
-        // ID remapping is only needed when the fighter re-enters the world (payload -> world).
-        bindFighter(fighter, runway);
         if (refit > eps) {
             deckRefitTimers.put(fighter.id, -refit);
         } else {
             deckRefitTimers.remove(fighter.id, 0f);
+        }
+
+        for (RunwayLane lane : lanes) {
+            for (int i = lane.airborne.size - 1; i >= 0; i--) {
+                if (lane.airborne.get(i) == fighter.id) {
+                    lane.airborne.removeIndex(i);
+                }
+            }
         }
 
         UnitPayload payload = new UnitPayload(fighter);
@@ -1027,14 +1043,17 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         syncPayloadStorageFromRunwayDecks();
 
         Fx.unitPickup.at(fighter);
+        if (Vars.net.client() && Vars.netClient != null) {
+            Vars.netClient.clearRemovedEntity(fighter.id);
+        }
         Events.fire(new PickupEvent(this, fighter));
     }
 
-    // ===== 在空追踪与甲板维�?=====
+    // ===== 在空追踪与甲板维护 =====
 
-    /** [061] ：维护在空列表、纠正跑道归属并累计出击时间�?*/
+    /** [061] ：维护在空列表、纠正跑道归属并累计出击时间。 */
     protected void updateAirborneState() {
-        // 维护各跑�?airborne 列表：去重、剔除失效目标、修正跑道归属，并累�?sortie 时间�?
+        // 维护各跑道 airborne 列表：去重、剔除失效目标、修正跑道归属，并累计 sortie 时间。
         for (RunwayLane lane : lanes) {
             uniqueIdsScratch.clear();
             for (int i = lane.airborne.size - 1; i >= 0; i--) {
@@ -1066,7 +1085,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [062] ：全局重扫在空战机，补全遗漏索引�?
+     * [062] ：全局重扫在空战机，补全遗漏索引。
      */
     protected void rescanAirborneFighters() {
         for (Unit fighter : Groups.unit) {
@@ -1076,7 +1095,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [063] ：向指定跑道在空列表去重添加战机 ID�?
+     * [063] ：向指定跑道在空列表去重添加战机 ID。
      */
     protected void addAirborneFighter(int runway, int fighterId) {
         RunwayLane lane = laneForRunway(runway);
@@ -1086,7 +1105,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         lane.airborne.add(fighterId);
     }
 
-    /** [064] ：判断给定战机是否已存放在甲�?payload 中�?*/
+    /** [064] ：判断给定战机是否已存放在甲板 payload 中。 */
     protected boolean isFighterStoredOnDeck(int fighterId) {
         if (fighterId < 0) return false;
         for (Payload payload : payloads) {
@@ -1097,7 +1116,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return false;
     }
 
-    /** [065] ：推进甲板整�?维修计时并执行周期回血�?*/
+    /** [065] ：推进甲板整备/维修计时并执行周期回血。 */
     protected void updateDeckMaintenance(CarrierUnitType ctype){
         IntSet live = uniqueIdsScratch;
         live.clear();
@@ -1106,7 +1125,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         float healInterval = allowHeal ? Math.max(ctype.recoverHealInterval, 1f) : 1f;
         float healFraction = allowHeal ? Mathf.clamp(ctype.recoverHealFraction, 0f, 1f) : 0f;
 
-        // 处理甲板内战机的整备/维修计时，并定期清理失效计时器条目�?
+        // 处理甲板内战机的整备/维修计时，并定期清理失效计时器条目。
         for(Payload payload : payloads){
             if(!(payload instanceof UnitPayload up) || up.unit == null) continue;
             Unit fighter = up.unit;
@@ -1142,7 +1161,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    /** [066] ：清理计时表中不再存活的条目�?*/
+    /** [066] ：清理计时表中不再存活的条目。 */
     protected void pruneTimerEntries(IntFloatMap map, IntSet live) {
         staleIdsScratch.clear();
         for (IntFloatMap.Entry entry : map) {
@@ -1155,11 +1174,11 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    // ===== 补给与起飞调�?=====
+    // ===== 补给与起飞调度 =====
 
-    /** [067] ：按补给间隔为空缺跑道补充甲板战机�?*/
+    /** [067] ：按补给间隔为空缺跑道补充甲板战机。 */
     protected void updateRearm(CarrierUnitType ctype) {
-        // 当某条跑道无在空战机且甲板未满时，按间隔补充新的甲板战机�?
+        // 当某条跑道无在空战机且甲板未满时，按间隔补充新的甲板战机。
         for (int runway = 0; runway < runwayCount(); runway++) {
             RunwayLane lane = laneForRunway(runway);
             lane.rearmReload = Math.max(lane.rearmReload - Time.delta, 0f);
@@ -1173,7 +1192,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    /** [068] ：创建一架甲板战机并加入对应跑道队列�?*/
+    /** [068] ：创建一架甲板战机并加入对应跑道队列。 */
     protected boolean createDeckFighter(CarrierUnitType ctype, int runway, boolean construct) {
         if (!authoritative()) return false;
         int r = clampRunway(runway);
@@ -1200,7 +1219,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return true;
     }
 
-    /** [069] ：初始化�?payload 的视觉起始位置�?*/
+    /** [069] ：初始化新 payload 的视觉起始位置。 */
     protected void seedPayloadVisualPosition(UnitPayload payload, int runway, boolean construct) {
         if (payload == null) return;
         Vec2 start = new Vec2();
@@ -1219,9 +1238,9 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         payloadVisuals.put(payload, start);
     }
 
-    /** [070] ：调度各跑道起飞流程与发射节奏�?*/
+    /** [070] ：调度各跑道起飞流程与发射节奏。 */
     protected void updateRunwayLaunchState(CarrierUnitType ctype) {
-        // 起飞调度：等待整条跑道准备就绪，再按发射间隔依次放飞队首战机�?
+        // 起飞调度：等待整条跑道准备就绪，再按发射间隔依次放飞队首战机。
         for(int runway = 0; runway < runwayCount(); runway++){
             RunwayLane lane = laneForRunway(runway);
             lane.launchReload = Math.max(lane.launchReload - Time.delta, 0f);
@@ -1253,7 +1272,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    /** [071] ：检查跑道内战机是否全部满足起飞前置条件�?*/
+    /** [071] ：检查跑道内战机是否全部满足起飞前置条件。 */
     protected boolean runwayStoredFightersReady(int runway) {
         CarrierUnitType ctype = carrierType();
         if (ctype == null) return false;
@@ -1268,7 +1287,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [072] ：判断跑道是否被回收流程阻塞起飞�?
+     * [072] ：判断跑道是否被回收流程阻塞起飞。
      */
     protected boolean runwayLaunchBlocked(int runway) {
         RunwayLane lane = laneForRunway(runway);
@@ -1283,7 +1302,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [073] ：获取跑道队首可用战�?payload�?
+     * [073] ：获取跑道队首可用战机 payload。
      */
     protected @Nullable UnitPayload frontPayloadInRunway(int runway) {
         Queue<UnitPayload> deck = laneForRunway(runway).deck;
@@ -1298,7 +1317,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return null;
     }
 
-    /** [074] ：判断队�?payload 是否达到可起飞状态�?*/
+    /** [074] ：判断队首 payload 是否达到可起飞状态。 */
     protected boolean launchStateReady(UnitPayload payload, int runway, CarrierUnitType ctype){
         if(payload == null || ctype == null) return false;
         Queue<UnitPayload> deck = laneForRunway(runway).deck;
@@ -1312,7 +1331,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return state.current.dst2(Tmp.v4) <= threshold * threshold * 5.76f;
     }
 
-    /** [075] ：执行战机出舰起飞、速度设置与事件派发�?*/
+    /** [075] ：执行战机出舰起飞、速度设置与事件派发。 */
     protected boolean launchFighter(UnitPayload payload, int runway, int launchLocalSlot, CarrierUnitType ctype) {
         Unit fighter = payload.unit;
         if (fighter == null || fighter.type == null) return false;
@@ -1334,13 +1353,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         if(fighter.type.flying){
             fighter.elevation = Math.max(fighter.elevation, 0.32f);
         }
-        if(!fighter.isAdded()){
-            fighter.team.data().updateCount(fighter.type, -1);
-        }
-
-        // Match vanilla payload drop semantics: remap to a fresh ID before re-entering world.
-        // This prevents client removed-entity cache collisions when the same fighter is recovered
-        // then relaunched repeatedly.
         int oldId = fighter.id;
         fighter.id = EntityGroup.nextId();
         if (oldId != fighter.id) {
@@ -1348,7 +1360,6 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             deckRefitTimers.remove(oldId, 0f);
             deckHealTimers.remove(oldId, 0f);
             for (RunwayLane lane : lanes) {
-                if (lane == null) continue;
                 if (lane.recoveryClaim == oldId) {
                     lane.recoveryClaim = -1;
                 }
@@ -1358,6 +1369,9 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
                     }
                 }
             }
+        }
+        if (!fighter.isAdded()) {
+            fighter.team.data().updateCount(fighter.type, -1);
         }
 
         bindFighter(fighter, runway);
@@ -1380,7 +1394,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [076] ：解析起飞起点坐标并处理无效点回退�?
+     * [076] ：解析起飞起点坐标并处理无效点回退。
      */
     protected void resolveLaunchStartPoint(int runway, int launchLocalSlot, Vec2 out) {
         runwayFrontPoint(runway, out);
@@ -1393,7 +1407,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [077] ：移除已起飞 payload 并清理其关联计时�?
+     * [077] ：移除已起飞 payload 并清理其关联计时。
      */
     protected void removeLaunchedPayload(int runway, UnitPayload payload) {
         if (!authoritative()) return;
@@ -1408,10 +1422,10 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         syncPayloadStorageFromRunwayDecks();
     }
 
-    // ===== 视觉状态与插�?=====
+    // ===== 视觉状态与插值 =====
 
     /**
-     * [078] ：同步视觉锚点并对历史视觉点做位姿补偿�?
+     * [078] ：同步视觉锚点并对历史视觉点做位姿补偿。
      */
     protected void updateVisualAnchor() {
         if (!visualAnchorValid) {
@@ -1446,7 +1460,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [079] ：对单个视觉点应用平移与旋转变换�?
+     * [079] ：对单个视觉点应用平移与旋转变换。
      */
     protected void transformVisualPoint(Vec2 point, float anchorX, float anchorY, float dx, float dy, float drot) {
         if (point == null) return;
@@ -1454,7 +1468,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [080] ：计算两个角度之间的最短差值�?
+     * [080] ：计算两个角度之间的最短差值。
      */
     protected float angleDelta(float from, float to) {
         float delta = to - from;
@@ -1463,15 +1477,24 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         return delta;
     }
 
-    /** [081] ：获取或创建 payload 的视觉插值状态对象�?*/
+    /** [081] ：获取或创建 payload 的视觉插值状态对象。 */
     protected RunwayPayloadState getOrCreatePayloadState(UnitPayload payload, int runway, int localSlot) {
         RunwayPayloadState state = payloadStates.get(payload);
         if (state == null) {
-            state = new RunwayPayloadState();
+            Integer fighterId = payload.unit == null ? null : payload.unit.id;
+            if (fighterId != null) {
+                state = payloadStatesByFighterId.get(fighterId);
+            }
+            if (state == null) {
+                state = new RunwayPayloadState();
+            }
             state.runway = runway;
             state.localSlot = localSlot;
             deckSlotWorld(runway, localSlot, state.target);
             Vec2 visual = payloadVisuals.get(payload);
+            if (visual == null && fighterId != null) {
+                visual = payloadVisualsByFighterId.get(fighterId);
+            }
             if (visual != null) {
                 state.current.set(visual);
             } else if (payload.unit != null && deckRefitShowsConstruct(payload.unit.id)) {
@@ -1481,18 +1504,21 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
             }
             if (invalidLaunchPoint(state.current)) state.current.set(state.target);
             payloadStates.put(payload, state);
+            if (fighterId != null) {
+                payloadStatesByFighterId.put(fighterId, state);
+            }
         }
         return state;
     }
 
-    /** [082] ：逐帧更新甲板与溢�?payload 的视觉位置�?*/
+    /** [082] ：逐帧更新甲板与溢出 payload 的视觉位置。 */
     protected void updatePayloadVisuals(CarrierUnitType ctype) {
         updateVisualAnchor();
         float smooth = Mathf.clamp(ctype.deckVisualSmoothing, 0.02f, 0.95f);
         float queueSpeed = Mathf.clamp(ctype.queueMoveSpeed, 0.02f, 3f);
         float follow = Mathf.clamp(smooth * queueSpeed, 0.0025f, 0.18f);
 
-        // 仅更新甲板上 payload 的视觉位置，让排�?回收过程看起来平滑连续�?
+        // 仅更新甲板上 payload 的视觉位置，让排队/回收过程看起来平滑连续。
         for (int runway = 0; runway < runwayCount(); runway++) {
             int localSlot = 0;
             for (UnitPayload payload : laneForRunway(runway).deck) {
@@ -1528,6 +1554,15 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
                 } else {
                     visual.set(state.current);
                 }
+                if (payload.unit != null) {
+                    payloadStatesByFighterId.put(payload.unit.id, state);
+                    Vec2 cached = payloadVisualsByFighterId.get(payload.unit.id);
+                    if (cached == null) {
+                        payloadVisualsByFighterId.put(payload.unit.id, new Vec2(state.current));
+                    } else {
+                        cached.set(state.current);
+                    }
+                }
                 localSlot++;
             }
         }
@@ -1546,7 +1581,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    /** [083] ：清理已失效 payload 的视觉缓存与状态�?*/
+    /** [083] ：清理已失效 payload 的视觉缓存与状态。 */
     protected void cleanupPayloadVisuals() {
         livePayloadsScratch.clear();
         for (Payload payload : payloads) {
@@ -1572,13 +1607,41 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         for (UnitPayload payload : staleStateScratch) {
             payloadStates.remove(payload);
         }
+
+        uniqueIdsScratch.clear();
+        for (Payload payload : payloads) {
+            if (payload instanceof UnitPayload up && up.unit != null) {
+                uniqueIdsScratch.add(up.unit.id);
+            }
+        }
+
+        staleIdsScratch.clear();
+        for (ObjectMap.Entry<Integer, RunwayPayloadState> entry : payloadStatesByFighterId) {
+            Integer id = entry.key;
+            if (id == null || !uniqueIdsScratch.contains(id)) {
+                staleIdsScratch.add(id == null ? -1 : id);
+            }
+        }
+        for (int i = 0; i < staleIdsScratch.size; i++) {
+            payloadStatesByFighterId.remove(staleIdsScratch.get(i));
+        }
+
+        staleIdsScratch.clear();
+        for (ObjectMap.Entry<Integer, Vec2> entry : payloadVisualsByFighterId) {
+            Integer id = entry.key;
+            if (id == null || !uniqueIdsScratch.contains(id)) {
+                staleIdsScratch.add(id == null ? -1 : id);
+            }
+        }
+        for (int i = 0; i < staleIdsScratch.size; i++) {
+            payloadVisualsByFighterId.remove(staleIdsScratch.get(i));
+        }
     }
 
-    /** [084] ：移除航母时清理并销毁所有归属战机�?*/
+    /** [084] ：移除航母时清理并销毁所有归属战机。 */
     @Override
     public void remove() {
-        // Only the server/authority should mutate ownership and kill fighters.
-        if (!Vars.net.client()) {
+        if (authoritative()) {
             for (RunwayLane lane : lanes) {
                 for (int i = 0; i < lane.airborne.size; i++) {
                     Unit fighter = Groups.unit.getByID(lane.airborne.get(i));
@@ -1589,7 +1652,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
                 }
             }
 
-            for (Payload payload : payloads) {
+            for (Payload payload : payloads){
                 if (payload instanceof UnitPayload up && up.unit != null && ownsFighter(up.unit)) {
                     clearFighterBinding(up.unit);
                     up.unit.kill();
@@ -1606,7 +1669,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
 
     // ===== 状态序列化 =====
 
-    /** [085] ：把 IntFloatMap 序列化写入数据流�?*/
+    /** [085] ：把 IntFloatMap 序列化写入数据流。 */
     protected void writeIntFloatMap(Writes write, IntFloatMap map) {
         write.i(map.size);
         for (IntFloatMap.Entry entry : map) {
@@ -1615,7 +1678,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    /** [086] ：从数据流读取并反序列化 IntFloatMap�?*/
+    /** [086] ：从数据流读取并反序列化 IntFloatMap。 */
     protected void readIntFloatMap(Reads read, IntFloatMap map) {
         map.clear();
         int size = read.i();
@@ -1628,7 +1691,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    /** [087] ：写出航母完整运行时状态�?*/
+    /** [087] ：写出航母完整运行时状态。 */
     protected void writeState(Writes write) {
         write.bool(deckInitialized);
         writeIntFloatMap(write, sortieTimers);
@@ -1647,12 +1710,12 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
     }
 
-    /** [088] ：按完整模式读取运行时状态（默认入口）�?*/
+    /** [088] ：按完整模式读取运行时状态（默认入口）。 */
     protected void readState(Reads read) {
         readState(read, true);
     }
 
-    /** [089] ：按 full 标志读取并应用运行时状态�?*/
+    /** [089] ：按 full 标志读取并应用运行时状态。 */
     protected void readState(Reads read, boolean full) {
         deckInitialized = read.bool();
         readIntFloatMap(read, sortieTimers);
@@ -1697,45 +1760,11 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         deckDirty = true;
         if (!full) {
             overflow.clear();
-            payloadStates.clear();
-            payloadVisuals.clear();
-            visualAnchorValid = false;
-        }
-        clearRemovedFlagsForStoredFighters();
-    }
-
-    protected void clearRemovedFlagsForStoredFighters() {
-        if (!Vars.net.client() || Vars.netClient == null) return;
-        for (Payload payload : payloads) {
-            if (payload instanceof UnitPayload up && up.unit != null) {
-                Vars.netClient.clearRemovedEntity(up.unit.id);
-            }
+            // Keep visual caches for multiplayer smoothing; they are pruned separately.
         }
     }
 
-    protected void clearRemovedFlagsForKnownFighters() {
-        if (!Vars.net.client() || Vars.netClient == null) return;
-
-        for (Payload payload : payloads) {
-            if (payload instanceof UnitPayload up && up.unit != null) {
-                Vars.netClient.clearRemovedEntity(up.unit.id);
-            }
-        }
-        for (RunwayLane lane : lanes) {
-            if (lane == null) continue;
-            for (int i = 0; i < lane.airborne.size; i++) {
-                Vars.netClient.clearRemovedEntity(lane.airborne.get(i));
-            }
-        }
-        for (IntFloatMap.Entry entry : sortieTimers) {
-            Vars.netClient.clearRemovedEntity(entry.key);
-        }
-        for (IntFloatMap.Entry entry : deckRefitTimers) {
-            Vars.netClient.clearRemovedEntity(entry.key);
-        }
-    }
-
-    /** [090] ：读取实体全量状态数据�?*/
+    /** [090] ：读取实体全量状态数据。 */
     @Override
     public void read(Reads read) {
         super.read(read);
@@ -1743,7 +1772,7 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     }
 
     /**
-     * [091] ：写出实体全量状态数据�?
+     * [091] ：写出实体全量状态数据。
      */
     @Override
     public void write(Writes write) {
@@ -1751,15 +1780,14 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         writeState(write);
     }
 
-    /** [092] ：读取联机同步帧状态�?*/
+    /** [092] ：读取联机同步帧状态。 */
     @Override
     public void readSync(Reads read) {
-        clearRemovedFlagsForKnownFighters();
         super.readSync(read);
         readState(read, false);
     }
 
-    /** [093] ：写出联机同步帧状态�?*/
+    /** [093] ：写出联机同步帧状态。 */
     @Override
     public void writeSync(Writes write) {
         super.writeSync(write);

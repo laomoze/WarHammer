@@ -1,4 +1,4 @@
-package wh.gen;
+package wh.entities.world.entities;
 
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.TextureRegion;
@@ -14,7 +14,7 @@ import mindustry.type.Weapon;
 import wh.content.WHFx;
 import wh.entities.bullet.CritBulletType;
 import wh.entities.world.drawer.part.BarrelPart;
-import wh.entities.world.entities.WHUnitType;
+import wh.gen.TankEn2Unit;
 import wh.graphics.WHPal;
 
 import static wh.core.WarHammerMod.name;

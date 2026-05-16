@@ -573,7 +573,7 @@ public class AirborneSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc
 
     @Override
     public int classId(){
-        return EntityRegister.getId(getClass());
+        return EntityRegister.getId(AirborneSpawner.class);
     }
 
     @Override

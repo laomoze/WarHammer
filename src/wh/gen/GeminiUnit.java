@@ -34,6 +34,7 @@ import wh.core.WHSettings;
 import wh.entities.bullet.ApproachBullet;
 import wh.entities.bullet.ApproachBullet.AB;
 import wh.entities.world.entities.GeminiUnitType;
+import wh.net.packet.GeminiSpecialBulletPacket;
 import wh.util.WHUtils;
 
 import static mindustry.io.TypeIO.readEntity;
@@ -45,12 +46,10 @@ public class GeminiUnit extends UnitEntity {
         public Healthc primaryLink;
         public float primaryLinkTimeLeft;
         public float phaseTimeLeft;
-        public float phaseCooldownTimer;
-        public float phaseVisualFade;
-        public float lowHealthEyeOpen;
         public GeminiUnit pairLinkUnit;
-        public boolean pairLinking;
-        public boolean pairLinked;
+        public float pairLinkLastX;
+        public float pairLinkLastY;
+        public float pairLinkLastRadius;
         public final Seq<Healthc> secondaryLinks = new Seq<>();
     }
 
@@ -99,14 +98,15 @@ public class GeminiUnit extends UnitEntity {
     public static final int LOW_HEALTH_SPECIAL_MAX_BULLETS = 4;
     public static final int LOW_HEALTH_SPECIAL_BURST = 3;
     public static final float LOW_HEALTH_SPECIAL_SPREAD = 20f;
-    public static final float LOW_HEALTH_SPECIAL_SCAN_RANGE = 200;
-    public static final float LOW_HEALTH_SPECIAL_SCAN_INTERVAL = 120;
+    public static final float LOW_HEALTH_SPECIAL_SCAN_RANGE = 320;
+    public static final float LOW_HEALTH_SPECIAL_SCAN_INTERVAL = 10f;
 
     public static final float PAIR_LINK_RANGE = 800;
     public static final float PAIR_LINK_REFRESH_INTERVAL = 60;
     public static final float PAIR_LINK_RADIUS_APPROACH = 0.02f;
     public static final float PAIR_LINK_DAMAGE_REDUCTION = 0.2f;
     public static final float PAIR_LINK_TRANSFER_FRACTION = 0.17f;
+    public static final float PAIR_LINK_LAST_HOLD = 20f;
 
     public static final float LOW_HEALTH_DAMAGE_CAP = 5000;
     public static final float LOW_HEALTH_ARMOR_MULTIPLIER = 1.5f;
@@ -150,6 +150,10 @@ public class GeminiUnit extends UnitEntity {
     public float lowHealthEyeOpen = 0f;
     public float pairLinkRefreshTimer = 0f;
     public float pairLinkFade = 0f;
+    public float pairLinkLastX = Float.NaN;
+    public float pairLinkLastY = Float.NaN;
+    public float pairLinkLastRadius = Float.NaN;
+    public float pairLinkLastTime = 0f;
     public long primaryGhostTrailSeed = 1L;
     public transient final GeminiSyncState syncStateScratch = new GeminiSyncState();
 
@@ -160,8 +164,11 @@ public class GeminiUnit extends UnitEntity {
 
     @Override
     public void setType(UnitType type) {
+        boolean typeChanged = this.type != type;
         super.setType(type);
         lowHealthSpecialBulletType = resolveLowHealthSpecialBulletType(type);
+        if (!typeChanged) return;
+
         retargetTimer = Mathf.random(0f, PRIMARY_RETARGET_INTERVAL);
         secondaryRefreshTimer = 0f;
         secondaryTransferTimer = SECONDARY_TRANSFER_INTERVAL;
@@ -183,6 +190,10 @@ public class GeminiUnit extends UnitEntity {
         pairLinked = false;
         pairLinkRefreshTimer = Mathf.random(0f, PAIR_LINK_REFRESH_INTERVAL);
         pairLinkFade = 0f;
+        pairLinkLastX = Float.NaN;
+        pairLinkLastY = Float.NaN;
+        pairLinkLastRadius = Float.NaN;
+        pairLinkLastTime = 0f;
         lowHealthSpecialBullets.clear();
         lowHealthSpecialDraw.clear();
         ghostTrails.clear();
@@ -191,6 +202,33 @@ public class GeminiUnit extends UnitEntity {
             if (pairLinkTrails[i] != null) pairLinkTrails[i].clear();
             pairLinkTrailPoints[i] = null;
             pairLinkTrailRadius[i] = 0f;
+        }
+    }
+
+    public boolean hasPairLinkLastEndpoint() {
+        return pairLinkLastTime > 0.001f
+                && !Float.isNaN(pairLinkLastX)
+                && !Float.isNaN(pairLinkLastY)
+                && !Float.isNaN(pairLinkLastRadius)
+                && pairLinkLastRadius > 0.01f;
+    }
+
+    public void capturePairLinkLastEndpoint(float tx, float ty, float radius) {
+        if (Float.isNaN(tx) || Float.isNaN(ty) || Float.isNaN(radius)) return;
+        pairLinkLastX = tx;
+        pairLinkLastY = ty;
+        pairLinkLastRadius = Math.max(radius, 2f);
+        pairLinkLastTime = Vars.net.client() ? Math.min(PAIR_LINK_LAST_HOLD, 6f) : PAIR_LINK_LAST_HOLD;
+    }
+
+    public void updatePairLinkLastEndpoint() {
+        if (hasValidPairLink()) {
+            GeminiUnit other = pairLinkUnit;
+            capturePairLinkLastEndpoint(other.x, other.y, other.hitSize * 0.52f);
+            return;
+        }
+        if (pairLinkLastTime > 0f) {
+            pairLinkLastTime = Math.max(pairLinkLastTime - Time.delta, 0f);
         }
     }
 
@@ -363,13 +401,21 @@ public class GeminiUnit extends UnitEntity {
 
         if (authority) {
             updatePhaseState();
+        } else {
+            updatePhaseVisualState();
         }
 
-        sanitizePairLinkState(!authority);
+        if (authority) {
+            sanitizePairLinkState(false);
+            updatePairLinkLastEndpoint();
+        } else {
+            updateClientPairLinkState();
+        }
         updatePairLinkVisuals();
 
         if (!authority) {
-            updateStrokeFade(isEnemyTarget(primaryLink));
+            boolean hasPrimaryVisual = isEnemyTarget(primaryLink) || hasPrimaryGhost();
+            updateStrokeFade(hasPrimaryVisual);
             return;
         }
 
@@ -425,6 +471,13 @@ public class GeminiUnit extends UnitEntity {
 
     }
 
+    public void updateClientPairLinkState() {
+        sanitizePairLinkState(true);
+        if (pairLinkLastTime > 0f) {
+            pairLinkLastTime = Math.max(pairLinkLastTime - Time.delta, 0f);
+        }
+    }
+
     public boolean isAuthority() {
         return !Vars.net.client();
     }
@@ -434,7 +487,14 @@ public class GeminiUnit extends UnitEntity {
     }
 
     public boolean hasValidPairLink() {
+        if (Vars.net.client() && !isLocal()) {
+            return !dead() && isValid() && isValidPairLinkUnit(pairLinkUnit);
+        }
         return !dead() && isValid() && pairLinkUnit != null && hasPairLinkRole() && isValidPairLinkUnit(pairLinkUnit);
+    }
+
+    public boolean hasPairLinkVisualUnit() {
+        return pairLinkUnit != null && isValidPairLinkUnit(pairLinkUnit);
     }
 
     public boolean isValidPairLinkUnit(GeminiUnit other) {
@@ -452,25 +512,23 @@ public class GeminiUnit extends UnitEntity {
         boolean clientVisualOnly = Vars.net.client();
         if (pairLinkUnit == this) {
             pairLinkUnit = null;
-            pairLinking = false;
-            pairLinked = false;
+            if (!clientVisualOnly) {
+                pairLinking = false;
+                pairLinked = false;
+            }
+            return;
+        }
+
+        if (clientVisualOnly) {
+            if (pairLinkUnit != null && !isValidPairLinkUnit(pairLinkUnit)) {
+                capturePairLinkLastEndpoint(pairLinkUnit.x, pairLinkUnit.y, pairLinkUnit.hitSize * 0.52f);
+                pairLinkUnit = null;
+            }
             return;
         }
 
         if (pairLinkUnit == null) {
-            if (clientVisualOnly && hasPairLinkRole()) {
-                GeminiUnit recovered = recoverPairLinkUnit();
-                if (recovered != null) {
-                    pairLinkUnit = recovered;
-                    return;
-                }
-                // Remote sync can temporarily provide role flags before entity refs resolve.
-                // Keep role flags for this frame to avoid client-side flicker.
-                return;
-            }
-            // Save/load recovery: entity references can be temporarily unresolved on first tick.
-            // Rebuild link from role flags before clearing the role.
-            if (!clientVisualOnly && hasPairLinkRole()) {
+            if (hasPairLinkRole()) {
                 GeminiUnit recovered = recoverPairLinkUnit();
                 if (recovered != null) {
                     pairLinkUnit = recovered;
@@ -483,18 +541,12 @@ public class GeminiUnit extends UnitEntity {
         }
 
         if (!isValidPairLinkUnit(pairLinkUnit)) {
-            clearPairLink(preservePartner || clientVisualOnly);
+            clearPairLink(preservePartner);
             return;
         }
 
         if (!pairLinking && !pairLinked) {
             pairLinkUnit = null;
-            return;
-        }
-
-        // On clients, pair state is server-authoritative. Do not require reciprocal
-        // fields to already be populated on the partner in the same sync step.
-        if (clientVisualOnly) {
             return;
         }
 
@@ -633,7 +685,7 @@ public class GeminiUnit extends UnitEntity {
     }
 
     public void updatePairLinkVisuals() {
-        boolean active = hasValidPairLink();
+        boolean active = hasValidPairLink() || (Vars.net.client() && hasPairLinkLastEndpoint());
         pairLinkFade = Mathf.lerpDelta(pairLinkFade, active ? 1f : 0f, active ? 0.05f : 0.08f);
         if (Vars.headless || (!active && pairLinkFade <= 0.01f)) return;
 
@@ -680,8 +732,8 @@ public class GeminiUnit extends UnitEntity {
         Color mainColor = Tmp.c1.set(team.color).lerp(Color.white, Mathf.absin(4.2f, 0.34f));
         Color secondaryColor = Tmp.c2.set(mainColor).lerp(Color.white, 0.2f);
         float z = Draw.z();
-        boolean hasPrimary = isEnemyTarget(primaryLink);
-        boolean hasAnchor = hasPrimary || hasPrimaryGhost();
+        boolean hasPrimary = Vars.net.client() ? hasClientPrimaryVisual() : isEnemyTarget(primaryLink);
+        boolean hasAnchor = Vars.net.client() ? (hasPrimary || hasPrimaryGhost()) : (hasPrimary || hasPrimaryGhost());
         if (hasAnchor) {
             float primaryX = hasPrimary ? primaryLink.getX() : primaryGhostX;
             float primaryY = hasPrimary ? primaryLink.getY() : primaryGhostY;
@@ -690,18 +742,25 @@ public class GeminiUnit extends UnitEntity {
             float primaryFadeVisual = Mathf.pow(primaryStrokeFade, 1.35f);
 
             Draw.z(WHFx.EFFECT_BOTTOM);
-            if (hasPrimary) {
+            if (!Vars.net.client() && hasPrimary) {
                 drawLinkRing(primaryLink, mainColor, bodyAlpha * primaryFadeVisual);
+            } else if (hasPrimaryGhost()) {
+                drawLinkRing(primaryGhostX, primaryGhostY, primaryGhostRadius * 2f, 911L, mainColor, bodyAlpha * primaryFadeVisual);
             }
             for (int i = 0; i < secondaryLinks.size; i++) {
                 Healthc linked = secondaryLinks.get(i);
-                if (!isSecondaryRenderTarget(linked)) continue;
                 int linkId = entityId(linked);
                 GhostTrail secondaryGhost = linkId < 0 ? null : findGhostTrail(linkId, true);
-                float secondaryFade = secondaryGhost != null ? secondaryGhost.fade : (isSecondaryTarget(linked) ? 1f : 0f);
+                boolean renderable = Vars.net.client() ? isSecondaryClientVisualTarget(linked) : isSecondaryRenderTarget(linked);
+                if (!renderable && secondaryGhost == null) continue;
+                float secondaryFade = secondaryGhost != null ? secondaryGhost.fade : ((Vars.net.client() ? renderable : isSecondaryTarget(linked)) ? 1f : 0f);
                 if (secondaryFade <= 0.01f) continue;
                 float secondaryFadeVisual = Mathf.pow(secondaryFade, 1.35f);
-                drawLinkRing(linked, secondaryColor, bodyAlpha * secondaryFadeVisual * 0.84f);
+                if (renderable) {
+                    drawLinkRing(linked, secondaryColor, bodyAlpha * secondaryFadeVisual * 0.84f);
+                } else {
+                    drawLinkRing(secondaryGhost.x, secondaryGhost.y, secondaryGhost.radius * 2f, secondaryGhost.seed, secondaryColor, bodyAlpha * secondaryFadeVisual * 0.84f);
+                }
             }
 
             Draw.z(Layer.effect + 0.02f);
@@ -735,7 +794,7 @@ public class GeminiUnit extends UnitEntity {
                     ty = secondaryGhost.y;
                     tr = secondaryGhost.radius;
                 }
-                if (isSecondaryRenderTarget(linked)) {
+                if (Vars.net.client() ? isSecondaryClientVisualTarget(linked) : isSecondaryRenderTarget(linked)) {
                     tx = linked.getX();
                     ty = linked.getY();
                     tr = targetHitSize(linked) * 0.5f;
@@ -764,7 +823,9 @@ public class GeminiUnit extends UnitEntity {
 
     public void drawPairLinkEffects(Color baseColor, float bodyAlpha) {
         if (Vars.headless) return;
-        if (pairLinkFade <= 0.01f && !hasValidPairLink()) return;
+        boolean hasCachedEndpoint = Vars.net.client() && hasPairLinkLastEndpoint();
+        boolean hasResolvedPair = hasValidPairLink();
+        if (pairLinkFade <= 0.01f && !hasResolvedPair && !hasCachedEndpoint) return;
 
         float z = Draw.z();
         Color pairColor = Tmp.c3.set(baseColor).lerp(Color.white, 0.3f);
@@ -782,7 +843,7 @@ public class GeminiUnit extends UnitEntity {
             Fill.circle(point.x, point.y, trailWidth * 0.8f);
         }
 
-        if (pairLinking && hasValidPairLink()) {
+        if (hasResolvedPair) {
             GeminiUnit other = pairLinkUnit;
             Draw.z(Layer.flyingUnitLow - 0.001f);
             drawLinkRing(this, pairColor, bodyAlpha * pairLinkFade * 0.3f);
@@ -799,12 +860,30 @@ public class GeminiUnit extends UnitEntity {
                     bodyAlpha * pairLinkFade,
                     Math.min(Mathf.dst(x, y, other.x, other.y) * 0.03f, 8f)
             );
+        } else if (hasCachedEndpoint) {
+            float cacheFade = Mathf.clamp(pairLinkLastTime / PAIR_LINK_LAST_HOLD);
+            Draw.z(Layer.flyingUnitLow - 0.001f);
+            drawLinkRing(this, pairColor, bodyAlpha * pairLinkFade * 0.3f * cacheFade);
+            drawLinkRing(pairLinkLastX, pairLinkLastY, pairLinkLastRadius * 2f, ((long) id << 11) ^ 0x91B3L, pairColor, bodyAlpha * pairLinkFade * 0.3f * cacheFade);
+
+            Draw.z(Layer.effect + 0.03f);
+            drawLinkCurvesSized(
+                    x, y, hitSize * 0.52f,
+                    pairLinkLastX, pairLinkLastY, pairLinkLastRadius,
+                    4,
+                    ((long) id << 24) ^ 0x51F15EEDL,
+                    5 * (1 + Mathf.sin(8, 0.25f)) * pairLinkFade * cacheFade,
+                    pairColor,
+                    bodyAlpha * pairLinkFade * cacheFade,
+                    Math.min(Mathf.dst(x, y, pairLinkLastX, pairLinkLastY) * 0.03f, 8f)
+            );
         }
 
         Draw.z(z);
     }
 
     public void drawPrimaryGhostTrails(Color mainColor, Color secondaryColor, float bodyAlpha) {
+        if (Vars.net.client()) return;
         if (ghostTrails.isEmpty() || bodyAlpha <= 0.001f) return;
 
         float z = Draw.z();
@@ -861,6 +940,14 @@ public class GeminiUnit extends UnitEntity {
             }
         }
 
+        boolean phased = isPhasing();
+        phaseVisualFade = Mathf.lerpDelta(phaseVisualFade, phased ? 1f : 0f, phased ? 0.08f : 0.02f);
+    }
+
+    public void updatePhaseVisualState() {
+        if (phaseTimeLeft > 0f) {
+            phaseTimeLeft = Math.max(phaseTimeLeft - Time.delta, 0f);
+        }
         boolean phased = isPhasing();
         phaseVisualFade = Mathf.lerpDelta(phaseVisualFade, phased ? 1f : 0f, phased ? 0.08f : 0.02f);
     }
@@ -1020,6 +1107,11 @@ public class GeminiUnit extends UnitEntity {
         return !Float.isNaN(primaryGhostX) && !Float.isNaN(primaryGhostY) && !Float.isNaN(primaryGhostRadius);
     }
 
+    public boolean hasClientPrimaryVisual() {
+        if (!Vars.net.client()) return false;
+        return isEnemyTarget(primaryLink);
+    }
+
     public GhostTrail findGhostTrail(int trailId, boolean secondary) {
         for (int i = 0; i < ghostTrails.size; i++) {
             GhostTrail ghost = ghostTrails.get(i);
@@ -1167,6 +1259,7 @@ public class GeminiUnit extends UnitEntity {
      * 5) Invalid/inactive secondary links are pruned from active list.
      */
     public void updateStrokeFade(boolean hasPrimary) {
+        boolean clientVisual = Vars.net.client();
         // Primary stroke fade and primary ghost snapshot.
         primaryStrokeFade = Mathf.lerpDelta(primaryStrokeFade, hasPrimary ? 1f : 0f, hasPrimary ? 0.04f : 0.06f);
         if (hasPrimary && primaryLink != null) {
@@ -1177,11 +1270,14 @@ public class GeminiUnit extends UnitEntity {
         updateGhostTrails();
 
         // Keep active links simple: update secondary ghost by id, and prune invalid links.
+        boolean hasAnchor = clientVisual ? (hasPrimary || hasPrimaryGhost()) : (hasPrimary || primaryLinkTimeLeft > 0.001f || hasPrimaryGhost());
         for (int i = secondaryLinks.size - 1; i >= 0; i--) {
             Healthc linked = secondaryLinks.get(i);
             int linkId = entityId(linked);
-            boolean renderable = isSecondaryRenderTarget(linked);
-            boolean active = hasPrimary && renderable && isSecondaryTarget(linked);
+            boolean renderable = clientVisual
+                    ? (hasAnchor && isSecondaryClientVisualTarget(linked))
+                    : (hasPrimary && isSecondaryRenderTarget(linked));
+            boolean active = clientVisual ? (hasPrimary && renderable) : (hasPrimary && renderable && isSecondaryTarget(linked));
 
             if (linkId >= 0) {
                 GhostTrail ghost = findGhostTrail(linkId, true);
@@ -1210,6 +1306,14 @@ public class GeminiUnit extends UnitEntity {
             if (ghost.fade <= 0.01f) {
                 ghostTrails.remove(i);
             }
+        }
+
+        if (clientVisual && !hasPrimary && hasPrimaryGhost() && primaryStrokeFade <= 0.02f) {
+            primaryGhostX = Float.NaN;
+            primaryGhostY = Float.NaN;
+            primaryGhostRadius = Float.NaN;
+            clearSecondaryGhostTrails();
+            secondaryLinks.clear();
         }
     }
 
@@ -1267,6 +1371,21 @@ public class GeminiUnit extends UnitEntity {
         if (!(target instanceof Teamc targetTeam) || !(primaryLink instanceof Teamc primaryTeam)) return false;
         if (primaryTeam.team() == team) return false;
         if (targetTeam.team() != primaryTeam.team()) return false;
+        if (target instanceof WallBuild) return false;
+        if (target instanceof Unit unit && !unit.hittable()) return false;
+        if (target instanceof Building building) {
+            return building.block != null
+                    && building.block.group != BlockGroup.walls
+                    && !(building.block instanceof CoreBlock)
+                    && building.block.targetable;
+        }
+        return true;
+    }
+
+    public boolean isSecondaryClientVisualTarget(Healthc target) {
+        if (target == null || target.dead() || !target.isValid()) return false;
+        if (!(target instanceof Teamc teamTarget)) return false;
+        if (teamTarget.team() == team) return false;
         if (target instanceof WallBuild) return false;
         if (target instanceof Unit unit && !unit.hittable()) return false;
         if (target instanceof Building building) {
@@ -1404,6 +1523,10 @@ public class GeminiUnit extends UnitEntity {
             }
         }
 
+        if (Vars.net.client() && lowHealthSpecialBullets.isEmpty()) {
+            collectLowHealthSpecialBullets();
+        }
+
         lowHealthSpecialScanTimer -= Time.delta;
         if (lowHealthSpecialScanTimer > 0f) return;
 
@@ -1423,17 +1546,92 @@ public class GeminiUnit extends UnitEntity {
 
     public boolean isOwnedLowHealthSpecialBullet(Bullet bullet) {
         if (bullet == null || !bullet.isAdded()) return false;
+        if (lowHealthSpecialBulletType == null) {
+            lowHealthSpecialBulletType = resolveLowHealthSpecialBulletType(type);
+        }
         if (lowHealthSpecialBulletType == null || bullet.type != lowHealthSpecialBulletType) return false;
         if (bullet.team != team) return false;
 
         Entityc owner = bullet.owner();
         if (owner == this) return true;
-        return owner instanceof Unit && ((Unit) owner).id == id;
+        if (owner instanceof Unit && ((Unit) owner).id == id) return true;
+        if (!Vars.net.client() || owner != null) return false;
+
+        float range = LOW_HEALTH_SPECIAL_SCAN_RANGE + hitSize * 0.9f;
+        return Mathf.within(x, y, bullet.x, bullet.y, range);
     }
 
     public Teamc findLowHealthSpecialTarget() {
         if (isEnemyTarget(primaryLink) && primaryLink instanceof Teamc) return (Teamc) primaryLink;
         return null;
+    }
+
+    public Teamc resolveSyncTeamTarget(int targetId) {
+        if (targetId < 0) return null;
+        try {
+            Entityc entity = Groups.sync.getByID(targetId);
+            if (entity instanceof Teamc) {
+                return (Teamc) entity;
+            }
+        } catch (RuntimeException ignored) {
+            // Target mapping may be unavailable for a frame on client.
+        }
+        return null;
+    }
+
+    public boolean applyLowHealthSpecialBulletCreate(
+            BulletType bulletType, Team bulletTeam,
+            float bulletX, float bulletY, float fireAngle,
+            float aimX, float aimY,
+            int targetId, float launchAngle, float launchSpeed,
+            boolean forceFind
+    ) {
+        if (!(bulletType instanceof ApproachBullet approach)) return false;
+        Team spawnTeam = bulletTeam == null ? team : bulletTeam;
+
+        Bullet bullet = approach.create(
+                this, this, spawnTeam,
+                bulletX, bulletY, fireAngle,
+                -1f, 1f, 1f,
+                null, null,
+                aimX, aimY, null
+        );
+        if (!(bullet instanceof AB ab)) return false;
+
+        Teamc resolvedTarget = resolveSyncTeamTarget(targetId);
+        ab.target = resolvedTarget;
+        ab.find = forceFind || resolvedTarget == null;
+        ab.initVel(launchAngle, launchSpeed);
+
+        if (!lowHealthSpecialBullets.contains(bullet, true)) {
+            lowHealthSpecialBullets.add(bullet);
+        }
+        return true;
+    }
+
+    public void sendLowHealthSpecialBulletCreate(
+            BulletType bulletType, Team bulletTeam,
+            float bulletX, float bulletY, float fireAngle,
+            float aimX, float aimY,
+            int targetId, float launchAngle, float launchSpeed,
+            boolean forceFind
+    ) {
+        if (!Vars.net.server() || bulletType == null) return;
+
+        GeminiSpecialBulletPacket packet = new GeminiSpecialBulletPacket();
+        packet.ownerId = id;
+        packet.type = bulletType;
+        packet.team = bulletTeam;
+        packet.x = bulletX;
+        packet.y = bulletY;
+        packet.angle = fireAngle;
+        packet.aimX = aimX;
+        packet.aimY = aimY;
+        packet.targetId = targetId;
+        packet.launchAngle = launchAngle;
+        packet.launchSpeed = launchSpeed;
+        packet.forceFind = forceFind;
+        Vars.net.send(packet, true);
     }
 
     public void fireLowHealthSpecialAttack() {
@@ -1482,6 +1680,14 @@ public class GeminiUnit extends UnitEntity {
                 float speedRand = 0.5f;
                 float launchSpeed = bullet.type.speed * Mathf.random(Math.max(0f, 1f - speedRand), 1f + speedRand);
                 ab.initVel(launchAngle, launchSpeed);
+                int targetId = target == null ? -1 : target.id();
+                sendLowHealthSpecialBulletCreate(
+                        bullet.type, bullet.team,
+                        bulletX, bulletY, fireAngle,
+                        tx, ty,
+                        targetId, launchAngle, launchSpeed,
+                        ab.find
+                );
             }
 
             if (!lowHealthSpecialBullets.contains(bullet)) {
@@ -1532,16 +1738,15 @@ public class GeminiUnit extends UnitEntity {
     }
 
     public void updateLowHealthEyeAnimation() {
-        if (Vars.net.client()) return;
         boolean showEye = !dead() && healthf() < LOW_HEALTH_EYE_THRESHOLD;
         float danger = showEye ? Mathf.clamp((LOW_HEALTH_EYE_THRESHOLD - healthf()) / LOW_HEALTH_EYE_THRESHOLD) : 0f;
-        float targetOpen = showEye ? Mathf.clamp(0.5f + danger * 0.5f) : 0f;
-        float speed = targetOpen > lowHealthEyeOpen ? 0.02f : 0.05f;
+        float targetOpen = showEye ? Mathf.clamp(0.72f + danger * 0.28f) : 0f;
+        float speed = targetOpen > lowHealthEyeOpen ? 0.03f : 0.06f;
         lowHealthEyeOpen = Mathf.approachDelta(lowHealthEyeOpen, targetOpen, speed);
     }
 
     public void drawLowHealthEye(float cx, float cy, float width) {
-        if (lowHealthEyeOpen <= 0.001f) return;
+        if (lowHealthEyeOpen <= 0.08f) return;
 
         float danger = Mathf.clamp((LOW_HEALTH_EYE_THRESHOLD - healthf()) / LOW_HEALTH_EYE_THRESHOLD);
         float open = Mathf.clamp(lowHealthEyeOpen);
@@ -1549,10 +1754,10 @@ public class GeminiUnit extends UnitEntity {
     }
 
     public static void drawLowHealthEye(float cx, float cy, float width, float danger, float open, Color c) {
-        if (width <= 0.001f) return;
+        if (width <= 0.001f || open <= 0.08f) return;
 
         float eyeWidth = width * (1f + danger * 0.24f);
-        float lidHeight = eyeWidth * (0.15f + open * 0.22f);
+        float lidHeight = eyeWidth * (0.2f + open * 0.2f);
         float lx = cx - eyeWidth * 0.5f;
         float rx = cx + eyeWidth * 0.5f;
 
@@ -1896,10 +2101,10 @@ public class GeminiUnit extends UnitEntity {
         writeHealthTarget(write, primaryLink);
         write.f(primaryLinkTimeLeft);
         write.f(phaseTimeLeft);
-        write.f(phaseCooldownTimer);
-        write.f(phaseVisualFade);
-        write.f(lowHealthEyeOpen);
-        writePairLinkState(write, false);
+        writePairLinkUnit(write, pairLinkUnit);
+        write.f(pairLinkLastX);
+        write.f(pairLinkLastY);
+        write.f(pairLinkLastRadius);
         writeHealthTargets(write, secondaryLinks);
     }
 
@@ -1907,12 +2112,10 @@ public class GeminiUnit extends UnitEntity {
         state.primaryLink = readHealthTarget(read);
         state.primaryLinkTimeLeft = read.f();
         state.phaseTimeLeft = read.f();
-        state.phaseCooldownTimer = read.f();
-        state.phaseVisualFade = read.f();
-        state.lowHealthEyeOpen = read.f();
         state.pairLinkUnit = readPairLinkUnit(read);
-        state.pairLinking = read.bool();
-        state.pairLinked = read.bool();
+        state.pairLinkLastX = read.f();
+        state.pairLinkLastY = read.f();
+        state.pairLinkLastRadius = read.f();
         readHealthTargets(read, state.secondaryLinks);
         return state;
     }
@@ -1921,6 +2124,28 @@ public class GeminiUnit extends UnitEntity {
         if (previousPrimary == nextPrimary) return;
         primaryDurabilitySnapshot = Float.NaN;
         pendingSecondaryTransferDamage = 0f;
+
+        if (Vars.net.client()) {
+            boolean previousGone = previousPrimary != null && (previousPrimary.dead() || !previousPrimary.isValid());
+            if (isEnemyTarget(nextPrimary)) {
+                primaryGhostX = Float.NaN;
+                primaryGhostY = Float.NaN;
+                primaryGhostRadius = Float.NaN;
+                clearSecondaryGhostTrails();
+            } else if (previousGone) {
+                primaryGhostX = previousPrimary.getX();
+                primaryGhostY = previousPrimary.getY();
+                primaryGhostRadius = targetHitSize(previousPrimary) * 0.5f;
+            } else {
+                primaryGhostX = Float.NaN;
+                primaryGhostY = Float.NaN;
+                primaryGhostRadius = Float.NaN;
+                ghostTrails.clear();
+                clearSecondaryGhostTrails();
+                secondaryLinks.clear();
+            }
+            return;
+        }
 
         if (previousPrimary != null && nextPrimary == null) {
             primaryGhostX = previousPrimary.getX();
@@ -1950,21 +2175,76 @@ public class GeminiUnit extends UnitEntity {
 
     public void applySyncState(GeminiSyncState state) {
         Healthc previousPrimary = primaryLink;
+        GeminiUnit previousPair = pairLinkUnit;
 
-        primaryLink = state.primaryLink;
+        primaryLink = resolveSyncedPrimary(previousPrimary, state.primaryLink);
         primaryLinkTimeLeft = state.primaryLinkTimeLeft;
-        phaseTimeLeft = state.phaseTimeLeft;
-        phaseCooldownTimer = state.phaseCooldownTimer;
-        phaseVisualFade = state.phaseVisualFade;
-        lowHealthEyeOpen = Mathf.clamp(state.lowHealthEyeOpen, 0f, 1f);
-        pairLinkUnit = state.pairLinkUnit;
-        pairLinking = state.pairLinking;
-        pairLinked = state.pairLinked;
-        secondaryLinks.clear();
-        secondaryLinks.addAll(state.secondaryLinks);
+        applySyncedPhaseTimeLeft(state.phaseTimeLeft);
 
-        handlePrimarySyncChange(previousPrimary, state.primaryLink);
-        sanitizeLinkState();
+        pairLinkUnit = resolveSyncedPair(previousPair, state.pairLinkUnit);
+        if (Vars.net.client() && !isLocal()) {
+            boolean hasPair = pairLinkUnit != null;
+            pairLinking = hasPair;
+            pairLinked = hasPair;
+        }
+        if (!Float.isNaN(state.pairLinkLastX) && !Float.isNaN(state.pairLinkLastY) && state.pairLinkLastRadius > 0.01f) {
+            capturePairLinkLastEndpoint(state.pairLinkLastX, state.pairLinkLastY, state.pairLinkLastRadius);
+        }
+        mergeSyncedSecondaryLinks(primaryLink, state.secondaryLinks);
+
+        handlePrimarySyncChange(previousPrimary, primaryLink);
+        if (Vars.net.client() && !isEnemyTarget(primaryLink)) {
+            primaryLinkTimeLeft = 0f;
+        }
+        sanitizeLinkState(Vars.net.client());
+    }
+
+    public void applySyncedPhaseTimeLeft(float syncedPhaseTimeLeft) {
+        float incoming = Math.max(syncedPhaseTimeLeft, 0f);
+        if (!Vars.net.client() || isLocal()) {
+            phaseTimeLeft = incoming;
+            return;
+        }
+
+        float current = Math.max(phaseTimeLeft, 0f);
+        if (incoming <= current + 0.001f) {
+            phaseTimeLeft = incoming;
+            return;
+        }
+
+        // Ignore backward packets that would re-extend an active phase.
+        if (current <= 0.001f) {
+            phaseTimeLeft = incoming;
+        }
+    }
+
+    public Healthc resolveSyncedPrimary(Healthc previous, Healthc synced) {
+        if (!Vars.net.client() || isLocal()) return synced;
+        if (synced != null && synced.isValid() && !synced.dead()) return synced;
+        if (previous != null && previous.isValid() && !previous.dead()) return previous;
+        return null;
+    }
+
+    public GeminiUnit resolveSyncedPair(GeminiUnit previous, GeminiUnit synced) {
+        if (!Vars.net.client() || isLocal()) return synced;
+        if (isValidPairLinkUnit(synced)) return synced;
+        if (isValidPairLinkUnit(previous)) return previous;
+        return null;
+    }
+
+    public void mergeSyncedSecondaryLinks(Healthc nextPrimary, Seq<Healthc> synced) {
+        if (!Vars.net.client() || isLocal()) {
+            secondaryLinks.clear();
+            secondaryLinks.addAll(synced);
+            return;
+        }
+        if (!synced.isEmpty()) {
+            secondaryLinks.clear();
+            secondaryLinks.addAll(synced);
+            return;
+        }
+        if (hasPrimaryGhost()) return;
+        secondaryLinks.clear();
     }
 
     public void sanitizeLinkState() {
@@ -1973,6 +2253,12 @@ public class GeminiUnit extends UnitEntity {
 
     public void sanitizeLinkState(boolean preservePairState) {
         sanitizePairLinkState(preservePairState);
+        if (Vars.net.client() && preservePairState) {
+            boolean hasPrimaryVisual = isEnemyTarget(primaryLink) || hasPrimaryGhost();
+            updateStrokeFade(hasPrimaryVisual);
+            return;
+        }
+
         if (primaryLink != null && !isEnemyTarget(primaryLink)) {
             losePrimaryLink(true);
         } else {
@@ -1993,7 +2279,8 @@ public class GeminiUnit extends UnitEntity {
             }
         }
 
-        updateStrokeFade(isEnemyTarget(primaryLink));
+        boolean hasPrimaryVisual = isEnemyTarget(primaryLink) || hasPrimaryGhost();
+        updateStrokeFade(hasPrimaryVisual);
     }
 
     @Override
@@ -2006,7 +2293,6 @@ public class GeminiUnit extends UnitEntity {
     public void read(Reads read) {
         super.read(read);
         readFullState(read);
-        // During save load, pair units may not be fully initialized in the same tick.
         sanitizeLinkState(true);
     }
 
@@ -2020,6 +2306,7 @@ public class GeminiUnit extends UnitEntity {
     public void readSync(Reads read) {
         super.readSync(read);
         GeminiSyncState syncState = readSyncState(read, syncStateScratch);
+        if (isLocal()) return;
         applySyncState(syncState);
     }
 

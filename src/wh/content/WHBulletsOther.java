@@ -1340,7 +1340,7 @@ public class WHBulletsOther {
 
                 speed = 3;
 
-                bulletType = new CritBulletType(8, 230, name("pierce")) {
+                bulletType = new CritBulletType(6, 230, name("pierce")) {
                     {
                         hitColor = trailColor = frontColor = backColor = Team.crux.color.cpy();
                         lifetime = 400 / speed;
@@ -1355,8 +1355,8 @@ public class WHBulletsOther {
 
                         homingPower = 0.1f;
                         homingRange = 100f;
-                        homingDelay = 3;
-                        followAimSpeed = 10;
+                        homingDelay = 6;
+                        followAimSpeed = 2;
 
                         shootEffect = WHFx.hitSpark(10, hitColor, 4, 30, 1, 8);
 

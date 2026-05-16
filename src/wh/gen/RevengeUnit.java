@@ -1,14 +1,11 @@
 package wh.gen;
 
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.TextureRegion;
 import arc.math.Angles;
 import arc.math.Mathf;
 import arc.struct.ObjectFloatMap;
 import arc.struct.Seq;
 import arc.util.Time;
-import arc.util.Tmp;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.Vars;
@@ -18,22 +15,23 @@ import mindustry.entities.Damage;
 import mindustry.entities.UnitSorts;
 import mindustry.entities.Units;
 import mindustry.entities.bullet.BulletType;
+import mindustry.game.Team;
 import mindustry.gen.*;
-import mindustry.graphics.Layer;
 import mindustry.type.UnitType;
 import mindustry.world.blocks.defense.Wall.WallBuild;
 import mindustry.world.blocks.defense.turrets.Turret.TurretBuild;
 import wh.content.WHBulletsOther;
 import wh.content.WHStatusEffects;
 import wh.entities.bullet.ApproachBullet.AB;
-import wh.entities.world.entities.RevengeUnitType;
 import wh.net.packet.RevengeOrbitBulletPacket;
+import wh.net.packet.RevengeOrbitCreatePacket;
 import wh.util.WHUtils;
 
 import static mindustry.io.TypeIO.*;
 import static wh.util.WHUtils.rand;
 
 public class RevengeUnit extends UnitEntity{
+
     public final float DAMAGE_REDUCE = 0.8f;
     public final float DAMAGE_REDUCE_Duration = 8 * 60f;
     public final float MAX_DAMAGE = 1000f;
@@ -47,6 +45,8 @@ public class RevengeUnit extends UnitEntity{
 
     public final float CHECK_RELOAD = 75;
     public final float CHECK_RANGE = 550;
+    public final float ORBIT_COLLECT_INTERVAL = 10f;
+    public final float ORBIT_COLLECT_RANGE = 320f;
     public float checkReload = CHECK_RELOAD;
 
     public float abilityTimer;
@@ -54,6 +54,7 @@ public class RevengeUnit extends UnitEntity{
     public float bulletRecoveryTimer;
     public float abilityDuration;
     public float drawSize;
+    public float orbitCollectTimer;
 
     public float accumulateDamage;
 
@@ -63,6 +64,8 @@ public class RevengeUnit extends UnitEntity{
 
     public Seq<Bullet> surroundBullets = new Seq<>();
     public final Seq<BulletType> bullets = new Seq<>(BulletType.class);
+
+    public TextureRegion armorRegion;
 
     public ObjectFloatMap<Healthc> hatred = new ObjectFloatMap<>();
 
@@ -77,8 +80,8 @@ public class RevengeUnit extends UnitEntity{
         bullets.clear();
         bullets.add(WHBulletsOther.RevengeBullet1, WHBulletsOther.RevengeBullet2,
         WHBulletsOther.RevengeBullet3, WHBulletsOther.RevengeBullet4);
+        orbitCollectTimer = 0f;
     }
-
 
     public Healthc findOwner(Entityc ent){
         Healthc target = null;
@@ -133,22 +136,6 @@ public class RevengeUnit extends UnitEntity{
     @Override
     public void draw(){
         super.draw();
-        TextureRegion armorRegion = type instanceof RevengeUnitType revengeType ? revengeType.armorRegion : null;
-        if (armorRegion == null) return;
-
-        float width = armorRegion.width * Draw.scl * drawSize,
-        height = armorRegion.height * Draw.scl * drawSize;
-
-        if(Vars.renderer.animateShields){
-            Draw.z(Layer.shields + 0.01f);
-            Draw.color(Tmp.c1.set(team.color.cpy()).lerp(Color.white, Mathf.absin(4f, 0.3f)));
-            Draw.rect(armorRegion, x, y, width, height, this.rotation - 90);
-        }else{
-            Draw.z(Layer.shields);
-            Draw.color(Tmp.c1.set(team.color.cpy()).lerp(Color.white, Mathf.absin(4f, 0.3f)));
-            Draw.alpha(0.5f);
-            Draw.rect(armorRegion, x, y, width, height, this.rotation - 90);
-        }
     }
 
     @Override
@@ -157,13 +144,13 @@ public class RevengeUnit extends UnitEntity{
         boolean server = !Vars.net.client();
         if (!server) {
             updateClientVisualState();
-            surroundBullets.removeAll(e -> e == null || !e.isAdded());
-            updateSurroundBulletsOrbit();
+            updateOrbitBulletCache();
+            surroundBullets.removeAll(e -> !isOrbitBulletCandidate(e));
+            updateSurroundBulletsOrbit(false);
             return;
         }
 
-        // Orbit bullets are an intrinsic ability; do not gate regeneration by weapon shootability.
-        bulletRecoveryTimer += Time.delta * reloadMultiplier();
+        if (canShoot()) bulletRecoveryTimer += Time.delta * reloadMultiplier();
 
         rand.setSeed(id);
 
@@ -171,7 +158,8 @@ public class RevengeUnit extends UnitEntity{
         rangeTimer -= Time.delta;
         abilityDuration -= Time.delta;
 
-        surroundBullets.removeAll(e -> e == null || !e.isAdded());
+        updateOrbitBulletCache();
+        surroundBullets.removeAll(e -> !isOrbitBulletCandidate(e));
 
 
         if(checkReload <= 0.0001f && surroundBullets.size > 0){
@@ -184,12 +172,7 @@ public class RevengeUnit extends UnitEntity{
                 int shots = Math.min(Mathf.random(1, 3), surroundBullets.size);
                 for(int i = 0; i < shots && !surroundBullets.isEmpty(); i++){
                     int index = Mathf.random(surroundBullets.size - 1);
-                    Bullet c = surroundBullets.remove(index);
-                    if(c instanceof AB a){
-                        a.target = en;
-                        if(!(en instanceof Healthc enemy) || enemy.dead() || !enemy.isValid()) a.find = true;
-                        a.initVel(c.angleTo(en), c.type.speed);
-                    }
+                    launchOrbitBulletAtIndex(index, en);
                 }
             }
            /* Units.nearbyEnemies(team, x, y, CHECK_RANGE, other -> {
@@ -210,7 +193,6 @@ public class RevengeUnit extends UnitEntity{
         if(bulletRecoveryTimer > BULLET_RECOVERY_TIME && surroundBullets.size < MAX_BULLET){
             bulletRecoveryTimer = 0;
             createBullet();
-            if(Mathf.chanceDelta(0.05f)) createBullet();
         }
 
         enemies.removeAll(e -> e == null || e.dead() || e.dst(this) > CHECK_RANGE || !e.isAdded() || e.maxHealth() <= RECOVERY_HEALTH);
@@ -252,12 +234,7 @@ public class RevengeUnit extends UnitEntity{
                 createBullet();
                 if(surroundBullets.isEmpty()) continue;
                 int index = Mathf.random(surroundBullets.size - 1);
-                Bullet bu = surroundBullets.remove(index);
-                if(bu instanceof AB a){
-                    a.target = (Teamc)e;
-                    if(e == null || e.dead() || !e.isValid()) a.find = true;
-                    a.initVel(bu.angleTo(e), bu.type.speed);
-                }
+                launchOrbitBulletAtIndex(index, (Teamc) e);
             }
             apply(WHStatusEffects.energyAmplification, DAMAGE_REDUCE_Duration);
         }
@@ -267,7 +244,7 @@ public class RevengeUnit extends UnitEntity{
             drawSize = Mathf.lerpDelta(drawSize, 1f, 0.08f);
         }else drawSize = Mathf.lerpDelta(drawSize, 0f, 0.1f);
 
-        updateSurroundBulletsOrbit();
+        updateSurroundBulletsOrbit(true);
     }
 
     public void updateClientVisualState() {
@@ -279,24 +256,12 @@ public class RevengeUnit extends UnitEntity{
         }
     }
 
-    public void addOrbitBullet(Bullet bullet) {
-        if (bullet == null || !bullet.isAdded()) return;
-        if (!(bullet instanceof AB)) return;
-        if (bullet.team != team) return;
-        if (!bullets.contains(bullet.type, true)) return;
-        if (!surroundBullets.contains(bullet, true)) {
-            surroundBullets.add(bullet);
-        }
-    }
-
-    public void updateSurroundBulletsOrbit() {
+    public void updateSurroundBulletsOrbit(boolean authority) {
         if (surroundBullets.isEmpty()) return;
 
-        boolean server = !Vars.net.client();
         for (int i = 0; i < surroundBullets.size; i++) {
             Bullet bullet = surroundBullets.get(i);
             if (!(bullet instanceof AB a)) continue;
-
             int ta = Mathf.randomSeed(a.id, 90, 150);
             float tg = Mathf.randomSeed(a.id, 360) + rotation;
             float r = Mathf.randomSeed(a.id, 0.7f, 1f);
@@ -306,13 +271,119 @@ public class RevengeUnit extends UnitEntity{
 
             WHUtils.movePoint(a, tx, ty, 0.1f * r);
             a.rotation(a.angleTo(tx, ty));
-            a.initVel(a.rotation(), 0);
-            if (a.time > 30f) a.time = 30f;
-            if (server) {
+            a.initVel(a.rotation(), 0f);
+            if (authority) {
                 a.team(team);
                 a.owner(this);
             }
+            if (a.time > 30f) a.time = 30f;
         }
+    }
+
+    public void launchOrbitBulletAtIndex(int index, Teamc target) {
+        if (index < 0 || index >= surroundBullets.size) return;
+        Bullet bullet = surroundBullets.remove(index);
+        if (!(bullet instanceof AB a)) return;
+        int bulletId = bullet.id;
+
+        boolean invalidTarget = !(target instanceof Healthc enemy) || enemy.dead() || !enemy.isValid();
+        a.target = target;
+        if (invalidTarget) a.find = true;
+        float launchAngle = target == null ? bullet.rotation() : bullet.angleTo(target);
+        a.initVel(launchAngle, bullet.type.speed);
+        sendOrbitBulletLaunchPacket(bulletId, launchAngle, target == null ? -1 : target.id(), a.find);
+    }
+
+    public boolean applyOrbitLaunch(int bulletId, float launchAngle, int targetId, boolean forceFind) {
+        Bullet bullet = null;
+        for (int i = surroundBullets.size - 1; i >= 0; i--) {
+            Bullet candidate = surroundBullets.get(i);
+            if (candidate != null && candidate.id == bulletId) {
+                bullet = candidate;
+                surroundBullets.remove(i);
+                break;
+            }
+        }
+        if (bullet == null) {
+            try {
+                bullet = Groups.bullet.getByID(bulletId);
+            } catch (RuntimeException ignored) {
+                bullet = null;
+            }
+        }
+        if (!(bullet instanceof AB a)) return false;
+        surroundBullets.remove(bullet, true);
+        Teamc resolvedTarget = null;
+        if (targetId >= 0) {
+            Entityc entity;
+            try {
+                entity = Groups.sync.getByID(targetId);
+            } catch (RuntimeException ignored) {
+                entity = null;
+            }
+            if (entity instanceof Teamc) resolvedTarget = (Teamc) entity;
+        }
+
+        a.target = resolvedTarget;
+        a.find = forceFind || resolvedTarget == null || a.find;
+        a.initVel(launchAngle, bullet.type.speed);
+        return true;
+    }
+
+    public boolean applyOrbitLaunchEvent(int bulletId, float launchAngle, int targetId, boolean forceFind) {
+        return applyOrbitLaunch(bulletId, launchAngle, targetId, forceFind);
+    }
+
+    public void updateOrbitBulletCache() {
+        orbitCollectTimer -= Time.delta;
+        if (orbitCollectTimer > 0f) return;
+        orbitCollectTimer = ORBIT_COLLECT_INTERVAL;
+
+        float range = ORBIT_COLLECT_RANGE + hitSize * 0.5f;
+        Groups.bullet.intersect(x - range, y - range, range * 2f, range * 2f, this::addOrbitBullet);
+    }
+
+    public boolean applyOrbitBulletCreate(BulletType bulletType, Team bulletTeam, int bulletId, float bulletX, float bulletY, float fireAngle, float velocityScl, float aimX, float aimY) {
+        if (!(bulletType.create(this, this, bulletTeam == null ? team : bulletTeam, bulletX, bulletY, fireAngle, -1f, velocityScl, 1f, null, null, aimX, aimY, null) instanceof AB bullet)) {
+            return false;
+        }
+        bullet.id(bulletId);
+        bullet.target = null;
+        bullet.find = false;
+        bullet.team(bulletTeam == null ? team : bulletTeam);
+        bullet.owner(this);
+        bullet.time = 0f;
+        if (!surroundBullets.contains(bullet, true)) {
+            surroundBullets.add(bullet);
+        }
+        return true;
+    }
+
+    public void sendOrbitBulletCreatePacket(Bullet bullet, float bulletX, float bulletY, float fireAngle, float velocityScl) {
+        if (!Vars.net.server() || bullet == null) return;
+        RevengeOrbitCreatePacket packet = new RevengeOrbitCreatePacket();
+        packet.ownerId = id;
+        packet.bulletId = bullet.id;
+        packet.type = bullet.type;
+        packet.team = bullet.team;
+        packet.x = bulletX;
+        packet.y = bulletY;
+        packet.angle = fireAngle;
+        packet.velocityScl = velocityScl;
+        packet.aimX = aimX;
+        packet.aimY = aimY;
+        Vars.net.send(packet, true);
+    }
+
+    public void sendOrbitBulletLaunchPacket(int bulletId, float launchAngle, int targetId, boolean forceFind) {
+        if (!Vars.net.server()) return;
+        RevengeOrbitBulletPacket packet = new RevengeOrbitBulletPacket();
+        packet.ownerId = id;
+        packet.bulletId = bulletId;
+        packet.launchAngle = launchAngle;
+        packet.targetId = targetId;
+        packet.forceFind = forceFind;
+        Vars.net.send(packet, true);
     }
 
     public void createBullet(){
@@ -323,28 +394,41 @@ public class RevengeUnit extends UnitEntity{
         BulletType b = bullets.random();
         float angle = rand.random(360f);
         float velocityScl = rand.random(0.7f, 1f);
-
-        Bullet local = b.create(this, this, this.team, bulletX, bulletY, angle, -1f,
+        Bullet b1 = b.create(this, this, this.team, bulletX, bulletY, angle, -1f,
                 velocityScl,
                 1f, null, null, aimX, aimY, null);
-        if (local != null) {
-            addOrbitBullet(local);
+        if (b1 != null) {
+            surroundBullets.add(b1);
+            sendOrbitBulletCreatePacket(b1, bulletX, bulletY, angle, velocityScl);
         }
+    }
 
-        if (Vars.net.server() && local != null) {
-            RevengeOrbitBulletPacket packet = new RevengeOrbitBulletPacket();
-            packet.ownerId = id;
-            packet.type = b;
-            packet.team = team;
-            packet.x = bulletX;
-            packet.y = bulletY;
-            packet.angle = angle;
-            packet.damage = -1f;
-            packet.velocityScl = velocityScl;
-            packet.lifetimeScl = 1f;
-            packet.aimX = aimX;
-            packet.aimY = aimY;
-            Vars.net.send(packet, true);
+    public boolean matchesOrbitBulletOwner(Entityc owner) {
+        if (owner == this) return true;
+        return owner instanceof Unit unit && unit.id == id;
+    }
+
+    public boolean isOrbitBulletCandidate(Bullet bullet) {
+        if (bullet == null || !bullet.isAdded()) return false;
+        if (!(bullet instanceof AB a)) return false;
+        if (bullet.team != team) return false;
+        if (!bullets.contains(bullet.type, true)) return false;
+
+        if (bullet.time > 45f) return false;
+        if (a.target != null || a.find) return false;
+
+        Entityc owner = bullet.owner();
+        if (matchesOrbitBulletOwner(owner)) return true;
+        if (!Vars.net.client() || owner != null) return false;
+
+        float range = ORBIT_COLLECT_RANGE + hitSize * 0.9f;
+        return Mathf.within(x, y, bullet.x, bullet.y, range);
+    }
+
+    public void addOrbitBullet(Bullet bullet) {
+        if (!isOrbitBulletCandidate(bullet)) return;
+        if (!surroundBullets.contains(bullet, true)) {
+            surroundBullets.add(bullet);
         }
     }
 
@@ -391,15 +475,15 @@ public class RevengeUnit extends UnitEntity{
             Bullet bullet = bulletType.create(this, this, this.team, bulletX, bulletY, rand.random(360), -1f,
             rand.random(0.7f, 1),
             1, null, null, aimX, aimY, null);
-            addOrbitBullet(bullet);
+            surroundBullets.add(bullet);
         }
 
         int enemySize = read.i();
         enemies.clear();
         for(int i = 0; i < enemySize; i++){
             Entityc entity = readEntity(read);
-            if (entity instanceof Healthc e) {
-                enemies.add(e);
+            if (entity instanceof Healthc) {
+                enemies.add((Healthc) entity);
             }
         }
     }
@@ -429,11 +513,7 @@ public class RevengeUnit extends UnitEntity{
 
         write.i(enemies.size);
         for(Healthc e : enemies){
-            if (e instanceof Entityc) {
-                writeEntity(write, (Entityc) e);
-            } else {
-                writeEntity(write, null);
-            }
+            writeEntity(write, e);
         }
     }
 
@@ -454,9 +534,11 @@ public class RevengeUnit extends UnitEntity{
         float syncCheckReload = read.f();
         float syncBulletRecoveryTimer = read.f();
 
-        abilityDuration = syncAbilityDuration;
-        drawSize = syncDrawSize;
-        checkReload = syncCheckReload;
-        bulletRecoveryTimer = syncBulletRecoveryTimer;
+        if (!isLocal()) {
+            abilityDuration = syncAbilityDuration;
+            drawSize = syncDrawSize;
+            checkReload = syncCheckReload;
+            bulletRecoveryTimer = syncBulletRecoveryTimer;
+        }
     }
 }

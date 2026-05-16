@@ -36,9 +36,7 @@ import wh.gen.EntityRegister;
 import wh.graphics.MainRenderer;
 import wh.graphics.WHShaders;
 import wh.maps.filters.WhTechFilter;
-import wh.net.packet.AlertToastPacket;
-import wh.net.packet.RevengeOrbitBulletPacket;
-import wh.net.packet.WarnHUDPacket;
+import wh.net.packet.*;
 
 import java.util.Arrays;
 
@@ -56,6 +54,8 @@ public class WarHammerMod extends Mod {
     public WarHammerMod() {
         Net.registerPacket(WarnHUDPacket::new);
         Net.registerPacket(AlertToastPacket::new);
+        Net.registerPacket(GeminiSpecialBulletPacket::new);
+        Net.registerPacket(RevengeOrbitCreatePacket::new);
         Net.registerPacket(RevengeOrbitBulletPacket::new);
         /* WHClassMap.load();*/
         WHSettings.load();

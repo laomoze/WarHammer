@@ -1,45 +1,32 @@
 package wh.net.packet;
 
+import arc.util.Time;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
-import mindustry.entities.bullet.BulletType;
-import mindustry.game.Team;
-import mindustry.gen.Bullet;
 import mindustry.gen.Groups;
 import mindustry.gen.Unit;
 import mindustry.net.Packet;
 import wh.gen.RevengeUnit;
 
-import static mindustry.io.TypeIO.*;
-
 public class RevengeOrbitBulletPacket extends Packet {
+    private static final int launchRetryCount = 20;
+    private static final float launchRetryStep = 2f;
+
     public int ownerId;
-    public BulletType type;
-    public Team team;
-    public float x;
-    public float y;
-    public float angle;
-    public float damage;
-    public float velocityScl;
-    public float lifetimeScl;
-    public float aimX;
-    public float aimY;
+    public int bulletId;
+    public float launchAngle;
+    public int targetId = -1;
+    public boolean forceFind;
 
     private byte[] data = NODATA;
 
     @Override
     public void write(Writes write) {
         write.i(ownerId);
-        writeBulletType(write, type);
-        writeTeam(write, team);
-        write.f(x);
-        write.f(y);
-        write.f(angle);
-        write.f(damage);
-        write.f(velocityScl);
-        write.f(lifetimeScl);
-        write.f(aimX);
-        write.f(aimY);
+        write.i(bulletId);
+        write.f(launchAngle);
+        write.i(targetId);
+        write.bool(forceFind);
     }
 
     @Override
@@ -51,32 +38,31 @@ public class RevengeOrbitBulletPacket extends Packet {
     public void handled() {
         BAIS.setBytes(data);
         ownerId = READ.i();
-        type = readBulletType(READ);
-        team = readTeam(READ);
-        x = READ.f();
-        y = READ.f();
-        angle = READ.f();
-        damage = READ.f();
-        velocityScl = READ.f();
-        lifetimeScl = READ.f();
-        aimX = READ.f();
-        aimY = READ.f();
+        bulletId = READ.i();
+        launchAngle = READ.f();
+        targetId = READ.i();
+        forceFind = READ.bool();
     }
 
     @Override
     public void handleClient() {
-        if (type == null) return;
-
         Unit owner = Groups.unit.getByID(ownerId);
         if (!(owner instanceof RevengeUnit revenge)) return;
+        if (revenge.applyOrbitLaunchEvent(bulletId, launchAngle, targetId, forceFind)) return;
 
-        Team spawnTeam = team == null ? revenge.team : team;
-        Bullet bullet = type.create(revenge, revenge, spawnTeam, x, y, angle, damage, velocityScl, lifetimeScl, null, null, aimX, aimY, null);
-        if (bullet == null) return;
-
-        bullet.owner(revenge);
-        bullet.team(spawnTeam);
-        revenge.addOrbitBullet(bullet);
+        for (int i = 1; i <= launchRetryCount; i++) {
+            final float delay = i * launchRetryStep;
+            final int syncOwnerId = ownerId;
+            final int syncBulletId = bulletId;
+            final float syncLaunchAngle = launchAngle;
+            final int syncTargetId = targetId;
+            final boolean syncForceFind = forceFind;
+            Time.run(delay, () -> {
+                Unit retryOwner = Groups.unit.getByID(syncOwnerId);
+                if (!(retryOwner instanceof RevengeUnit retryRevenge)) return;
+                retryRevenge.applyOrbitLaunchEvent(syncBulletId, syncLaunchAngle, syncTargetId, syncForceFind);
+            });
+        }
     }
 
     @Override
@@ -84,4 +70,3 @@ public class RevengeOrbitBulletPacket extends Packet {
         return !server;
     }
 }
-

@@ -60,6 +60,13 @@ public class TitanUnit extends MechUnit{
         return new TitanUnit();
     }
 
+    private String bundleOr(String key, String fallback) {
+        if (Core.bundle != null && Core.bundle.has(key)) {
+            return Core.bundle.get(key);
+        }
+        return fallback;
+    }
+
     @Override
     public int classId(){
         return EntityRegister.getId(TitanUnit.class);
@@ -413,12 +420,12 @@ public class TitanUnit extends MechUnit{
         t.row();
         t.table(bars -> {
             bars.defaults().growX().pad(5).height(20f);
-            bars.add(new Bar(Core.bundle.format("bar.wh-full-absorb"), Pal.accent, () -> {
+            bars.add(new Bar(bundleOr("bar.wh-full-absorb", "Full Absorb"), Pal.accent, () -> {
                 float fullTime = fullAbsorbTime();
                 return fullTime <= 0f ? 0f : fullAbsorbTimer / fullTime;
             }));
             bars.row();
-            bars.add(new Bar("stat.shieldhealth", Pal.accent, () -> {
+            bars.add(new Bar(bundleOr("stat.shieldhealth", "Shield"), Pal.accent, () -> {
                 float max = maxShield();
                 return max <= 0f ? 0f : Mathf.clamp(forceShield / max, 0f, 1f);
             }));

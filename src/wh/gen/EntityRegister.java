@@ -42,10 +42,7 @@ public final class EntityRegister{
 
     public static void load(){
         register("PlaFire", PlasmaFire.class, PlasmaFire::new);
-
-        register("PesterUnit", PesterUnit.class, PesterUnit::new);
         register("AirRaiderUnit", AirRaiderUnitType.class, AirRaiderUnitType::new);
-        /*  register("StarrySkyUnit", StarrySkyEntity.class, StarrySkyEntity::new);*/
 
         register("HoverPayloadUnit", HoverPayloadUnit.class, HoverPayloadUnit::new);
         register("CarrierPayloadUnit", CarrierPayloadUnit.class, CarrierPayloadUnit::new);
@@ -65,6 +62,8 @@ public final class EntityRegister{
         register("RiftSpawner", RiftSpawner.class, RiftSpawner::new);
 
         register("PortableAutoEventTrigger", Trigger.class, Trigger::new);
+
+        /* register("StarrySkyUnit", StarrySkyEntity.class, StarrySkyEntity::new);*/
 
     }
 }

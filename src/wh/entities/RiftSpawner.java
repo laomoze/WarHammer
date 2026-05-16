@@ -519,7 +519,7 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
 
     @Override
     public int classId(){
-        return EntityRegister.getId(getClass());
+        return EntityRegister.getId(RiftSpawner.class);
     }
 
     @Override
@@ -542,8 +542,8 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
 
         type = TypeIO.readUnitType(read);
         team = TypeIO.readTeam(read);
-        if(commandPos != null) commandPos = TypeIO.readVec2(read);
-        else commandPos = new Vec2(Float.NaN, Float.NaN);
+        Vec2 syncPos = TypeIO.readVec2(read);
+        commandPos = syncPos == null ? new Vec2(Float.NaN, Float.NaN) : syncPos;
 
         afterSync();
     }

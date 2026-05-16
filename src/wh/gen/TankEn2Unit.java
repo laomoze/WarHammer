@@ -1,14 +1,32 @@
 package wh.gen;
 
-import arc.util.io.*;
-import mindustry.entities.units.*;
-import mindustry.io.*;
-import mindustry.type.*;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.entities.units.WeaponMount;
+import mindustry.io.TypeIO;
+import mindustry.type.UnitType;
+import wh.entities.world.entities.TankEn2UnitType;
 
 public class TankEn2Unit extends HoverPayloadUnit{
     public WeaponMount m;
     public WeaponMount[] ms;
 
+    private void ensureCoaxialMount() {
+        if (ms != null && ms.length > 0 && ms[0] != null) {
+            m = ms[0];
+            return;
+        }
+        if (!(type instanceof TankEn2UnitType type1) || type1.coaxialWeapon == null) return;
+
+        ms = new WeaponMount[1];
+        ms[0] = new WeaponMount(type1.coaxialWeapon);
+        m = ms[0];
+
+        if (!Vars.headless && m.weapon != null) {
+            m.weapon.load();
+        }
+    }
 
     @Override
     public int classId(){
@@ -18,18 +36,13 @@ public class TankEn2Unit extends HoverPayloadUnit{
     @Override
     public void setType(UnitType type){
         super.setType(type);
-
-        if((ms == null || ms.length == 0) && type instanceof TankEn2UnitType type1){
-            this.ms = new WeaponMount[1];
-            ms[0] = new WeaponMount(type1.coaxialWeapon);
-            m = ms[0];
-            m.weapon.load();
-        }
+        ensureCoaxialMount();
     }
 
     @Override
     public void update(){
         super.update();
+        ensureCoaxialMount();
 
         if(mounts != null && mounts.length > 0 && m != null && ms != null){
             WeaponMount mainMount = mounts[0];
@@ -61,12 +74,16 @@ public class TankEn2Unit extends HoverPayloadUnit{
     @Override
     public void read(Reads read){
         super.read(read);
-        TypeIO.readMounts(read, this.ms);
+        ensureCoaxialMount();
+        if (ms != null) {
+            TypeIO.readMounts(read, this.ms);
+        }
     }
 
     @Override
     public void write(Writes write){
         super.write(write);
-        TypeIO.writeMounts(write, this.ms);
+        ensureCoaxialMount();
+        TypeIO.writeMounts(write, this.ms == null ? new WeaponMount[0] : this.ms);
     }
 }

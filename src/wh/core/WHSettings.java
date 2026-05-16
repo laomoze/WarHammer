@@ -103,7 +103,7 @@ public final class WHSettings{
     }
 
     public static int regularEffectPercent(){
-        return Mathf.clamp(Core.settings.getInt(regularEffectScaleKey, 100), 25, 100);
+        return Mathf.clamp(Core.settings.getInt(regularEffectScaleKey, 100), 10, 100);
     }
 
     public static float regularEffectScale(){

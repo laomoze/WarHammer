@@ -7,6 +7,7 @@ import arc.util.Tmp;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.entities.Effect;
+import mindustry.entities.units.WeaponMount;
 import mindustry.game.Team;
 import mindustry.gen.Bullet;
 import mindustry.gen.Hitboxc;
@@ -165,7 +166,14 @@ public class CarrierFighterUnit extends UnitEntity {
     }
 
     protected boolean hasOffensiveWeapon() {
-        return isShooting;
+        if (mounts == null || mounts.length == 0) return false;
+        for (WeaponMount mount : mounts) {
+            if (mount == null || mount.weapon == null) continue;
+            if (mount.weapon.noAttack) continue;
+            if (mount.weapon.bullet == null) continue;
+            return true;
+        }
+        return false;
     }
 
     protected void writeCarrierState(Writes write) {

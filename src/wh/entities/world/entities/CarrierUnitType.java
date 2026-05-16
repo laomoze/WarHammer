@@ -427,6 +427,9 @@ public class CarrierUnitType extends WHUnitType{
 
         float payloadRotation = runwayPayloadRotation(unit, carrier, runway);
         payload.set(Tmp.v1.x, Tmp.v1.y, payloadRotation);
+        if (payload instanceof UnitPayload up && up.unit != null && up.unit.trail != null) {
+            up.unit.trail.clear();
+        }
         payload.draw();
     }
 
