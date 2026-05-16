@@ -1949,7 +1949,7 @@ public final class WHUnitTypes {
             }
         };
 
-        revenge = new SuperHeavyUnitType("revenge") {
+        revenge = new RevengeUnitType("revenge") {
             {
                 constructor = RevengeUnit::new;
 

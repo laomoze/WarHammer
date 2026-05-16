@@ -6,7 +6,6 @@
 package wh.content;
 
 import arc.Core;
-import arc.graphics.Texture;
 import arc.graphics.g2d.TextureRegion;
 import mindustry.Vars;
 import mindustry.ctype.Content;
@@ -17,7 +16,7 @@ import wh.core.WarHammerMod;
 import static wh.core.WarHammerMod.name;
 
 public class WHContent extends Content{
-    private static final TextureRegion emptyRegion = new TextureRegion(new Texture("sprites/error.png"));
+    private static final TextureRegion emptyRegion = new TextureRegion();
 
     public static TextureRegion arrowRegion,
     pointerRegion,

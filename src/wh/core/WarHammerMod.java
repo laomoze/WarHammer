@@ -37,6 +37,7 @@ import wh.graphics.MainRenderer;
 import wh.graphics.WHShaders;
 import wh.maps.filters.WhTechFilter;
 import wh.net.packet.AlertToastPacket;
+import wh.net.packet.RevengeOrbitBulletPacket;
 import wh.net.packet.WarnHUDPacket;
 
 import java.util.Arrays;
@@ -55,6 +56,7 @@ public class WarHammerMod extends Mod {
     public WarHammerMod() {
         Net.registerPacket(WarnHUDPacket::new);
         Net.registerPacket(AlertToastPacket::new);
+        Net.registerPacket(RevengeOrbitBulletPacket::new);
         /* WHClassMap.load();*/
         WHSettings.load();
         setupMultiplayerSettingSync();
@@ -97,7 +99,9 @@ public class WarHammerMod extends Mod {
     private static void setupMultiplayerSettingSync() {
         Events.on(EventType.PlayerConnect.class, event -> {
             WHSettings.forceMultiplayerSettings();
-            KarvexTeachTree.forceFullTechCoverage();
+            if (WHSettings.fullTechCoverage()) {
+                KarvexTeachTree.forceFullTechCoverage();
+            }
             Call.clientPacketReliable(forcedSettingPacketName, WHSettings.overrideStatus());
         });
 

@@ -14,8 +14,6 @@ public final class WHSettings{
     public static final String distortionStrengthKey = "wh-distortion-strength";
     public static final String carrierDebugHudKey = "wh-carrier-debug-hud";
     public static final String fullTechCoverageKey = "wh-full-tech-coverage";
-    public static final String converterEnabledKey = "wh-enable-converter";
-    public static final String[] multiplayerForcedKeys = {fullTechCoverageKey};
     private static final String categoryName = "WarHammer设置";
 
     private WHSettings(){
@@ -38,8 +36,7 @@ public final class WHSettings{
             table.checkPref(distortionEnabledKey, true);
             table.sliderPref(distortionStrengthKey, 100, 0, 100, 5, i -> i + "%");
             table.checkPref(carrierDebugHudKey, false);
-            table.checkPref(fullTechCoverageKey, true);
-            table.checkPref(converterEnabledKey, false);
+            table.checkPref(fullTechCoverageKey, false);
         });
     }
 
@@ -49,8 +46,7 @@ public final class WHSettings{
         setDefault(distortionEnabledKey, true);
         setDefault(distortionStrengthKey, 100);
         setDefault(carrierDebugHudKey, false);
-        setDefault(fullTechCoverageKey, true);
-        setDefault(converterEnabledKey, false);
+        setDefault(fullTechCoverageKey, false);
     }
 
     private static void setDefault(String key, Object value) {
@@ -60,16 +56,15 @@ public final class WHSettings{
     }
 
     public static void forceMultiplayerSettings() {
-        for (String key : multiplayerForcedKeys) {
-            Core.settings.put(key, true);
+        if (Vars.headless) {
+            Core.settings.put(fullTechCoverageKey, true);
         }
     }
 
     public static String overrideStatus() {
+        if (!Vars.headless) return "";
         StringBuilder builder = new StringBuilder();
-        for (String key : multiplayerForcedKeys) {
-            builder.append(key).append(":").append(Core.settings.getBool(key, true)).append("|");
-        }
+        builder.append(fullTechCoverageKey).append(":true|");
         return builder.toString();
     }
 
@@ -133,11 +128,11 @@ public final class WHSettings{
     }
 
     public static boolean fullTechCoverage() {
-        return Core.settings.getBool(fullTechCoverageKey, true);
+        return Core.settings.getBool(fullTechCoverageKey, false);
     }
 
     public static boolean converterEnabled() {
-        return Core.settings.getBool(converterEnabledKey, false);
+        return fullTechCoverage();
     }
 
     public static boolean laserDebugLengths() {

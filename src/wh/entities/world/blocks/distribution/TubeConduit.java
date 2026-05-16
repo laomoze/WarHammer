@@ -112,14 +112,6 @@ public class TubeConduit extends Conduit{
     }
 
     @Override
-    public void init(){
-        super.init();
-        for(int i = 0; i < 5; i++){
-            arrowRegion[i] = Core.atlas.find(name + "-arrow-" + i);
-        }
-    }
-
-    @Override
     public TextureRegion[] icons(){
         return new TextureRegion[]{editorRegion};
     }

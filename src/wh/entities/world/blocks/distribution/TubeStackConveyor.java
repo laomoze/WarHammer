@@ -46,8 +46,8 @@ public class TubeStackConveyor extends StackConveyor{
     }
 
     @Override
-    public void init(){
-        super.init();
+    public void load() {
+        super.load();
         CoRegions = new TextureRegion[5][8];
 
         topRegion = WHUtils.splitLayers2(name + "-top", 32, 512, 64);

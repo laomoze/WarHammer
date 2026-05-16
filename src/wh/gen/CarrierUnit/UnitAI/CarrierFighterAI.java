@@ -8,6 +8,7 @@ import arc.math.geom.Vec2;
 import arc.util.Nullable;
 import arc.util.Time;
 import arc.util.Tmp;
+import mindustry.Vars;
 import mindustry.ai.types.FlyingAI;
 import mindustry.ai.types.GroundAI;
 import mindustry.entities.Predict;
@@ -64,6 +65,10 @@ public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC {
     protected boolean debugWeaponAllowFire = false;
     protected @Nullable Teamc debugWeaponTarget;
     protected String debugRecallReason = "none";
+
+    protected boolean isRemoteClientUnit() {
+        return unit != null && Vars.net.client() && !unit.isLocal();
+    }
 
     public CarrierFighterAI() {
     }
@@ -255,6 +260,7 @@ public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC {
     @Override
     public void updateMovement() {
         pullStateFromUnit();
+        if (isRemoteClientUnit()) return;
 
         CarrierHostc carrier = carrier();
         CarrierUnitType type = carrier == null ? null : carrier.carrierType();
@@ -278,6 +284,10 @@ public class CarrierFighterAI extends FlyingAI implements CarrierBoundAIC {
     @Override
     public void updateWeapons() {
         pullStateFromUnit();
+        if (isRemoteClientUnit()) {
+            stopShooting();
+            return;
+        }
 
         CarrierHostc carrier = carrier();
         CarrierUnitType type = carrier == null ? null : carrier.carrierType();

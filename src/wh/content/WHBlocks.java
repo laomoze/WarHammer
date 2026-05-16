@@ -222,7 +222,7 @@ public final class WHBlocks {
     private WHBlocks() {
     }
 
-    private static void loadConverter() {
+    public static void loadConverter() {
         converter = new MultiCrafter("converter") {{
             requirements(Category.crafting, with(Items.graphite, 50, Items.silicon, 40));
 
@@ -475,9 +475,9 @@ public final class WHBlocks {
     }
 
     public static void load() {
-        if (WHSettings.converterEnabled()) {
-            loadConverter();
-        }
+
+        loadConverter();
+
         scrapFurance = new GenericCrafter("scrap-furance") {{
             requirements(Category.crafting, with(WHItems.manganeseSteel, 30, WHItems.chromium, 40, Items.plastanium, 30));
             health = 800;

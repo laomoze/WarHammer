@@ -1,34 +1,53 @@
 package wh.entities.world.blocks.unit.AirBorne;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.input.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.event.*;
-import arc.scene.ui.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
+import arc.Core;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.input.KeyCode;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Point2;
+import arc.math.geom.Vec2;
+import arc.scene.event.InputEvent;
+import arc.scene.event.InputListener;
+import arc.scene.ui.Button;
+import arc.scene.ui.Image;
+import arc.scene.ui.ScrollPane;
+import arc.scene.ui.layout.Stack;
+import arc.scene.ui.layout.Table;
+import arc.struct.IntIntMap;
+import arc.struct.IntSeq;
+import arc.struct.Seq;
 import arc.util.*;
-import arc.util.io.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.ctype.*;
-import mindustry.entities.*;
-import mindustry.game.*;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.content.Items;
+import mindustry.content.StatusEffects;
+import mindustry.ctype.UnlockableContent;
+import mindustry.entities.Units;
+import mindustry.game.Team;
 import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.io.*;
-import mindustry.logic.*;
-import mindustry.type.*;
-import mindustry.ui.*;
-import mindustry.ui.dialogs.*;
-import mindustry.world.*;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Pal;
+import mindustry.io.TypeIO;
+import mindustry.logic.LAccess;
+import mindustry.type.Item;
+import mindustry.type.ItemStack;
+import mindustry.type.StatusEffect;
+import mindustry.type.UnitType;
+import mindustry.ui.Bar;
+import mindustry.ui.Styles;
+import mindustry.ui.dialogs.BaseDialog;
+import mindustry.world.Block;
+import mindustry.world.Tile;
 import mindustry.world.meta.*;
-import mindustry.world.modules.*;
-import wh.entities.*;
-import wh.ui.*;
+import mindustry.world.modules.ItemModule;
+import wh.entities.AirborneSpawner;
+import wh.entities.WorldRegister;
+import wh.ui.ItemImageDynamic;
+import wh.ui.UIUtils;
 
 import static mindustry.Vars.tilesize;
 
@@ -1869,6 +1888,13 @@ public class AirborneUnitCallBlock extends Block{
 
         @Override
         public void read(Reads read, byte revision){
+            boolean preservePendingDraft = !pendingEqualsActive();
+            int pendingAmountSnapshot = pendingSpawnAmount;
+            int pendingBoostSnapshot = pendingBoostItemsPerUnit;
+            int pendingEditGroupSnapshot = editingGroup;
+            Seq<IntSeq> pendingSnapshot = new Seq<>();
+            copyGroups(pendingGroups, pendingSnapshot);
+
             super.read(read, revision);
             warmup = read.f();
             buildProgress = read.f();
@@ -1884,6 +1910,13 @@ public class AirborneUnitCallBlock extends Block{
             readPendingCapacities(read);
             readActiveGroups(read, revision);
             restoreLoadedState();
+            restorePendingDraftAfterRead(
+                    preservePendingDraft,
+                    pendingAmountSnapshot,
+                    pendingBoostSnapshot,
+                    pendingEditGroupSnapshot,
+                    pendingSnapshot
+            );
         }
 
         private void readPendingCapacities(Reads read){
@@ -1935,14 +1968,35 @@ public class AirborneUnitCallBlock extends Block{
                 activeGroups.add(new IntSeq());
             }
             syncCurrentPlanFromActive();
+            clampSpawnPos();
+            // Loaded saves may keep confirm flag; reset progress to rebuild safely.
+            if (needConfirmDeploy) {
+                buildProgress = 0f;
+            }
+        }
+
+        private void syncPendingFromActive() {
             copyGroups(activeGroups, pendingGroups);
             pendingSpawnAmount = spawnAmount;
             pendingBoostItemsPerUnit = boostItemsPerUnit;
             editingGroup = Mathf.clamp(editingGroup, 0, Math.max(0, pendingSpawnAmount - 1));
-            clampSpawnPos();
-            // Loaded saves may keep confirm flag; reset progress to rebuild safely.
-            if(needConfirmDeploy){
-                buildProgress = 0f;
+        }
+
+        private void restorePendingDraftAfterRead(boolean preservePendingDraft, int pendingAmountSnapshot, int pendingBoostSnapshot, int pendingEditGroupSnapshot, Seq<IntSeq> pendingSnapshot) {
+            if (!preservePendingDraft) {
+                syncPendingFromActive();
+                return;
+            }
+
+            pendingSpawnAmount = Mathf.clamp(pendingAmountSnapshot, 1, Math.max(1, maxSpawnCount));
+            pendingBoostItemsPerUnit = Mathf.clamp(pendingBoostSnapshot, 0, Math.max(0, maxBoostItemsPerUnit));
+            copyGroups(pendingSnapshot, pendingGroups);
+            ensureGroupRows(pendingGroups, pendingSpawnAmount);
+            ensurePendingDraft();
+            editingGroup = Mathf.clamp(pendingEditGroupSnapshot, 0, Math.max(0, pendingSpawnAmount - 1));
+
+            if (pendingEqualsActive()) {
+                syncPendingFromActive();
             }
         }
     }

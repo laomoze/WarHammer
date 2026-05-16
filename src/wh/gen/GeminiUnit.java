@@ -29,7 +29,6 @@ import mindustry.type.UnitType;
 import mindustry.world.blocks.defense.Wall.WallBuild;
 import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.meta.BlockGroup;
-import wh.content.WHBulletsOther;
 import wh.content.WHFx;
 import wh.core.WHSettings;
 import wh.entities.bullet.ApproachBullet;
@@ -48,6 +47,7 @@ public class GeminiUnit extends UnitEntity {
         public float phaseTimeLeft;
         public float phaseCooldownTimer;
         public float phaseVisualFade;
+        public float lowHealthEyeOpen;
         public GeminiUnit pairLinkUnit;
         public boolean pairLinking;
         public boolean pairLinked;
@@ -197,9 +197,6 @@ public class GeminiUnit extends UnitEntity {
     public ApproachBullet resolveLowHealthSpecialBulletType(UnitType fromType) {
         if (fromType instanceof GeminiUnitType gType && gType.lowHealthSpecialBullet != null) {
             return gType.lowHealthSpecialBullet;
-        }
-        if (WHBulletsOther.RevengeBullet3 instanceof ApproachBullet) {
-            return (ApproachBullet) WHBulletsOther.RevengeBullet3;
         }
         return null;
     }
@@ -429,7 +426,7 @@ public class GeminiUnit extends UnitEntity {
     }
 
     public boolean isAuthority() {
-        return !Vars.net.client() || isLocal();
+        return !Vars.net.client();
     }
 
     public boolean hasPairLinkRole() {
@@ -461,6 +458,16 @@ public class GeminiUnit extends UnitEntity {
         }
 
         if (pairLinkUnit == null) {
+            if (clientVisualOnly && hasPairLinkRole()) {
+                GeminiUnit recovered = recoverPairLinkUnit();
+                if (recovered != null) {
+                    pairLinkUnit = recovered;
+                    return;
+                }
+                // Remote sync can temporarily provide role flags before entity refs resolve.
+                // Keep role flags for this frame to avoid client-side flicker.
+                return;
+            }
             // Save/load recovery: entity references can be temporarily unresolved on first tick.
             // Rebuild link from role flags before clearing the role.
             if (!clientVisualOnly && hasPairLinkRole()) {
@@ -1256,7 +1263,9 @@ public class GeminiUnit extends UnitEntity {
 
     public boolean isSecondaryRenderTarget(Healthc target) {
         if (target == null || target == primaryLink || target.dead() || !target.isValid()) return false;
+        if (!isEnemyTarget(primaryLink)) return false;
         if (!(target instanceof Teamc targetTeam) || !(primaryLink instanceof Teamc primaryTeam)) return false;
+        if (primaryTeam.team() == team) return false;
         if (targetTeam.team() != primaryTeam.team()) return false;
         if (target instanceof WallBuild) return false;
         if (target instanceof Unit unit && !unit.hittable()) return false;
@@ -1523,6 +1532,7 @@ public class GeminiUnit extends UnitEntity {
     }
 
     public void updateLowHealthEyeAnimation() {
+        if (Vars.net.client()) return;
         boolean showEye = !dead() && healthf() < LOW_HEALTH_EYE_THRESHOLD;
         float danger = showEye ? Mathf.clamp((LOW_HEALTH_EYE_THRESHOLD - healthf()) / LOW_HEALTH_EYE_THRESHOLD) : 0f;
         float targetOpen = showEye ? Mathf.clamp(0.5f + danger * 0.5f) : 0f;
@@ -1888,6 +1898,7 @@ public class GeminiUnit extends UnitEntity {
         write.f(phaseTimeLeft);
         write.f(phaseCooldownTimer);
         write.f(phaseVisualFade);
+        write.f(lowHealthEyeOpen);
         writePairLinkState(write, false);
         writeHealthTargets(write, secondaryLinks);
     }
@@ -1898,6 +1909,7 @@ public class GeminiUnit extends UnitEntity {
         state.phaseTimeLeft = read.f();
         state.phaseCooldownTimer = read.f();
         state.phaseVisualFade = read.f();
+        state.lowHealthEyeOpen = read.f();
         state.pairLinkUnit = readPairLinkUnit(read);
         state.pairLinking = read.bool();
         state.pairLinked = read.bool();
@@ -1944,6 +1956,7 @@ public class GeminiUnit extends UnitEntity {
         phaseTimeLeft = state.phaseTimeLeft;
         phaseCooldownTimer = state.phaseCooldownTimer;
         phaseVisualFade = state.phaseVisualFade;
+        lowHealthEyeOpen = Mathf.clamp(state.lowHealthEyeOpen, 0f, 1f);
         pairLinkUnit = state.pairLinkUnit;
         pairLinking = state.pairLinking;
         pairLinked = state.pairLinked;
@@ -2007,9 +2020,7 @@ public class GeminiUnit extends UnitEntity {
     public void readSync(Reads read) {
         super.readSync(read);
         GeminiSyncState syncState = readSyncState(read, syncStateScratch);
-        if (!isLocal()) {
-            applySyncState(syncState);
-        }
+        applySyncState(syncState);
     }
 
 }

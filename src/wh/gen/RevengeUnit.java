@@ -1,6 +1,5 @@
 package wh.gen;
 
-import arc.Core;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.TextureRegion;
@@ -27,13 +26,14 @@ import mindustry.world.blocks.defense.turrets.Turret.TurretBuild;
 import wh.content.WHBulletsOther;
 import wh.content.WHStatusEffects;
 import wh.entities.bullet.ApproachBullet.AB;
+import wh.entities.world.entities.RevengeUnitType;
+import wh.net.packet.RevengeOrbitBulletPacket;
 import wh.util.WHUtils;
 
 import static mindustry.io.TypeIO.*;
 import static wh.util.WHUtils.rand;
 
 public class RevengeUnit extends UnitEntity{
-
     public final float DAMAGE_REDUCE = 0.8f;
     public final float DAMAGE_REDUCE_Duration = 8 * 60f;
     public final float MAX_DAMAGE = 1000f;
@@ -64,8 +64,6 @@ public class RevengeUnit extends UnitEntity{
     public Seq<Bullet> surroundBullets = new Seq<>();
     public final Seq<BulletType> bullets = new Seq<>(BulletType.class);
 
-    public TextureRegion armorRegion;
-
     public ObjectFloatMap<Healthc> hatred = new ObjectFloatMap<>();
 
     @Override
@@ -76,10 +74,11 @@ public class RevengeUnit extends UnitEntity{
     @Override
     public void setType(UnitType type){
         super.setType(type);
-        armorRegion = Core.atlas.find(this.type.name + "-energyArmor");
+        bullets.clear();
         bullets.add(WHBulletsOther.RevengeBullet1, WHBulletsOther.RevengeBullet2,
         WHBulletsOther.RevengeBullet3, WHBulletsOther.RevengeBullet4);
     }
+
 
     public Healthc findOwner(Entityc ent){
         Healthc target = null;
@@ -134,6 +133,8 @@ public class RevengeUnit extends UnitEntity{
     @Override
     public void draw(){
         super.draw();
+        TextureRegion armorRegion = type instanceof RevengeUnitType revengeType ? revengeType.armorRegion : null;
+        if (armorRegion == null) return;
 
         float width = armorRegion.width * Draw.scl * drawSize,
         height = armorRegion.height * Draw.scl * drawSize;
@@ -156,10 +157,13 @@ public class RevengeUnit extends UnitEntity{
         boolean server = !Vars.net.client();
         if (!server) {
             updateClientVisualState();
+            surroundBullets.removeAll(e -> e == null || !e.isAdded());
+            updateSurroundBulletsOrbit();
             return;
         }
 
-        if(canShoot()) bulletRecoveryTimer += Time.delta * reloadMultiplier();
+        // Orbit bullets are an intrinsic ability; do not gate regeneration by weapon shootability.
+        bulletRecoveryTimer += Time.delta * reloadMultiplier();
 
         rand.setSeed(id);
 
@@ -263,26 +267,7 @@ public class RevengeUnit extends UnitEntity{
             drawSize = Mathf.lerpDelta(drawSize, 1f, 0.08f);
         }else drawSize = Mathf.lerpDelta(drawSize, 0f, 0.1f);
 
-        if(surroundBullets.size > 0){
-            for(int i = 0; i < surroundBullets.size; i++){
-                Bullet bullet = surroundBullets.get(i);
-                if(bullet instanceof AB a){
-                    int ta = Mathf.randomSeed(a.id, 90, 150);
-                    float tg = Mathf.randomSeed(a.id, 360) + rotation;
-                    float r = Mathf.randomSeed(a.id, 0.7f, 1f);
-                    float angle = Time.time / 2 * r * (ta % 2 == 0 ? 1 : -1) + tg;
-                    float tx = WHUtils.ellipseXY(x, y, ta, ta / 4f, tg, angle, 0);
-                    float ty = WHUtils.ellipseXY(x, y, ta, ta / 4f, tg, angle, 1);
-                    /*  a.layer = angle%360f > 180 ? -0.3f : 0.1f;*/
-                    WHUtils.movePoint(a, tx, ty, 0.1f * r);
-                    a.rotation(a.angleTo(tx, ty));
-                    a.initVel(a.rotation(), 0);
-                    a.team(team);
-                    a.owner(this);
-                    if(a.time > 30) a.time = 30;
-                }
-            }
-        }
+        updateSurroundBulletsOrbit();
     }
 
     public void updateClientVisualState() {
@@ -294,16 +279,73 @@ public class RevengeUnit extends UnitEntity{
         }
     }
 
+    public void addOrbitBullet(Bullet bullet) {
+        if (bullet == null || !bullet.isAdded()) return;
+        if (!(bullet instanceof AB)) return;
+        if (bullet.team != team) return;
+        if (!bullets.contains(bullet.type, true)) return;
+        if (!surroundBullets.contains(bullet, true)) {
+            surroundBullets.add(bullet);
+        }
+    }
+
+    public void updateSurroundBulletsOrbit() {
+        if (surroundBullets.isEmpty()) return;
+
+        boolean server = !Vars.net.client();
+        for (int i = 0; i < surroundBullets.size; i++) {
+            Bullet bullet = surroundBullets.get(i);
+            if (!(bullet instanceof AB a)) continue;
+
+            int ta = Mathf.randomSeed(a.id, 90, 150);
+            float tg = Mathf.randomSeed(a.id, 360) + rotation;
+            float r = Mathf.randomSeed(a.id, 0.7f, 1f);
+            float angle = Time.time / 2 * r * (ta % 2 == 0 ? 1 : -1) + tg;
+            float tx = WHUtils.ellipseXY(x, y, ta, ta / 4f, tg, angle, 0);
+            float ty = WHUtils.ellipseXY(x, y, ta, ta / 4f, tg, angle, 1);
+
+            WHUtils.movePoint(a, tx, ty, 0.1f * r);
+            a.rotation(a.angleTo(tx, ty));
+            a.initVel(a.rotation(), 0);
+            if (a.time > 30f) a.time = 30f;
+            if (server) {
+                a.team(team);
+                a.owner(this);
+            }
+        }
+    }
+
     public void createBullet(){
         if (Vars.net.client()) return;
         float
         bulletX = x + Angles.trnsx(rotation - 90, this.shootX, this.shootY),
         bulletY = y + Angles.trnsy(rotation - 90, this.shootX, this.shootY);
         BulletType b = bullets.random();
-        Bullet b1 = b.create(this, this, this.team, bulletX, bulletY, rand.random(360), -1f,
-        rand.random(0.7f, 1),
-        1, null, null, aimX, aimY, null);
-        surroundBullets.add(b1);
+        float angle = rand.random(360f);
+        float velocityScl = rand.random(0.7f, 1f);
+
+        Bullet local = b.create(this, this, this.team, bulletX, bulletY, angle, -1f,
+                velocityScl,
+                1f, null, null, aimX, aimY, null);
+        if (local != null) {
+            addOrbitBullet(local);
+        }
+
+        if (Vars.net.server() && local != null) {
+            RevengeOrbitBulletPacket packet = new RevengeOrbitBulletPacket();
+            packet.ownerId = id;
+            packet.type = b;
+            packet.team = team;
+            packet.x = bulletX;
+            packet.y = bulletY;
+            packet.angle = angle;
+            packet.damage = -1f;
+            packet.velocityScl = velocityScl;
+            packet.lifetimeScl = 1f;
+            packet.aimX = aimX;
+            packet.aimY = aimY;
+            Vars.net.send(packet, true);
+        }
     }
 
     @Override
@@ -349,14 +391,16 @@ public class RevengeUnit extends UnitEntity{
             Bullet bullet = bulletType.create(this, this, this.team, bulletX, bulletY, rand.random(360), -1f,
             rand.random(0.7f, 1),
             1, null, null, aimX, aimY, null);
-            surroundBullets.add(bullet);
+            addOrbitBullet(bullet);
         }
 
         int enemySize = read.i();
         enemies.clear();
         for(int i = 0; i < enemySize; i++){
-            Healthc e = readUnit(read);
-            enemies.add(e);
+            Entityc entity = readEntity(read);
+            if (entity instanceof Healthc e) {
+                enemies.add(e);
+            }
         }
     }
 
@@ -385,7 +429,11 @@ public class RevengeUnit extends UnitEntity{
 
         write.i(enemies.size);
         for(Healthc e : enemies){
-            writeUnit(write, (Unit)e);
+            if (e instanceof Entityc) {
+                writeEntity(write, (Entityc) e);
+            } else {
+                writeEntity(write, null);
+            }
         }
     }
 
@@ -406,11 +454,9 @@ public class RevengeUnit extends UnitEntity{
         float syncCheckReload = read.f();
         float syncBulletRecoveryTimer = read.f();
 
-        if (!isLocal()) {
-            abilityDuration = syncAbilityDuration;
-            drawSize = syncDrawSize;
-            checkReload = syncCheckReload;
-            bulletRecoveryTimer = syncBulletRecoveryTimer;
-        }
+        abilityDuration = syncAbilityDuration;
+        drawSize = syncDrawSize;
+        checkReload = syncCheckReload;
+        bulletRecoveryTimer = syncBulletRecoveryTimer;
     }
 }
