@@ -50,6 +50,7 @@ public class GeminiUnit extends UnitEntity {
         public float pairLinkLastX;
         public float pairLinkLastY;
         public float pairLinkLastRadius;
+        public float pairLinkLastTime;
         public final Seq<Healthc> secondaryLinks = new Seq<>();
     }
 
@@ -64,15 +65,15 @@ public class GeminiUnit extends UnitEntity {
         public long seed;
     }
 
-    public static final float PRIMARY_RETARGET_INTERVAL = 8f * 60f;
-    public static final float ATTACKER_MEMORY_DURATION = 20f * 60f;
-    public static final float PRIMARY_LINK_DURATION = 18f * 60f;
+    public static final float PRIMARY_RETARGET_INTERVAL = 16f * 60f;
+    public static final float ATTACKER_MEMORY_DURATION = 10f * 60f;
+    public static final float PRIMARY_LINK_DURATION = 12f * 60f;
     public static final float SECONDARY_RANGE = 300;
     public static final float SECONDARY_REFRESH_INTERVAL = 30f;
     public static final float SECONDARY_TRANSFER_INTERVAL = 1f;
-    public static final float SECONDARY_TRANSFER_DAMAGE_MULTIPLIER = 1;
+    public static final float SECONDARY_TRANSFER_DAMAGE_MULTIPLIER = 0.75f;
     public static final float SECONDARY_MIN_SCORE = 3500f;
-    public static final float SELF_TO_PRIMARY_DAMAGE = 0.8f;
+    public static final float SELF_TO_PRIMARY_DAMAGE = 0.75f;
     public static final float ATTACKER_PRUNE_INTERVAL = 20f;
 
     public static final int MAX_SECONDARY_LINKS = 3;
@@ -85,7 +86,7 @@ public class GeminiUnit extends UnitEntity {
 
     public static final float EARLY_LINK_RESET_PROGRESS = 1f / 2f;
 
-    public static final float PHASE_INTERVAL = 25f * 60f;
+    public static final float PHASE_INTERVAL = 20f * 60f;
     public static final float PHASE_DURATION = 5f * 60f;
     public static final float PHASE_ALPHA = 0.4f;
 
@@ -414,8 +415,7 @@ public class GeminiUnit extends UnitEntity {
         updatePairLinkVisuals();
 
         if (!authority) {
-            boolean hasPrimaryVisual = isEnemyTarget(primaryLink) || hasPrimaryGhost();
-            updateStrokeFade(hasPrimaryVisual);
+            updateStrokeFade(isEnemyTarget(primaryLink));
             return;
         }
 
@@ -617,6 +617,9 @@ public class GeminiUnit extends UnitEntity {
 
     public void clearPairLink(boolean preservePartner) {
         GeminiUnit other = pairLinkUnit;
+        if (other != null) {
+            capturePairLinkLastEndpoint(other.x, other.y, other.hitSize * 0.52f);
+        }
         pairLinkUnit = null;
         pairLinking = false;
         pairLinked = false;
@@ -2105,6 +2108,7 @@ public class GeminiUnit extends UnitEntity {
         write.f(pairLinkLastX);
         write.f(pairLinkLastY);
         write.f(pairLinkLastRadius);
+        write.f(pairLinkLastTime);
         writeHealthTargets(write, secondaryLinks);
     }
 
@@ -2116,6 +2120,7 @@ public class GeminiUnit extends UnitEntity {
         state.pairLinkLastX = read.f();
         state.pairLinkLastY = read.f();
         state.pairLinkLastRadius = read.f();
+        state.pairLinkLastTime = read.f();
         readHealthTargets(read, state.secondaryLinks);
         return state;
     }
@@ -2187,8 +2192,19 @@ public class GeminiUnit extends UnitEntity {
             pairLinking = hasPair;
             pairLinked = hasPair;
         }
-        if (!Float.isNaN(state.pairLinkLastX) && !Float.isNaN(state.pairLinkLastY) && state.pairLinkLastRadius > 0.01f) {
-            capturePairLinkLastEndpoint(state.pairLinkLastX, state.pairLinkLastY, state.pairLinkLastRadius);
+        if (!Float.isNaN(state.pairLinkLastX)
+                && !Float.isNaN(state.pairLinkLastY)
+                && state.pairLinkLastRadius > 0.01f
+                && state.pairLinkLastTime > 0.001f) {
+            pairLinkLastX = state.pairLinkLastX;
+            pairLinkLastY = state.pairLinkLastY;
+            pairLinkLastRadius = state.pairLinkLastRadius;
+            pairLinkLastTime = Mathf.clamp(state.pairLinkLastTime, 0f, PAIR_LINK_LAST_HOLD);
+        } else if (Vars.net.client() && !isLocal() && !hasValidPairLink()) {
+            pairLinkLastTime = 0f;
+            pairLinkLastX = Float.NaN;
+            pairLinkLastY = Float.NaN;
+            pairLinkLastRadius = Float.NaN;
         }
         mergeSyncedSecondaryLinks(primaryLink, state.secondaryLinks);
 
@@ -2197,6 +2213,18 @@ public class GeminiUnit extends UnitEntity {
             primaryLinkTimeLeft = 0f;
         }
         sanitizeLinkState(Vars.net.client());
+    }
+
+    @Override
+    public void killed() {
+        clearPairLink(false);
+        super.killed();
+    }
+
+    @Override
+    public void remove() {
+        clearPairLink(false);
+        super.remove();
     }
 
     public void applySyncedPhaseTimeLeft(float syncedPhaseTimeLeft) {
@@ -2254,8 +2282,7 @@ public class GeminiUnit extends UnitEntity {
     public void sanitizeLinkState(boolean preservePairState) {
         sanitizePairLinkState(preservePairState);
         if (Vars.net.client() && preservePairState) {
-            boolean hasPrimaryVisual = isEnemyTarget(primaryLink) || hasPrimaryGhost();
-            updateStrokeFade(hasPrimaryVisual);
+            updateStrokeFade(isEnemyTarget(primaryLink));
             return;
         }
 
@@ -2279,8 +2306,7 @@ public class GeminiUnit extends UnitEntity {
             }
         }
 
-        boolean hasPrimaryVisual = isEnemyTarget(primaryLink) || hasPrimaryGhost();
-        updateStrokeFade(hasPrimaryVisual);
+        updateStrokeFade(isEnemyTarget(primaryLink));
     }
 
     @Override

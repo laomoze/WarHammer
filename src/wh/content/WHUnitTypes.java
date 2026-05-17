@@ -3541,7 +3541,7 @@ public final class WHUnitTypes {
                         inaccuracy = 1.2f;
                         shootSound = WHSounds.energyShoot;
                         shootCone = 20f;
-                        bullet = new TrailFadeBulletType(5, 200, name("pierce")) {
+                        bullet = new TrailFadeBulletType(5, 400, name("pierce")) {
                             {
                                 splashDamageRadius = 56;
                                 splashDamage = 180;
@@ -3617,10 +3617,11 @@ public final class WHUnitTypes {
                                 splashDamage = 50;
                                 knockback = 0.3f;
 
-                                lightning = 2;
+                                lightning = 1;
                                 lightningLength = 8;
                                 lightningLengthRand = 8;
-                                lightningDamage = 25f;
+                                lightningDamage = 40;
+                                shieldDamageMultiplier = 3;
 
                                 reflectable = false;
                                 trailLength = 5;
@@ -3672,7 +3673,7 @@ public final class WHUnitTypes {
                             lightning = 3;
                             lightningLength = 6;
                             lightningLengthRand = 8;
-                            lightningDamage = 35f;
+                            lightningDamage = 75;
 
                             hittable = false;
 
@@ -3697,7 +3698,7 @@ public final class WHUnitTypes {
                             );
 
                             fragBullets = 5;
-                            fragBullet = new CritBulletType(1.5f, 120, "circle") {{
+                            fragBullet = new CritBulletType(1.5f, 150, "circle") {{
                                 width = height = 6;
                                 shrinkX = shrinkY = 0f;
                                 trailLength = 5;
@@ -3771,7 +3772,7 @@ public final class WHUnitTypes {
                             shots = 6;
                             shotDelay = 5;
                         }};
-                        bullet = new BasicBulletType(8, 50) {{
+                        bullet = new BasicBulletType(8, 70) {{
                             width = 8;
                             height = 20;
                             lifetime = 270 / speed;
@@ -3781,6 +3782,7 @@ public final class WHUnitTypes {
                             trailLength = 4;
                             trailWidth = width / 2.8f;
                             pierceCap = 2;
+                            armorMultiplier = 0.6f;
                             pierceBuilding = true;
                             shootEffect = WHFx.lineCircleOut(10, WHPal.ShootOrange, 5, 2);
                             smokeEffect = shootSmallSmoke;
@@ -3804,7 +3806,7 @@ public final class WHUnitTypes {
                         shootSound = WHSounds.laser5;
                         velocityRnd = 0.1f;
 
-                        bullet = new CritBulletType(8, 50, "circle") {
+                        bullet = new CritBulletType(8, 75, "circle") {
                             {
                                 critChance = 0.01f;
                                 makePlaFire = true;
@@ -3821,7 +3823,7 @@ public final class WHUnitTypes {
                                 lightning = 2;
                                 lightningLength = 8;
                                 lightningLengthRand = 8;
-                                lightningDamage = 25f;
+                                lightningDamage = 35;
 
                                 reflectable = false;
                                 trailLength = 5;
@@ -3877,6 +3879,7 @@ public final class WHUnitTypes {
                             splashDamage = 60;
                             splashDamageRadius = 35;
 
+
                             width = 28;
                             height = width * 2;
                             lengthOffset = height / 3f;
@@ -3901,6 +3904,7 @@ public final class WHUnitTypes {
                             fragBullet = new BasicBulletType(0, 80) {{
                                 hittable = reflectable = false;
                                 lifetime = 20f;
+                                buildingDamageMultiplier = 1.5f;
                                 splashDamage = damage;
                                 splashDamageRadius = 45;
                                 lightningColor = trailColor = backColor = hitColor = WHPal.ShootOrange;
@@ -3912,6 +3916,7 @@ public final class WHUnitTypes {
                                 fragLifeMax = fragLifeMin = 1;
                                 fragBullet = new BasicBulletType(0, 100) {
                                     {
+                                        buildingDamageMultiplier = 1.5f;
                                         hittable = reflectable = false;
                                         lifetime = 20f;
                                         splashDamage = damage;
@@ -5839,7 +5844,7 @@ public final class WHUnitTypes {
             {
                 constructor = ElevationMoveUnit::create;
 
-                health = 210 * 1000f;
+                health = 180 * 1000f;
                 speed = 0.8f;
                 hitSize = 70;
                 armor = 75;
@@ -6449,8 +6454,8 @@ public final class WHUnitTypes {
                 hitSize = 64;
                 speed = 0.8f;
                 rotateSpeed = 1f;
-                health = 120000;
-                armor = 40;
+                health = 140000;
+                armor = 60f;
                 itemCapacity = 0;
                 floorMultiplier = 0.6f;
 
@@ -6524,6 +6529,7 @@ public final class WHUnitTypes {
                                 splashDamage = 1000;
                                 splashDamageRadius = 56;
                                 buildingDamageMultiplier = 1.5f;
+
                                 width = 30;
                                 height = width * 2;
                                 hitSize = 18;
@@ -6602,6 +6608,7 @@ public final class WHUnitTypes {
                         bullet = new PositionLightningBulletType(100) {
                             {
                                 maxRange = 400;
+                                shieldDamageMultiplier = 4;
                                 hitColor = lightColor = lightningColor = WHPal.ShootOrange;
                                 shootEffect = new WrapEffect(WHFx.hitSparkLarge, WHPal.ShootOrange);
                                 hitEffect = WHFx.lightningHitSmall;
@@ -6611,6 +6618,7 @@ public final class WHUnitTypes {
                                         sideAngle = 90;
                                         sideWidth = 2;
                                         sideLength = 20;
+                                        shieldDamageMultiplier = 4;
                                         Color c = hitColor = lightColor = lightningColor = WHPal.ShootOrange.cpy();
                                         colors = new Color[]{c.a(0.3f), c.a(0.5f), c.a(0.7f), WHPal.ShootOrangeLight};
                                         width = 18;
@@ -6708,7 +6716,7 @@ public final class WHUnitTypes {
                             shootEffect = shootBig2;
                             splashDamageRadius = 64;
                             splashDamage = damage;
-                            buildingDamageMultiplier = 1.5f;
+                            buildingDamageMultiplier = 4f;
                             hitEffect = despawnEffect = new MultiEffect(
                                     WHFx.circleOut(60, hitColor, splashDamageRadius),
                                     WHFx.smoothColorCircle(60, hitColor, splashDamageRadius),
@@ -7268,8 +7276,8 @@ public final class WHUnitTypes {
                     whenShooting = false;
                     y = 25;
                     radius = 30;
-                    max = 12000;
-                    regen = 30;
+                    max = 20000;
+                    regen = 2000 / 60f;
                     cooldown = 1500;
                     angle = 100;
                     width = 6f;
@@ -7337,14 +7345,13 @@ public final class WHUnitTypes {
                             }
                         });
 
-                        bullet = new BasicBulletType(10, 800, "missile-large") {
+                        bullet = new BasicBulletType(10, 500, "missile-large") {
                             {
                                 width = 16;
                                 height = 42;
                                 lifetime = 300 / speed;
                                 recoil = 2;
 
-                                damage = 900;
                                 collidesTiles = true;
                                 collidesAir = false;
                                 hittable = false;
@@ -7354,8 +7361,8 @@ public final class WHUnitTypes {
 
                                 scaledSplashDamage = true;
                                 splashDamageRadius = 64;
-                                splashDamage = 700;
-                                buildingDamageMultiplier = 2;
+                                splashDamage = 1000;
+                                buildingDamageMultiplier = 3;
                                 hitSound = explosionMissile;
                                 hitShake = 9;
                                 shootEffect = new MultiEffect(
@@ -7385,7 +7392,7 @@ public final class WHUnitTypes {
                                         scaledSplashDamage = true;
                                         splashDamageRadius = 49;
                                         splashDamage = 200;
-                                        buildingDamageMultiplier = 1.8f;
+                                        buildingDamageMultiplier = 6;
                                         hitSound = explosion;
                                         absorbable = false;
                                         sprite = "circle-bullet";
@@ -9209,7 +9216,7 @@ public final class WHUnitTypes {
                 range = 390;
 
                 abilities.add(
-                        new EllipseForceFieldAbility(300 / 4f, 180 / 4f, 7, 5000, 70 * 60f, 0.3f, 22) {{
+                        new EllipseForceFieldAbility(300 / 4f, 180 / 4f, 800 / 60f, 8000, 70 * 60f, 0.3f, 22) {{
                             reflectChance = 0.15f;
                             percentRegen = true;
                             percentRegenAmount = 0.06f;
@@ -9238,7 +9245,7 @@ public final class WHUnitTypes {
                         shootSound = Sounds.shootTank;
                         ;
                         shake = 5;
-                        bullet = new CritBulletType(15, 900, "missile-large") {
+                        bullet = new CritBulletType(15, 1200, "missile-large") {
                             {
                                 critChance = 0.2f;
                                 width = 16;

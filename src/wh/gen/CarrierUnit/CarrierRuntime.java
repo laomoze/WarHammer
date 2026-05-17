@@ -142,7 +142,9 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
     /** [006] ：切换单位类型后重置甲板状态、计时器与瞬态缓存。 */
     @Override
     public void setType(UnitType type) {
+        boolean typeChanged = this.type != type;
         super.setType(type);
+        if (!typeChanged) return;
         deckInitialized = false;
         sortieTimers.clear();
         deckRefitTimers.clear();
@@ -618,6 +620,9 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
 
         Vec2 visual = payloadVisuals.get(payload);
+        if (visual == null && payload instanceof UnitPayload up && up.unit != null) {
+            visual = payloadVisualsByFighterId.get(up.unit.id);
+        }
         if (visual != null) {
             out.set(visual);
         } else {
@@ -1324,7 +1329,10 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         if (deck.isEmpty() || deck.first() != payload) return false;
 
         RunwayPayloadState state = payloadStates.get(payload);
-        if (state == null) return true;
+        if (state == null && payload.unit != null) {
+            state = payloadStatesByFighterId.get(payload.unit.id);
+        }
+        if (state == null) return false;
 
         runwayFrontPoint(runway, Tmp.v4);
         float threshold = Math.max(3f, ctype.runwaySlotSpacing(runway) * 0.22f);
@@ -1355,6 +1363,10 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         }
         int oldId = fighter.id;
         fighter.id = EntityGroup.nextId();
+        if (oldId != fighter.id) {
+            payloadStatesByFighterId.remove(oldId);
+            payloadVisualsByFighterId.remove(oldId);
+        }
         if (oldId != fighter.id) {
             sortieTimers.remove(oldId, 0f);
             deckRefitTimers.remove(oldId, 0f);
@@ -1416,6 +1428,8 @@ public class CarrierRuntime extends CarrierUnit implements CarrierHostc{
         payloadVisuals.remove(payload);
         payloadStates.remove(payload);
         if (payload.unit != null) {
+            payloadStatesByFighterId.remove(payload.unit.id);
+            payloadVisualsByFighterId.remove(payload.unit.id);
             deckRefitTimers.remove(payload.unit.id, 0f);
             deckHealTimers.remove(payload.unit.id, 0f);
         }
