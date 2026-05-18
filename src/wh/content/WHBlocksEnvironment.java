@@ -31,11 +31,12 @@ public class WHBlocksEnvironment {
     //Floor
     public static Block cementFloor, darkHotRock, darkMagmaRock, darkRock, gravel, darkMineralSandstone, darkMineralFloor, mineralSandFloor, chromiteStone, chromiteFloor, chromiteFloorDark, manganeseStone, manganeseFloor, cobaltStone, cobaltFloor,
             trachyte, oreShale, oreSalt, radiationCraters, radiationRockFloor,
+            darkDacite, rustFloor, rustSand,
             scorchedEarth, scorchedStone;
     //Wall
     public static Block mineralSandWall, quartzSandWall, cementWall, darkRockWall, darkMineralSandstoneWall, chromiteWall, manganeseWall, cobaltWall,
             oreShaleWall, oreSaltWall, radiationRockWall,
-            scorchedEarthWall, trachyteWall, darkMeltaWall,
+            scorchedEarthWall, trachyteWall, darkMeltaWall, darkDaciteWall, rustFloorWall,
             abandonedWall, abandonedWallLarge, abandonedFactory, abandonedFactoryBreak;
     //MeltaFloor
     public static Block darkMetalFloor1, darkMetalFloor2, darkMetalFloor3, darkMetalFloor4, darkMetalFloor5, darkMetalFloor6,
@@ -48,7 +49,7 @@ public class WHBlocksEnvironment {
     public static Block quartzSandVent, cementVent, darkRockVent, radiationRockVent, scorchedEarthVent, chromiteVent, manganeseVent, cobaltVent;
     //Boulders/Props
     public static Block quartzSandBoulder, chromiteBoulder, cobaltBoulder, darkRockBoulder, manganeseBoulder, mineralSandFloorBoulder, radiationBoulder,
-            darkMineralSandBoulder, scorchedEarthBoulder, darkStoneCrystalCluster, quartzCrystalCluster,
+            darkMineralSandBoulder, scorchedEarthBoulder, darkDaciteBoulder, rustBoulder, darkStoneCrystalCluster, quartzCrystalCluster,
             chromiteBlock, cobaltBlock, darkMineralSandBlock, manganeseBlock, mineralSandBlock;
 
 
@@ -257,6 +258,11 @@ public class WHBlocksEnvironment {
             attributes.set(Attribute.water, -0.2f);
         }};
 
+        darkDacite = new Floor("dark-dacite") {{
+            variants = 3;
+            attributes.set(Attribute.water, -0.3f);
+        }};
+
         darkMineralSandstone = new Floor("dark-mineral-sandstone") {{
             itemDrop = WHItems.oreSand;
             playerUnmineable = true;
@@ -332,6 +338,18 @@ public class WHBlocksEnvironment {
         radiationCraters = new Floor("radiation-craters") {{
             attributes.set(Attribute.water, -1f);
             blendGroup = radiationRockFloor;
+        }};
+
+        rustFloor = new Floor("rust-floor") {{
+            variants = 4;
+            attributes.set(Attribute.water, -0.2f);
+            attributes.set(Attribute.oil, 0.15f);
+        }};
+
+        rustSand = new Floor("rust-sand") {{
+            variants = 4;
+            attributes.set(Attribute.water, -0.1f);
+            attributes.set(Attribute.oil, 0.2f);
         }};
 
         scorchedEarth = new Floor("scorched-earth") {{
@@ -411,6 +429,11 @@ public class WHBlocksEnvironment {
             darkRock.asFloor().wall = darkMagmaRock.asFloor().wall = darkHotRock.asFloor().wall = this;
         }};
 
+        darkDaciteWall = new StaticWall("dark-dacite-wall") {{
+            variants = 2;
+            darkDacite.asFloor().wall = this;
+        }};
+
         darkMineralSandstoneWall = new StaticWall("dark-mineral-sandstone-wall") {{
             darkMineralSandstone.asFloor().wall = this;
         }};
@@ -442,6 +465,11 @@ public class WHBlocksEnvironment {
 
         radiationRockWall = new StaticWall("radiation-rock-wall") {{
             radiationSand.asFloor().wall = radiationRockFloor.asFloor().wall = this;
+        }};
+
+        rustFloorWall = new StaticWall("rust-floor-wall") {{
+            variants = 2;
+            rustFloor.asFloor().wall = this;
         }};
 
         scorchedEarthWall = new StaticWall("scorched-earth-wall") {{
@@ -507,6 +535,11 @@ public class WHBlocksEnvironment {
             darkRock.asFloor().decoration = darkHotRock.asFloor().decoration = darkMagmaRock.asFloor().decoration = this;
         }};
 
+        darkDaciteBoulder = new Prop("dark-dacite-boulder") {{
+            variants = 3;
+            darkDacite.asFloor().decoration = this;
+        }};
+
         manganeseBoulder = new Prop("manganese-boulder") {{
             variants = 3;
             manganeseStone.asFloor().decoration = this;
@@ -525,6 +558,11 @@ public class WHBlocksEnvironment {
         radiationBoulder = new Prop("radiation-boulder") {{
             variants = 2;
             radiationSand.asFloor().decoration = radiationRockFloor.asFloor().decoration = radiationCraters.asFloor().decoration = this;
+        }};
+
+        rustBoulder = new Prop("rust-boulder") {{
+            variants = 3;
+            rustFloor.asFloor().decoration = rustSand.asFloor().decoration = this;
         }};
 
         scorchedEarthBoulder = new Prop("scorched-earth-boulder") {{
