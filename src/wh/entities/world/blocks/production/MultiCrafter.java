@@ -96,12 +96,11 @@ public class MultiCrafter extends PayloadBlock {
         saveConfig = true;
 
         config(int[].class, (MultiCrafterBuild tile, int[] in) -> {
-            if (in.length != 2) return;
-
-            tile.rotation = in[0];
-
-            if (craftPlans.isEmpty() || in[1] == -1) tile.craftPlan = null;
-            tile.craftPlan = craftPlans.get(in[1]);
+            tile.applyConfig(in);
+        });
+        config(Integer.class, (MultiCrafterBuild tile, Integer in) -> {
+            if (in == null) return;
+            tile.applyConfig(new int[]{tile.rotation, in});
         });
     }
 
@@ -239,6 +238,10 @@ public class MultiCrafter extends PayloadBlock {
         return useBlockDrawer ? drawer.icons(this) : craftPlans.any() ? craftPlans.get(0).drawer.icons(this) : super.icons();
     }
 
+    public int clampCraftPlanIndex(int index) {
+        return craftPlans.isEmpty() ? -1 : Mathf.clamp(index, 0, craftPlans.size - 1);
+    }
+
     public class MultiCrafterBuild extends PayloadBlockBuild<Payload> implements HeatBlock, HeatConsumer {
         public CraftPlan craftPlan = craftPlans.any() ? craftPlans.get(0) : null;
         public float progress;
@@ -252,6 +255,30 @@ public class MultiCrafter extends PayloadBlock {
         public int lastRotation = -1;
 
         public TextureRegionDrawable[] rotationIcon = {Icon.right, Icon.up, Icon.left, Icon.down};
+
+        public int craftPlanIndex() {
+            return craftPlan == null || !craftPlans.contains(craftPlan) ? -1 : craftPlans.indexOf(craftPlan);
+        }
+
+        public void setCraftPlanIndex(int index) {
+            if (craftPlans.isEmpty() || index < 0) {
+                craftPlan = null;
+                configs[1] = -1;
+                return;
+            }
+
+            int resolved = clampCraftPlanIndex(index);
+            craftPlan = craftPlans.get(resolved);
+            configs[1] = resolved;
+        }
+
+        public void applyConfig(int[] in) {
+            if (in == null || in.length != 2) return;
+
+            rotation = Mathf.mod(in[0], 4);
+            configs[0] = rotation;
+            setCraftPlanIndex(in[1]);
+        }
 
         @Override
         public void draw() {
@@ -685,8 +712,7 @@ public class MultiCrafter extends PayloadBlock {
                         int j = i;
                         button.table(img -> img.image(rotationIcon[j]).color(Color.white).size(40).pad(10f));
                         button.changed(() -> {
-                            configs[0] = j;
-                            configure(configs);
+                            configure(new int[]{j, craftPlanIndex()});
                         });
                         button.update(() -> button.setChecked(rotation == j));
                         button.setStyle(Styles.clearNoneTogglei);
@@ -731,8 +757,7 @@ public class MultiCrafter extends PayloadBlock {
                     }).grow().left().pad(5);
                     button.setStyle(Styles.clearNoneTogglei);
                     button.changed(() -> {
-                        configs[1] = craftPlans.indexOf(craftPlan);
-                        configure(configs);
+                        configure(new int[]{rotation, craftPlans.indexOf(craftPlan)});
                     });
                     button.update(() -> button.setChecked(this.craftPlan == craftPlan));
                     cont.add(button);
@@ -767,7 +792,9 @@ public class MultiCrafter extends PayloadBlock {
 
         @Override
         public int[] config() {
-            return configs;
+            configs[0] = rotation;
+            configs[1] = craftPlanIndex();
+            return new int[]{configs[0], configs[1]};
         }
 
         @Override
@@ -787,7 +814,7 @@ public class MultiCrafter extends PayloadBlock {
             write.f(progress);
             write.f(warmup);
             write.i(lastRotation);
-            write.i(craftPlan == null || !craftPlans.contains(craftPlan) ? -1 : craftPlans.indexOf(craftPlan));
+            write.i(craftPlanIndex());
             payloads.write(write);
         }
 
@@ -797,10 +824,8 @@ public class MultiCrafter extends PayloadBlock {
             progress = read.f();
             warmup = read.f();
             lastRotation = read.i();
-            int i = read.i();
-            craftPlan = i == -1 ? null : craftPlans.get(i);
+            setCraftPlanIndex(read.i());
             configs[0] = rotation;
-            configs[1] = i;
             if (revision >= 1) {
                 payloads.read(read);
             } else {

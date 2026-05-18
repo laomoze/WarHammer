@@ -1,19 +1,25 @@
 package wh.entities.world.blocks.production;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.*;
-import mindustry.entities.effect.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.ui.*;
-import mindustry.world.blocks.power.*;
-import mindustry.world.meta.*;
-import wh.content.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.math.Mathf;
+import arc.struct.EnumSet;
+import arc.util.Time;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.entities.effect.MultiEffect;
+import mindustry.gen.Sounds;
+import mindustry.graphics.Pal;
+import mindustry.ui.Bar;
+import mindustry.world.blocks.power.NuclearReactor;
+import mindustry.world.meta.BlockFlag;
+import mindustry.world.meta.Env;
+import mindustry.world.meta.Stat;
+import mindustry.world.meta.StatUnit;
+import wh.content.WHFx;
+import wh.content.WHItems;
 
 import static mindustry.Vars.tilesize;
 
@@ -27,6 +33,10 @@ public class HeatProducerReactor extends NuclearReactor{
     public float workHeatOutput = 10f;
     /** How fast output heat approaches target heat. */
     public float workHeatWarmupRate = 0.15f;
+    /**
+     * Whether output heat scales with stored fuel fullness instead of any-valid-operation.
+     */
+    public boolean scaleHeatWithFuel = true;
 
     public HeatProducerReactor(String name){
         super(name);
@@ -85,17 +95,17 @@ public class HeatProducerReactor extends NuclearReactor{
         public void updateTile(){
             super.updateTile();
             int fuel = items.get(fuelItem);
-            boolean valid = enabled && fuel > 0 && productionEfficiency > 0.0001f;
+            boolean valid = enabled && fuel > 0;
 
             warmup = Mathf.lerpDelta(warmup, valid ? 1f : 0f, 0.09f);
 
-            if(!valid){
-                workHeat = Mathf.approachDelta(workHeat, 0, 0.2f * delta());
-                return;
+            if (!valid) {
+                workHeat = Mathf.approachDelta(workHeat, 0f, 0.2f);
+            } else {
+                float heatScale = scaleHeatWithFuel ? (float) fuel / Math.max(itemCapacity, 1) : 1f;
+                float target = workHeatOutput * heatScale;
+                workHeat = Mathf.approachDelta(workHeat, target, workHeatWarmupRate);
             }
-            float fullness = (float)fuel / Math.max(itemCapacity, 1);
-            float target = workHeatOutput * fullness;
-            workHeat = Mathf.approachDelta(workHeat, target, workHeatWarmupRate * delta());
         }
 
         @Override

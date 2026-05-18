@@ -50,6 +50,8 @@ public final class KarvexTeachTree {
     }
 
     private static void applyKarvexPlanetToVanillaContent() {
+        addKarvexResourceTabs();
+
         if (WHSettings.fullTechCoverage()) {
             applyFullTechCoverage();
             return;
@@ -67,6 +69,35 @@ public final class KarvexTeachTree {
         addPlanetTab(Liquids.slag);
         addPlanetTab(Liquids.nitrogen);
         addPlanetTab(Liquids.cryofluid);
+    }
+
+    private static void addKarvexResourceTabs() {
+        addPlanetTab(WHItems.oreSand);
+        addPlanetTab(WHItems.manganese);
+        addPlanetTab(WHItems.chromium);
+        addPlanetTab(WHItems.cobalt);
+        addPlanetTab(WHItems.uranium);
+        addPlanetTab(WHItems.molybdenum);
+        addPlanetTab(WHItems.vibranium);
+
+        addPlanetTab(WHItems.manganeseSteel);
+        addPlanetTab(WHItems.combustible);
+        addPlanetTab(WHItems.armorAlloy);
+        addPlanetTab(WHItems.entanglement);
+        addPlanetTab(WHItems.ceramite);
+        addPlanetTab(WHItems.cobaltNitride);
+        addPlanetTab(WHItems.resonantCrystal);
+        addPlanetTab(WHItems.culverCrystal);
+        addPlanetTab(WHItems.molybdenumAlloy);
+        addPlanetTab(WHItems.refineCeramite);
+        addPlanetTab(WHItems.protocolChip);
+        addPlanetTab(WHItems.sealedPromethium);
+        addPlanetTab(WHItems.adamantium);
+
+        addPlanetTab(WHLiquids.swageWater);
+        addPlanetTab(WHLiquids.orePromethium);
+        addPlanetTab(WHLiquids.refinePromethium);
+        addPlanetTab(WHLiquids.liquidNitrogen);
     }
 
     private static void addPlanetTab(UnlockableContent content) {
@@ -120,7 +151,6 @@ public final class KarvexTeachTree {
     }
 
     private static boolean isKarvexResource(UnlockableContent content) {
-        if (!hasPlanetTab(content, WHPlanets.karvex)) return false;
         return content.minfo != null && content.minfo.mod != null && MOD_NAME.equals(content.minfo.mod.name);
     }
 

@@ -18,7 +18,7 @@ public class WHOverride{
         Blocks.multiPress.requirements(Category.crafting, with(Items.silicon, 25, Items.lead, 80, Items.graphite, 50, WHItems.titaniumSteel, 50));
         Blocks.multiPress.itemCapacity = 30;*/
 
-        Blocks.darksand.attributes.set(WHBlocksEnvironment.hasPromethium, 0.5f);
+        Blocks.darksand.attributes.set(WHBlocksEnvironment.hasPromethium, 1f);
         Blocks.sand.attributes.set(WHBlocksEnvironment.hasPromethium, 0.5f);
 
         Weapon scepterWeapon1 = UnitTypes.scepter.weapons.get(0);
@@ -32,8 +32,8 @@ public class WHOverride{
         scepterWeapon1.inaccuracy = 6f;
         scepterWeapon1.reload = 8f;
         Weapon reignWeapon1 = UnitTypes.reign.weapons.get(0);
-        scepterWeapon1.top = false;
-        reignWeapon1.layerOffset = -0.001f;
+        reignWeapon1.x = -86 / 4f;
+        reignWeapon1.y = 1 / 4f;
         reignWeapon1.shoot.shots = 3;
         reignWeapon1.shoot.shotDelay = 4f;
         reignWeapon1.reload = 15f;
@@ -43,8 +43,8 @@ public class WHOverride{
         fortressWeapon1.y = 3 / 4f;
 
         Weapon quasarWeapon1 = UnitTypes.quasar.weapons.get(0);
-        quasarWeapon1.x = 29 / 4f;
-        quasarWeapon1.y = -4 / 4f;
+        quasarWeapon1.x = -25 / 4f;
+        quasarWeapon1.y = 0 / 4f;
 
         Items.graphite.hardness = 2;
     }

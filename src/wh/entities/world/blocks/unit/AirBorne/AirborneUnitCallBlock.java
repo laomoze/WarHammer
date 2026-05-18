@@ -243,7 +243,9 @@ public class AirborneUnitCallBlock extends Block{
     @Override
     public boolean canPlaceOn(Tile tile, Team team, int rotation){
         if(WorldRegister.blockCount(this) > 0){
-            drawPlaceText(Core.bundle.get("wh-airborne-only-one"), tile.x, tile.y, false);
+            if (!Vars.headless && Vars.renderer != null) {
+                drawPlaceText(Core.bundle.get("wh-airborne-only-one"), tile.x, tile.y, false);
+            }
             return false;
         }
         return super.canPlaceOn(tile, team, rotation);

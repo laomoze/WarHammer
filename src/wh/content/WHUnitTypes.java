@@ -9912,10 +9912,10 @@ public final class WHUnitTypes {
                                 buildingDamageMultiplier = 2f;
                                 makePlaFire = true;
                                 plaFireChance = 0.08f;
-                                lifetime = 260 / speed;
+                                lifetime = 270 / speed;
 
                                 splashDamageRadius = 40;
-                                splashDamage = 90;
+                                splashDamage = 120;
                                 frontColor = WHPal.SkyBlueF;
                                 hitColor = trailColor = backColor = WHPal.SkyBlue;
                                 shrinkX = shrinkY = 0;
@@ -10046,6 +10046,7 @@ public final class WHUnitTypes {
                         bullet = new BasicBulletType(4, 150, name("large-missile")) {{
                             splashDamageRadius = 50;
                             splashDamage = 100;
+                            buildingDamageMultiplier = 2;
                             lifetime = 62.1f;//300
                             status = blasted;
                             statusDuration = 60;
@@ -10072,7 +10073,7 @@ public final class WHUnitTypes {
                 });
                 weapons.add(new Weapon(name("mecha2-weapon2")) {
                     {
-                        reload = 60;
+                        reload = 45;
                         recoil = 3;
                         shoot.shots = 3;
                         shoot.shotDelay = 4;
@@ -11690,12 +11691,12 @@ public final class WHUnitTypes {
                             shoot.firstShotDelay = 20;
                             parentizeEffects = true;
 
-                            bullet = new LightingLaserBulletType(110) {{
+                            bullet = new LightingLaserBulletType(120) {{
                                 recoil = 0.15f;
                                 Color color = hitColor = lightningColor = WHPal.SkyBlueF.cpy();
                                 chargeEffect = WHFx.genericCharge(20, hitColor, 5, 30).followParent(true);
                                 lifetime = 30;
-                                length = 250;
+                                length = 270;
                                 width = 7;
                                 pierceCap = 5;
                                 sideAngle = 90;

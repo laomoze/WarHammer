@@ -111,7 +111,7 @@ public final class WHBlocks {
 
     //factory
     public static Block
-            converter,
+            converter, itemPulverizer,
             manganeseSteelFurnace,
             arcKiln, multiPress, siliconMixFurnace, sandSeparator, scrapFurance, heatIncinerator,
 
@@ -230,6 +230,7 @@ public final class WHBlocks {
             health = 700;
             hasPower = true;
             itemCapacity = 30;
+            liquidCapacity = 200;
             maxList = 8;
             useBlockDrawer = true;
 
@@ -238,28 +239,15 @@ public final class WHBlocks {
                         craftTime = 30;
                         consumePower(1f);
                         consumeLiquid(Liquids.water, 1);
-                        outputLiquids = LiquidStack.with(WHLiquids.swageWater, 1);
+                        outputLiquids = LiquidStack.with(WHLiquids.swageWater, 2);
                         craftEffect = Fx.smeltsmoke;
                     }},
+
                     new MultiCrafter.CraftPlan() {{
                         craftTime = 30;
                         consumePower(1f);
-                        consumeItems(with(Items.sand, 2));
-                        outputItems = with(WHItems.oreSand, 1);
-                        craftEffect = Fx.smeltsmoke;
-                    }},
-                    new MultiCrafter.CraftPlan() {{
-                        craftTime = 30;
-                        consumePower(1f);
-                        consumeItems(with(Items.scrap, 2));
-                        outputItems = with(WHItems.oreSand, 1);
-                        craftEffect = Fx.smeltsmoke;
-                    }},
-                    new MultiCrafter.CraftPlan() {{
-                        craftTime = 30;
-                        consumePower(1f);
-                        consumeItems(with(Items.copper, 2, Items.lead, 2));
-                        outputItems = with(WHItems.manganese, 1);
+                        consumeItems(with(Items.copper, 1));
+                        outputItems = with(WHItems.manganese, 2);
                         craftEffect = Fx.smeltsmoke;
                         drawer = new DrawMulti(
                                 new DrawDefault(),
@@ -275,8 +263,8 @@ public final class WHBlocks {
                     new MultiCrafter.CraftPlan() {{
                         craftTime = 30;
                         consumePower(1f);
-                        consumeItem(Items.beryllium, 2);
-                        outputItems = with(WHItems.manganese, 1);
+                        consumeItem(Items.beryllium, 1);
+                        outputItems = with(WHItems.manganese, 2);
                         craftEffect = Fx.smeltsmoke;
                         drawer = new DrawMulti(
                                 new DrawDefault(),
@@ -298,8 +286,54 @@ public final class WHBlocks {
                     new MultiCrafter.CraftPlan() {{
                         craftTime = 30;
                         consumePower(1f);
+                        consumeItem(Items.beryllium, 1);
+                        outputItems = with(WHItems.chromium, 2);
+                        craftEffect = Fx.smeltsmoke;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawCrucibleFlame() {{
+                                    flameColor = midColor = WHItems.chromium.color.cpy();
+                                    flameRadiusScl = 5;
+                                    particles = 10;
+                                    particleRad = 3;
+                                }},
+                                new DrawGlowRegion("-glow") {{
+                                    color = WHItems.chromium.color.cpy();
+                                    rotateSpeed = 1;
+                                    alpha = 0.5f;
+                                    glowIntensity = 0.35f;
+                                    glowScale = 8f;
+                                }}
+                        );
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItem(Items.titanium, 1);
+                        outputItems = with(WHItems.chromium, 2);
+                        craftEffect = Fx.smeltsmoke;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawCrucibleFlame() {{
+                                    flameColor = midColor = WHItems.chromium.color.cpy();
+                                    flameRadiusScl = 5;
+                                    particles = 10;
+                                    particleRad = 3;
+                                }},
+                                new DrawGlowRegion("-glow") {{
+                                    color = WHItems.chromium.color.cpy();
+                                    rotateSpeed = 1;
+                                    alpha = 0.5f;
+                                    glowIntensity = 0.35f;
+                                    glowScale = 8f;
+                                }}
+                        );
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
                         consumeItem(Items.thorium, 1);
-                        outputItems = with(Items.tungsten, 1);
+                        outputItems = with(Items.tungsten, 2);
                         craftEffect = Fx.smeltsmoke;
                         drawer = new DrawMulti(
                                 new DrawDefault(),
@@ -322,7 +356,7 @@ public final class WHBlocks {
                         craftTime = 30;
                         consumePower(2f);
                         consumeItem(Items.beryllium, 1);
-                        outputItems = with(WHItems.cobalt, 1);
+                        outputItems = with(WHItems.cobalt, 2);
                         craftEffect = Fx.smeltsmoke;
                         drawer = new DrawMulti(
                                 new DrawDefault(),
@@ -345,7 +379,7 @@ public final class WHBlocks {
                         craftTime = 30;
                         consumePower(2f);
                         consumeItem(Items.tungsten, 1);
-                        outputItems = with(WHItems.cobalt, 1);
+                        outputItems = with(WHItems.cobalt, 2);
                         craftEffect = Fx.smeltsmoke;
                         drawer = new DrawMulti(
                                 new DrawDefault(),
@@ -367,8 +401,8 @@ public final class WHBlocks {
                     new MultiCrafter.CraftPlan() {{
                         craftTime = 30;
                         consumePower(2f);
-                        consumeItem(Items.titanium, 2);
-                        outputItems = with(WHItems.cobalt, 1);
+                        consumeItem(Items.titanium, 1);
+                        outputItems = with(WHItems.cobalt, 2);
                         craftEffect = Fx.smeltsmoke;
                         drawer = new DrawMulti(
                                 new DrawDefault(),
@@ -390,8 +424,8 @@ public final class WHBlocks {
                     new MultiCrafter.CraftPlan() {{
                         craftTime = 60;
                         consumePower(2f);
-                        consumeItem(Items.thorium, 2);
-                        outputItems = with(WHItems.uranium, 1);
+                        consumeItem(Items.thorium, 1);
+                        outputItems = with(WHItems.uranium, 2);
                         craftEffect = Fx.smeltsmoke;
                         drawer = new DrawMulti(
                                 new DrawDefault(),
@@ -418,10 +452,10 @@ public final class WHBlocks {
                         );
                     }},
                     new MultiCrafter.CraftPlan() {{
-                        craftTime = 60;
+                        craftTime = 30;
                         consumePower(2f);
-                        consumeItem(Items.surgeAlloy, 2);
-                        outputItems = with(WHItems.molybdenum, 1);
+                        consumeItem(Items.surgeAlloy, 1);
+                        outputItems = with(WHItems.molybdenum, 3);
                         craftEffect = Fx.smeltsmoke;
                         drawer = new DrawMulti(
                                 new DrawDefault(),
@@ -441,10 +475,10 @@ public final class WHBlocks {
                         );
                     }},
                     new MultiCrafter.CraftPlan() {{
-                        craftTime = 180;
+                        craftTime = 30;
                         consumePower(4f);
-                        consumeItem(WHItems.molybdenumAlloy, 2);
-                        outputItems = with(WHItems.vibranium, 1);
+                        consumeItem(WHItems.molybdenumAlloy, 1);
+                        outputItems = with(WHItems.vibranium, 2);
                         craftEffect = Fx.smeltsmoke;
                         drawer = new DrawMulti(
                                 new DrawDefault(),
@@ -465,13 +499,123 @@ public final class WHBlocks {
                     }}
             );
 
-            useBlockDrawer = false;
-
 
             ambientSound = loopSmelter;
             ambientSoundVolume = 0.09f;
             researchCostMultiplier = 0.5f;
         }};
+
+        itemPulverizer = new MultiCrafter("item-pulverizer") {{
+            requirements(Category.crafting, with(Items.graphite, 50, Items.silicon, 40));
+
+            size = 2;
+            health = 700;
+            hasPower = true;
+            itemCapacity = 30;
+            liquidCapacity = 200;
+            maxList = 8;
+            useBlockDrawer = true;
+
+            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawRegion("-rotator") {{
+                spinSprite = true;
+                rotateSpeed = 2f;
+            }}, new DrawDefault());
+
+            craftPlans = Seq.with(
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.scrap, 2));
+                        outputItems = with(Items.sand, 2);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.copper, 1));
+                        outputItems = with(Items.sand, 1);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.lead, 1));
+                        outputItems = with(Items.sand, 1);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.beryllium, 1));
+                        outputItems = with(Items.sand, 2);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.titanium, 1));
+                        outputItems = with(Items.sand, 2);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.beryllium, 1));
+                        outputItems = with(WHItems.oreSand, 2);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.titanium, 1));
+                        outputItems = with(WHItems.oreSand, 2);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.copper, 1));
+                        outputItems = with(WHItems.oreSand, 2);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.lead, 1));
+                        outputItems = with(WHItems.oreSand, 2);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.beryllium, 1));
+                        outputItems = with(WHItems.oreSand, 2);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.titanium, 1));
+                        outputItems = with(WHItems.oreSand, 2);
+                        craftEffect = Fx.smeltsmoke;
+                    }},
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
+                        consumePower(1f);
+                        consumeItems(with(Items.scrap, 1));
+                        outputItems = with(WHItems.oreSand, 1);
+                        craftEffect = Fx.smeltsmoke;
+                    }}
+            );
+
+
+            ambientSound = loopSmelter;
+            ambientSoundVolume = 0.09f;
+            researchCostMultiplier = 0.5f;
+
+        }};
+
     }
 
     public static void load() {
@@ -666,9 +810,9 @@ public final class WHBlocks {
                 ambientSound = Sounds.loopExtract;
                 ambientSoundVolume = 0.06f;
                 consumePower(2);
-                heatRequirement = 8;
-                maxEfficiency = 1;
-                outputLiquid = new LiquidStack(Liquids.nitrogen, 20f / 60f);
+                heatRequirement = 5;
+                maxEfficiency = 2;
+                outputLiquid = new LiquidStack(Liquids.nitrogen, 15f / 60f);
                 drawer = new DrawMulti(new DrawRegion("-bottom"),
                         new DrawLiquidTile(Liquids.nitrogen, FACTORY_PAD_33),
                         new DrawParticles() {{
@@ -824,13 +968,13 @@ public final class WHBlocks {
                 requirements(Category.crafting, with(WHItems.manganeseSteel, 50, Items.silicon, 50, Items.plastanium, 70));
                 health = 800;
                 hasItems = hasPower = hasLiquids = true;
-                craftTime = 120;
+                craftTime = 240;
                 itemCapacity = 12;
                 liquidCapacity = 300;
                 size = 3;
-                consumePower(8);
-                consumeItems(with(WHItems.oreSand, 2, Items.graphite, 4));
-                consumeLiquid(WHLiquids.swageWater, 100 / 60f);
+                consumePower(3);
+                consumeItems(with(WHItems.oreSand, 2, Items.graphite, 2));
+                consumeLiquid(WHLiquids.swageWater, 80 / 60f);
                 outputLiquid = new LiquidStack(Liquids.water, 50 / 60f);
                 drawer = new DrawMulti(new DrawRegion("-bottom"),
                         new DrawLiquidTile(WHLiquids.swageWater),
@@ -988,7 +1132,7 @@ public final class WHBlocks {
                 itemCapacity = 15;
                 consumePower(4);
                 consumeLiquid(Liquids.nitrogen, 10 / 60f);
-                consumeItems(with(WHItems.cobalt, 2, Items.silicon, 4, WHItems.manganeseSteel, 1));
+                consumeItems(with(WHItems.cobalt, 2, Items.silicon, 4));
                 outputItems = with(WHItems.cobaltNitride, 2);
                 drawer = new DrawMulti(
                         new DrawRegion("-bottom"),
@@ -1200,7 +1344,7 @@ public final class WHBlocks {
                             }
                         }, new DrawDefault());
 
-                outputItem = new ItemStack(WHItems.combustible, 1);
+                outputItem = new ItemStack(WHItems.combustible, 2);
 
                 updateEffect = new ExplosionEffect();
                 updateEffectChance = 0.02f;
@@ -1219,7 +1363,7 @@ public final class WHBlocks {
             size = 3;
             consumePower(5);
             consumeLiquid(Liquids.ozone, 15f / 2 / 60f);
-            consumeItems(with(WHItems.uranium, 4, Items.metaglass, 5, Items.sand, 4));
+            consumeItems(with(WHItems.uranium, 4, Items.silicon, 6));
             outputItem = new ItemStack(WHItems.entanglement, 2);
             drawer = new DrawMulti(new DrawRegion("-bottom"),
                     new DrawLiquidTile(Liquids.ozone, FACTORY_PAD_33) {{
@@ -1262,7 +1406,7 @@ public final class WHBlocks {
                 squareSprite = false;
                 size = 3;
                 consumePower(3);
-                consumeItems(with(WHItems.entanglement, 1, WHItems.cobaltNitride, 1));
+                consumeItems(with(WHItems.entanglement, 1, WHItems.combustible, 1));
                 consumeLiquid(WHLiquids.orePromethium, 20 / 60f);
                 outputLiquid = new LiquidStack(WHLiquids.refinePromethium, 31f / 60f);
                 drawer = new DrawMulti(
@@ -1408,12 +1552,12 @@ public final class WHBlocks {
 
                 health = 900;
                 hasItems = hasPower = true;
-                craftTime = 90;
+                craftTime = 120;
                 itemCapacity = 12;
                 liquidCapacity = 120;
                 size = 3;
                 consumePower(5);
-                consumeItems(with(WHItems.molybdenum, 3, Items.metaglass, 3, WHItems.cobaltNitride, 1));
+                consumeItems(with(WHItems.molybdenum, 4, Items.metaglass, 4, WHItems.cobaltNitride, 1));
                 outputItem = new ItemStack(WHItems.resonantCrystal, 3);
                 drawer = new DrawMulti(
                         new DrawRegion("-bottom"),
@@ -1822,9 +1966,12 @@ public final class WHBlocks {
                 liquidCapacity = 120;
                 itemCapacity = 10;
                 workHeatOutput = 10;
+                scaleHeatWithFuel = false;
+                heating = 0.02f;
+                coolantPower = heating / (15f / 60f);
                 consumeItem(WHItems.uranium, 2);
                 fuelItem = WHItems.uranium;
-                consumeLiquid(Liquids.water, 20 / 60f).update(false);
+                consumeLiquid(Liquids.water, 15f / 60f).update(false);
                 drawer = new DrawMulti(
                         new DrawRegion("-bottom"),
                         new DrawCrucibleFlame(),
@@ -1849,7 +1996,7 @@ public final class WHBlocks {
             consumePower(800 / 60f);
             consumeItems(with(WHItems.combustible, 1));
             consumeLiquid(WHLiquids.refinePromethium, 20 / 60f);
-            heatOutput = 40f;
+            heatOutput = 60f;
             drawer = new DrawMulti(new DrawRegion("-bottom"),
                     new DrawLiquidTile(WHLiquids.refinePromethium),
                     new DrawDefault(),
@@ -2201,8 +2348,8 @@ public final class WHBlocks {
 
         heavyExtractor = new EnhancedWaterExtractor("heavy-extractor") {
             {
-                requirements(Category.production, with(WHItems.chromium, 50, Items.silicon, 80, WHItems.cobaltNitride, 20));
-                health = 400;
+                requirements(Category.production, with(WHItems.ceramite, 50, Items.silicon, 80, WHItems.cobaltNitride, 50, WHItems.resonantCrystal, 50));
+                health = 600;
                 size = 3;
                 hasPower = true;
                 hasLiquids = true;
@@ -2213,11 +2360,10 @@ public final class WHBlocks {
                 result = Liquids.water;
                 attribute = Attribute.water;
 
-                extractorItem = Items.plastanium;
-                itemUseTime = 240;
-                consumeItems(with(Items.graphite, 2));
-                consumeItems(with(extractorItem, 1)).boost();
-                consumePower(7f);
+                extractorItem = Items.graphite;
+                itemUseTime = 120;
+                consumeItems(with(Items.graphite, 1)).boost();
+                consumePower(1000 / 60f);
                 researchCostMultiplier = 0.5f;
             }
         };
@@ -2255,7 +2401,7 @@ public final class WHBlocks {
                 rotateSpeed = 1.3f;
                 result = WHLiquids.orePromethium;
                 /*  attribute = Attribute.oil;*/
-                baseEfficiency = 0.3f;
+                baseEfficiency = 0.5f;
                 attribute = WHBlocksEnvironment.hasPromethium;
                 consumePower(4);
                 itemUseTime = 300;
@@ -2730,7 +2876,7 @@ public final class WHBlocks {
 
         trackDriverPoint = new MassDriver("track-driver-point") {
             {
-                requirements(Category.distribution, with(WHItems.manganeseSteel, 50, Items.plastanium, 50, WHItems.cobaltNitride, 25));
+                requirements(Category.distribution, with(WHItems.manganeseSteel, 25, Items.plastanium, 25, WHItems.cobaltNitride, 25));
 
                 health = 800;
                 size = 2;
@@ -2744,7 +2890,7 @@ public final class WHBlocks {
                 smokeEffect = WHFx.hugeSmokeGray;
                 shootSound = shootLancer;
                 range = 270;
-                consumePower(3);
+                consumePower(2);
                 researchCostMultiplier = 0.6f;
             }
         };
@@ -3626,7 +3772,7 @@ public final class WHBlocks {
                 sides = 30;
                 canOverdrive = false;
                 shieldHealth = 16000;
-                phaseRadiusBoost = 80;
+                phaseRadiusBoost = 120;
                 phaseShieldBoost = 10000;
                 cooldownNormal = 1000 / 60f;
                 cooldownBrokenBase = 600 / 60f;
@@ -3649,7 +3795,7 @@ public final class WHBlocks {
             shieldHealth = 2500;
             phaseShieldBoost = 1500;
             radius = 150;
-            phaseRadiusBoost = 80f;
+            phaseRadiusBoost = 40f;
             cooldownNormal = shieldHealth / 15f / 60f;
             cooldownBrokenBase = shieldHealth / 20 / 60f;
             cooldownLiquid = 1.1f;
@@ -3684,6 +3830,7 @@ public final class WHBlocks {
                 health = 5000;
                 itemCapacity = 2000;
                 size = 4;
+                max = 10;
                 unitCapModifier = 15;
                 researchCostMultiplier = 0.3f;
             }
@@ -4462,6 +4609,7 @@ public final class WHBlocks {
             heatColor = Pal.turretHeat;
             recoilTime = 15;
             recoil = 0.5f;
+            health = 700;
 
             shootCone = 10f;
             shootSound = Sounds.shootCyclone;
@@ -4490,6 +4638,7 @@ public final class WHBlocks {
 
             requirements(Category.turret, with(WHItems.cobalt, 50, Items.graphite, 50, Items.silicon, 50, WHItems.manganeseSteel, 50));
             size = 2;
+            health = 700;
             range = 240;
             outlineColor = WHPal.Outline;
             reload = 70;
@@ -4537,6 +4686,7 @@ public final class WHBlocks {
             {
                 requirements(Category.turret, with(WHItems.uranium, 100, Items.carbide, 50, WHItems.manganeseSteel, 50, Items.plastanium, 50));
 
+                health = 1200;
                 size = 3;
                 float r = range = 216;
                 outlineColor = WHPal.Outline;
@@ -7124,41 +7274,9 @@ public final class WHBlocks {
             }
         };
 
-        sb7 = new OverheatGenericCrafter("overheat-crafter-test") {
-            {
-                requirements(Category.crafting, with(WHItems.manganese, 200, WHItems.manganese, 120, Items.silicon, 90));
-                buildVisibility = BuildVisibility.sandboxOnly;
-                craftEffect = Fx.pulverizeMedium;
-                outputItem = new ItemStack(Items.graphite, 1);
-                craftTime = 90f;
-                size = 2;
-                /*   proximityRange = 2;*/
-                hasItems = true;
-                placeEffect = Fx.rotateBlock;
-
-                consumeItem(Items.coal, 2);
-
-            }
-        };
-
-        sb10 = new OverheatBooster("overheat-booster-test") {
-            {
-                requirements(Category.crafting, with(WHItems.manganese, 200, WHItems.manganese, 120, Items.silicon, 90));
-                buildVisibility = BuildVisibility.sandboxOnly;
-                size = 2;
-                dymamicHeat = 2;
-                heatReduceMax = 1f;
-                hasItems = true;
-                placeEffect = Fx.rotateBlock;
-                consumeLiquid(Liquids.cryofluid, 0.5f);
-                heatRequirement = 15f;
-                boostRange = 20f;
-
-            }
-        };
 
         sb1 = new MultiCrafter("multi-crafter-test") {{
-            requirements(Category.crafting, BuildVisibility.sandboxOnly, with(Items.copper, 1));
+            requirements(Category.crafting, BuildVisibility.sandboxOnly, with(Items.copper, 114514));
             buildVisibility = BuildVisibility.sandboxOnly;
             alwaysUnlocked = true;
             size = 3;
@@ -7245,7 +7363,7 @@ public final class WHBlocks {
         // from EU
         randomer = new Randomer("randomer1") {
             {
-                requirements(Category.distribution, with(Items.silicon, 1));
+                requirements(Category.distribution, with(Items.silicon, 114514));
                 alwaysUnlocked = true;
                 buildVisibility = BuildVisibility.sandboxOnly;
             }

@@ -1,35 +1,53 @@
 package wh.entities.world.blocks.production;
 
-import arc.func.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.graphics.g2d.TextureAtlas.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.style.*;
-import arc.scene.ui.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
+import arc.func.Boolf;
+import arc.func.Func;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.TextureAtlas.AtlasRegion;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.scene.style.TextureRegionDrawable;
+import arc.scene.ui.ImageButton;
+import arc.scene.ui.ScrollPane;
+import arc.scene.ui.layout.Table;
+import arc.struct.EnumSet;
+import arc.struct.ObjectMap;
+import arc.struct.OrderedMap;
+import arc.struct.Seq;
 import arc.util.*;
-import arc.util.io.*;
-import mindustry.content.*;
-import mindustry.ctype.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import mindustry.ui.*;
-import mindustry.world.*;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.content.Fx;
+import mindustry.ctype.UnlockableContent;
+import mindustry.entities.Effect;
+import mindustry.entities.units.BuildPlan;
+import mindustry.gen.Building;
+import mindustry.gen.Icon;
+import mindustry.gen.Sounds;
+import mindustry.graphics.Pal;
+import mindustry.type.Item;
+import mindustry.type.ItemStack;
+import mindustry.type.Liquid;
+import mindustry.type.LiquidStack;
+import mindustry.ui.Bar;
+import mindustry.ui.Fonts;
+import mindustry.ui.Styles;
+import mindustry.world.Block;
 import mindustry.world.consumers.*;
-import mindustry.world.draw.*;
+import mindustry.world.draw.DrawBlock;
+import mindustry.world.draw.DrawDefault;
 import mindustry.world.meta.*;
-import wh.entities.world.blocks.production.MultiCrafter.*;
-import wh.ui.*;
-import wh.util.*;
+import wh.entities.world.blocks.production.MultiCrafter.CraftPlan;
+import wh.ui.UIUtils;
+import wh.util.WHUtils;
 
-import static arc.Core.*;
-import static mindustry.Vars.*;
+import static arc.Core.atlas;
+import static arc.Core.bundle;
+import static mindustry.Vars.content;
+import static mindustry.Vars.tilesize;
 
 /**
  * MultiCrafter. You can freely choose to change the production formula.
@@ -82,6 +100,15 @@ public class MultiCrafterE extends Block {
 
             if (products.size <= 0 || ints[1] == -1) tile.formula = null;
             tile.formula = products.get(ints[1]);
+        });
+        config(Integer.class, (MultiCrafterBuildE tile, Integer in) -> {
+            if (in == null) return;
+
+            int[] ints = {tile.rotation, in};
+            tile.rotation = ints[0];
+
+            if (products.size <= 0 || ints[1] == -1) tile.formula = null;
+            else tile.formula = products.get(Mathf.clamp(ints[1], 0, products.size - 1));
         });
     }
 

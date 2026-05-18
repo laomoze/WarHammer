@@ -280,7 +280,6 @@ public class WarHammerMod extends Mod {
         WHBlocksEnvironment.load();
         WHBlocks.load();
 
-        WHOverride.load();
         WHEvents.load();
         WHAutoTriggerSetup.load();
         WHLogicStatements.load();
@@ -288,5 +287,6 @@ public class WarHammerMod extends Mod {
 
         WHPlanets.load();
         KarvexTeachTree.load();
+        WHOverride.load();
     }
 }

@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 apply plugin: "java"
 
 version = '1.0'
@@ -42,6 +44,16 @@ ext{
     sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
     mindustryModsDir = file((project.findProperty('mindustryModsDir') ?: "${System.properties['user.home']}/AppData/Roaming/Mindustry/mods").toString())
 }
+
+def modMetadataFile = file("assets/mod.json")
+if (!modMetadataFile.exists()) {
+    throw new GradleException("Missing mod metadata file: $modMetadataFile")
+}
+
+def modMetadata = new JsonSlurper().parse(modMetadataFile)
+def modVersion = (modMetadata.version ?: project.version).toString()
+def artifactBaseName = (project.findProperty('modArtifact') ?: project.name).toString()
+def serverArtifactBaseName = (project.findProperty('serverArtifact') ?: "${artifactBaseName}Server").toString()
 
 def copyArtifactToMindustryMods = { File artifact ->
     if(!mindustryModsDir.exists() && !mindustryModsDir.mkdirs()){
@@ -90,13 +102,13 @@ tasks.register('jarAndroid'){
         def d8 = isWindows ? "d8.bat" : "d8"
 
         //dex and desugar files - this requires d8 in your PATH
-        "$d8 $dependencies --min-api 14 --output ${project.name}Android.jar ${project.name}Desktop.jar"
+        "$d8 $dependencies --min-api 14 --output ${artifactBaseName}Android.jar ${artifactBaseName}Desktop.jar"
                 .execute(null, new File("build/libs")).waitForProcessOutput(System.out, System.err)
     }
 }
 
 jar{
-    archiveFileName = "${project.name}Desktop.jar"
+    archiveFileName = "${artifactBaseName}Desktop.jar"
 
     from{
         configurations.runtimeClasspath.collect{ it.isDirectory() ? it : zipTree(it) }
@@ -118,13 +130,29 @@ jar{
 tasks.register('deploy', Jar){
     dependsOn jarAndroid
     dependsOn jar
-    archiveFileName = "${project.name}.jar"
+    archiveFileName = "${artifactBaseName}-${modVersion}.jar"
 
-    from{ [zipTree("build/libs/${project.name}Desktop.jar"), zipTree("build/libs/${project.name}Android.jar")] }
+    from { [zipTree("build/libs/${artifactBaseName}Desktop.jar"), zipTree("build/libs/${artifactBaseName}Android.jar")] }
 
     doLast{
         delete{
-            delete "build/libs/${project.name}Android.jar"
+            delete "build/libs/${artifactBaseName}Android.jar"
+        }
+    }
+}
+
+tasks.register('serverDeploy', Copy) {
+    dependsOn deploy
+    def sourceJar = layout.buildDirectory.file("libs/${artifactBaseName}-${modVersion}.jar")
+    def targetJarName = "${serverArtifactBaseName}-${modVersion}.jar"
+
+    from(sourceJar)
+    into(layout.buildDirectory.dir("libs"))
+    rename { targetJarName }
+
+    doLast {
+        if (sourceJar.get().asFile.name != targetJarName) {
+            project.delete(sourceJar.get().asFile)
         }
     }
 }

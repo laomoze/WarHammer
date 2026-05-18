@@ -1,34 +1,49 @@
 package wh.entities.world.blocks.distribution;
 
-import arc.*;
-import arc.func.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import mindustry.ui.*;
-import mindustry.world.*;
-import mindustry.world.blocks.*;
-import mindustry.world.blocks.distribution.*;
-import mindustry.world.blocks.heat.*;
-import mindustry.world.blocks.power.*;
-import mindustry.world.meta.*;
-import wh.content.*;
-import wh.entities.world.blocks.production.*;
+import arc.Core;
+import arc.func.Boolf;
+import arc.graphics.Blending;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.struct.IntSet;
+import arc.struct.Seq;
+import arc.util.Eachable;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.entities.TargetPriority;
+import mindustry.entities.units.BuildPlan;
+import mindustry.gen.Building;
+import mindustry.gen.Teamc;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.type.Item;
+import mindustry.ui.Bar;
+import mindustry.world.Block;
+import mindustry.world.Edges;
+import mindustry.world.Tile;
+import mindustry.world.blocks.Autotiler;
+import mindustry.world.blocks.distribution.ChainedBuilding;
+import mindustry.world.blocks.heat.HeatBlock;
+import mindustry.world.blocks.heat.HeatConsumer;
+import mindustry.world.blocks.heat.HeatProducer;
+import mindustry.world.blocks.power.NuclearReactor;
+import mindustry.world.meta.BlockGroup;
+import mindustry.world.meta.Env;
+import wh.content.WHBlocks;
+import wh.entities.world.blocks.production.FlammabilityHeatProducer;
+import wh.entities.world.blocks.production.HeatProducerReactor;
 
 import static mindustry.Vars.*;
 import static mindustry.input.Placement.isSidePlace;
 
-public class HeatBelt extends Block implements Autotiler{
+public class HeatBelt extends Block implements Autotiler {
     public TextureRegion[] topRegions = new TextureRegion[5];
     public TextureRegion[] botRegions = new TextureRegion[5];
     public TextureRegion[] heatRegions = new TextureRegion[5];
@@ -43,7 +58,7 @@ public class HeatBelt extends Block implements Autotiler{
 
     public @Nullable Block bridgeReplacement;
 
-    public HeatBelt(String name){
+    public HeatBelt(String name) {
         super(name);
 
         group = BlockGroup.heat;
@@ -61,9 +76,9 @@ public class HeatBelt extends Block implements Autotiler{
     }
 
     @Override
-    public void load(){
+    public void load() {
         super.load();
-        for(int i = 0; i < 5; i++){
+        for (int i = 0; i < 5; i++) {
             botRegions[i] = Core.atlas.find(name + "-bottom-" + i);
             topRegions[i] = Core.atlas.find(name + "-top-" + i);
             heatRegions[i] = Core.atlas.find(name + "-heat-" + i);
@@ -72,28 +87,29 @@ public class HeatBelt extends Block implements Autotiler{
     }
 
     @Override
-    public void setBars(){
+    public void setBars() {
         super.setBars();
 
         addBar("heat", (
-        HeatBeltBuilding entity) -> new Bar(() -> Core.bundle.format("bar.heatamount", (int)(entity.heat + 0.001f)), () -> Pal.lightOrange, () -> entity.heat / visualMaxHeat));
+                HeatBeltBuilding entity) -> new Bar(() -> Core.bundle.format("bar.heatamount", (int) (entity.heat + 0.001f)), () -> Pal.lightOrange, () -> entity.heat / visualMaxHeat));
     }
 
     @Override
-    public void init(){
+    public void init() {
         super.init();
         bridgeReplacement = WHBlocks.heatBridge;
     }
+
     @Override
-    protected void initBuilding(){
-        if(buildType == null) buildType = HeatBeltBuilding::new;
+    protected void initBuilding() {
+        if (buildType == null) buildType = HeatBeltBuilding::new;
     }
 
     @Override
-    public void drawPlanRegion(BuildPlan plan, Eachable<BuildPlan> list){
+    public void drawPlanRegion(BuildPlan plan, Eachable<BuildPlan> list) {
         int[] bits = getTiling(plan, list);
 
-        if(bits == null) return;
+        if (bits == null) return;
 
         Draw.scl(bits[1], bits[2]);
         Draw.alpha(0.5f);
@@ -104,40 +120,40 @@ public class HeatBelt extends Block implements Autotiler{
     }
 
     @Override
-    public boolean blends(Tile tile, int rotation, int otherx, int othery, int otherrot, Block otherblock){
+    public boolean blends(Tile tile, int rotation, int otherx, int othery, int otherrot, Block otherblock) {
         boolean directionalProducer =
-        otherblock instanceof HeatProducer || otherblock instanceof FlammabilityHeatProducer || otherblock instanceof OverheatGenericCrafter || otherblock instanceof NuclearReactor;
+                otherblock instanceof HeatProducer || otherblock instanceof FlammabilityHeatProducer || otherblock instanceof NuclearReactor;
 
         boolean orientationMatch = directionalProducer ? otherFacesThis(tile, otherx, othery, otherrot, otherblock) :
-        lookingAtEither(tile, rotation, otherx, othery, otherrot, otherblock);
+                lookingAtEither(tile, rotation, otherx, othery, otherrot, otherblock);
 
         return
-        (otherblock instanceof HeatBlock || lookingAt(tile, rotation, otherx, othery, otherblock)
-        || otherblock instanceof HeatBelt
-        || otherblock instanceof FlammabilityHeatProducer
-        || otherblock instanceof OverheatGenericCrafter
-        || (otherblock instanceof HeatProducer b && b.heatOutput > 0)
-        || otherblock instanceof HeatDirectionBridge) && orientationMatch;
+                (otherblock instanceof HeatBlock || lookingAt(tile, rotation, otherx, othery, otherblock)
+                        || otherblock instanceof HeatBelt
+                        || otherblock instanceof FlammabilityHeatProducer
+                        || (otherblock instanceof HeatProducer b && b.heatOutput > 0)
+                        || otherblock instanceof HeatDirectionBridge
+                        || otherblock instanceof HeatProducerReactor) && orientationMatch;
     }
 
-    private boolean otherFacesThis(Tile tile, int otherx, int othery, int otherrot, Block otherblock){
+    private boolean otherFacesThis(Tile tile, int otherx, int othery, int otherrot, Block otherblock) {
         Tile facing = Edges.getFacingEdge(otherblock, otherx, othery, tile);
         return facing != null && facing.relativeTo(tile) == otherrot;
     }
 
     @Override
-    public TextureRegion[] icons(){
+    public TextureRegion[] icons() {
         return new TextureRegion[]{Core.atlas.find("duct-bottom"), topRegions[0]};
     }
 
     @Override
-    public void handlePlacementLine(Seq<BuildPlan> plans){
-        if(bridgeReplacement == null) return;
-        if(bridgeReplacement instanceof HeatDirectionBridge bridge)
+    public void handlePlacementLine(Seq<BuildPlan> plans) {
+        if (bridgeReplacement == null) return;
+        if (bridgeReplacement instanceof HeatDirectionBridge bridge)
             PlacementHB.calculateBridges(plans, bridge, false, b -> b instanceof HeatDirectionBridge);
     }
 
-    public class HeatBeltBuilding extends Building implements HeatBlock, HeatConsumer, ChainedBuilding{
+    public class HeatBeltBuilding extends Building implements HeatBlock, HeatConsumer, ChainedBuilding {
         public int blendbits, xscl = 1, yscl = 1, blending;
         public boolean capped, backCapped = false;
         public @Nullable Building next;
@@ -148,124 +164,116 @@ public class HeatBelt extends Block implements Autotiler{
         public long lastHeatUpdate = -1;
 
         @Override
-        public float[] sideHeat(){
+        public float[] sideHeat() {
             return sideHeat;
         }
 
         @Override
-        public float heatRequirement(){
+        public float heatRequirement() {
             return visualMaxHeat;
         }
 
         @Override
-        public void updateTile(){
+        public void updateTile() {
             updateHeat();
         }
 
-        public void updateHeat(){
-            if(sideHeat != null){
-                if(lastHeatUpdate == Vars.state.updateId) return;
+        public void updateHeat() {
+            if (lastHeatUpdate == Vars.state.updateId) return;
 
-                lastHeatUpdate = Vars.state.updateId;
-                float cHeat = calculateHeat(sideHeat, cameFrom);
-                heat = Mathf.approach(heat, cHeat,
-                Interp.smooth.apply(Mathf.approach(0, warmupRate, warmupRate)) * 2 * delta());
-                noSleep();
-            }
-            else{
-                sleep();
-            }
+            lastHeatUpdate = Vars.state.updateId;
+            float cHeat = calculateHeat(sideHeat, cameFrom);
+            heat = Mathf.approach(heat, cHeat, Interp.smooth.apply(Mathf.approach(0f, 1, warmupRate * 3f)) * warmupRate * delta());
         }
 
-
         @Override
-        public float heat(){
+        public float heat() {
             return heat;
         }
 
         @Override
-        public float heatFrac(){
+        public float heatFrac() {
             return (heat / visualMaxHeat) / (splitHeat ? 3f : 1);
         }
 
         @Override
-        public void payloadDraw(){
+        public void payloadDraw() {
             Draw.rect(fullIcon, x, y);
         }
 
         @Override
-        public void draw(){
+        public void draw() {
             float rotation = rotdeg();
             int r = this.rotation;
 
             Draw.z(Layer.blockUnder);
             //draw extra ducts facing this one for tiling purposes
-            for(int i = 0; i < 4; i++){
-                if((blending & (1 << i)) != 0){
+            for (int i = 0; i < 4; i++) {
+                if ((blending & (1 << i)) != 0) {
                     int dir = r - i;
-                    float rot = i == 0 ? rotation : (dir)*90;
-                    drawAt(x + Geometry.d4x(dir) * tilesize*0.75f, y + Geometry.d4y(dir) * tilesize*0.75f, 0, rot, i != 0 ? SliceMode.bottom : SliceMode.top);
+                    float rot = i == 0 ? rotation : (dir) * 90;
+                    drawAt(x + Geometry.d4x(dir) * tilesize * 0.75f, y + Geometry.d4y(dir) * tilesize * 0.75f, 0, rot, i != 0 ? SliceMode.bottom : SliceMode.top);
                 }
             }
 
             Draw.scl(xscl, yscl);
             drawAt(x, y, blendbits, rotation, SliceMode.none);
             Draw.scl();
-            if(capped && capRegion.found()) Draw.rect(capRegion, x, y, rotation);
-            if(backCapped && capRegion.found()) Draw.rect(capRegion, x, y, rotation + 180);
+            if (capped && capRegion.found()) Draw.rect(capRegion, x, y, rotation);
+            if (backCapped && capRegion.found()) Draw.rect(capRegion, x, y, rotation + 180);
         }
 
 
-        public void drawAt(float x, float y, int bits, float rotation, SliceMode slice){
-
+        public void drawAt(float x, float y, int bits, float rotation, SliceMode slice) {
             Draw.z(Layer.block - 0.2f);
             Draw.rect(sliced(botRegions[bits], slice), x, y, rotation);
 
             Draw.z(Layer.block);
             Draw.rect(sliced(topRegions[bits], slice), x, y, rotation);
 
-            if(heat > 0.001f && !headless){
+            if (heat > 0.001f && !headless) {
                 Draw.tint(heatColor1, heatColor2, Mathf.clamp(heatFrac() / 2) * Mathf.absin(Time.time, heatPulse));
-                Draw.alpha(Mathf.curve(heat / visualMaxHeat, 0, 1f) * (1f - Mathf.absin(Time.time, (3 * heat / visualMaxHeat + 6 * heatPulseScl * 3) / heatPulseScl, heatPulse)));
+                Draw.alpha(Mathf.curve(heat / visualMaxHeat, 0f, 1f) * (1f - Mathf.absin(Time.time, (3f * heat / visualMaxHeat + 6f * heatPulseScl * 3f) / heatPulseScl, heatPulse)));
                 Draw.blend(Blending.additive);
                 Draw.rect(sliced(heatRegions[bits], slice), x, y, rotation);
                 Draw.blend();
             }
             Draw.reset();
         }
+
         @Override
-        public boolean acceptItem(Building source, Item item){
-           return false;
+        public boolean acceptItem(Building source, Item item) {
+            return false;
         }
 
 
         @Override
-        public void handleStack(Item item, int amount, Teamc source){
+        public void handleStack(Item item, int amount, Teamc source) {
         }
 
         @Override
-        public void handleItem(Building source, Item item){
+        public void handleItem(Building source, Item item) {
         }
 
         @Override
-        public byte version(){
+        public byte version() {
             return 1;
         }
 
         @Override
-        public void write(Writes write){
+        public void write(Writes write) {
             super.write(write);
             write.f(heat);
         }
 
         @Override
-        public void read(Reads read, byte revision){
+        public void read(Reads read, byte revision) {
             super.read(read, revision);
             heat = read.f();
         }
 
         @Override
-        public void onProximityUpdate(){
+        public void onProximityUpdate() {
             super.onProximityUpdate();
 
             int[] bits = buildBlending(tile, rotation, null, true);
@@ -284,9 +292,9 @@ public class HeatBelt extends Block implements Autotiler{
 
         @Nullable
         @Override
-        public Building next(){
+        public Building next() {
             Tile next = tile.nearby(rotation);
-            if(next != null && next.build instanceof HeatBeltBuilding){
+            if (next != null && next.build instanceof HeatBeltBuilding) {
                 return next.build;
             }
             return null;
@@ -294,52 +302,52 @@ public class HeatBelt extends Block implements Autotiler{
     }
 }
 
-class PlacementHB{
+class PlacementHB {
 
     private static final Seq<BuildPlan> plans1 = new Seq<>();
 
-    public static void calculateBridges(Seq<BuildPlan> plans, HeatDirectionBridge bridge, boolean hasJunction, Boolf<Block> avoid){
-        if(isSidePlace(plans) || plans.size == 0) return;
+    public static void calculateBridges(Seq<BuildPlan> plans, HeatDirectionBridge bridge, boolean hasJunction, Boolf<Block> avoid) {
+        if (isSidePlace(plans) || plans.size == 0) return;
 
         //check for orthogonal placement + unlocked state
-        if(!(plans.first().x == plans.peek().x || plans.first().y == plans.peek().y) || !bridge.unlockedNow()){
+        if (!(plans.first().x == plans.peek().x || plans.first().y == plans.peek().y) || !bridge.unlockedNow()) {
             return;
         }
 
         Boolf<BuildPlan> placeable = plan ->
-        (plan.placeable(player.team()) || (plan.tile() != null && plan.tile().block() == plan.block)) &&  //don't count the same block as inaccessible
-        !(plan != plans.first() && plan.build() != null && plan.build().rotation != plan.rotation && avoid.get(plan.tile().block()));
+                (plan.placeable(player.team()) || (plan.tile() != null && plan.tile().block() == plan.block)) &&  //don't count the same block as inaccessible
+                        !(plan != plans.first() && plan.build() != null && plan.build().rotation != plan.rotation && avoid.get(plan.tile().block()));
 
         var result = plans1.clear();
 
         outer:
-        for(int i = 0; i < plans.size; ){
+        for (int i = 0; i < plans.size; ) {
             var cur = plans.get(i);
             result.add(cur);
 
             //gap found
-            if(i < plans.size - 1 && placeable.get(cur) && !placeable.get(plans.get(i + 1))){
+            if (i < plans.size - 1 && placeable.get(cur) && !placeable.get(plans.get(i + 1))) {
                 boolean wereSame = true;
 
                 //find the closest valid position within range
-                for(int j = i + 1; j < plans.size; j++){
+                for (int j = i + 1; j < plans.size; j++) {
                     var other = plans.get(j);
 
                     //out of range now, set to current position and keep scanning forward for next occurrence
-                    if(!bridge.positionsValid(cur.x, cur.y, other.x, other.y)){
+                    if (!bridge.positionsValid(cur.x, cur.y, other.x, other.y)) {
                         //add 'missed' conveyors
-                        for(int k = i + 1; k < j; k++){
+                        for (int k = i + 1; k < j; k++) {
                             result.add(plans.get(k));
                         }
                         i = j;
                         continue outer;
-                    }else if(placeable.get(other)){
+                    } else if (placeable.get(other)) {
 
-                        if(wereSame && hasJunction){
+                        if (wereSame && hasJunction) {
                             //the gap is fake, it's just conveyors that can be replaced with junctions
                             i++;
                             continue outer;
-                        }else{
+                        } else {
                             //found a link, assign bridges
                             cur.block = bridge;
                             other.block = bridge;
@@ -348,17 +356,17 @@ class PlacementHB{
                         }
                     }
 
-                    if(other.tile() != null && !avoid.get(other.tile().block())){
+                    if (other.tile() != null && !avoid.get(other.tile().block())) {
                         wereSame = false;
                     }
                 }
 
                 //if it got here, that means nothing was found. this likely means there's a bunch of stuff at the end; add it and bail out
-                for(int j = i + 1; j < plans.size; j++){
+                for (int j = i + 1; j < plans.size; j++) {
                     result.add(plans.get(j));
                 }
                 break;
-            }else{
+            } else {
                 i++;
             }
         }

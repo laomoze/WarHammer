@@ -10,6 +10,7 @@ import arc.math.Rand;
 import arc.math.geom.Vec2;
 import arc.struct.ObjectFloatMap;
 import arc.struct.Seq;
+import arc.util.Log;
 import arc.util.Time;
 import arc.util.Tmp;
 import arc.util.io.Reads;
@@ -20,6 +21,7 @@ import mindustry.entities.Damage;
 import mindustry.entities.Effect;
 import mindustry.entities.Units;
 import mindustry.entities.bullet.BulletType;
+import mindustry.entities.units.UnitController;
 import mindustry.game.Team;
 import mindustry.gen.*;
 import mindustry.graphics.Drawf;
@@ -42,6 +44,8 @@ import static mindustry.io.TypeIO.writeEntity;
 import static wh.content.WHFx.rand;
 
 public class GeminiUnit extends UnitEntity {
+    public static final java.lang.reflect.Field controllerField = findControllerField();
+
     public static class GeminiSyncState {
         public Healthc primaryLink;
         public float primaryLinkTimeLeft;
@@ -158,6 +162,23 @@ public class GeminiUnit extends UnitEntity {
     public long primaryGhostTrailSeed = 1L;
     public transient final GeminiSyncState syncStateScratch = new GeminiSyncState();
 
+    public static java.lang.reflect.Field findControllerField() {
+        Class<?> current = UnitEntity.class;
+        while (current != null) {
+            try {
+                java.lang.reflect.Field field = current.getDeclaredField("controller");
+                field.setAccessible(true);
+                return field;
+            } catch (NoSuchFieldException ignored) {
+                current = current.getSuperclass();
+            } catch (Throwable t) {
+                Log.err(t);
+                return null;
+            }
+        }
+        return null;
+    }
+
     @Override
     public int classId() {
         return EntityRegister.getId(GeminiUnit.class);
@@ -246,6 +267,33 @@ public class GeminiUnit extends UnitEntity {
         lowHealthSpecialBullets.clear();
         lowHealthSpecialDraw.clear();
         return true;
+    }
+
+    public Object rawControllerObject() {
+        if (controllerField == null) return null;
+        try {
+            return controllerField.get(this);
+        } catch (Throwable t) {
+            Log.err(t);
+            return null;
+        }
+    }
+
+    public void ensureValidController(String stage) {
+        Object raw = rawControllerObject();
+        if (raw == null || raw instanceof UnitController) return;
+
+        UnitController replacement = null;
+        if (type != null && type.controller != null) {
+            replacement = type.controller.get(this);
+        }
+
+        if (replacement != null) {
+            Log.warn("Recovered invalid GeminiUnit controller (@) at @ with @.", raw.getClass().getName(), stage, replacement.getClass().getName());
+            controller(replacement);
+        } else {
+            Log.warn("Invalid GeminiUnit controller (@) at @, but no replacement controller was available.", raw.getClass().getName(), stage);
+        }
     }
 
     @Override
@@ -391,6 +439,7 @@ public class GeminiUnit extends UnitEntity {
 
     @Override
     public void update() {
+        ensureValidController("update");
         super.update();
         boolean authority = isAuthority();
 
@@ -2318,12 +2367,14 @@ public class GeminiUnit extends UnitEntity {
     @Override
     public void read(Reads read) {
         super.read(read);
+        ensureValidController("read");
         readFullState(read);
         sanitizeLinkState(true);
     }
 
     @Override
     public void writeSync(Writes write) {
+        ensureValidController("writeSync");
         super.writeSync(write);
         writeSyncState(write);
     }
@@ -2331,6 +2382,7 @@ public class GeminiUnit extends UnitEntity {
     @Override
     public void readSync(Reads read) {
         super.readSync(read);
+        ensureValidController("readSync");
         GeminiSyncState syncState = readSyncState(read, syncStateScratch);
         if (isLocal()) return;
         applySyncState(syncState);
