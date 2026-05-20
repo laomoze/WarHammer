@@ -10587,7 +10587,7 @@ public final class WHUnitTypes {
                             bullet = new DelayedPointBulletType() {{
                                 recoil = 0.08f;
                                 delayEffectLifeTime = 15;
-                                splashDamage = damage = 120;
+                                splashDamage = damage = 150;
                                 splashDamageRadius = 24;
                                 pierceArmor = true;
                                 maxRange = range = 300;
@@ -10900,7 +10900,7 @@ public final class WHUnitTypes {
                 speed = 1.5f;
                 hitSize = 28f;
                 rotateSpeed = 1.6f;
-                health = 12000;
+                health = 1300;
                 armor = 28;
                 mechFrontSway = 0.08f;
                 ammoType = new ItemAmmoType(WHItems.ceramite);
@@ -11108,8 +11108,8 @@ public final class WHUnitTypes {
             {
                 speed = 1.5f;
                 hitSize = 28f;
-                rotateSpeed = 1.6f;
-                health = 12000;
+                rotateSpeed = 2;
+                health = 13000;
                 armor = 28;
                 mechFrontSway = 0.08f;
                 ammoType = new ItemAmmoType(WHItems.ceramite);
@@ -11345,10 +11345,10 @@ public final class WHUnitTypes {
 
         M4D = new PowerArmourUnitType("m4D") {
             {
-                speed = 1.8f;
+                speed = 2.5f;
                 hitSize = 22f;
-                rotateSpeed = 1.6f;
-                health = 15000;
+                rotateSpeed = 4f;
+                health = 16000;
                 armor = 28;
                 mechFrontSway = 0.08f;
                 ammoType = new ItemAmmoType(WHItems.ceramite);
@@ -11582,7 +11582,7 @@ public final class WHUnitTypes {
                         new Weapon("") {{
                             y = 0f;
                             x = 23 / 4f;
-                            reload = 90;
+                            reload = 70;
 
                             layerOffset = 0.01f;
 
@@ -11594,7 +11594,7 @@ public final class WHUnitTypes {
                             mirror = false;
                             cooldownTime = recoilTime = 120;
 
-                            shootWarmupSpeed = 0.09f;
+                            shootWarmupSpeed = 0.15f;
                             minWarmup = 0.99f;
 
                             shootSound = Sounds.shootLancer;
@@ -11695,6 +11695,7 @@ public final class WHUnitTypes {
                                 recoil = 0.15f;
                                 Color color = hitColor = lightningColor = WHPal.SkyBlueF.cpy();
                                 chargeEffect = WHFx.genericCharge(20, hitColor, 5, 30).followParent(true);
+                                laserEffect = Fx.none;
                                 lifetime = 30;
                                 length = 270;
                                 width = 7;
@@ -11712,7 +11713,7 @@ public final class WHUnitTypes {
             {
                 speed = 0.9f;
                 hitSize = 12;
-                rotateSpeed = 2f;
+                rotateSpeed = 2.5f;
                 targetAir = true;
                 health = 1500;
                 armor = 10f;
@@ -11743,8 +11744,9 @@ public final class WHUnitTypes {
                             mirror = false;
                             cooldownTime = recoilTime = 120;
 
-                            shootWarmupSpeed = 0.09f;
+                            shootWarmupSpeed = 0.13f;
                             minWarmup = 0.99f;
+
 
                             shootSound = Sounds.shootLocus;
                             soundPitchMax = 1.2f;
@@ -11923,7 +11925,7 @@ public final class WHUnitTypes {
                             mirror = false;
                             cooldownTime = recoilTime = 20;
 
-                            shootWarmupSpeed = 0.09f;
+                            shootWarmupSpeed = 0.1f;
                             minWarmup = 0.99f;
 
                             shootSound = WHSounds.pulseLaserFire01;

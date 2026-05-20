@@ -354,6 +354,30 @@ public final class WHBlocks {
                     }},
                     new MultiCrafter.CraftPlan() {{
                         craftTime = 30;
+                        consumePower(1f);
+                        consumeItem(Items.tungsten, 1);
+                        outputItems = with(WHItems.uranium, 2);
+                        craftEffect = Fx.smeltsmoke;
+                        drawer = new DrawMulti(
+                                new DrawDefault(),
+                                new DrawCrucibleFlame() {{
+                                    flameColor = midColor = Items.tungsten.color.cpy();
+                                    flameRadiusScl = 5;
+                                    particles = 10;
+                                    particleRad = 3;
+                                }},
+                                new DrawGlowRegion("-glow") {{
+                                    color = Items.tungsten.color.cpy();
+                                    rotateSpeed = 1;
+                                    alpha = 0.5f;
+                                    glowIntensity = 0.35f;
+                                    glowScale = 8f;
+                                }}
+                        );
+                    }},
+
+                    new MultiCrafter.CraftPlan() {{
+                        craftTime = 30;
                         consumePower(2f);
                         consumeItem(Items.beryllium, 1);
                         outputItems = with(WHItems.cobalt, 2);
@@ -2209,7 +2233,7 @@ public final class WHBlocks {
             liquidBoostIntensity = 1.5f;
             mineTime = 500;
 
-            tier = 4;
+            tier = 5;
             drillMultipliers.put(Items.coal, 2);
 
             drawDrill = true;
@@ -3088,7 +3112,7 @@ public final class WHBlocks {
             liquidCapacity = 20f * 3;
             consumeLiquids(LiquidStack.with(Liquids.ozone, 5 / 60f));
             itemDurationMultipliers.put(WHItems.chromium, 4);
-            itemDurationMultipliers.put(WHItems.combustible, 6);
+            itemDurationMultipliers.put(WHItems.combustible, 3);
             itemDurationMultipliers.put(WHItems.sealedPromethium, 12);
             consume(new ConsumeItemFlammable());
 
@@ -3146,7 +3170,7 @@ public final class WHBlocks {
             {
                 requirements(Category.power,
                         with(WHItems.cobalt, 100, Items.silicon, 100, WHItems.manganeseSteel, 70, WHItems.ceramite, 80, WHItems.resonantCrystal, 50));
-                powerProduction = 2500f / 60f;
+                powerProduction = 2200f / 60f;
 
                 drawer = new DrawMulti(new DrawRegion("-bottom"),
                         new DrawLiquidTile(WHLiquids.orePromethium),
@@ -3202,8 +3226,8 @@ public final class WHBlocks {
         };
 
         decayGenerator = new ConsumeGenerator("decay-generator") {{
-            requirements(Category.power, with(WHItems.cobalt, 70, WHItems.armorAlloy, 60,
-                    Items.silicon, 150, Items.plastanium, 120, WHItems.entanglement, 50));
+            requirements(Category.power, with(WHItems.cobalt, 70, WHItems.armorAlloy, 80,
+                    Items.silicon, 200, WHItems.ceramite, 50, WHItems.entanglement, 50));
 
             size = 2;
             health = 1200;

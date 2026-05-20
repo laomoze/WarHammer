@@ -224,7 +224,7 @@ public class KarvexSurfaceProfile{
         Block rrf = WHBlocksEnvironment.radiationRockFloor;
         Block rrc = WHBlocksEnvironment.radiationCraters;
 
-        Block ap = WHBlocksEnvironment.quartzSand;
+        Block ap = WHBlocksEnvironment.apatiteCoarse;
         Block ce = WHBlocksEnvironment.cementFloor;
         Block gv = WHBlocksEnvironment.gravel;
 
@@ -267,4 +267,3 @@ public class KarvexSurfaceProfile{
         };
     }
 }
-

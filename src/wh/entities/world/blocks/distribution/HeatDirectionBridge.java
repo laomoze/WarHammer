@@ -30,16 +30,14 @@ import mindustry.input.Placement;
 import mindustry.ui.Bar;
 import mindustry.world.Block;
 import mindustry.world.Tile;
-import mindustry.world.blocks.distribution.ItemBridge;
-import mindustry.world.blocks.distribution.ItemBridge.*;
 import mindustry.world.blocks.heat.HeatBlock;
 import mindustry.world.blocks.heat.HeatConsumer;
 import mindustry.world.draw.DrawBlock;
 import mindustry.world.draw.DrawDefault;
-import mindustry.world.meta.*;
+import mindustry.world.meta.BlockGroup;
 
-import static arc.math.geom.Mat3D.rot;
-import static mindustry.Vars.*;
+import static mindustry.Vars.tilesize;
+import static mindustry.Vars.world;
 
 public class HeatDirectionBridge extends Block {
     private static BuildPlan otherReq;
@@ -155,7 +153,18 @@ public class HeatDirectionBridge extends Block {
     }
 
     public boolean linkValid(Tile tile, Tile other, boolean checkDouble) {
-        if (other == null || tile == null || !positionsValid(tile.x, tile.y, other.x, other.y)) return false;
+        if (other == null || tile == null || tile == other || !positionsValid(tile.x, tile.y, other.x, other.y))
+            return false;
+
+        if (tile.block() == this) {
+            if (!(tile.build instanceof HeatDirectionBridgeBuild self)) return false;
+            if (!forwardPositionValid(tile.x, tile.y, self.rotation, other.x, other.y)) return false;
+
+            if (other.block() == this) {
+                if (!(other.build instanceof HeatDirectionBridgeBuild target) || target.rotation != self.rotation)
+                    return false;
+            }
+        }
 
         return ((other.block() == tile.block() && tile.block() == this) || (!(tile.block() instanceof HeatDirectionBridge) && other.block() == this))
                 && (other.team() == tile.team() || tile.block() != this)
@@ -172,9 +181,22 @@ public class HeatDirectionBridge extends Block {
         }
     }
 
+    public boolean forwardPositionValid(int x1, int y1, int rotation, int x2, int y2) {
+        int dx = x2 - x1;
+        int dy = y2 - y1;
+        if (dx == 0 && dy == 0) return false;
+
+        int dirx = Geometry.d4x(rotation), diry = Geometry.d4y(rotation);
+        if (dirx != 0) {
+            return dy == 0 && Integer.signum(dx) == dirx;
+        } else {
+            return dx == 0 && Integer.signum(dy) == diry;
+        }
+    }
+
     public Tile findLink(int x, int y) {
         Tile tile = world.tile(x, y);
-        if (tile != null && tile.build != null && lastBuild != null && linkValid(tile, lastBuild.tile) && lastBuild.tile != tile && lastBuild.link == -1) {
+        if (tile != null && tile.build != null && lastBuild != null && linkValid(lastBuild.tile, tile) && lastBuild.tile != tile && lastBuild.link == -1) {
             if (tile.build.rotation == lastBuild.rotation) {
                 return lastBuild.tile;
             }
@@ -313,7 +335,7 @@ public class HeatDirectionBridge extends Block {
             super.playerPlaced(config);
 
             Tile link = findLink(tile.x, tile.y);
-            if (linkValid(tile, link) && this.link != link.pos() && !proximity.contains(link.build)) {
+            if (linkValid(link, tile) && this.link != link.pos() && !proximity.contains(link.build)) {
                 link.build.configure(tile.pos());
             }
 
@@ -334,12 +356,15 @@ public class HeatDirectionBridge extends Block {
                 if (otherOne.checkOneOwner(this)) otherOne.owners.add(this);
                 this.updateTransfer();
                 otherOne.updateTransfer();
-                if(this.heat > 0) {
+                if (this.heat > 0) {
                     timeSpeed = Mathf.approachDelta(timeSpeed, 1, 1f / 60f);
                     time += timeSpeed * delta();
                     warmup = Mathf.approachDelta(warmup, efficiency, 1f / 30f);
                 }
             } else {
+                if (link != -1) link = -1;
+                updateTransfer();
+                if (owners.size == 0 && heat <= 0.0001f) heat = 0f;
                 warmup = Mathf.slerpDelta(warmup, 0, 0.02f);
             }
         }
@@ -379,7 +404,7 @@ public class HeatDirectionBridge extends Block {
 
         @Override
         public float heat() {
-            return (owners.size > 0 && link == -1) ? heat : 0;
+            return (owners.size > 0 && !linkValid(tile, world.tile(link))) ? heat : 0f;
         }
 
         @Override
@@ -480,13 +505,15 @@ public class HeatDirectionBridge extends Block {
 
 
         public void checkOwner() {
-            for (int i = 0; i < owners.size; i++) {
-                int pos = owners.get(i).pos();
-                Building build = world.build(pos);
-                if (build instanceof HeatDirectionBridgeBuild owner) {
-                    if (owner.block != block || owner.link != this.pos()) owners.remove(i);
+            int idx = 0;
+            while (idx < owners.size) {
+                Building owner = owners.get(idx);
+                Building build = owner == null ? null : world.build(owner.pos());
+
+                if (build instanceof HeatDirectionBridgeBuild bridgeOwner && bridgeOwner.block == block && bridgeOwner.link == this.pos()) {
+                    idx++;
                 } else {
-                    owners.remove(i);
+                    owners.remove(idx);
                 }
             }
         }

@@ -32,7 +32,7 @@ public class WHOverride{
         scepterWeapon1.inaccuracy = 6f;
         scepterWeapon1.reload = 8f;
         Weapon reignWeapon1 = UnitTypes.reign.weapons.get(0);
-        reignWeapon1.x = -86 / 4f;
+        reignWeapon1.x = 86 / 4f;
         reignWeapon1.y = 1 / 4f;
         reignWeapon1.shoot.shots = 3;
         reignWeapon1.shoot.shotDelay = 4f;
@@ -43,7 +43,7 @@ public class WHOverride{
         fortressWeapon1.y = 3 / 4f;
 
         Weapon quasarWeapon1 = UnitTypes.quasar.weapons.get(0);
-        quasarWeapon1.x = -25 / 4f;
+        quasarWeapon1.x = 25 / 4f;
         quasarWeapon1.y = 0 / 4f;
 
         Items.graphite.hardness = 2;

@@ -1,10 +1,13 @@
-package wh.entities.world.blocks;
+package wh.entities.world.blocks.others;
 
-import arc.graphics.g2d.*;
-import arc.math.geom.*;
-import mindustry.gen.*;
-import mindustry.world.*;
-import mindustry.world.blocks.*;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
+import mindustry.gen.Building;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import mindustry.world.blocks.TileBitmask;
 
 import static mindustry.Vars.state;
 
