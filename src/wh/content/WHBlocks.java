@@ -3432,25 +3432,25 @@ public final class WHBlocks {
                 maxHeat = 120f;
                 drawer = new DrawMulti(
                         new DrawRegion("-bottom"),
-                        new DrawLiquidTile(WHLiquids.liquidNitrogen) {{
+                        new DrawLiquidTile(WHLiquids.liquidNitrogen, FACTORY_PAD_33 / 2) {{
                             alpha = 0.35f;
                         }},
                         new DrawRegion("-mid-1"),
-                        new DrawLiquidTile(WHLiquids.refinePromethium),
+                        new DrawLiquidTile(WHLiquids.refinePromethium, FACTORY_PAD_33 / 2),
                         new DrawRegion("-mid"),
                         new DrawSoftParticles() {{
                             alpha = 0.35f;
-                            particleRad = 16f;
-                            particleSize = 7f;
+                            particleRad = 12f;
+                            particleSize = 4f;
                             particleLife = 120f;
-                            particles = 15;
+                            particles = 10;
                             color = WHPal.SkyBlue;
                             color2 = WHPal.SkyBlueF;
                         }},
                         new DrawBubbles() {{
                             spread = 1;
                             sides = 6;
-                            recurrence = 15;
+                            recurrence = 20;
                             radius = amount = 10;
                         }},
                         new DrawArcs() {{
@@ -3459,11 +3459,13 @@ public final class WHBlocks {
                             flameRad = 2f;
                         }},
                         new DrawCrucibleFlame() {{
+                            flameColor = SkyBlue;
+                            midColor = SkyBlueF;
                             flameRad = 3;
                             circleSpace = circleStroke = 1f;
                             particles = 20;
-                            particleRad = 12f;
-                            particleSize = 17;
+                            particleRad = 14f;
+                            particleSize = 7;
                         }},
                         new DrawDefault(),
                         new DrawHeatInput(),
