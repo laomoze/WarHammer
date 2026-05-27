@@ -1,10 +1,13 @@
 package wh.pipelinePlanet.karvex;
 
-import arc.math.geom.*;
-import mindustry.content.*;
-import mindustry.world.*;
-import wh.content.*;
-import wh.pipelinePlanet.core.*;
+import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
+import mindustry.content.Blocks;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import wh.content.WHBlocksEnvironment;
+import wh.pipelinePlanet.core.GenContext;
+import wh.pipelinePlanet.core.TilePass;
 
 /**
  * Karvex-specific decoration rules.
@@ -37,19 +40,19 @@ public class KarvexDecorationTilePass implements TilePass{
 
         Block floor = tile.floor();
 
-        // Purple crystal clusters only on dark-rock family, never on ore-shale or ore floors.
+        // Dark-rock crystals only on dark-rock family, never on ore-shale or ore floors.
         if(isDarkRockFamily(floor)
-        && WHBlocksEnvironment.darkStoneCrystalCluster != null
+                && WHBlocksEnvironment.darkRockCrystal != null
         && tile.overlay() == Blocks.air
-        && !nearBlock(ctx, x, y, WHBlocksEnvironment.darkStoneCrystalCluster, 5)
+                && !nearBlock(ctx, x, y, WHBlocksEnvironment.darkRockCrystal, 5)
         && ctx.rand.chance(0.0032f)){
-            tile.setBlock(WHBlocksEnvironment.darkStoneCrystalCluster);
+            tile.setBlock(WHBlocksEnvironment.darkRockCrystal);
             return;
         }
 
         Block decoration = surfaceProfile.decorationForFloor(floor);
         if(decoration == null || decoration == Blocks.air) return;
-        if(decoration == WHBlocksEnvironment.darkStoneCrystalCluster) return;
+        if (decoration == WHBlocksEnvironment.darkRockCrystal) return;
 
         float chance = 0.0085f;
         if(floor == WHBlocksEnvironment.quartzSand || floor == Blocks.crystalFloor){
@@ -68,7 +71,8 @@ public class KarvexDecorationTilePass implements TilePass{
     private boolean isDarkRockFamily(Block floor){
         return floor == WHBlocksEnvironment.darkRock
         || floor == WHBlocksEnvironment.darkHotRock
-        || floor == WHBlocksEnvironment.darkMagmaRock;
+                || floor == WHBlocksEnvironment.darkMagmaRock
+                || floor == WHBlocksEnvironment.darkRockCraters;
     }
 
     private boolean isMetalFamily(Block floor){

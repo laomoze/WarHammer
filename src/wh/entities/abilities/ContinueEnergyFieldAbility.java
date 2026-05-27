@@ -1,25 +1,35 @@
 package wh.entities.abilities;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.core.*;
-import mindustry.entities.*;
-import mindustry.entities.abilities.*;
-import mindustry.game.*;
+import arc.Core;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.math.Mathf;
+import arc.math.geom.Intersector;
+import arc.math.geom.Rect;
+import arc.scene.ui.layout.Table;
+import arc.struct.Seq;
+import arc.util.Strings;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.Vars;
+import mindustry.content.Fx;
+import mindustry.content.StatusEffects;
+import mindustry.core.World;
+import mindustry.entities.Damage;
+import mindustry.entities.Units;
+import mindustry.entities.abilities.EnergyFieldAbility;
+import mindustry.game.Team;
 import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import mindustry.world.meta.*;
-import wh.core.*;
-import wh.graphics.*;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.type.UnitType;
+import mindustry.world.meta.StatValues;
+import wh.core.WHSettings;
+import wh.graphics.Drawn;
+import wh.graphics.PositionLightning;
 
 import static mindustry.Vars.*;
 import static wh.core.WarHammerMod.name;
@@ -138,7 +148,7 @@ public class ContinueEnergyFieldAbility extends EnergyFieldAbility{
 
         curStroke = Mathf.lerpDelta(curStroke, anyNearby ? 1 : 0, 0.09f);
 
-        if(data >= reload && (!useAmmo || unit.ammo > 0 || !state.rules.unitAmmo)){
+        if (data >= reload && true) {
             Tmp.v1.trns(unit.rotation - 90, x, y).add(unit.x, unit.y);
             float rx = Tmp.v1.x, ry = Tmp.v1.y;
             anyNearby = false;
@@ -263,10 +273,6 @@ public class ContinueEnergyFieldAbility extends EnergyFieldAbility{
             }
             if(anyNearby){
                 shootSound.at(unit);
-
-                if(useAmmo && state.rules.unitAmmo){
-                    unit.ammo--;
-                }
             }
             data = 0f;
         }

@@ -1,11 +1,11 @@
-{
+﻿{
   "name": "wh",
   "displayName": "WarHammer",
   "author": "LaoMoze",
   "subtitle": "唯战永恒",
-  "description": "以战锤40k为原型的MOD,设定与qq群链接可以到模组简介里面找\nQQ群316481519\n贡献者DOC-A-7244(bundles和翻译),Eipusino(java技术指导)",
-  "version": "beta.2.1",
-  "minGameVersion": "154.2",
+  "description": "[accent]以战锤40k为原型的MOD[],设定与qq群链接可以到[accent]模组简介[]里面找\n[cyan]QQ群316481519[]\n贡献者DOC-A-7244(bundles和翻译),Eipusino(java技术指导)\n[accent]The MOD based on Warhammer 40k[], with its settings and links to the QQ group, can be found in the [accent]mod introduction[]\n[cyan]QQ group 316481519[]\nDiscord will consider adding features in its subsequent improvements\nContributors: DOC-A-7244 (bundles and translation), Eipusino (Java technical guidance)",
+  "version": "beta.2.4",
+  "minGameVersion": "157",
   "main": "wh.core.WarHammerMod",
   "dependencies": [],
   "java": true

@@ -242,6 +242,10 @@ public class TubeConduit extends Conduit{
             Draw.z(Layer.block - 0.1f);
             Draw.scl(xscl, yscl);
             drawAt(x, y, blendbits, r, SliceMode.none);
+            if (drawArrow) {
+                Draw.z(Layer.block);
+                Draw.rect(sliced(arrowRegion[blendbits], SliceMode.none), x, y, rotation * 90f);
+            }
             Draw.scl();
 
             byte[] placementId = tileMap[tiling];
@@ -289,10 +293,7 @@ public class TubeConduit extends Conduit{
             Drawf.liquid(sliced(liquidr, slice), x + ox, y + oy, smoothLiquid, liquids.current().color.write(Tmp.c1).a(1f));
             Draw.scl(sx, sy);
 
-            if(drawArrow){
-                Draw.z(Layer.block);
-                Draw.rect(sliced(arrowRegion[bits], slice), x, y, angle);
-            }
+
         }
 
         private int nonSquareLiquidBlendMask() {

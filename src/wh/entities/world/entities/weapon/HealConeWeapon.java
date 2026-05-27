@@ -1,19 +1,26 @@
 package wh.entities.world.entities.weapon;
 
-import arc.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import mindustry.audio.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
+import arc.Core;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
+import arc.scene.ui.layout.Table;
+import arc.util.Strings;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.audio.SoundLoop;
+import mindustry.entities.Predict;
+import mindustry.entities.Sized;
+import mindustry.entities.Units;
+import mindustry.entities.units.WeaponMount;
 import mindustry.gen.*;
-import mindustry.type.*;
-import mindustry.world.meta.*;
-import wh.entities.bullet.*;
+import mindustry.type.UnitType;
+import mindustry.type.Weapon;
+import mindustry.world.meta.Stat;
+import mindustry.world.meta.StatUnit;
+import wh.entities.bullet.HealCone;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.headless;
 
 public class HealConeWeapon extends Weapon{
     public boolean targetUnits = true;
@@ -203,7 +210,7 @@ public class HealConeWeapon extends Weapon{
         if(mount.shoot && //must be shooting
         can && //must be able to shoot
         !(bullet.killShooter && mount.totalShots > 0) && //if the bullet kills the shooter, you should only ever be able to shoot once
-        (!useAmmo || unit.ammo > 0 || !state.rules.unitAmmo || unit.team.rules().infiniteAmmo) && //check ammo
+                true && //check ammo
         (!alternate || wasFlipped == flipSprite) &&
         mount.warmup >= minWarmup && //must be warmed up
         unit.vel.len() >= minShootVelocity && //check velocity requirements
@@ -213,11 +220,6 @@ public class HealConeWeapon extends Weapon{
             shoot(unit, mount, bulletX, bulletY, shootAngle);
 
             mount.reload = reload;
-
-            if(useAmmo){
-                unit.ammo--;
-                if(unit.ammo < 0) unit.ammo = 0;
-            }
         }
     }
 }

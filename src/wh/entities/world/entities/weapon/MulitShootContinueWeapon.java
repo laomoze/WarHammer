@@ -18,7 +18,6 @@ import mindustry.type.Weapon;
 import wh.entities.world.entities.weapon.MarkWeapon.MarkWeaponMount;
 
 import static mindustry.Vars.headless;
-import static mindustry.Vars.state;
 
 public class MulitShootContinueWeapon extends Weapon{
     public MulitShootContinueWeapon(String name){
@@ -184,7 +183,7 @@ public class MulitShootContinueWeapon extends Weapon{
         if(mount.shoot && //must be shooting
         can && //must be able to shoot
         !(bullet.killShooter && mount.totalShots > 0) && //if the bullet kills the shooter, you should only ever be able to shoot once
-        (!useAmmo || unit.ammo > 0 || !state.rules.unitAmmo || unit.team.rules().infiniteAmmo) && //check ammo
+                true && //check ammo
         (!alternate || wasFlipped == flipSprite) &&
         mount.warmup >= minWarmup && //must be warmed up
         unit.vel.len() >= minShootVelocity && //check velocity requirements
@@ -194,11 +193,6 @@ public class MulitShootContinueWeapon extends Weapon{
             shoot(unit, mount, bulletX, bulletY, shootAngle);
 
             mount.reload = reload;
-
-            if(useAmmo){
-                unit.ammo--;
-                if(unit.ammo < 0) unit.ammo = 0;
-            }
         }
     }
 

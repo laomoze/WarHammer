@@ -78,7 +78,8 @@ public class KarvexVentPass implements GenPass{
         }
         if(floor == WHBlocksEnvironment.darkRock
         || floor == WHBlocksEnvironment.darkHotRock
-        || floor == WHBlocksEnvironment.darkMagmaRock){
+                || floor == WHBlocksEnvironment.darkMagmaRock
+                || floor == WHBlocksEnvironment.darkRockCraters) {
             return WHBlocksEnvironment.darkRockVent;
         }
         if(floor == WHBlocksEnvironment.radiationSand
@@ -88,6 +89,9 @@ public class KarvexVentPass implements GenPass{
         }
         if (floor == WHBlocksEnvironment.quartzSand) {
             return WHBlocksEnvironment.quartzSandVent;
+        }
+        if (floor == WHBlocksEnvironment.apatiteCoarse) {
+            return WHBlocksEnvironment.apatiteVent;
         }
         return null;
     }
@@ -139,4 +143,3 @@ public class KarvexVentPass implements GenPass{
         }
     }
 }
-

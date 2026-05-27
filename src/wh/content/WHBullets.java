@@ -1088,9 +1088,9 @@ public class WHBullets{
         }};
 
 
-        SpikeBulletSilicon = new BasicBulletType(5f, 20){{
+        SpikeBulletSilicon = new BasicBulletType(5f, 25) {{
             reloadMultiplier = 1.5f;
-            ammoMultiplier = 4f;
+            ammoMultiplier = 6f;
             homingPower = 0.12f;
             lifetime = 185 / speed;
             width = 7f;
@@ -1106,7 +1106,7 @@ public class WHBullets{
         }};
 
 
-        SpikeBulletGraphite = new BasicBulletType(4f, 45){{
+        SpikeBulletGraphite = new BasicBulletType(4f, 41) {{
             rangeChange = 12f;
             ammoMultiplier = 3f;
             armorMultiplier = 0.1f;
@@ -1127,7 +1127,7 @@ public class WHBullets{
             smokeEffect = Fx.shootBigSmoke;
         }};
 
-        CrushBulletManganese = new FlakBulletType(6f, 15){{
+        CrushBulletManganese = new FlakBulletType(6f, 10) {{
             shootPattern = new ShootPattern(){{
                 shots = 2;
                 shotDelay = 5f;
@@ -1146,9 +1146,22 @@ public class WHBullets{
             hitEffect = Fx.flakExplosion;
             hitEffect = new WrapEffect(Fx.flakExplosion, WHPal.MnSteelColor);
             collidesGround = true;
+
+            fragBullets = 3;
+            fragBullet = new BasicBulletType(3f, 12, name("tall")) {{
+                ammoMultiplier = 0.8f;
+                width = 10f;
+                height = 10f;
+                shrinkY = 1f;
+                lifetime = 20f;
+                backColor = Pal.gray;
+                frontColor = Color.white;
+                despawnEffect = Fx.none;
+                collidesGround = true;
+            }};
         }};
 
-        CrushBulletMetaGlass = new FlakBulletType(5, 35){{
+        CrushBulletMetaGlass = new FlakBulletType(5, 15) {{
             reloadMultiplier = 0.8f;
             rangeChange = 1.5f * 8f;
             ammoMultiplier = 2;
@@ -1169,7 +1182,9 @@ public class WHBullets{
 
             collidesGround = true;
 
-            fragBullet = new BasicBulletType(3f, 12, name("tall")){{
+            fragBullets = 3;
+            fragBullet = new BasicBulletType(3f, 15, name("tall")) {{
+                ammoMultiplier = 0.8f;
                 width = 10f;
                 height = 10f;
                 shrinkY = 1f;
@@ -1181,7 +1196,7 @@ public class WHBullets{
             }};
         }};
 
-        CrushBulletPlastanium = new FlakBulletType(6.5f, 45) {{
+        CrushBulletPlastanium = new FlakBulletType(6.5f, 35) {{
             reloadMultiplier = 1.5f;
             ammoMultiplier = 3;
             lifetime = 180f / speed;
@@ -1199,7 +1214,8 @@ public class WHBullets{
             shootEffect = Fx.shootSmallColor;
             hitEffect = new MultiEffect(Fx.plasticExplosion, Fx.shockwave);
             collidesGround = true;
-            fragBullet = new CritBulletType(2.5f, 20, "bullet") {{
+            fragBullet = new CritBulletType(2.5f, 15, "bullet") {{
+                ammoMultiplier = 0.8f;
                 width = 10f;
                 height = 12f;
                 shrinkY = 1f;
@@ -1392,7 +1408,7 @@ public class WHBullets{
         LcarusBullet = new DelayedPointBulletType(){{
             colors = new Color[]{WHPal.SkyBlue.cpy().mul(1f, 1f, 1f, 0.4f), WHPal.SkyBlue.cpy(), Pal.lancerLaser};
             damage = 50;
-            splashDamageRadius = 32;
+            splashDamageRadius = 36;
             splashDamage = 80;
             width = 20;
             laser = Fx.none;
@@ -1417,10 +1433,10 @@ public class WHBullets{
         LcarusBulletEnhanced = new DelayedPointBulletType(){{
             reloadMultiplier = 0.75f;
             colors = new Color[]{WHPal.ShootOrangeLight.cpy().a(0.3f), WHPal.ShootOrangeLight.cpy().a(0.7f), WHPal.ShootOrangeLight.cpy()};
-            damage = 120;
+            damage = 80;
             rangeChange = 16f;
             shieldDamageMultiplier = 2;
-            splashDamageRadius = 40;
+            splashDamageRadius = 45;
             splashDamage = 100;
             laser = Fx.none;
             width = 20;
@@ -1448,9 +1464,9 @@ public class WHBullets{
             critChance = 0.1f;
             critMultiplier = 2f;
             speed = 8f;
-            damage = 50;
+            damage = 40;
             splashDamageRadius = 32;
-            splashDamage = 45;
+            splashDamage = 40;
             lifetime = 420 / speed;
             homingDelay = lifetime / 2;
             homingPower = 0.08f;
@@ -1524,7 +1540,7 @@ public class WHBullets{
             fragBullets = 6;
             fragBullet = new BasicBulletType(2.5f, 25, name("tall")){{
                 splashDamageRadius = 32;
-                splashDamage = 30;
+                splashDamage = 20;
                 width = 10f;
                 height = 12f;
                 shrinkY = 1f;
@@ -1549,8 +1565,8 @@ public class WHBullets{
             critChance = 0.1f;
             critMultiplier = 2f;
             speed = 8f;
-            damage = 70;
-            splashDamageRadius = 50;
+            damage = 60;
+            splashDamageRadius = 42;
             splashDamage = 60;
             lifetime = 55;
             homingDelay = lifetime / 2;
@@ -1599,7 +1615,7 @@ public class WHBullets{
             critChance = 0.1f;
             critMultiplier = 2f;
             speed = 8f;
-            damage = 100;
+            damage = 90;
             splashDamageRadius = 40;
             splashDamage = 50;
             lifetime = 55;

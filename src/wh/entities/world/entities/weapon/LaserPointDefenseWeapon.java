@@ -1,20 +1,28 @@
 package wh.entities.world.entities.weapon;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import mindustry.content.*;
-import mindustry.entities.bullet.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import mindustry.type.weapons.*;
-import mindustry.world.blocks.defense.turrets.*;
-import mindustry.world.meta.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Position;
+import arc.scene.ui.layout.Table;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.content.Blocks;
+import mindustry.entities.bullet.BulletType;
+import mindustry.entities.units.WeaponMount;
+import mindustry.gen.Bullet;
+import mindustry.gen.Groups;
+import mindustry.gen.Sounds;
+import mindustry.gen.Unit;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.type.UnitType;
+import mindustry.type.Weapon;
+import mindustry.type.weapons.PointDefenseWeapon;
+import mindustry.world.blocks.defense.turrets.TractorBeamTurret;
+import mindustry.world.meta.Stat;
+import mindustry.world.meta.StatUnit;
 
 import static mindustry.Vars.*;
 
@@ -41,7 +49,6 @@ public class LaserPointDefenseWeapon extends PointDefenseWeapon{
         controllable = false;
         rotate = true;
         rotateSpeed = 15;
-        useAmmo = false;
         useAttackRange = false;
         targetInterval = targetSwitchInterval = 4;
 

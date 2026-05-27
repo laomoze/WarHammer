@@ -1,14 +1,14 @@
 package wh.entities.world.entities;
 
-import arc.math.*;
-import arc.struct.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.type.*;
-import mindustry.type.ammo.*;
-import wh.content.*;
-import wh.entities.world.drawer.part.*;
-import wh.graphics.*;
+import arc.math.Mathf;
+import arc.struct.Seq;
+import mindustry.Vars;
+import mindustry.content.StatusEffects;
+import mindustry.type.StatusEffect;
+import mindustry.type.UnitType;
+import wh.content.WHStatusEffects;
+import wh.entities.world.drawer.part.AncientEngine;
+import wh.graphics.WHPal;
 
 public class SuperHeavyUnitType extends WHUnitType{
     public boolean immuniseAll = true;
@@ -20,8 +20,6 @@ public class SuperHeavyUnitType extends WHUnitType{
 
         healColor = WHPal.WHYellow;
         lightColor = WHPal.WHYellow;
-
-        ammoType = new ItemAmmoType(WHItems.ceramite);
     }
 
     @Override

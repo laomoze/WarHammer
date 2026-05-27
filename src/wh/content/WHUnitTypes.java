@@ -29,7 +29,6 @@ import mindustry.ai.Pathfinder;
 import mindustry.ai.UnitCommand;
 import mindustry.ai.types.*;
 import mindustry.content.Fx;
-import mindustry.content.Items;
 import mindustry.content.StatusEffects;
 import mindustry.content.UnitTypes;
 import mindustry.entities.*;
@@ -53,8 +52,6 @@ import mindustry.graphics.Pal;
 import mindustry.graphics.Trail;
 import mindustry.type.UnitType;
 import mindustry.type.Weapon;
-import mindustry.type.ammo.ItemAmmoType;
-import mindustry.type.ammo.PowerAmmoType;
 import mindustry.type.weapons.BuildWeapon;
 import mindustry.type.weapons.PointDefenseBulletWeapon;
 import mindustry.type.weapons.PointDefenseWeapon;
@@ -3265,8 +3262,6 @@ public final class WHUnitTypes {
                 payloadCapacity = (8 * 8) * tilePayload;
 
                 targetFlags = new BlockFlag[]{BlockFlag.reactor, BlockFlag.turret, BlockFlag.core, null};
-                ammoType = new ItemAmmoType(WHItems.molybdenumAlloy);
-
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
 
@@ -3732,7 +3727,6 @@ public final class WHUnitTypes {
                 drag = 0.04f;
                 rotateSpeed = 1;
                 immunities.addAll(StatusEffects.electrified, StatusEffects.slow);
-                ammoType = new PowerAmmoType(6600);
                 ammoCapacity = 3000;
                 hitSize = 35;
                 flying = true;
@@ -3944,8 +3938,8 @@ public final class WHUnitTypes {
                 rotateSpeed = 4f;
                 flying = true;
                 lowAltitude = false;
-                health = 3000;
-                armor = 10f;
+                health = 3500;
+                armor = 12f;
                 hitSize = 20;
                 engineOffset = 7.5f;
                 engineSize = 4.5f;
@@ -3956,9 +3950,6 @@ public final class WHUnitTypes {
                 engineLayer = 110f;
 
                 immunities.add(StatusEffects.unmoving);
-
-                ammoType = new PowerAmmoType(3000);
-                ammoCapacity = 150;
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
@@ -3988,7 +3979,7 @@ public final class WHUnitTypes {
                         backColor = WHPal.ShootOrange;
                         width = 7;
                         height = width * 3;
-                        lifetime = 300 / speed;
+                        lifetime = 310 / speed;
 
                         shootEffect = new MultiEffect(Fx.colorSpark, Fx.shootBig);
 
@@ -4022,6 +4013,7 @@ public final class WHUnitTypes {
 
                     bullet = new CritMissileBulletType(4f, 65f, "missile") {{
 
+                        lifetime = 310 / speed;
                         width = 10;
                         height = 16;
                         lengthOffset = width / 4f;
@@ -4048,7 +4040,7 @@ public final class WHUnitTypes {
                                 WHFx.hitCircle(12, hitColor, Color.lightGray, 5, 15, 4f)
                         );
                         smokeEffect = Fx.none;
-                        lifetime = 300 / speed;
+
 
                         weaveScale = 12f;
                         weaveMag = 1;
@@ -4078,7 +4070,7 @@ public final class WHUnitTypes {
                 drag = 0.016f;
                 hitSize = 11f;
                 flying = true;
-                health = 1000;
+                health = 1200;
                 armor = 6f;
                 engineOffset = 45 / 4f;
                 engineSize = 4;
@@ -4086,34 +4078,31 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new ItemAmmoType(Items.graphite);
-
                 abilities.add(new BoostAbility(1.6f, 90) {{
                     trailLength = 10;
                 }});
 
                 weapons.add(new MarkWeapon(name("gun-mount-2")) {{
-                    markShoot = new ShootSpread(3, 10) {{
-                        shotDelay = 10f;
+                    markShoot = new ShootSpread(3, 6) {{
+                        shotDelay = 5f;
                     }};
-                    markChance = 0.1f;
+                    markChance = 0.2f;
                     markReduce = 0f;
                     x = 32 / 4f;
                     y = -16 / 4f;
                     rotate = true;
                     rotateSpeed = 0.8f;
-                    reload = 90f;
+                    reload = 60;
                     recoil = 4f;
                     shake = 2f;
                     shootY = 20 / 4f;
                     ejectEffect = Fx.casing2;
                     shootSound = shootArtillery;
-                    markBullet = bullet = new ArtilleryBulletType(4f, 80, "shell") {{
+                    markBullet = bullet = new ArtilleryBulletType(4.5f, 80, "shell") {{
                         shootEffect = Fx.shootBig;
                         smokeEffect = shootBigSmoke;
                         knockback = 0.8f;
-                        lifetime = 230 / speed;
+                        lifetime = 255 / speed;
                         width = 12f;
                         height = 20f;
                         collidesAir = collides = true;
@@ -4177,8 +4166,8 @@ public final class WHUnitTypes {
                 accel = 0.08f;
                 drag = 0.04f;
                 flying = true;
-                health = 350;
-                armor = 4f;
+                health = 425;
+                armor = 5f;
                 engineOffset = 28 / 4f;
                 targetFlags = new BlockFlag[]{BlockFlag.generator, null};
                 hitSize = 9;
@@ -4190,9 +4179,6 @@ public final class WHUnitTypes {
                 abilities.add(new BoostAbility(1.6f, 90) {{
                     trailLength = 10;
                 }});
-
-                ammoType = new ItemAmmoType(Items.coal);
-
                 immunities.add(StatusEffects.burning);
 
                 weapons.add(new Weapon(name(name + "weapon-1")) {{
@@ -4201,7 +4187,7 @@ public final class WHUnitTypes {
                     top = false;
                     shootSound = shootFlame;
                     shootY = 2f;
-                    reload = 8f;
+                    reload = 5f;
                     recoil = 1f;
                     ejectEffect = Fx.none;
                     bullet = new BulletType(4, 30f) {{
@@ -4252,7 +4238,6 @@ public final class WHUnitTypes {
                 targetAir = false;
 
                 immunities.add(StatusEffects.unmoving);
-                ammoType = new PowerAmmoType(2200);
                 ammoCapacity = 80;
 
                 omniMovement = false;
@@ -4406,8 +4391,6 @@ public final class WHUnitTypes {
                 circleTargetRadius = 100;
 
                 immunities.add(StatusEffects.unmoving);
-
-                ammoType = new PowerAmmoType(3000);
                 ammoCapacity = 150;
 
                 useUnitCap = false;
@@ -4806,9 +4789,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new PowerAmmoType(30000);
-
                 range = 400;
 
                 parts.add(
@@ -5185,9 +5165,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new PowerAmmoType(10000);
-
                 float engineSize = 2f;
 
                 for (int a = 0; a < 5; a++) {
@@ -5424,9 +5401,6 @@ public final class WHUnitTypes {
                 outlineColor = WHPal.Outline;
 
                 range = 250f;
-
-                ammoType = new PowerAmmoType(4000);
-
                 float engineSize = 1.8f;
 
                 for (int a = 0; a < 10; a++) {
@@ -5539,7 +5513,6 @@ public final class WHUnitTypes {
                                 findRange = 130f;
                             }};
                             reload = 300;
-                            useAmmo = mirror = alternate = false;
                             continuous = true;
                             recoil = 0;
                         }},
@@ -5620,9 +5593,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new PowerAmmoType(2200);
-
                 weapons.addAll(
                         new HealWeapon(name(name + "-weapon1")) {{
                             top = false;
@@ -5701,7 +5671,6 @@ public final class WHUnitTypes {
                                 findRange = 100;
                             }};
                             reload = 300;
-                            useAmmo = mirror = alternate = false;
                             continuous = true;
                             recoil = 0;
                         }},
@@ -5756,9 +5725,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new PowerAmmoType(1200);
-
                 mineTier = 2;
                 mineSpeed = 3f;
                 mineItems = Seq.with(WHItems.kellexItems);
@@ -5831,9 +5797,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new PowerAmmoType(900);
-
                 mineTier = 3;
                 mineSpeed = 3.5f;
             }
@@ -6461,11 +6424,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new ItemAmmoType(WHItems.refineCeramite) {{
-                    ammoPerItem = 10;
-                }};
-
                 ammoCapacity = 10000;
 
                 float lx = 150, ly = 205;
@@ -6743,9 +6701,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new ItemAmmoType(WHItems.ceramite);
-
                 float lx = 130, ly = 160;
 
                 treadFrames = 16;
@@ -6996,9 +6951,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new PowerAmmoType(4000);
-
                 float lx = 94f, ly = 128;
                 treadPullOffset = 8;
                 treadFrames = 16;
@@ -7101,9 +7053,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new PowerAmmoType(50000);
-
                 ammoCapacity = 10000;
 
                 float lx = 140, ly = 180;
@@ -7255,11 +7204,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new ItemAmmoType(WHItems.ceramite) {{
-                    ammoPerItem = 10;
-                }};
-
                 float lx = 110, ly = 175;
 
                 treadFrames = 16;
@@ -7496,11 +7440,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new ItemAmmoType(WHItems.ceramite) {{
-                    ammoPerItem = 10;
-                }};
-
                 float lx = 94, ly = 112;
 
                 treadFrames = 16;
@@ -7704,11 +7643,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new ItemAmmoType(WHItems.refineCeramite) {{
-                    ammoPerItem = 10;
-                }};
-
                 ammoCapacity = 10000;
 
                 float lx = 150, ly = 205;
@@ -8105,9 +8039,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new PowerAmmoType(4000);
-
                 parts.addAll(
                         new HoverPart() {{
                             x = -71 / 4f;
@@ -8322,9 +8253,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new PowerAmmoType(4000);
-
                 float lx = 200 / 2f, ly = 250 / 2f;
                 treadPullOffset = 8;
                 treadFrames = 16;
@@ -8536,9 +8464,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new PowerAmmoType(4000);
-
                 float lx = 112f, ly = 120f;
                 /*   treadPullOffset = 8;*/
                 treadFrames = 16;
@@ -8687,9 +8612,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new PowerAmmoType(4000);
-
                 float lx = 112f, ly = 120f;
                 /*   treadPullOffset = 8;*/
                 treadFrames = 16;
@@ -8845,9 +8767,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new ItemAmmoType(WHItems.refineCeramite);
-
                /* abilities.add(
                 new EllipseForceFieldAbility(500 / 4f, 400 / 4f, 12, 10000, 90 * 60f, 0.3f, 30){{
                     shader = true;
@@ -9211,8 +9130,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new ItemAmmoType(WHItems.refineCeramite);
                 range = 390;
 
                 abilities.add(
@@ -9462,8 +9379,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new ItemAmmoType(WHItems.molybdenumAlloy);
                 range = 330;
 
                 abilities.add(
@@ -9611,8 +9526,6 @@ public final class WHUnitTypes {
                 armor = 18f;
                 mechFrontSway = 1f;
                 stepSound = Sounds.mechStep;
-                ammoType = new ItemAmmoType(WHItems.sealedPromethium);
-
                 stepShake = 0.15f;
                 drownTimeMultiplier = 0.5f;
 
@@ -9860,8 +9773,6 @@ public final class WHUnitTypes {
                 mechFrontSway = 0.55f;
                 drownTimeMultiplier = 0.5f;
                 stepSound = Sounds.walkerStep;
-                ammoType = new ItemAmmoType(WHItems.ceramite);
-
                 immunities.addAll(StatusEffects.burning, WHStatusEffects.plasmaFireBurn);
 
                 outlineRadius = 3;
@@ -10124,8 +10035,6 @@ public final class WHUnitTypes {
                 drownTimeMultiplier = 1.6f;
                 mechFrontSway = 1f;
                 mechSideSway = 0.3f;
-                ammoType = new ItemAmmoType(WHItems.ceramite);
-
                 singleTarget = true;
 
                 abilities.add(
@@ -10398,8 +10307,6 @@ public final class WHUnitTypes {
                 health = 28000;
                 armor = 32;
                 mechFrontSway = 0.08f;
-                ammoType = new ItemAmmoType(WHItems.ceramite);
-
                 mechStepParticles = true;
                 stepShake = 0.15f;
                 singleTarget = true;
@@ -10693,8 +10600,6 @@ public final class WHUnitTypes {
                 health = 12000;
                 armor = 28;
                 mechFrontSway = 0.08f;
-                ammoType = new ItemAmmoType(WHItems.ceramite);
-
                 mechStepParticles = true;
                 stepShake = 0.15f;
                 singleTarget = true;
@@ -10903,8 +10808,6 @@ public final class WHUnitTypes {
                 health = 1300;
                 armor = 28;
                 mechFrontSway = 0.08f;
-                ammoType = new ItemAmmoType(WHItems.ceramite);
-
                 mechStepParticles = true;
                 stepShake = 0.15f;
                 singleTarget = true;
@@ -11112,8 +11015,6 @@ public final class WHUnitTypes {
                 health = 13000;
                 armor = 28;
                 mechFrontSway = 0.08f;
-                ammoType = new ItemAmmoType(WHItems.ceramite);
-
                 mechStepParticles = true;
                 stepShake = 0.15f;
                 singleTarget = true;
@@ -11351,8 +11252,6 @@ public final class WHUnitTypes {
                 health = 16000;
                 armor = 28;
                 mechFrontSway = 0.08f;
-                ammoType = new ItemAmmoType(WHItems.ceramite);
-
                 mechStepParticles = true;
                 stepShake = 0.15f;
                 singleTarget = true;
@@ -11573,8 +11472,6 @@ public final class WHUnitTypes {
                 health = 3000;
                 armor = 13f;
                 mechFrontSway = 0.3f;
-                ammoType = new PowerAmmoType(5000);
-
                 outlineRadius = 3;
                 mechLegColor = outlineColor = WHPal.Outline;
 
@@ -11718,8 +11615,6 @@ public final class WHUnitTypes {
                 health = 1500;
                 armor = 10f;
                 mechFrontSway = 0.3f;
-                ammoType = new PowerAmmoType(3000);
-
                 outlineRadius = 3;
                 mechLegColor = outlineColor = WHPal.Outline;
 
@@ -11732,7 +11627,7 @@ public final class WHUnitTypes {
                         new Weapon("") {{
                             y = 0f;
                             x = 23 / 4f;
-                            reload = 10;
+                            reload = 12;
 
                             layerOffset = 0.01f;
 
@@ -11744,7 +11639,7 @@ public final class WHUnitTypes {
                             mirror = false;
                             cooldownTime = recoilTime = 120;
 
-                            shootWarmupSpeed = 0.13f;
+                            shootWarmupSpeed = 0.17f;
                             minWarmup = 0.99f;
 
 
@@ -11843,8 +11738,8 @@ public final class WHUnitTypes {
                             parentizeEffects = true;
 
                             bullet = new RailBulletType() {{
-                                length = 220;
-                                damage = 75;
+                                length = 210;
+                                damage = 70;
                                 hitColor = Color.valueOf("feb380");
                                 hitEffect = endEffect = Fx.hitBulletColor;
                                 pierceDamageFactor = 0.25f;
@@ -11904,8 +11799,6 @@ public final class WHUnitTypes {
                 health = 600;
                 armor = 8;
                 mechFrontSway = 0.3f;
-                ammoType = new PowerAmmoType(1500);
-
                 outlineRadius = 3;
                 mechLegColor = outlineColor = WHPal.Outline;
 
@@ -12028,9 +11921,6 @@ public final class WHUnitTypes {
 
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
-
-                ammoType = new ItemAmmoType(WHItems.molybdenumAlloy);
-
                 stepShake = 0.15f;
                 singleTarget = true;
 
@@ -12463,7 +12353,6 @@ public final class WHUnitTypes {
                             findRange = 90;
                         }};
                         reload = 120;
-                        useAmmo = mirror = alternate = false;
                         continuous = true;
                         recoil = 0;
                     }});
@@ -12545,7 +12434,6 @@ public final class WHUnitTypes {
                     findRange = 100;
                 }};
                 reload = 80;
-                useAmmo = alternate = false;
                 continuous = true;
                 mirror = true;
                 recoil = 0;
@@ -12758,9 +12646,6 @@ public final class WHUnitTypes {
                 outlineColor = WHPal.OutlineS;
 
                 range = 270;
-
-                ammoType = new PowerAmmoType(15000);
-
                 setEnginesMirror(
                         new UnitEngine(-64 / 4f, -160 / 4f, 14, 225)
                 );
@@ -13139,7 +13024,6 @@ public final class WHUnitTypes {
                 legForwardScl = 0.58f;
                 allowLegStep = hovering = true;
                 shadowElevation = 0.3f;
-                ammoType = new PowerAmmoType(20000);
                 groundLayer = Layer.legUnit + 0.01f;
 
                 outlineColor = WHPal.OutlineS;
@@ -13313,7 +13197,6 @@ public final class WHUnitTypes {
                             rotate = true;
                             rotateSpeed = 2;
                             alternate = false;
-                            useAmmo = false;
                             continuous = true;
                             cooldownTime = 150;
                             recoil = 0;
@@ -13347,8 +13230,6 @@ public final class WHUnitTypes {
                 legLengthScl = 1f;
                 rippleScale = 2f;
                 legSpeed = 0.2f;
-
-                ammoType = new ItemAmmoType(Items.surgeAlloy, 4);
                 ammoCapacity = 1000;
 
                 legSplashDamage = 80f;
@@ -14192,7 +14073,6 @@ public final class WHUnitTypes {
                 drag = 0.04f;
                 rotateSpeed = 1;
                 immunities.addAll(StatusEffects.electrified, StatusEffects.slow);
-                ammoType = new PowerAmmoType(6600);
                 ammoCapacity = 3000;
                 hitSize = 35;
                 health = 10000;
@@ -14320,7 +14200,6 @@ public final class WHUnitTypes {
                 drag = 0.04f;
                 accel = 0.08f;
                 rotateSpeed = 0.3f;
-                ammoType = new PowerAmmoType(3000);
                 hitSize = 30f;
                 flying = true;
                 outlineRadius = 3;
@@ -14476,9 +14355,6 @@ public final class WHUnitTypes {
                 fallEffect = fallEngineEffect = Fx.none;
                 physics = false;
                 bounded = false;
-
-                ammoType = new ItemAmmoType(WHItems.ceramite);
-
                 weapons.add(new ARWeapon() {{
                     x = y = 0f;
                     mirror = false;
@@ -14503,7 +14379,6 @@ public final class WHUnitTypes {
                 armor = 10f;
                 mechFrontSway = 1f;
                 flying = false;
-                ammoType = new ItemAmmoType(Items.thorium);
           /*  abilities.add(
             new EllipseForceFieldAbility(100, 80, 2000/60f, 10000f, 60f * 3, 0.2f)
             {{shader=true;fullAbsorb=true;Regen=true;}});*/

@@ -1,17 +1,21 @@
 package wh.entities.world.entities.weapon;
 
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.audio.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.type.*;
-import wh.entities.bullet.laser.LightingPointLaserBulletType.*;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.Vars;
+import mindustry.audio.SoundLoop;
+import mindustry.entities.Predict;
+import mindustry.entities.Sized;
+import mindustry.entities.units.WeaponMount;
+import mindustry.gen.Sounds;
+import mindustry.gen.Unit;
+import mindustry.type.Weapon;
+import wh.entities.bullet.laser.LightingPointLaserBulletType.PLBullet;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.headless;
 
 public class PointLaserWeapon extends Weapon{
     public float chargeTime = 20f;
@@ -161,7 +165,7 @@ public class PointLaserWeapon extends Weapon{
         if(mount.shoot && //must be shooting
         can && //must be able to shoot
         !(bullet.killShooter && mount.totalShots > 0) && //if the bullet kills the shooter, you should only ever be able to shoot once
-        (!useAmmo || unit.ammo > 0 || !state.rules.unitAmmo || unit.team.rules().infiniteAmmo) && //check ammo
+                true && //check ammo
         (!alternate || wasFlipped == flipSprite) &&
         mount.warmup >= minWarmup && //must be warmed up
         unit.vel.len() >= minShootVelocity && //check velocity requirements
@@ -171,11 +175,6 @@ public class PointLaserWeapon extends Weapon{
             shoot(unit, mount, bulletX, bulletY, shootAngle);
 
             mount.reload = reload;
-
-            if(useAmmo){
-                unit.ammo--;
-                if(unit.ammo < 0) unit.ammo = 0;
-            }
         }
     }
 

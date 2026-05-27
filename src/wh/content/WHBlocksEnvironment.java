@@ -32,7 +32,7 @@ public class WHBlocksEnvironment {
     public static WHShallowLiquid mineralSandEffluentWater, mineralSandRadiationWater, radiationSandWater,
             oilMineralSandWater, rustSandWater;
     //Floor
-    public static Block cementFloor, darkHotRock, darkMagmaRock, darkRock, gravel, darkMineralSandstone, darkMineralFloor, mineralSandFloor, chromiteStone, chromiteFloor, chromiteFloorDark, manganeseStone, manganeseFloor, cobaltStone, cobaltFloor,
+    public static Block cementFloor, darkHotRock, darkMagmaRock, darkRock, darkRockCraters, gravel, darkMineralSandstone, darkMineralFloor, mineralSandFloor, chromiteStone, chromiteFloor, chromiteFloorDark, manganeseStone, manganeseFloor, cobaltStone, cobaltFloor,
             trachyte, oreShale, oreSalt, radiationCraters, radiationRockFloor,
             darkDacite,
             scorchedEarth, scorchedStone;
@@ -44,17 +44,17 @@ public class WHBlocksEnvironment {
     //MeltaFloor
     public static Block darkMetalFloor1, darkMetalFloor2, darkMetalFloor3, darkMetalFloor4, darkMetalFloor5, darkMetalFloor6,
             darkMetalFloorDamage,
-            darkTile1, darkTile2, darkTile3, metalTile1, metalTile2, metalTile31, metalTile32, metalTile33,
-            metalTile34, metalTile4, metalTile5, metalMesh;
+            metalTile1, metalTile2, metalTile3, metalTile4, metalTile5,
+            metalTile6, metalTile7, metalTile8, metalTile9, metalTile10;
     //AutoTileFloor
     public static Block cementTile1, cementTile2, cementTile3, cementTile4;
     //Vents
-    public static Block quartzSandVent, cementVent, darkRockVent, radiationRockVent, scorchedEarthVent, chromiteVent, manganeseVent, cobaltVent;
+    public static Block quartzSandVent, apatiteVent, cementVent, darkRockVent, radiationRockVent, scorchedEarthVent, chromiteVent, manganeseVent, cobaltVent;
     //Boulders/Props
     public static Block quartzSandBoulder, chromiteBoulder, cobaltBoulder, darkRockBoulder, manganeseBoulder, mineralSandFloorBoulder, radiationBoulder,
-            darkMineralSandBoulder, scorchedEarthBoulder, darkDaciteBoulder, rustBoulder, darkStoneCrystalCluster, quartzCrystalCluster, quartzCrystalClusterLarge,
-            chromiteBlock, cobaltBlock, darkMineralSandBlock, manganeseBlock, mineralSandBlock,
-            chromiteCrystalStone, cobaltCrystalStone, uraniumCrystalStone;
+            darkMineralSandBoulder, scorchedEarthBoulder, darkDaciteBoulder, rustBoulder, darkRockCrystal, quartzCrystalCluster, quartzCrystalClusterLarge,
+            chromiteBlock, cobaltBlock, darkRockBlock, darkMineralSandBlock, manganeseBlock, mineralSandBlock,
+            chromiteCrystalStone, cobaltCrystalStone, uraniumCrystalStone, molybdenumCrystalStone, radiationCrystal;
 
 
     public static void load() {
@@ -268,6 +268,12 @@ public class WHBlocksEnvironment {
             lightColor = Color.orange.cpy().lerp(Pal.slagOrange, 0.15f).a(0.3f);
         }};
 
+        darkRockCraters = new Floor("dark-rock-craters") {{
+            variants = 3;
+            attributes.set(Attribute.water, -0.4f);
+            blendGroup = darkRock;
+        }};
+
         gravel = new Floor("gravel") {{
             variants = 3;
             attributes.set(Attribute.water, -0.2f);
@@ -386,6 +392,11 @@ public class WHBlocksEnvironment {
             attributes.set(Attribute.steam, 1f);
         }};
 
+        apatiteVent = new SteamVent("apatite-vent") {{
+            parent = blendGroup = apatiteCoarse;
+            attributes.set(Attribute.steam, 1f);
+        }};
+
         cementVent = new SteamVent("cement-vent") {{
             parent = blendGroup = cementFloor;
             attributes.set(Attribute.steam, 1f);
@@ -445,7 +456,7 @@ public class WHBlocksEnvironment {
         }};
 
         darkRockWall = new StaticWall("dark-rock-wall") {{
-            darkRock.asFloor().wall = darkMagmaRock.asFloor().wall = darkHotRock.asFloor().wall = this;
+            darkRock.asFloor().wall = darkMagmaRock.asFloor().wall = darkHotRock.asFloor().wall = darkRockCraters.asFloor().wall = this;
         }};
 
         darkDaciteWall = new StaticWall("dark-dacite-wall") {{
@@ -551,7 +562,7 @@ public class WHBlocksEnvironment {
 
         darkRockBoulder = new Prop("dark-rock-boulder") {{
             variants = 3;
-            darkRock.asFloor().decoration = darkHotRock.asFloor().decoration = darkMagmaRock.asFloor().decoration = this;
+            darkRock.asFloor().decoration = darkHotRock.asFloor().decoration = darkMagmaRock.asFloor().decoration = darkRockCraters.asFloor().decoration = this;
         }};
 
         darkDaciteBoulder = new Prop("dark-dacite-boulder") {{
@@ -589,11 +600,10 @@ public class WHBlocksEnvironment {
             scorchedEarth.asFloor().decoration = scorchedStone.asFloor().decoration = this;
         }};
 
-        darkStoneCrystalCluster = new TallBlock("dark-stone-crystal-cluster") {{
+        darkRockCrystal = new TallBlock("dark-rock-crystal") {{
             variants = 3;
             customShadow = true;
             clipSize = 128f;
-            oreShale.asFloor().decoration = this;
         }};
 
         quartzCrystalCluster = new TallBlock("quartz-crystal-cluster") {{
@@ -615,6 +625,12 @@ public class WHBlocksEnvironment {
         }};
 
         cobaltBlock = new TallBlock("cobalt-block") {{
+            variants = 2;
+            customShadow = true;
+            clipSize = 128f;
+        }};
+
+        darkRockBlock = new TallBlock("dark-rock-block") {{
             variants = 2;
             customShadow = true;
             clipSize = 128f;
@@ -656,6 +672,18 @@ public class WHBlocksEnvironment {
             clipSize = 128f;
         }};
 
+        molybdenumCrystalStone = new TallBlock("molybdenum-crystal-stone") {{
+            variants = 2;
+            customShadow = true;
+            clipSize = 128f;
+        }};
+
+        radiationCrystal = new TallBlock("radiation-crystal") {{
+            variants = 3;
+            customShadow = true;
+            clipSize = 128f;
+        }};
+
         darkMetalFloor1 = new Floor("dark-melta-floor", 0);
 
         darkMetalFloor2 = new Floor("dark-melta-floor-2", 0);
@@ -672,30 +700,24 @@ public class WHBlocksEnvironment {
 
         darkMetalFloor1.asFloor().wall = darkMeltaWall;
 
-
-        darkTile1 = new Floor("dark-tile-1", 0);
-
-        darkTile2 = new Floor("dark-tile-2", 0);
-
-        darkTile3 = new Floor("dark-tile-3", 0);
-
-      /*  metalTile1 = new Floor("metal-tile-1", 0);
-
+        metalTile1 = new Floor("metal-tile-1", 0);
         metalTile2 = new Floor("metal-tile-2", 0);
-
-        metalTile31 = new Floor("metal-tile-3-1", 0);
-
-        metalTile32 = new Floor("metal-tile-3-2", 0);
-
-        metalTile33 = new Floor("metal-tile-3-3", 0);
-
-        metalTile34 = new Floor("metal-tile-3-4", 0);*/
-
+        metalTile3 = new Floor("metal-tile-3", 0);
         metalTile4 = new Floor("metal-tile-4", 0);
-
-        /* metalTile5 = new Floor("metal-tile-5", 0);*/
-
-        metalMesh = new Floor("metal-mesh-autotile") {{
+        metalTile5 = new Floor("metal-tile-5", 0);
+        metalTile6 = new Floor("metal-tile-6", 0);
+        metalTile7 = new Floor("metal-tile-7", 0);
+        metalTile8 = new Floor("metal-tile-8", 0) {{
+            autotile = true;
+            drawEdgeOut = true;
+            drawEdgeIn = false;
+        }};
+        metalTile9 = new Floor("metal-tile-9", 0) {{
+            autotile = true;
+            drawEdgeOut = true;
+            drawEdgeIn = false;
+        }};
+        metalTile10 = new Floor("metal-tile-10", 0) {{
             autotile = true;
             drawEdgeOut = true;
             drawEdgeIn = false;

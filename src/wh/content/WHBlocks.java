@@ -724,7 +724,7 @@ public final class WHBlocks {
                 craftTime = 120;
                 itemCapacity = 64;
                 size = 3;
-                consumePower(4);
+                consumePower(2);
                 consumeItems(with(Items.coal, 10));
                 consumeLiquid(WHLiquids.swageWater, 15 / 60f);
                 outputItem = new ItemStack(Items.graphite, 8);
@@ -807,7 +807,7 @@ public final class WHBlocks {
                 craftTime = 60;
                 liquidCapacity = 120;
                 itemCapacity = 30;
-                consumePower(10f);
+                consumePower(8);
                 consumeLiquid(Liquids.oil, 1);
                 consumeItems(with(WHItems.chromium, 8));
                 outputItem = new ItemStack(Items.plastanium, 5);
@@ -866,7 +866,7 @@ public final class WHBlocks {
                 rotate = true;
                 invertFlip = true;
                 consumePower(2f);
-                consumeLiquid(Liquids.water, 1f);
+                consumeLiquid(Liquids.water, 30 / 60f);
                 outputLiquids = LiquidStack.with(Liquids.ozone, 15f / 60, Liquids.hydrogen, 30f / 60);
                 drawer = new DrawMulti(
                         new DrawRegion("-bottom"),
@@ -890,7 +890,8 @@ public final class WHBlocks {
                         }}
                 );
                 regionRotated1 = 3;
-                liquidOutputDirections = new int[]{2, 4};
+                liquidOutputDirections = new int[]{1, 3};
+
             }
         };
 
@@ -996,10 +997,10 @@ public final class WHBlocks {
                 itemCapacity = 12;
                 liquidCapacity = 300;
                 size = 3;
-                consumePower(3);
+                consumePower(90 / 60f);
                 consumeItems(with(WHItems.oreSand, 2, Items.graphite, 2));
                 consumeLiquid(WHLiquids.swageWater, 80 / 60f);
-                outputLiquid = new LiquidStack(Liquids.water, 50 / 60f);
+                outputLiquid = new LiquidStack(Liquids.water, 60 / 60f);
                 drawer = new DrawMulti(new DrawRegion("-bottom"),
                         new DrawLiquidTile(WHLiquids.swageWater),
                         new DrawLiquidTile(Liquids.water),
@@ -1944,7 +1945,7 @@ public final class WHBlocks {
             {
                 requirements(Category.crafting, with(WHItems.manganese, 60, Items.silicon, 40));
                 size = 2;
-                craftTime = 60;
+                craftTime = 90;
                 health = 200;
                 hasItems = true;
                 itemCapacity = 20;
@@ -2599,7 +2600,7 @@ public final class WHBlocks {
                 squareSprite = false;
                 drawer = new DrawMulti(new DrawRegion("-liquid"), new DrawPumpLiquidTile(4 / 8f), new DrawDefault());
                 liquidCapacity = 40;
-                hasLiquids = hasPower = true;
+                hasLiquids = true;
                 pumpAmount = 20 / 60f;
                 researchCostMultiplier = 0.45f;
             }
@@ -3039,7 +3040,7 @@ public final class WHBlocks {
             group = BlockGroup.liquids;
             displayEfficiencyScale = 1f / 9f;
             minEfficiency = 9f - 0.0001f;
-            powerProduction = (750.1f / 60f) / 9f;
+            powerProduction = (800.0001f / 60f) / 9f;
             displayEfficiency = false;
             generateEffect = Fx.turbinegenerate;
             effectChance = 0.04f;
@@ -3108,12 +3109,12 @@ public final class WHBlocks {
                         color = Color.valueOf("c967b099");
                     }});
             generateEffect = Fx.none;
-            itemDuration = 120f;
+            itemDuration = 150f;
             liquidCapacity = 20f * 3;
             consumeLiquids(LiquidStack.with(Liquids.ozone, 5 / 60f));
-            itemDurationMultipliers.put(WHItems.chromium, 4);
-            itemDurationMultipliers.put(WHItems.combustible, 3);
-            itemDurationMultipliers.put(WHItems.sealedPromethium, 12);
+            itemDurationMultipliers.put(WHItems.chromium, 3);
+            itemDurationMultipliers.put(WHItems.combustible, 2.5f);
+            itemDurationMultipliers.put(WHItems.sealedPromethium, 9);
             consume(new ConsumeItemFlammable());
 
             ambientSound = Sounds.loopSmelter;
@@ -3368,7 +3369,7 @@ public final class WHBlocks {
                         new DrawDefault()
                 );
                 consumePower(15);
-                consumeItems(with(WHItems.sealedPromethium, 1, WHItems.culverCrystal, 2));
+                consumeItems(with(WHItems.sealedPromethium, 2));
                 consumeLiquid(WHLiquids.refinePromethium, 60 / 60f);
                 ambientSound = loopPulse;
                 ambientSoundVolume = 0.1f;
@@ -3412,7 +3413,7 @@ public final class WHBlocks {
         plaRector = new PlaRector("plasma-reactor") {
             {
                 requirements(Category.power, with(WHItems.cobalt, 2000, Items.silicon, 4000, WHItems.cobaltNitride, 800,
-                        WHItems.molybdenumAlloy, 500, WHItems.refineCeramite, 500, WHItems.sealedPromethium, 800));
+                        WHItems.molybdenumAlloy, 1000, WHItems.refineCeramite, 1000, WHItems.sealedPromethium, 1000));
 
                 health = 20000;
                 size = 5;
@@ -3422,15 +3423,21 @@ public final class WHBlocks {
 
                 hasItems = true;
                 hasLiquids = true;
+                squareSprite = false;
                 itemCapacity = 120;
                 liquidCapacity = 120 * 10f;
-                consumeLiquid(WHLiquids.liquidNitrogen, 80 / 60f);
+                consumeLiquid(WHLiquids.liquidNitrogen, 60 / 60f);
                 consumeLiquid(WHLiquids.refinePromethium, 90 / 60f);
                 powerProduction = 150 * 1000f / 60f + 0.0001f;
                 maxHeat = 120f;
                 drawer = new DrawMulti(
                         new DrawRegion("-bottom"),
+                        new DrawLiquidTile(WHLiquids.liquidNitrogen) {{
+                            alpha = 0.35f;
+                        }},
+                        new DrawRegion("-mid-1"),
                         new DrawLiquidTile(WHLiquids.refinePromethium),
+                        new DrawRegion("-mid"),
                         new DrawSoftParticles() {{
                             alpha = 0.35f;
                             particleRad = 16f;
@@ -3440,19 +3447,23 @@ public final class WHBlocks {
                             color = WHPal.SkyBlue;
                             color2 = WHPal.SkyBlueF;
                         }},
-                        new DrawRegion("-mid"),
                         new DrawBubbles() {{
                             spread = 1;
-                            recurrence = 20;
+                            sides = 6;
+                            recurrence = 15;
                             radius = amount = 10;
-                        }},
-                        new DrawArcs() {{
-                            flameColor = midColor = SkyBlueF.cpy().a(0);
                         }},
                         new DrawArcs() {{
                             flameColor = midColor = SkyBlueF;
                             arcs = 5;
                             flameRad = 2f;
+                        }},
+                        new DrawCrucibleFlame() {{
+                            flameRad = 3;
+                            circleSpace = circleStroke = 1f;
+                            particles = 20;
+                            particleRad = 12f;
+                            particleSize = 17;
                         }},
                         new DrawDefault(),
                         new DrawHeatInput(),
@@ -4880,7 +4891,7 @@ public final class WHBlocks {
             shootType = WHBullets.LcarusBullet;
             ammoPerShot = 2;
             maxAmmo = 10;
-            enhance(WHItems.resonantCrystal, WHBullets.LcarusBulletEnhanced,
+            enhance(Items.carbide, WHBullets.LcarusBulletEnhanced,
                     new ShootPattern() {{
                         shotDelay = 10;
                         shots = 2;
@@ -4909,10 +4920,10 @@ public final class WHBlocks {
                 shots = 6;
                 shotDelay = 4;
                 barrels = new float[]{
-                        -29 / 4f, 36 / 4f, 0,
-                        -10 / 4f, 42 / 4f, 0,
-                        29 / 4f, 36 / 8f, 0,
-                        10 / 4f, 42 / 4f, 0,
+                        -29 / 4f, 42 / 4f, 0,
+                        -13 / 4f, 42 / 4f, 0,
+                        29 / 4f, 42 / 4f, 0,
+                        13 / 4f, 42 / 4f, 0,
                 };
             }};
             shootY = 0f;
@@ -5943,38 +5954,104 @@ public final class WHBlocks {
                                 under = true;
                                 progress = PartProgress.warmup;
                                 moveY = -56 / 4f;
-                            }},
-                            new RegionPart("-missile-part") {{
-                                x = -43 / 4f;
-                                y = 29 / 4f - 15f;
-                                progress = PartProgress.reload.curve(Interp.pow2In);
-
-                                colorTo = new Color(1f, 1f, 1f, 0f);
-                                color = Color.white;
-                                mixColorTo = Pal.accent;
-                                mixColor = new Color(1f, 1f, 1f, 0f);
-                                outline = false;
-
-                                layerOffset = -0.01f;
-
-                                moves.add(new PartMove(PartProgress.warmup, 0f, 15f, 0f));
-                            }},
-                            new RegionPart("-missile-part") {{
-                                x = 43 / 4f;
-                                y = 29 / 4f - 15f;
-
-                                progress = PartProgress.reload.curve(Interp.pow2In);
-
-                                colorTo = new Color(1f, 1f, 1f, 0f);
-                                color = Color.white;
-                                mixColorTo = Pal.accent;
-                                mixColor = new Color(1f, 1f, 1f, 0f);
-                                outline = false;
-
-                                layerOffset = -0.01f;
-
-                                moves.add(new PartMove(PartProgress.warmup, 0f, 15f, 0f));
                             }});
+                    setAmmoParts(
+                            WHItems.armorAlloy, Seq.with(
+                                    new RegionPart("-missile1") {{
+                                        x = -43 / 4f;
+                                        y = 29 / 4f - 15f;
+                                        progress = PartProgress.reload.curve(Interp.pow2In);
+
+                                        colorTo = new Color(1f, 1f, 1f, 0f);
+                                        color = Color.white;
+                                        mixColorTo = Pal.accent;
+                                        mixColor = new Color(1f, 1f, 1f, 0f);
+                                        outline = false;
+
+                                        layerOffset = -0.01f;
+
+                                        moves.add(new PartMove(PartProgress.warmup, 0f, 15f, 0f));
+                                    }},
+                                    new RegionPart("-missile1") {{
+                                        x = 43 / 4f;
+                                        y = 29 / 4f - 15f;
+
+                                        progress = PartProgress.reload.curve(Interp.pow2In);
+
+                                        colorTo = new Color(1f, 1f, 1f, 0f);
+                                        color = Color.white;
+                                        mixColorTo = Pal.accent;
+                                        mixColor = new Color(1f, 1f, 1f, 0f);
+                                        outline = false;
+
+                                        layerOffset = -0.01f;
+
+                                        moves.add(new PartMove(PartProgress.warmup, 0f, 15f, 0f));
+                                    }}),
+                            WHItems.sealedPromethium, Seq.with(
+                                    new RegionPart("-missile2") {{
+                                        x = -43 / 4f;
+                                        y = 29 / 4f - 15f;
+                                        progress = PartProgress.reload.curve(Interp.pow2In);
+
+                                        colorTo = new Color(1f, 1f, 1f, 0f);
+                                        color = Color.white;
+                                        mixColorTo = Pal.accent;
+                                        mixColor = new Color(1f, 1f, 1f, 0f);
+                                        outline = false;
+
+                                        layerOffset = -0.01f;
+
+                                        moves.add(new PartMove(PartProgress.warmup, 0f, 15f, 0f));
+                                    }},
+                                    new RegionPart("-missile2") {{
+                                        x = 43 / 4f;
+                                        y = 29 / 4f - 15f;
+
+                                        progress = PartProgress.reload.curve(Interp.pow2In);
+
+                                        colorTo = new Color(1f, 1f, 1f, 0f);
+                                        color = Color.white;
+                                        mixColorTo = Pal.accent;
+                                        mixColor = new Color(1f, 1f, 1f, 0f);
+                                        outline = false;
+
+                                        layerOffset = -0.01f;
+
+                                        moves.add(new PartMove(PartProgress.warmup, 0f, 15f, 0f));
+                                    }}),
+                            WHItems.refineCeramite, Seq.with(
+                                    new RegionPart("-missile3") {{
+                                        x = -43 / 4f;
+                                        y = 29 / 4f - 15f;
+                                        progress = PartProgress.reload.curve(Interp.pow2In);
+
+                                        colorTo = new Color(1f, 1f, 1f, 0f);
+                                        color = Color.white;
+                                        mixColorTo = Pal.accent;
+                                        mixColor = new Color(1f, 1f, 1f, 0f);
+                                        outline = false;
+
+                                        layerOffset = -0.01f;
+
+                                        moves.add(new PartMove(PartProgress.warmup, 0f, 15f, 0f));
+                                    }},
+                                    new RegionPart("-missile3") {{
+                                        x = 43 / 4f;
+                                        y = 29 / 4f - 15f;
+
+                                        progress = PartProgress.reload.curve(Interp.pow2In);
+
+                                        colorTo = new Color(1f, 1f, 1f, 0f);
+                                        color = Color.white;
+                                        mixColorTo = Pal.accent;
+                                        mixColor = new Color(1f, 1f, 1f, 0f);
+                                        outline = false;
+
+                                        layerOffset = -0.01f;
+
+                                        moves.add(new PartMove(PartProgress.warmup, 0f, 15f, 0f));
+                                    }}));
                 }};
 
                 ammo(

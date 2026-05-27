@@ -55,7 +55,6 @@ public class TitanUnitType extends UnitType{
         for(var ability : unit.abilities){
             ability.created(unit);
         }
-        unit.ammo = ammoCapacity; //fill up on ammo upon creation
         unit.elevation = flying ? 1f : 0;
         unit.heal();
         if(unit instanceof TimedKillc u){

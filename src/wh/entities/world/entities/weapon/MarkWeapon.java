@@ -1,25 +1,34 @@
 package wh.entities.world.entities.weapon;
 
-import arc.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
-import arc.util.*;
-import mindustry.ai.types.*;
-import mindustry.audio.*;
+import arc.Core;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
+import arc.scene.ui.layout.Table;
+import arc.struct.ObjectMap;
+import arc.struct.Seq;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.ai.types.MissileAI;
+import mindustry.audio.SoundLoop;
 import mindustry.entities.*;
-import mindustry.entities.bullet.*;
-import mindustry.entities.pattern.*;
-import mindustry.entities.units.*;
+import mindustry.entities.bullet.BulletType;
+import mindustry.entities.bullet.ContinuousBulletType;
+import mindustry.entities.pattern.ShootPattern;
+import mindustry.entities.units.WeaponMount;
 import mindustry.gen.*;
-import mindustry.type.*;
-import mindustry.world.meta.*;
-import wh.graphics.*;
-import wh.ui.*;
+import mindustry.type.UnitType;
+import mindustry.type.Weapon;
+import mindustry.world.meta.Stat;
+import mindustry.world.meta.StatCat;
+import wh.graphics.Drawn;
+import wh.ui.UIUtils;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.headless;
+import static mindustry.Vars.tilesize;
 
 public class MarkWeapon extends Weapon{
 
@@ -202,7 +211,7 @@ public class MarkWeapon extends Weapon{
         if(mount.shoot && //must be shooting
         can && //must be able to shoot
         !(bullet.killShooter && mount.totalShots > 0) && //if the bullet kills the shooter, you should only ever be able to shoot once
-        (!useAmmo || unit.ammo > 0 || !state.rules.unitAmmo || unit.team.rules().infiniteAmmo) && //check ammo
+                true && //check ammo
         (!alternate || wasFlipped == flipSprite) &&
         mount.warmup >= minWarmup && //must be warmed up
         unit.vel.len() >= minShootVelocity && //check velocity requirements
@@ -212,11 +221,6 @@ public class MarkWeapon extends Weapon{
             shoot(unit, mount, bulletX, bulletY, shootAngle);
 
             mount.reload = reload;
-
-            if(useAmmo){
-                unit.ammo--;
-                if(unit.ammo < 0) unit.ammo = 0;
-            }
         }
     }
 

@@ -1,14 +1,16 @@
 package wh.entities.world.entities;
 
-import arc.util.*;
-import mindustry.type.*;
-import mindustry.type.ammo.*;
-import mindustry.world.*;
-import mindustry.world.blocks.units.*;
-import mindustry.world.meta.*;
-import wh.content.*;
-import wh.entities.world.blocks.unit.*;
-import wh.graphics.*;
+import arc.util.Nullable;
+import mindustry.type.ItemSeq;
+import mindustry.type.ItemStack;
+import mindustry.type.UnitType;
+import mindustry.world.Block;
+import mindustry.world.blocks.units.UnitAssembler;
+import mindustry.world.blocks.units.UnitFactory;
+import mindustry.world.meta.Env;
+import wh.entities.world.blocks.unit.MultReconstructor;
+import wh.entities.world.blocks.unit.UnitCallBlock;
+import wh.graphics.WHPal;
 
 import static mindustry.Vars.content;
 
@@ -17,7 +19,6 @@ public class WHUnitType extends UnitType{
         super(name);
         outlineColor = WHPal.Outline;
         envDisabled = Env.space;
-        ammoType = new ItemAmmoType(WHItems.manganeseSteel);
         researchCostMultiplier = 10;
     }
 
