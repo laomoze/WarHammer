@@ -1056,7 +1056,7 @@ public class WHBullets{
             }
         };
 
-        SpikeBulletManganese = new BasicBulletType(4.5f, 25){{
+        SpikeBulletManganese = new BasicBulletType(5.5f, 25) {{
             ammoMultiplier = 2f;
             lifetime = 185 / speed;
             width = 7f;
@@ -1071,7 +1071,7 @@ public class WHBullets{
 
         }};
 
-        SpikeBulletChromium = new BasicBulletType(4.5f, 33){{
+        SpikeBulletChromium = new BasicBulletType(5.5f, 33) {{
             ammoMultiplier = 2f;
             lifetime = 185 / speed;
             armorMultiplier = 0.1f;
@@ -1088,7 +1088,7 @@ public class WHBullets{
         }};
 
 
-        SpikeBulletSilicon = new BasicBulletType(5f, 25) {{
+        SpikeBulletSilicon = new BasicBulletType(8f, 25) {{
             reloadMultiplier = 1.5f;
             ammoMultiplier = 6f;
             homingPower = 0.12f;
@@ -1106,7 +1106,7 @@ public class WHBullets{
         }};
 
 
-        SpikeBulletGraphite = new BasicBulletType(4f, 41) {{
+        SpikeBulletGraphite = new BasicBulletType(5f, 41) {{
             rangeChange = 12f;
             ammoMultiplier = 3f;
             armorMultiplier = 0.1f;
@@ -1296,7 +1296,7 @@ public class WHBullets{
         AutoGunManganeseSteel = new CritBulletType(8.5f, 40) {
             {
                 ammoMultiplier = 3;
-                critChance = 0.18f;
+                critChance = 0.3f;
                 critMultiplier = 1.4f;
                 rangeChange = 12f;
                 lifetime = (240 + 12) / 8.5f;

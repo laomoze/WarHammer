@@ -4376,13 +4376,15 @@ public final class WHBlocks {
         primarySteelWall = new Wall("primary-steel-wall") {{
             requirements(Category.defense, with(WHItems.manganese, 6, Items.graphite, 4));
             health = 450;
+            armor = 3;
             researchCostMultiplier = 0.25f;
         }};
 
         largePrimarySteelWall = new Wall("large-primary-steel-wall") {{
             requirements(Category.defense, ItemStack.mult(primarySteelWall.requirements, 4));
-            health = 450 * 4;
+            health = 450 * 4 + 200;
             size = 2;
+            armor = 3;
 
             researchCostMultiplier = 0.3f;
         }};
@@ -4390,16 +4392,16 @@ public final class WHBlocks {
         improvedSteelWall = new Wall("improved-steel-wall") {{
             requirements(Category.defense, with(WHItems.manganeseSteel, 6, Items.plastanium, 4, Items.carbide, 4));
             health = 1200;
-            armor = 3;
+            armor = 6;
 
             researchCostMultiplier = 0.25f;
         }};
 
         largeImprovedSteelWall = new Wall("large-improved-steel-wall") {{
             requirements(Category.defense, ItemStack.mult(improvedSteelWall.requirements, 4));
-            health = 1200 * 4;
+            health = 1200 * 4 + 400;
             size = 2;
-            armor = 3;
+            armor = 6;
 
             researchCostMultiplier = 0.3f;
         }};
@@ -4640,6 +4642,7 @@ public final class WHBlocks {
             size = 2;
             range = 180;
             reload = 20;
+            rotateSpeed = 5;
             maxAmmo = 30;
             inaccuracy = 3;
             xRand = 0.1f;
@@ -4679,6 +4682,7 @@ public final class WHBlocks {
             range = 240;
             outlineColor = WHPal.Outline;
             reload = 70;
+            rotateSpeed = 1;
             ammoPerShot = 2;
             inaccuracy = 3;
             xRand = 0.1f;

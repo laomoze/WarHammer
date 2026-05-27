@@ -4166,7 +4166,7 @@ public final class WHUnitTypes {
                 accel = 0.08f;
                 drag = 0.04f;
                 flying = true;
-                health = 425;
+                health = 410;
                 armor = 5f;
                 engineOffset = 28 / 4f;
                 targetFlags = new BlockFlag[]{BlockFlag.generator, null};
@@ -4176,7 +4176,7 @@ public final class WHUnitTypes {
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
 
-                abilities.add(new BoostAbility(1.6f, 90) {{
+                abilities.add(new BoostAbility(1.4f, 90) {{
                     trailLength = 10;
                 }});
                 immunities.add(StatusEffects.burning);
@@ -4187,10 +4187,10 @@ public final class WHUnitTypes {
                     top = false;
                     shootSound = shootFlame;
                     shootY = 2f;
-                    reload = 5f;
+                    reload = 6f;
                     recoil = 1f;
                     ejectEffect = Fx.none;
-                    bullet = new BulletType(4, 30f) {{
+                    bullet = new BulletType(4, 27f) {{
                         ammoMultiplier = 3f;
                         hitSize = 7f;
                         lifetime = 18;
