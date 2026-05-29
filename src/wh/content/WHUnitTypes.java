@@ -121,8 +121,7 @@ public final class WHUnitTypes {
             M4A, M4B, M4C, M4D,
             M3, M2, M1,
     //特种
-    MEn1,
-            airD1, airD2;
+    MEn1, airD1, airD2;
     //核心机
     public static UnitType t6AssemblyDrone, mechaAssemblerDrone, reborn, recovery, restore;
     //原版
@@ -8536,7 +8535,7 @@ public final class WHUnitTypes {
                                 Color c = WHPal.ShootOrange.cpy().lerp(Color.orange, 0.25f);
                                 colors = new Color[]{c.a(0.55f), c.a(0.7f), c.a(0.8f), c, Color.white};
 
-                                lifetime = 500 / speed;
+                                lifetime = 450 / speed;
                                 trailLength = 10;
                                 trailWidth = 1.5f;
                                 statusDuration = 5;
@@ -8564,6 +8563,36 @@ public final class WHUnitTypes {
                                 lightning = 2;
                                 lightningLength = 12;
                             }
+
+                            @Override
+                            public void updateHoming(Bullet b) {
+                                if (homingPower > 0.0001f && b.time >= homingDelay && b.owner instanceof Unit owner) {
+                                    Teamc sharedTarget = null;
+                                    if (owner.mounts != null) {
+                                        for (WeaponMount mount : owner.mounts) {
+                                            if (mount == null || mount.weapon == null) continue;
+                                            if (!mount.weapon.name.endsWith("tankD1-weapon1")) continue;
+                                            sharedTarget = mount.target;
+                                            break;
+                                        }
+                                    }
+
+                                    if (sharedTarget != null
+                                            && sharedTarget.team() != b.team
+                                            && sharedTarget.isAdded()
+                                            && !b.hasCollided(sharedTarget.id())
+                                            && sharedTarget.within(b.x, b.y, homingRange)) {
+                                        b.vel.setAngle(Angles.moveToward(
+                                                b.rotation(),
+                                                b.angleTo(sharedTarget),
+                                                homingPower * 3 * Time.delta * 50f
+                                        ));
+                                        return;
+                                    }
+                                }
+
+                                super.updateHoming(b);
+                            }
                         };
                     }
                 });
@@ -8579,9 +8608,9 @@ public final class WHUnitTypes {
                         controllable = false;
                         shootY = 4;
                         alternate = false;
-                        shootCone = 10;
+                        shootCone = 15;
                         shootSound = loopPulse;
-                        bullet = new MoveSuppressionBullet(15, 350, 0.1f) {{
+                        bullet = new MoveSuppressionBullet(15, 400, 0.1f) {{
                             lifetime = 240f;
                             statusEffect = WHStatusEffects.powerReduce1;
                             maxRange = findRange;

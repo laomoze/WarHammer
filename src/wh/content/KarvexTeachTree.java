@@ -308,10 +308,10 @@ public final class KarvexTeachTree {
 
             });
             node(WHBlocks.basicUnloader, () -> {
-                node(WHBlocks.steelUnloader, () -> {
-                    node(WHBlocks.armoredContainer, () -> {
-                        node(WHBlocks.armoredVault, () -> {
-                        });
+                node(WHBlocks.armoredContainer, () -> {
+                    node(WHBlocks.armoredVault, () -> {
+                    });
+                    node(WHBlocks.steelUnloader, () -> {
                     });
                     node(WHBlocks.landingPad, () -> {
                     });
@@ -405,7 +405,6 @@ public final class KarvexTeachTree {
 
     private static void buildProductionBranch() {
         node(WHBlocks.electronicPneumaticDrill, () -> {
-            // mining line
             node(WHBlocks.MechanicalQuarry, () -> {
                 node(WHBlocks.lavaDrill, () -> {
                     node(WHBlocks.heavyCuttingDrill, () -> {
@@ -417,10 +416,12 @@ public final class KarvexTeachTree {
                 });
             });
 
-            node(WHBlocks.heavyExtractor, () -> {
-                node(WHBlocks.promethiumExtractor, () -> {
-                    node(WHBlocks.slagExtractor, () -> {
+            node(WHBlocks.sandExcavator, () -> {
+                node(WHBlocks.slagExtractor, () -> {
+                    node(WHBlocks.heavyExtractor, () -> {
                     });
+                });
+                node(WHBlocks.promethiumExtractor, () -> {
                 });
             });
 
@@ -536,6 +537,8 @@ public final class KarvexTeachTree {
         });
 
         node(WHBlocks.ventDistiller, () -> {
+            node(WHBlocks.armorIlluminator, () -> {
+            });
             node(WHBlocks.oxidationGenerator, () -> {
                 node(WHBlocks.turboGenerator, () -> node(WHBlocks.crackingGenerator, () -> {
                 }));

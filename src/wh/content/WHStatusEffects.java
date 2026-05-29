@@ -34,7 +34,7 @@ public final class WHStatusEffects{
             rust, radiation, acidRain,
             assault, bless, energyAmplification, weaponCharge, protection,
     tear, armorFracture, rock,
-    scare,
+            scare, mark,
     distort, forcesOfChaos, melta, palsy, plasma, plasmaFireBurn;
     private WHStatusEffects(){
     }
@@ -267,6 +267,13 @@ public final class WHStatusEffects{
             effect = Fx.sapped;
             effectChance = 0.1f;
             init(() -> opposite(bless));
+        }};
+
+        mark = new StatusEffect("mark") {{
+            color = Pal.remove;
+            effectChance = 0f;
+            show = true;
+            permanent = false;
         }};
 
         plasmaFireBurn = new StatusEffect("plasma-fire"){{

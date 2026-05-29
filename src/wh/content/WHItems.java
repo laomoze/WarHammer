@@ -43,6 +43,7 @@ public final class WHItems{
             hidden = false;
             hardness = 1;
             alwaysUnlocked = true;
+            lowPriority = true;
         }};
 
         manganese = new Item("manganese", Color.valueOf("947C9EFF")){{

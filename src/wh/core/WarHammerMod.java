@@ -27,6 +27,7 @@ import mindustry.net.Net;
 import mindustry.ui.Styles;
 import mindustry.ui.WarningBar;
 import mindustry.ui.dialogs.BaseDialog;
+import mindustry.world.blocks.defense.turrets.Turret;
 import wh.content.*;
 import wh.entities.WorldRegister;
 import wh.entities.event.logic.WHLogicStatements;
@@ -48,6 +49,7 @@ public class WarHammerMod extends Mod {
     private static final String settingsButtonName = "wh-moddetail-settings-button";
     private static final String forcedSettingPacketName = "wh-forced-setting-check";
     private static final long modDetailPollIntervalMs = 160L;
+
     private static long nextModDetailPollMs = 0L;
     private static BaseDialog lastSeenDialog = null;
 
@@ -288,5 +290,24 @@ public class WarHammerMod extends Mod {
         WHPlanets.load();
         KarvexTeachTree.load();
         WHOverride.load();
+        applyTauntTargetPriority();
+    }
+
+    private static final float markSortBias = 11451.4f;
+
+    private static void applyTauntTargetPriority() {
+        Vars.content.blocks().each(block -> {
+            if (block instanceof Turret turret) {
+                var baseSort = turret.unitSort;
+                if (baseSort == null) return;
+                turret.unitSort = (unit, x, y) -> {
+                    float cost = baseSort.cost(unit, x, y);
+                    if (unit != null && unit.hasEffect(WHStatusEffects.mark)) {
+                        cost -= markSortBias;
+                    }
+                    return cost;
+                };
+            }
+        });
     }
 }

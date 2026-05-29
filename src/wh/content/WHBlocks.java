@@ -78,6 +78,7 @@ import wh.entities.world.blocks.defense.turrets.*;
 import wh.entities.world.blocks.distribution.*;
 import wh.entities.world.blocks.effect.*;
 import wh.entities.world.blocks.others.Randomer;
+import wh.entities.world.blocks.others.SearchlightBlock;
 import wh.entities.world.blocks.production.*;
 import wh.entities.world.blocks.storage.FrontlineCoreBlock;
 import wh.entities.world.blocks.storage.UnloaderF;
@@ -113,32 +114,38 @@ public final class WHBlocks {
     public static Block
             converter, itemPulverizer,
             manganeseSteelFurnace,
-            arcKiln, multiPress, siliconMixFurnace, sandSeparator, scrapFurance, heatIncinerator,
+            arcKiln, multiPress, siliconMixFurnace, sandSeparator, scrapFurance, heatIncinerator;
 
-    plastaniumCompressor, atmosphericSeparator,
+    public static Block
+            plastaniumCompressor, atmosphericSeparator,
             electrolyzer, coalCentrifuge, sporePress, cultivator,
-            carbideCrucible, waterPurifier,
+            carbideCrucible, waterPurifier;
 
-    T2sandSeparator, cobaltNitrideChamber, petroleumConverter,
+    public static Block
+            T2sandSeparator, cobaltNitrideChamber, petroleumConverter,
             armorCompressor, ceramiteSteelFoundry, cryofluidMixer, combustibleCrafter,
-            entanglementSynthesizer, T2ManganeseSteelFurnace, promethiumRefinery,
+            entanglementSynthesizer, T2ManganeseSteelFurnace, promethiumRefinery;
 
-    heatSiliconSmelter, T2WaterPurifier, combustibleSeparator,
-            crystalEngraver, pressureReactionChamber,
+    public static Block
+            heatSiliconSmelter, T2WaterPurifier, combustibleSeparator,
+            crystalEngraver, pressureReactionChamber;
 
-    LiquidNitrogenPlant,
-            moSurgeSmelter, largeArmorSmelter, sealedPromethiumMill,
+    public static Block
+            LiquidNitrogenPlant,
+            moSurgeSmelter, largeArmorSmelter, sealedPromethiumMill;
 
-    T2ceramiteSteelFoundry, laserEngraver,
-
-    ceramiteRefinery, slagfurnace, ADMill,
+    public static Block
+            T2ceramiteSteelFoundry, laserEngraver,
+            ceramiteRefinery, slagfurnace, ADMill;
     //heat
-    combustionHeater, slagHeatMaker, decayHeater, promethiumHeater,
+    public static Block
+            combustionHeater, slagHeatMaker, decayHeater, promethiumHeater,
             smallHeatRouter, heatBelt, heatBridge, T2heatBridge,
             tungstenConverter, molybdenumConverter, vibraniumConverter;
     //drill
     public static Block
-            electronicPneumaticDrill, MechanicalQuarry, lavaDrill,
+            electronicPneumaticDrill, MechanicalQuarry,
+            sandExcavator, lavaDrill,
             heavyCuttingDrill, SpecialCuttingDrill, highEnergyDrill,
             heavyExtractor, strengthenOilExtractor,
             promethiumExtractor, slagExtractor, integratedCompressor;
@@ -178,6 +185,7 @@ public final class WHBlocks {
 
     //effect
     public static Block
+            armorIlluminator, searchlight,
             armoredVault, armoredContainer,
             wrapProjector, wrapOverdrive, shelterDome,
             repairTower, voidShield, ionShield,
@@ -778,7 +786,7 @@ public final class WHBlocks {
                 consumePower(2);
                 consumeItems(with(WHItems.oreSand, 6));
                 outputItem = new ItemStack(Items.sand, 4);
-                outputLiquid = new LiquidStack(Liquids.slag, 10 / 60f);
+                outputLiquid = new LiquidStack(Liquids.slag, 15 / 60f);
                 drawer = new DrawMulti(new DrawDefault(),
                         new DrawRegion("-rotator", -4) {{
                             spinSprite = true;
@@ -1086,7 +1094,7 @@ public final class WHBlocks {
                 heatOutput = 4;
                 consumeItems(with(WHItems.oreSand, 15));
                 outputItem = new ItemStack(Items.sand, 12);
-                outputLiquid = new LiquidStack(Liquids.slag, 40 / 60f);
+                outputLiquid = new LiquidStack(Liquids.slag, 45 / 60f);
                 drawer = new DrawMulti(new DrawRegion("-bottom"),
                         new DrawLiquidTile(Liquids.slag),
                         new DrawRegion("-rotator", -4) {{
@@ -1977,8 +1985,8 @@ public final class WHBlocks {
             regionRotated1 = 1;
             ambientSound = loopHum;
             drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawLiquidTile(Liquids.slag), new DrawDefault(), new DrawHeatOutput());
-            consumeLiquid(Liquids.slag, 1);
-            heatOutput = 6;
+            consumeLiquid(Liquids.slag, 45 / 60f);
+            heatOutput = 5;
         }};
 
         decayHeater = new HeatProducerReactor("decay-heater") {
@@ -2242,13 +2250,47 @@ public final class WHBlocks {
             deployInterp = new Interp.PowOut(4);
             deployInterpInverse = new Interp.PowIn(4);
             drillMoveSpeed = 0.07f;
-            consumePower(1);
+            consumePower(160 / 60f);
             consumeLiquid(WHLiquids.swageWater, 10 / 60f).boost();
 
         }};
 
+        sandExcavator = new Drill("sand-excavator") {
+            {
+                requirements(Category.production, with(WHItems.chromium, 50, Items.plastanium, 25, WHItems.cobaltNitride, 20));
+                drillTime = 45;
+                hardnessDrillMultiplier = 60;
+                size = 3;
+                hasPower = true;
+                squareSprite = false;
+
+                tier = 2;
+                updateEffect = Fx.pulverizeRed;
+                updateEffectChance = 0.03f;
+                drillEffect = Fx.mineHuge;
+                rotateSpeed = 3f;
+                warmupSpeed = 0.007f;
+                liquidCapacity = 60;
+                itemCapacity = 100;
+
+                liquidBoostIntensity = 1;
+
+                drillMultipliers.put(Items.coal, 0.9f);
+                drillMultipliers.put(Items.graphite, 0.75f);
+                drillMultipliers.put(WHItems.manganese, 0.5f);
+
+                consumePower(3f);
+                consumeLiquid(WHLiquids.swageWater, 30 / 60f);
+            }
+
+            @Override
+            public float getDrillTime(Item item) {
+                return (drillTime + hardnessDrillMultiplier * Math.max(item.hardness - 1, 0)) / drillMultipliers.get(item, 1f);
+            }
+        };
+
         lavaDrill = new Drill("lava-drill") {{
-            requirements(Category.production, with(WHItems.manganeseSteel, 50, Items.carbide, 25, WHItems.cobaltNitride, 25));
+            requirements(Category.production, with(WHItems.manganeseSteel, 50, Items.carbide, 50, WHItems.cobaltNitride, 25));
             drillTime = 320;
             size = 4;
             drawRim = true;
@@ -2266,10 +2308,11 @@ public final class WHBlocks {
 
             liquidBoostIntensity = 2;
 
+            drillMultipliers.put(WHItems.oreSand, 2);
             drillMultipliers.put(Items.coal, 2);
             drillMultipliers.put(WHItems.cobalt, 1.2f);
             drillMultipliers.put(WHItems.chromium, 1.3f);
-            drillMultipliers.put(WHItems.manganese, 1.4f);
+            drillMultipliers.put(WHItems.manganese, 1.5f);
 
             consumePower(3f);
             consumeLiquid(Liquids.slag, 10 / 60f).boost();
@@ -2474,7 +2517,7 @@ public final class WHBlocks {
 
         slagExtractor = new AttributeCrafter("slag-extractor") {
             {
-                requirements(Category.production, with(WHItems.chromium, 70, WHItems.armorAlloy, 60, Items.silicon, 100, WHItems.manganeseSteel, 50));
+                requirements(Category.production, with(WHItems.chromium, 70, WHItems.cobaltNitride, 60, Items.silicon, 100, WHItems.manganeseSteel, 50));
                 size = 3;
                 hasItems = hasPower = hasLiquids = true;
                 liquidCapacity = 180;
@@ -2487,8 +2530,8 @@ public final class WHBlocks {
                                 new DrawRegion("-light"),
                                 new DrawRegion("-top"));
 
-                craftTime = 60f;
-                outputLiquid = new LiquidStack(Liquids.slag, 1f);
+                craftTime = 120f;
+                outputLiquid = new LiquidStack(Liquids.slag, 90 / 60f);
 
                 consumePower(10);
                 consumeItems(with(Items.tungsten, 2));
@@ -3067,6 +3110,7 @@ public final class WHBlocks {
             powerProduction = 200 / 60f;
 
             size = 2;
+            scaledHealth = 80;
             drawer = new DrawMulti(
                     new DrawDefault(),
                     new DrawGlowRegion() {{
@@ -3092,6 +3136,7 @@ public final class WHBlocks {
             powerProduction = 450.0001f / 60f;
 
             size = 2;
+            scaledHealth = 140;
             drawer = new DrawMulti(
                     new DrawRegion("-bottom"),
                     new DrawLiquidTile(Liquids.ozone, 5 / 4f),
@@ -3653,6 +3698,23 @@ public final class WHBlocks {
             }
         };
 
+        armorIlluminator = new LightBlock("armor-illuminator") {{
+            requirements(Category.effect, with(Items.graphite, 20, Items.silicon, 30, WHItems.chromium, 20));
+            brightness = 0.75f;
+            radius = 200;
+            health = 300;
+            consumePower(15 / 60f);
+        }};
+
+        searchlight = new SearchlightBlock("searchlight") {{
+            requirements(Category.effect, with(Items.graphite, 60, Items.silicon, 60, WHItems.chromium, 60));
+            beamLength = 600;
+            range = 400;
+            health = 800;
+            size = 2;
+            consumePower(100 / 60f);
+        }};
+
         armoredVault = new StorageBlock("armored-vault") {
             {
                 requirements(Category.effect, with(WHItems.cobalt, 500, Items.silicon, 1000, WHItems.armorAlloy, 500, WHItems.ceramite, 500));
@@ -3690,13 +3752,13 @@ public final class WHBlocks {
 
         wrapProjector = new RegenProjector("wrap-projector") {
             {
-                requirements(Category.effect, with(Items.plastanium, 100, Items.silicon, 200, WHItems.manganeseSteel, 100, Items.carbide, 100, WHItems.sealedPromethium, 50));
+                requirements(Category.effect, with(Items.plastanium, 100, Items.silicon, 200, WHItems.manganeseSteel, 100, Items.carbide, 100));
 
                 health = 1500;
                 size = 3;
                 armor = 6;
                 canOverdrive = false;
-                healPercent = 2 / 60f;
+                healPercent = 3f / 60f;
                 squareSprite = true;
                 baseColor = Pal.sapBullet;
                 drawer = new DrawMulti(
@@ -4897,7 +4959,7 @@ public final class WHBlocks {
             shootType = WHBullets.LcarusBullet;
             ammoPerShot = 2;
             maxAmmo = 10;
-            enhance(Items.carbide, WHBullets.LcarusBulletEnhanced,
+            enhance(WHItems.cobalt, WHBullets.LcarusBulletEnhanced,
                     new ShootPattern() {{
                         shotDelay = 10;
                         shots = 2;
