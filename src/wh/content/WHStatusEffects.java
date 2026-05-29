@@ -272,8 +272,6 @@ public final class WHStatusEffects{
         mark = new StatusEffect("mark") {{
             color = Pal.remove;
             effectChance = 0f;
-            show = true;
-            permanent = false;
         }};
 
         plasmaFireBurn = new StatusEffect("plasma-fire"){{

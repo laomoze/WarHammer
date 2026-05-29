@@ -538,6 +538,8 @@ public final class KarvexTeachTree {
 
         node(WHBlocks.ventDistiller, () -> {
             node(WHBlocks.armorIlluminator, () -> {
+                node(WHBlocks.searchlight, () -> {
+                });
             });
             node(WHBlocks.oxidationGenerator, () -> {
                 node(WHBlocks.turboGenerator, () -> node(WHBlocks.crackingGenerator, () -> {
