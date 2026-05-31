@@ -1295,7 +1295,7 @@ public class WHBullets{
 
         AutoGunManganeseSteel = new CritBulletType(8.5f, 40) {
             {
-                ammoMultiplier = 3;
+                ammoMultiplier = 4;
                 critChance = 0.3f;
                 critMultiplier = 1.4f;
                 rangeChange = 12f;
@@ -1311,7 +1311,7 @@ public class WHBullets{
                 homingPower = 0.01f;
                 homingRange = 20;
                 trailChance = 0.1f;
-                splashDamageRadius = 32;
+                splashDamageRadius = 40;
                 splashDamage = 50;
                 critEffect = WHFx.square(20, Items.silicon.color, 1, 10, 3f);
                 shootEffect = Fx.shootBig;
@@ -1407,9 +1407,9 @@ public class WHBullets{
 
         LcarusBullet = new DelayedPointBulletType(){{
             colors = new Color[]{WHPal.SkyBlue.cpy().mul(1f, 1f, 1f, 0.4f), WHPal.SkyBlue.cpy(), Pal.lancerLaser};
-            damage = 50;
+            damage = 100;
             splashDamageRadius = 36;
-            splashDamage = 80;
+            splashDamage = 100;
             width = 20;
             laser = Fx.none;
             delayEffectLifeTime = 28f;
@@ -1433,11 +1433,11 @@ public class WHBullets{
         LcarusBulletEnhanced = new DelayedPointBulletType(){{
             reloadMultiplier = 0.75f;
             colors = new Color[]{WHPal.ShootOrangeLight.cpy().a(0.3f), WHPal.ShootOrangeLight.cpy().a(0.7f), WHPal.ShootOrangeLight.cpy()};
-            damage = 80;
+            damage = 100;
             rangeChange = 16f;
             shieldDamageMultiplier = 2;
             splashDamageRadius = 45;
-            splashDamage = 100;
+            splashDamage = 120;
             laser = Fx.none;
             width = 20;
             delayEffectLifeTime = 28f;

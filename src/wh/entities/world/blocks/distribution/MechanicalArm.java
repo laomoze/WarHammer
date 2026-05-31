@@ -473,23 +473,33 @@ public class MechanicalArm extends Block {
 
         @Override
         public double sense(LAccess sensor) {
-            return switch (sensor) {
-                case progress -> logicProgress();
-                case totalItems -> carryingAmount;
-                case payloadCount -> carryingPayload != null ? 1d : 0d;
-                default -> super.sense(sensor);
-            };
+            if (sensor == LAccess.progress) {
+                return logicProgress();
+            }
+            if (sensor == LAccess.totalItems) {
+                return carryingAmount;
+            }
+            if (sensor == LAccess.payloadCount) {
+                return carryingPayload != null ? 1d : 0d;
+            }
+            return super.sense(sensor);
         }
 
         @Override
         public Object senseObject(LAccess sensor) {
-            return switch (sensor) {
-                case firstItem -> carrying;
-                case config -> config();
-                case payloadType ->
-                        carryingPayload instanceof UnitPayload up && up.unit != null ? up.unit.type : super.senseObject(sensor);
-                default -> super.senseObject(sensor);
-            };
+            if (sensor == LAccess.firstItem) {
+                return carrying;
+            }
+            if (sensor == LAccess.config) {
+                return config();
+            }
+            if (sensor == LAccess.payloadType) {
+                if (carryingPayload instanceof UnitPayload up && up.unit != null) {
+                    return up.unit.type;
+                }
+                return super.senseObject(sensor);
+            }
+            return super.senseObject(sensor);
         }
 
         @Override

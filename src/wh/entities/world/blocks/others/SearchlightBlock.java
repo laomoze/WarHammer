@@ -33,6 +33,7 @@ import mindustry.world.Block;
 import mindustry.world.Tile;
 import mindustry.world.meta.Env;
 import wh.content.WHStatusEffects;
+import wh.graphics.Drawn;
 
 import static mindustry.Vars.*;
 
@@ -57,7 +58,6 @@ public class SearchlightBlock extends Block {
     public float beamAngle = 10f;
     public int beamRays = 12;
     public int beamSegments = 10;
-    public float beamFalloff = 1.7f;
     public float markDuration = 20f;
     public float markAngleTolerance = 2f;
 
@@ -65,7 +65,7 @@ public class SearchlightBlock extends Block {
     public float warmupOutLerp = 0.02f;
 
     public float rotationOffset = -90;
-    public Color beamColor = Color.valueOf("c3b4757f");
+    public Color beamColor = Color.valueOf("ffe6a87f");
     public float lightOpacity = 0.85f;
     public boolean targetAir = true;
     public boolean targetGround = true;
@@ -140,7 +140,6 @@ public class SearchlightBlock extends Block {
 
         Draw.rect(reg, plan.drawx(), plan.drawy());
         Draw.rect(topRegion, plan.drawx(), plan.drawy(), rotate ? plan.rotation * 90f - 90f : 0f);
-        Draw.rect(topOutlineRegion, plan.drawx(), plan.drawy(), rotate ? plan.rotation * 90f - 90f : 0f);
 
         if (plan.worldContext && player != null && teamRegion != null && teamRegion.found()) {
             if (teamRegions[player.team().id] == teamRegion) Draw.color(player.team().color, a);
@@ -276,30 +275,54 @@ public class SearchlightBlock extends Block {
             Color drawColor = Tmp.c1.set(color);
             float sx = x + Angles.trnsx(turretRotation, beamStart);
             float sy = y + Angles.trnsy(turretRotation, beamStart);
-            float angleFrac = beamAngle / 360f;
             float length = beamLength * smoothTime;
 
             Draw.z(Layer.blockAdditive - 0.01f);
-            Draw.color(drawColor.r, drawColor.g, drawColor.b, 1f);
+            Draw.color(drawColor.cpy());
             Draw.blend(Blending.additive);
 
-            // Radial gradient fill: near brighter, far dimmer.
-            int segs = Math.max(2, beamSegments);
-            for (int i = 1; i <= segs; i++) {
-                float frac = i / (float) segs;
-                float fall = Mathf.pow(1f - frac, beamFalloff);
-                Draw.alpha(strength * (0.11f / segs + 0.08f * fall / segs));
-                Fill.arc(sx, sy, length * frac, angleFrac, turretRotation - beamAngle / 2f);
-            }
 
-            Fill.circle(sx, sy, length * 0.08f);
+            float dirx = Angles.trnsx(turretRotation, 1f);
+            float diry = Angles.trnsy(turretRotation, 1f);
+            float nx = Angles.trnsx(turretRotation + 90f, 1f);
+            float ny = Angles.trnsy(turretRotation + 90f, 1f);
+
+            float farHalfByAngle = length * (float) Math.tan(Math.toRadians(beamAngle / 2f));
+            float farHalf = Math.min(beamFarWidth * 0.25f * smoothTime, farHalfByAngle);
+            float nearHalf = Math.max(1.25f, farHalf * 0.12f);
+
+            float fx = sx + dirx * length;
+            float fy = sy + diry * length;
+
+            float n1x = sx - nx * nearHalf, n1y = sy - ny * nearHalf;
+            float n2x = sx + nx * nearHalf, n2y = sy + ny * nearHalf;
+            float f1x = fx + nx * farHalf, f1y = fy + ny * farHalf;
+            float f2x = fx - nx * farHalf, f2y = fy - ny * farHalf;
+
+            float nearBits = Tmp.c2.set(drawColor).a(strength * 0.18f).toFloatBits();
+            float farBits = Tmp.c3.set(drawColor).a(strength * 0.02f).toFloatBits();
+            Fill.quad(
+                    n1x, n1y, nearBits,
+                    n2x, n2y, nearBits,
+                    f1x, f1y, farBits,
+                    f2x, f2y, farBits
+            );
+            Draw.blend();
+            Draw.reset();
 
             if (lightRegion.found()) {
+                Draw.color(drawColor.cpy());
                 Draw.alpha(strength * 0.95f);
+                Draw.z(Layer.turretHeat - 0.001f);
                 Draw.rect(lightRegion, x, y, drawRot);
             }
-            Draw.blend();
-            Draw.color();
+
+            Draw.color(drawColor.cpy().a(0.3f));
+            Draw.z(Layer.turretHeat);
+            Fill.circle(sx, sy, length * 0.007f);
+            Drawn.wireCube(sx, sy, length * 0.01f, Time.time + 10f * strength, 1.4f * strength, drawColor.cpy());
+
+            Draw.reset();
         }
 
 
@@ -337,7 +360,7 @@ public class SearchlightBlock extends Block {
 
             float cex = sx + Angles.trnsx(turretRotation, length);
             float cey = sy + Angles.trnsy(turretRotation, length);
-            Drawf.light(sx, sy, 50 * smoothTime, drawColor, lightOpacity * 0.2f * strength);
+            Drawf.light(sx, sy, 50 * smoothTime, drawColor, lightOpacity * 0.5f * strength);
             Drawf.light(sx, sy, cex, cey, beamFarWidth * 0.12f * smoothTime, drawColor, lightOpacity * 0.2f * strength);
         }
 

@@ -272,8 +272,9 @@ public class WarHammerMod extends Mod {
         }
 
         WHItems.load();
-        WHLiquids.load();
         WHStatusEffects.load();
+        WHLiquids.load();
+
         WHWeathers.load();
         WHTeams.load();
         WHBulletsOther.load();

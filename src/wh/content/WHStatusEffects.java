@@ -314,7 +314,7 @@ public final class WHStatusEffects{
         rust = new StatusEffect("rust"){
             {
                 color = WHLiquids.swageWater.color.cpy();
-                damage = 90 / 60f;
+                damage = 60 / 60f;
                 speedMultiplier = 0.9f;
                 dragMultiplier = 0.95f;
                 effectChance = 0.09f;
@@ -332,6 +332,7 @@ public final class WHStatusEffects{
                 });
             }
         };
+
         radiation = new StatusEffect("radiation"){
             {
                 color = WHLiquids.swageWater.color.cpy().lerp(Items.plastanium.color, 0.35f);

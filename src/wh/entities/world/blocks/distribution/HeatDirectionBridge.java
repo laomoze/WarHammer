@@ -12,10 +12,7 @@ import arc.math.geom.Point2;
 import arc.struct.IntSeq;
 import arc.struct.IntSet;
 import arc.struct.Seq;
-import arc.util.Eachable;
-import arc.util.Nullable;
-import arc.util.Time;
-import arc.util.Tmp;
+import arc.util.*;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.Vars;
@@ -208,7 +205,11 @@ public class HeatDirectionBridge extends Block {
     @Override
     public void setBars() {
         super.setBars();
-        addBar("heat", (HeatDirectionBridgeBuild entity) -> new Bar(() -> Core.bundle.format("bar.heatamount", (int) (entity.heat + 0.001f)), () -> Pal.lightOrange, () -> entity.heat / visualMaxHeat));
+        addBar("heat", (HeatDirectionBridgeBuild entity) -> new Bar(
+                () -> Core.bundle.format("bar.heatamount", Strings.autoFixed(entity.heat, 1)),
+                () -> Pal.lightOrange,
+                () -> entity.heat / visualMaxHeat
+        ));
     }
 
     @Override
@@ -404,7 +405,7 @@ public class HeatDirectionBridge extends Block {
 
         @Override
         public float heat() {
-            return (owners.size > 0 && !linkValid(tile, world.tile(link))) ? heat : 0f;
+            return heat;
         }
 
         @Override

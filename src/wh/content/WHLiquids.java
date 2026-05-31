@@ -1,9 +1,9 @@
 package wh.content;
 
-import arc.graphics.*;
-import mindustry.content.*;
-import mindustry.type.*;
-import wh.graphics.*;
+import arc.graphics.Color;
+import mindustry.content.Liquids;
+import mindustry.type.Liquid;
+import wh.graphics.WHPal;
 
 public final class WHLiquids{
     public static Liquid orePromethium, refinePromethium, liquidNitrogen, swageWater;
@@ -52,7 +52,7 @@ public final class WHLiquids{
                 lightColor = Color.valueOf("92E1ADFF");
                 coolant = false;
                 heatCapacity = 0.4f;
-                effect = StatusEffects.wet;
+                effect = WHStatusEffects.rust;
                 boilPoint = 0.5f;
                 gasColor = Color.grays(0.9f).cpy();
                 barColor = Liquids.cyanogen.color.cpy().lerp(Color.white, 0.5f);
