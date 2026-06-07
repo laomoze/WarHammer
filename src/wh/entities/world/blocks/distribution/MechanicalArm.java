@@ -199,6 +199,18 @@ public class MechanicalArm extends Block {
             applyLinkConfig(encodeTarget(linkedPos));
         }
 
+        public void setLogicSource(Building other) {
+            if (!sourceValid(other)) return;
+            source = other.pos();
+            if (target == source) target = -1;
+        }
+
+        public void setLogicTarget(Building other) {
+            if (!targetValid(other)) return;
+            target = other.pos();
+            if (source == target) source = -1;
+        }
+
         @Override
         public void updateTile() {
             if (!tipInitialized) {

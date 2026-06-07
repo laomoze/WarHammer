@@ -333,6 +333,10 @@ public final class WHStatusEffects{
             }
         };
 
+        if (WHLiquids.swageWater != null) {
+            WHLiquids.swageWater.effect = rust;
+        }
+
         radiation = new StatusEffect("radiation"){
             {
                 color = WHLiquids.swageWater.color.cpy().lerp(Items.plastanium.color, 0.35f);

@@ -13,12 +13,11 @@ import arc.math.geom.Geometry;
 import arc.math.geom.Point2;
 import arc.math.geom.Rect;
 import arc.math.geom.Vec2;
+import arc.scene.ui.layout.Table;
 import arc.struct.EnumSet;
 import arc.struct.ObjectFloatMap;
 import arc.struct.Seq;
-import arc.util.Eachable;
-import arc.util.Time;
-import arc.util.Tmp;
+import arc.util.*;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.Vars;
@@ -35,6 +34,7 @@ import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 import mindustry.type.Item;
+import mindustry.ui.Bar;
 import mindustry.world.Block;
 import mindustry.world.Tile;
 import mindustry.world.meta.*;
@@ -71,6 +71,8 @@ public class Quarry extends Block {
     public float elevation = 8f;
 
     public int tier;
+    public float hardnessDrillMultiplier = 50f;
+    public float rescanInterval = 30;
 
     protected float fulls = areaSize * tilesize / 2f;
 
@@ -202,7 +204,7 @@ public class Quarry extends Block {
 
     public void drawText(Item item, int count, int x, int y, boolean valid, int layer) {
         if (item != null) {
-            float width = drawPlaceText(Core.bundle.formatFloat("bar.drillspeed", 60f / mineTime * count, 2), x, y + layer, valid);
+            float width = drawPlaceText(Core.bundle.formatFloat("bar.drillspeed", count / (getDrillTime(item) / 60f), 2), x, y + layer, valid);
             float dx = x * tilesize + offset - width / 2f - 4f, dy = y * tilesize + offset + size * tilesize / 2f + 5 + layer * 8, s = iconSmall / 4f;
             Draw.mixcol(Color.darkGray, 1f);
             Draw.rect(item.fullIcon, dx, dy - 1, s, s);
@@ -265,6 +267,16 @@ public class Quarry extends Block {
         return Tmp.v4.set(mineX, mineY);
     }
 
+    public float getDrillTime(Item item) {
+        return (mineTime + hardnessDrillMultiplier * item.hardness) / drillMultipliers.get(item, 1f);
+    }
+
+    public float getItemCycleMultiplier(Item item) {
+        float drillTime = getDrillTime(item);
+        if (drillTime <= 0.0001f) return 0f;
+        return mineTime / drillTime;
+    }
+
     @Override
     public void setStats() {
         super.setStats();
@@ -272,6 +284,11 @@ public class Quarry extends Block {
         if (liquidBoostIntensity != 1) {
             stats.add(Stat.boostEffect, liquidBoostIntensity, StatUnit.timesSpeed);
         }
+    }
+
+    @Override
+    public void setBars() {
+        super.setBars();
     }
 
 
@@ -290,6 +307,7 @@ public class Quarry extends Block {
         Seq<Item> itemsArray = new Seq<>();
 
         Seq<Item> itemList = new Seq<>();
+        public final Interval rescan = new Interval(1);
 
         public float mx = 0, my = 0, drillX = 0, drillY = 0, targetX = 0, targetY = 0;
 
@@ -311,13 +329,8 @@ public class Quarry extends Block {
 
             Vec2 MiningPos = new Vec2(World.conv(mx - fulls), World.conv(my - fulls));
 
-            if (lastChange != Vars.world.tileChanges) {
-                tiles = WorldDef.getAreaTile(MiningPos, areaSize, areaSize);
-
-                itemsArray = getDropList(tiles);
-
-                itemList = WorldDef.listItem(itemsArray);
-                empty = itemList.isEmpty();
+            if (tiles.isEmpty() || lastChange != Vars.world.tileChanges || rescan.get(0, rescanInterval)) {
+                refreshMiningState(MiningPos);
                 lastChange = Vars.world.tileChanges;
             }
 
@@ -336,24 +349,19 @@ public class Quarry extends Block {
                         tileItem = tileAt(ix, iy);
                         if (tileItem != null) {
                             if (items.total() < itemCapacity) {
-                                Fx.itemTransfer.at(dx + Mathf.range(1f), dy + Mathf.range(1f), 0, tileItem.color, new Vec2(drillX + mx, drillY + my));
-                                Fx.itemTransfer.at(drillX + Mathf.range(1f) + mx, drillY + Mathf.range(1f) + my, 0, tileItem.color, new Vec2(x, y));
-                                offload(tileItem);
-                                float mul = drillMultipliers.get(tileItem, 1f);
-                               /* if(mul < 1f){
-                                    if(Mathf.chance(mul * 100f)){
-                                        offload(tileItem);
+                                float mul = getItemCycleMultiplier(tileItem);
+                                int extra = Mathf.floor(mul);
+                                float frac = mul - extra;
+
+                                for (int n = 0; n < extra; n++) {
+                                    if (items.total() < itemCapacity) {
+                                        produceOre(tileItem, dx, dy);
                                     }
-                                }else{
-                                    int extra = Mathf.floor(mul);
-                                    float frac = mul - extra;
-                                    for(int n = 0; n < extra; n++){
-                                        if(items.total() < itemCapacity) offload(tileItem);
-                                    }
-                                    if(items.total() < itemCapacity && Mathf.chance(frac * 100f)){
-                                        offload(tileItem);
-                                    }
-                                }*/
+                                }
+
+                                if (items.total() < itemCapacity && Mathf.chance(frac * 100f)) {
+                                    produceOre(tileItem, dx, dy);
+                                }
                             }
                         }
                     }
@@ -404,6 +412,12 @@ public class Quarry extends Block {
                     dump(output);
                 }
             }
+        }
+
+        private void produceOre(Item tileItem, float dx, float dy) {
+            Fx.itemTransfer.at(dx + Mathf.range(1f), dy + Mathf.range(1f), 0, tileItem.color, new Vec2(drillX + mx, drillY + my));
+            Fx.itemTransfer.at(drillX + Mathf.range(1f) + mx, drillY + Mathf.range(1f) + my, 0, tileItem.color, new Vec2(x, y));
+            offload(tileItem);
         }
 
         public void drawDrill(float x, float y, float mx, float my, float layer) {
@@ -550,6 +564,92 @@ public class Quarry extends Block {
             int index = ix * areaSize + iy;
             if(index < 0 || index >= itemsArray.size) return null;
             return itemsArray.get(index);
+        }
+
+        private void refreshMiningState(Vec2 miningPos) {
+            tiles = WorldDef.getAreaTile(miningPos, areaSize, areaSize);
+            itemsArray = getDropList(tiles);
+            itemList = WorldDef.listItem(itemsArray);
+            empty = itemList.isEmpty();
+        }
+
+        private Seq<Item> getTopOres() {
+            Seq<Item> sorted = itemList.copy();
+            sorted.sort((a, b) -> {
+                int countCompare = Integer.compare(countOre(b, itemsArray), countOre(a, itemsArray));
+                if (countCompare != 0) return countCompare;
+                return Integer.compare(a.id, b.id);
+            });
+            return sorted;
+        }
+
+        public Item getTopOre(int index) {
+            Seq<Item> sorted = getTopOres();
+            if (index < 0 || index >= sorted.size || index >= 3) return null;
+            return sorted.get(index);
+        }
+
+        public float getTopOreSpeedPerSecond(int index) {
+            Item item = getTopOre(index);
+            if (item == null) return 0f;
+            int count = countOre(item, itemsArray);
+            float drillTime = getDrillTime(item);
+            if (count <= 0 || drillTime <= 0.0001f) return 0f;
+            float speedScale = Mathf.lerp(1f, liquidBoostIntensity, optionalEfficiency) * efficiency;
+            return (60f / drillTime) * count * speedScale;
+        }
+
+        public String getTopOreSpeedText(int index) {
+            Item item = getTopOre(index);
+            if (item == null) return "-";
+            return item.localizedName + " " + Strings.fixed(getTopOreSpeedPerSecond(index), 2) + "/s";
+        }
+
+        public float getTopOreSpeedProgress(int index) {
+            float top = getTopOreSpeedPerSecond(0);
+            if (top <= 0.0001f) return 0f;
+            return Mathf.clamp(getTopOreSpeedPerSecond(index) / top);
+        }
+
+        @Override
+        public void displayBars(Table table) {
+            int[] lastCount = {Math.min(getTopOres().size, 3)};
+            rebuildBars(table);
+            table.update(() -> {
+                int count = Math.min(getTopOres().size, 3);
+                if (count != lastCount[0]) {
+                    rebuildBars(table);
+                    lastCount[0] = count;
+                }
+            });
+        }
+
+        private void rebuildBars(Table table) {
+            table.clear();
+
+            for (var bar : block.listBars()) {
+                Bar base = bar.get(this);
+                if (base != null) {
+                    table.add(base).growX();
+                    table.row();
+                }
+            }
+
+            int maxBars = Math.min(getTopOres().size, 3);
+            for (int i = 0; i < maxBars; i++) {
+                final int index = i;
+                Item item = getTopOre(index);
+                if (item == null) continue;
+                table.add(new Bar(
+                        () -> getTopOreSpeedText(index),
+                        () -> {
+                            Item current = getTopOre(index);
+                            return current == null ? Pal.gray : current.color;
+                        },
+                        () -> getTopOreSpeedProgress(index)
+                )).growX();
+                table.row();
+            }
         }
 
         @Override
