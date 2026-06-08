@@ -165,7 +165,8 @@ public class KarvexTerrainRefinePass implements GenPass{
                 if(WHBlocksEnvironment.isMineralCoreFloor(tile.floor())) continue;
                 if(isHeatOrRadiation(tile.floor())) continue;
                 if(isMetalFamily(tile.floor())) continue;
-                if(tile.floor() == WHBlocksEnvironment.oreShale || tile.floor() == WHBlocksEnvironment.darkRock) continue;
+                if (WHBlocksEnvironment.isOreShaleFloor(tile.floor()) || tile.floor() == WHBlocksEnvironment.darkRock)
+                    continue;
 
                 float field = sample(ctx, ctx.seed + 331, tile.x, tile.y, 2, 0.60f, 170f);
                 if(field < threshold) continue;
@@ -269,4 +270,3 @@ public class KarvexTerrainRefinePass implements GenPass{
         return Simplex.noise3d(seed, octaves, falloff, 1f / scl, v.x, v.y, v.z);
     }
 }
-

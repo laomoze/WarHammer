@@ -69,7 +69,7 @@ public class KarvexOreTilePass implements TilePass{
                 || floor == WHBlocksEnvironment.darkMineralSandstone
         || floor == WHBlocksEnvironment.gravel
         || floor == WHBlocksEnvironment.trachyte
-        || floor == WHBlocksEnvironment.oreShale
+                || WHBlocksEnvironment.isOreShaleFloor(floor)
         || floor == WHBlocksEnvironment.darkRock;
     }
 
@@ -104,7 +104,7 @@ public class KarvexOreTilePass implements TilePass{
         return floor == WHBlocksEnvironment.radiationSand
         || floor == WHBlocksEnvironment.radiationRockFloor
         || floor == WHBlocksEnvironment.radiationCraters
-        || floor == WHBlocksEnvironment.oreShale
+                || WHBlocksEnvironment.isOreShaleFloor(floor)
         || floor == WHBlocksEnvironment.darkRock;
     }
 

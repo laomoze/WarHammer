@@ -33,9 +33,9 @@ public class WHBlocksEnvironment {
             oilMineralSandWater, rustSandWater;
     //Floor
     public static Block cementFloor, darkHotRock, darkMagmaRock, darkRock, darkRockCraters, gravel, darkMineralSandstone, darkMineralFloor, mineralSandFloor, chromiteStone, chromiteFloor, chromiteFloorDark, manganeseStone, manganeseFloor, cobaltStone, cobaltFloor,
-            trachyte, oreShale, oreSalt, radiationCraters, radiationRockFloor,
+            trachyte, oreShale, oreShale1, oreShale2, oreSalt, radiationCraters, radiationRockFloor,
             darkDacite,
-            scorchedEarth, scorchedStone;
+            scorchedEarth, scorchedEarthFloor, scorchedStone;
     //Wall
     public static Block mineralSandWall, quartzSandWall, cementWall, darkRockWall, darkMineralSandstoneWall, chromiteWall, manganeseWall, cobaltWall,
             oreShaleWall, oreSaltWall, radiationRockWall,
@@ -49,7 +49,7 @@ public class WHBlocksEnvironment {
     //AutoTileFloor
     public static Block cementTile1, cementTile2, cementTile3, cementTile4;
     //Vents
-    public static Block quartzSandVent, apatiteVent, cementVent, darkRockVent, radiationRockVent, scorchedEarthVent, chromiteVent, manganeseVent, cobaltVent;
+    public static Block quartzSandVent, apatiteVent, cementVent, darkRockVent, radiationRockVent, scorchedEarthVent, chromiteVent, manganeseVent, cobaltVent, oreShaleVent;
     //Boulders/Props
     public static Block quartzSandBoulder, chromiteBoulder, cobaltBoulder, darkRockBoulder, manganeseBoulder, mineralSandFloorBoulder, radiationBoulder,
             darkMineralSandBoulder, scorchedEarthBoulder, darkDaciteBoulder, rustBoulder, darkRockCrystal, quartzCrystalCluster, quartzCrystalClusterLarge,
@@ -346,6 +346,16 @@ public class WHBlocksEnvironment {
             variants = 4;
         }};
 
+        oreShale1 = new Floor("ore-shale-1") {{
+            variants = 3;
+            blendGroup = oreShale;
+        }};
+
+        oreShale2 = new Floor("ore-shale-2") {{
+            variants = 4;
+            blendGroup = oreShale;
+        }};
+
         oreSalt = new Floor("ore-salt") {{
             variants = 0;
             attributes.set(Attribute.water, 0.25f);
@@ -369,7 +379,12 @@ public class WHBlocksEnvironment {
 
         scorchedEarth = new Floor("scorched-earth") {{
             attributes.set(Attribute.water, 0.3f);
-            variants = 4;
+            variants = 5;
+        }};
+
+        scorchedEarthFloor = new Floor("scorched-earth-floor") {{
+            attributes.set(Attribute.water, 0.3f);
+            variants = 3;
         }};
 
         scorchedStone = new Floor("scorched-stone") {{
@@ -419,6 +434,11 @@ public class WHBlocksEnvironment {
 
         cobaltVent = new SteamVent("cobalt-vent") {{
             parent = blendGroup = cobaltStone;
+            attributes.set(Attribute.steam, 1f);
+        }};
+
+        oreShaleVent = new SteamVent("ore-shale-vent") {{
+            parent = blendGroup = oreShale;
             attributes.set(Attribute.steam, 1f);
         }};
 
@@ -485,7 +505,7 @@ public class WHBlocksEnvironment {
 
         oreShaleWall = new StaticWall("ore-shale-wall") {{
             variants = 2;
-            oreShale.asFloor().wall = this;
+            oreShale.asFloor().wall = oreShale1.asFloor().wall = oreShale2.asFloor().wall = this;
         }};
 
         oreSaltWall = new StaticWall("ore-salt-wall") {{
@@ -503,7 +523,7 @@ public class WHBlocksEnvironment {
         }};
 
         scorchedEarthWall = new StaticWall("scorched-earth-wall") {{
-            scorchedStone.asFloor().wall = scorchedEarth.asFloor().wall = this;
+            scorchedStone.asFloor().wall = scorchedEarth.asFloor().wall = scorchedEarthFloor.asFloor().wall = this;
         }};
 
       /*  titaniumCrystalWall = new StaticWall("titanium-crystal-wall"){{
@@ -576,7 +596,7 @@ public class WHBlocksEnvironment {
         }};
 
         darkMineralSandBoulder = new Prop("dark-mineral-sand-boulder") {{
-            variants = 2;
+            variants = 3;
             darkMineralFloor.asFloor().decoration = darkMineralSandstone.asFloor().decoration = this;
         }};
 
@@ -597,7 +617,7 @@ public class WHBlocksEnvironment {
 
         scorchedEarthBoulder = new Prop("scorched-earth-boulder") {{
             variants = 3;
-            scorchedEarth.asFloor().decoration = scorchedStone.asFloor().decoration = this;
+            scorchedEarth.asFloor().decoration = scorchedEarthFloor.asFloor().decoration = scorchedStone.asFloor().decoration = this;
         }};
 
         darkRockCrystal = new TallBlock("dark-rock-crystal") {{
@@ -709,17 +729,17 @@ public class WHBlocksEnvironment {
         metalTile7 = new Floor("metal-tile-7", 0);
         metalTile8 = new Floor("metal-tile-8", 0) {{
             autotile = true;
-            drawEdgeOut = true;
+            drawEdgeOut = false;
             drawEdgeIn = false;
         }};
         metalTile9 = new Floor("metal-tile-9", 0) {{
             autotile = true;
-            drawEdgeOut = true;
+            drawEdgeOut = false;
             drawEdgeIn = false;
         }};
         metalTile10 = new Floor("metal-tile-10", 0) {{
             autotile = true;
-            drawEdgeOut = true;
+            drawEdgeOut = false;
             drawEdgeIn = false;
         }};
 
@@ -757,6 +777,10 @@ public class WHBlocksEnvironment {
 
     public static boolean isMineralCoreFloor(Block floor) {
         return floor == darkMineralFloor || floor == mineralSandFloor;
+    }
+
+    public static boolean isOreShaleFloor(Block floor) {
+        return floor == oreShale || floor == oreShale1 || floor == oreShale2;
     }
 
     public static Block defaultMineralFloor() {

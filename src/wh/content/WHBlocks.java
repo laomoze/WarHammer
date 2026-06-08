@@ -215,7 +215,7 @@ public final class WHBlocks {
     //22
     Crush, AutoGun,
     //33
-    Lcarus, SSWord, Blaze, Blade, Shard,
+    Lcarus, SSWord, Blaze, Blade, Torrent, Shard,
     //44
     Prevent, Vortex, HeavyHammer, Flash, Ionize, Viper, Pyros, Deflection,
     //55
@@ -1889,7 +1889,7 @@ public final class WHBlocks {
                 consumeItems(with(WHItems.molybdenumAlloy, 2, WHItems.ceramite, 3));
                 consumeLiquid(WHLiquids.refinePromethium, 10 / 60f);
                 outputItem = new ItemStack(WHItems.refineCeramite, 3);
-                drawer = new DrawMulti(new DrawDefault(), new DrawHeatOutput(), new DrawFlame(color), new DrawGlowRegion() {{
+                drawer = new DrawMulti(new DrawDefault(), new DrawHeatInput(), new DrawFlame(color), new DrawGlowRegion() {{
                     color = Liquids.slag.color;
                     glowScale = 12f;
                 }});
@@ -2197,7 +2197,7 @@ public final class WHBlocks {
                 consumeItems(with(Items.carbide, 3, Items.plastanium, 5));
                 consumeLiquid(Liquids.slag, 30 / 60f);
                 outputItem = new ItemStack(WHItems.ceramite, 8);
-                heatOutput = 6;
+                heatOutput = 5;
                 drawer = new DrawMulti(new DrawRegion("-bottom"),
                         new DrawLiquidTile(Liquids.slag) {{
                             alpha = 0.4f;
@@ -5067,6 +5067,102 @@ public final class WHBlocks {
         }};
 
 
+        Torrent = new LiquidTurret("Vortex") {
+            {
+                requirements(Category.turret, with(Items.metaglass, 150, Items.plastanium, 100, WHItems.manganeseSteel, 80));
+
+                size = 3;
+                outlineColor = WHPal.Outline;
+                outlineRadius = 3;
+                reload = 2f;
+                velocityRnd = 0.1f;
+                inaccuracy = 4f;
+                recoil = 1f;
+                shootCone = 45f;
+                liquidCapacity = 120f;
+                shootEffect = Fx.shootLiquid;
+                squareSprite = false;
+                range = 220f;
+                shootY = 38 / 4f;
+                fogRadiusMultiplier = 0.3f;
+
+                ammo(
+                        WHLiquids.swageWater, new LiquidBulletType(WHLiquids.swageWater) {{
+                            lifetime = 290 / 4f;
+                            speed = 4f;
+                            knockback = 1.7f;
+                            puddleSize = 8f;
+                            orbSize = 4f;
+                            drag = 0.002f;
+                            ammoMultiplier = 0.5f;
+                            statusDuration = 60f * 4f;
+                            damage = 0.2f;
+                            layer = EFFECT_BOTTOM;
+                        }},
+                        Liquids.water, new LiquidBulletType(Liquids.water) {{
+                            lifetime = 290 / 4f;
+                            speed = 4f;
+                            knockback = 1.7f;
+                            puddleSize = 8f;
+                            orbSize = 4f;
+                            drag = 0.002f;
+                            ammoMultiplier = 0.5f;
+                            statusDuration = 60f * 4f;
+                            damage = 0.2f;
+                            layer = EFFECT_BOTTOM;
+                        }},
+                        Liquids.slag, new LiquidBulletType(Liquids.slag) {{
+                            lifetime = 290 / 4f;
+                            speed = 4f;
+                            knockback = 1.3f;
+                            puddleSize = 8f;
+                            orbSize = 4f;
+                            damage = 4.75f;
+                            drag = 0.004f;
+                            ammoMultiplier = 0.5f;
+                            statusDuration = 60f * 4f;
+                        }},
+                        Liquids.cryofluid, new LiquidBulletType(Liquids.cryofluid) {{
+                            lifetime = 290 / 4f;
+                            speed = 4f;
+                            knockback = 1.3f;
+                            puddleSize = 8f;
+                            orbSize = 4f;
+                            drag = 0.001f;
+                            ammoMultiplier = 0.5f;
+                            statusDuration = 60f * 4f;
+                            damage = 0.2f;
+                        }},
+                        Liquids.oil, new LiquidBulletType(Liquids.oil) {{
+                            lifetime = 290 / 4f;
+                            speed = 4f;
+                            knockback = 1.3f;
+                            puddleSize = 8f;
+                            orbSize = 4f;
+                            drag = 0.001f;
+                            ammoMultiplier = 0.5f;
+                            statusDuration = 60f * 4f;
+                            damage = 0.2f;
+                            layer = EFFECT_BOTTOM;
+                        }}
+                );
+
+                drawer = new DrawMulti(new DrawTurret(WarHammerMod.name("turret-")));
+                flags = EnumSet.of(BlockFlag.turret, BlockFlag.extinguisher);
+            }
+
+            @Override
+            public void init() {
+                armor = 3 * size;
+                researchCostMultiplier = Mathf.clamp(1.4f - 0.04f * size * size, 0.2f, 1.5f);
+                depositCooldown = size * 0.5f + 1;
+                buildCostMultiplier = Mathf.clamp(5 - size * 0.7f, 1.5f, 6);
+                scaledHealth = 10 * size * size + 20 * size;
+                super.init();
+            }
+        };
+
+
        /* Shard = new ShootMatchTurret("Shard"){{
             requirements(Category.turret, with(Items.tungsten, 120, Items.plastanium, 60, WHItems.resonantCrystal, 25, WHItems.molybdenumAlloy, 25));
 
@@ -5204,7 +5300,7 @@ public final class WHBlocks {
                             puddleSize = 8f;
                             orbSize = 4f;
                             drag = 0.002f;
-                            ammoMultiplier = 0.4f;
+                            ammoMultiplier = 0.3f;
                             statusDuration = 60f * 4f;
                             damage = 0.2f;
                             layer = EFFECT_BOTTOM;
@@ -5216,7 +5312,7 @@ public final class WHBlocks {
                             puddleSize = 8f;
                             orbSize = 4f;
                             drag = 0.002f;
-                            ammoMultiplier = 0.4f;
+                            ammoMultiplier = 0.3f;
                             statusDuration = 60f * 4f;
                             damage = 0.2f;
                             layer = EFFECT_BOTTOM;
@@ -5229,7 +5325,7 @@ public final class WHBlocks {
                             orbSize = 4f;
                             damage = 4.75f;
                             drag = 0.004f;
-                            ammoMultiplier = 0.4f;
+                            ammoMultiplier = 0.3f;
                             statusDuration = 60f * 4f;
                         }},
                         Liquids.cryofluid, new LiquidBulletType(Liquids.cryofluid) {{
@@ -5239,7 +5335,7 @@ public final class WHBlocks {
                             puddleSize = 8f;
                             orbSize = 4f;
                             drag = 0.001f;
-                            ammoMultiplier = 0.4f;
+                            ammoMultiplier = 0.3f;
                             statusDuration = 60f * 4f;
                             damage = 0.2f;
                         }},
@@ -5250,7 +5346,7 @@ public final class WHBlocks {
                             puddleSize = 8f;
                             orbSize = 4f;
                             drag = 0.001f;
-                            ammoMultiplier = 0.4f;
+                            ammoMultiplier = 0.3f;
                             statusDuration = 60f * 4f;
                             damage = 0.2f;
                             layer = EFFECT_BOTTOM;

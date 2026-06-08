@@ -257,7 +257,7 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
         }
 
         if(floor == WHBlocksEnvironment.trachyte) return WHBlocksEnvironment.trachyteWall;
-        if(floor == WHBlocksEnvironment.oreShale) return WHBlocksEnvironment.oreShaleWall;
+        if (WHBlocksEnvironment.isOreShaleFloor(floor)) return WHBlocksEnvironment.oreShaleWall;
         if(floor == WHBlocksEnvironment.manganeseFloor) return WHBlocksEnvironment.manganeseWall;
         if(floor == WHBlocksEnvironment.chromiteFloor || floor == WHBlocksEnvironment.chromiteFloorDark) return WHBlocksEnvironment.chromiteWall;
         if(floor == WHBlocksEnvironment.cobaltFloor) return WHBlocksEnvironment.cobaltWall;

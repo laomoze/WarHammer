@@ -60,8 +60,13 @@ public class KarvexVentPass implements GenPass{
     }
 
     private Block ventFor(Block floor){
-        if(floor == WHBlocksEnvironment.scorchedEarth || floor == WHBlocksEnvironment.scorchedStone){
+        if (floor == WHBlocksEnvironment.scorchedEarth
+                || floor == WHBlocksEnvironment.scorchedEarthFloor
+                || floor == WHBlocksEnvironment.scorchedStone) {
             return WHBlocksEnvironment.scorchedEarthVent;
+        }
+        if (WHBlocksEnvironment.isOreShaleFloor(floor)) {
+            return WHBlocksEnvironment.oreShaleVent;
         }
         if(floor == WHBlocksEnvironment.chromiteStone
         || floor == WHBlocksEnvironment.chromiteFloor

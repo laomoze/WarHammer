@@ -1773,12 +1773,15 @@ public class WHBullets{
 
         }};
 
-        BladeMnSteel = new CritBulletType(5, 6, "bullet"){{
+        BladeMnSteel = new CritBulletType(5, 60, "bullet") {{
             reloadMultiplier = 0.8f;
             ammoMultiplier = 2f;
 
             critChance = 0.1f;
             critMultiplier = 1.3f;
+
+            splashDamage = 60;
+            splashDamageRadius = 40;
 
             shootEffect = Fx.shootSmallColor;
             width = 12f;
@@ -1794,7 +1797,7 @@ public class WHBullets{
 
             critEffect = smokeTrail;
 
-            fragBullet = new CritBulletType(3f, 12, "bullet"){{
+            fragBullet = new CritBulletType(3f, 25, "bullet") {{
                 width = 5f;
                 height = 12f;
                 shrinkY = 1f;
@@ -1803,11 +1806,11 @@ public class WHBullets{
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
                 despawnEffect = Fx.none;
             }};
-            fragBullets = 4;
+            fragBullets = 2;
             despawnEffect = Fx.hitBulletColor;
         }};
 
-        BladePlastanium = new CritBulletType(4f, 6, "bullet"){{
+        BladePlastanium = new CritBulletType(4f, 40, "bullet") {{
             reloadMultiplier = 1.5f;
             ammoMultiplier = 3f;
 
@@ -1843,11 +1846,11 @@ public class WHBullets{
                 frontColor = Pal.plastaniumFront;
                 despawnEffect = Fx.none;
             }};
-            fragBullets = 4;
+            fragBullets = 3;
             despawnEffect = Fx.hitBulletColor;
         }};
 
-        BladeCarbide = new CritBulletType(4f, 6, "bullet"){{
+        BladeCarbide = new CritBulletType(4f, 60, "bullet") {{
             ammoMultiplier = 4f;
             reloadMultiplier = 0.5f;
 
@@ -1876,7 +1879,7 @@ public class WHBullets{
 
             critEffect = smokeTrail;
 
-            fragBullet = new CritBulletType(6, 30, "bullet"){{
+            fragBullet = new CritBulletType(6, 45, "bullet") {{
                 critMultiplier = 1.3f;
                 critChance = 0.05f;
 
@@ -1896,11 +1899,11 @@ public class WHBullets{
 
                 despawnEffect = Fx.hitBulletColor;
             }};
-            fragBullets = 4;
+            fragBullets = 3;
             despawnEffect = Fx.hitBulletColor;
         }};
 
-        BladeCeramite = new CritBulletType(4f, 50, "bullet"){{
+        BladeCeramite = new CritBulletType(4f, 60, "bullet") {{
             reloadMultiplier = 1.3f;
             ammoMultiplier = 3f;
 
@@ -1916,7 +1919,7 @@ public class WHBullets{
             frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
             splashDamage = 80;
-            splashDamageRadius = 50;
+            splashDamageRadius = 56;
 
             hitEffect = new MultiEffect(
             WHFx.generalExplosion(10, hitColor, splashDamageRadius, 5, true),

@@ -661,7 +661,7 @@ public class KarvexHazardBasinPass implements GenPass{
     }
 
     private boolean isTarHost(Block floor){
-        return floor == WHBlocksEnvironment.oreShale;
+        return WHBlocksEnvironment.isOreShaleFloor(floor);
     }
 
     private boolean isPromethiumHost(Block floor){
