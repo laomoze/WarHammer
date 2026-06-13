@@ -628,8 +628,11 @@ public final class KarvexTeachTree {
                             });
                         });
 
-                        node(WHBlocks.Vortex, () -> {
+                        node(WHBlocks.Torrent, () -> {
+                            node(WHBlocks.Vortex, () -> {
+                            });
                         });
+
                         node(WHBlocks.HeavyHammer, () -> {
                             node(WHBlocks.Colossus, () -> {
                                 node(WHBlocks.CycloneMissleLauncher, () -> node(WHBlocks.Erase, () -> {

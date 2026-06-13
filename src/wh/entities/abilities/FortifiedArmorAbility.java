@@ -1,15 +1,17 @@
 package wh.entities.abilities;
 
-import arc.*;
-import arc.math.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.entities.abilities.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.ui.*;
+import arc.Core;
+import arc.math.Mathf;
+import arc.scene.ui.layout.Table;
+import arc.util.Interval;
+import arc.util.Strings;
+import mindustry.content.Fx;
+import mindustry.entities.Effect;
+import mindustry.entities.abilities.Ability;
+import mindustry.gen.Unit;
+import mindustry.graphics.Pal;
+import mindustry.ui.Bar;
+import wh.content.WHStats;
 
 import static wh.core.WarHammerMod.name;
 
@@ -217,13 +219,13 @@ public class FortifiedArmorAbility extends Ability{
     public void addStats(Table t){
         super.addStats(t);
         t.row();
-        t.add(Core.bundle.format("stat.wh-max-health-bonus", Strings.autoFixed(maxHealthBonus * 100f, 2) + "%"));
+        t.add(WHStats.format("wh-max-health-bonus", Strings.autoFixed(maxHealthBonus * 100f, 2) + "%"));
         t.row();
-        t.add(Core.bundle.format("stat.wh-armor-multiplier", Strings.autoFixed(armorMultiplier, 2)));
+        t.add(WHStats.format("wh-armor-multiplier", Strings.autoFixed(armorMultiplier, 2)));
         t.row();
-        t.add(Core.bundle.format("stat.wh-restore-health-threshold", Strings.autoFixed(restoreTrigger * 100f, 2) + "%"));
+        t.add(WHStats.format("wh-restore-health-threshold", Strings.autoFixed(restoreTrigger * 100f, 2) + "%"));
       /*  t.row();
-        t.add(Core.bundle.format("stat.wh-restore-health-required", Strings.autoFixed(restoreHealth * 100f, 2) + "%"));*/
+        t.add(WHStats.format("wh-restore-health-required", Strings.autoFixed(restoreHealth * 100f, 2) + "%"));*/
     }
 
     @Override

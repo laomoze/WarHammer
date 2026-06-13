@@ -1,15 +1,17 @@
 package wh.entities.abilities;
 
-import arc.*;
-import arc.func.*;
-import arc.graphics.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import mindustry.entities.*;
-import mindustry.entities.abilities.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import wh.content.*;
+import arc.Core;
+import arc.func.Cons;
+import arc.graphics.Color;
+import arc.scene.ui.layout.Table;
+import arc.util.Strings;
+import arc.util.Time;
+import mindustry.entities.Units;
+import mindustry.entities.abilities.RepairFieldAbility;
+import mindustry.gen.Unit;
+import mindustry.graphics.Pal;
+import wh.content.WHFx;
+import wh.content.WHStats;
 
 import static wh.core.WarHammerMod.name;
 
@@ -89,9 +91,9 @@ public class AdaptedHealAbility extends RepairFieldAbility{
         super.addStats(t);
         if(selfHealReloadTime < 0)return;
         t.row();
-        t.add(Core.bundle.format("stat.wh-self-heal-reload-time", Strings.autoFixed(selfHealReloadTime / 60, 2)));
+        t.add(WHStats.format("wh-self-heal-reload-time", Strings.autoFixed(selfHealReloadTime / 60f, 2) + " " + mindustry.world.meta.StatUnit.seconds.localized()));
         t.row();
-        t.add(Core.bundle.format("stat.self-heal-amount", Strings.autoFixed(selfHealAmount, 2)));
+        t.add(WHStats.format("self-heal-amount", Strings.autoFixed(selfHealAmount, 2)));
 
     }
 

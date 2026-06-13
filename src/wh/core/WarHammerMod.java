@@ -24,6 +24,7 @@ import mindustry.maps.Maps;
 import mindustry.maps.filters.GenerateFilter;
 import mindustry.mod.Mod;
 import mindustry.net.Net;
+import mindustry.type.Category;
 import mindustry.ui.Styles;
 import mindustry.ui.WarningBar;
 import mindustry.ui.dialogs.BaseDialog;
@@ -54,6 +55,7 @@ public class WarHammerMod extends Mod {
     private static BaseDialog lastSeenDialog = null;
 
     public WarHammerMod() {
+        /* PsychicField.init();*/
         Net.registerPacket(WarnHUDPacket::new);
         Net.registerPacket(AlertToastPacket::new);
         Net.registerPacket(GeminiSpecialBulletPacket::new);
@@ -77,13 +79,19 @@ public class WarHammerMod extends Mod {
 
         // If a cutscene/UI action hid vanilla HUD and flow exited early, recover on map enter.
         Events.on(EventType.WorldLoadEvent.class, e -> {
+            /*  PsychicField.loadWorld();*/
             if(!Vars.headless){
                 restoreVanillaHud();
             }
         });
 
+      /*  Events.on(EventType.SaveLoadEvent.class, e -> PsychicField.loadWorld());
+
+        Events.on(EventType.ResetEvent.class, e -> PsychicField.clear());*/
+
         // Keep objective panel alive if another UI rebuild removes it.
         Events.run(EventType.Trigger.update, () -> {
+            /*    PsychicField.update();*/
             if(!Vars.headless){
                 ActionContext.cutsceneUI.update();
                 WHObjectiveUI.ensureMounted();
@@ -93,6 +101,9 @@ public class WarHammerMod extends Mod {
 
         Events.run(Trigger.draw, () -> {
             if(!Vars.headless){
+            /*    if(shouldDrawPsychicOverlay()){
+                    PsychicField.drawOverlay();
+                }*/
                 ActionContext.cutsceneUI.drawMarks();
             }
         });
@@ -139,6 +150,13 @@ public class WarHammerMod extends Mod {
         if(Vars.ui != null && Vars.ui.hudfrag != null){
             Vars.ui.hudfrag.shown = true;
         }
+    }
+
+    private static boolean shouldDrawPsychicOverlay() {
+        if (Vars.state == null || !Vars.state.isGame()) return false;
+        if (Vars.ui == null || Vars.ui.hudfrag == null || Vars.ui.hudfrag.blockfrag == null) return false;
+        if (!Vars.ui.hudfrag.shown) return false;
+        return Vars.ui.hudfrag.blockfrag.currentCategory == Category.power;
     }
 
     private static void pollModDetailInjection(){

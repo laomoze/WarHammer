@@ -1,20 +1,27 @@
 package wh.entities.abilities;
 
-import arc.*;
-import arc.audio.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.entities.abilities.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import wh.core.*;
-import wh.graphics.*;
+import arc.Core;
+import arc.audio.Sound;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.scene.ui.layout.Table;
+import arc.util.Interval;
+import arc.util.Strings;
+import arc.util.Time;
+import mindustry.content.Fx;
+import mindustry.content.StatusEffects;
+import mindustry.entities.Effect;
+import mindustry.entities.abilities.Ability;
+import mindustry.gen.Sounds;
+import mindustry.gen.Unit;
+import mindustry.graphics.Drawf;
+import wh.content.WHStats;
+import wh.core.WHSettings;
+import wh.graphics.WHPal;
 
-import java.util.*;
+import java.util.Arrays;
 
 import static arc.graphics.g2d.Draw.color;
 import static arc.graphics.g2d.Lines.stroke;
@@ -149,13 +156,13 @@ public class LastStandAbility extends Ability{
     public void addStats(Table t){
         super.addStats(t);
         t.row();
-        t.add(Core.bundle.format("stat.wh-last-stand-health-trigger", Strings.autoFixed(healthTrigger * 100f, 2) + "%"));
+        t.add(WHStats.format("wh-last-stand-health-trigger", Strings.autoFixed(healthTrigger * 100f, 2) + "%"));
         t.row();
-        t.add(Core.bundle.format("stat.wh-damage-threshold", Strings.autoFixed(damageThreshold * 100f, 2) + "%"));
+        t.add(WHStats.format("wh-damage-threshold", Strings.autoFixed(damageThreshold * 100f, 2) + "%"));
         t.row();
-        t.add(Core.bundle.format("stat.wh-invincible-duration", Strings.autoFixed(invincibleDuration / 60f, 2)));
+        t.add(WHStats.format("wh-invincible-duration", Strings.autoFixed(invincibleDuration / 60f, 2) + " " + mindustry.world.meta.StatUnit.seconds.localized()));
         t.row();
-        t.add(Core.bundle.format("stat.wh-cooldown", Strings.autoFixed(cooldown / 60f, 2)));
+        t.add(WHStats.format("wh-cooldown", Strings.autoFixed(cooldown / 60f, 2) + " " + mindustry.world.meta.StatUnit.seconds.localized()));
     }
 
     @Override

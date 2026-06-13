@@ -1,11 +1,13 @@
 package wh.entities.abilities;
 
-import arc.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import mindustry.entities.*;
-import mindustry.entities.abilities.*;
-import mindustry.gen.*;
+import arc.Core;
+import arc.scene.ui.layout.Table;
+import arc.util.Interval;
+import arc.util.Strings;
+import mindustry.entities.Units;
+import mindustry.entities.abilities.Ability;
+import mindustry.gen.Unit;
+import wh.content.WHStats;
 
 import static mindustry.Vars.tilesize;
 import static wh.core.WarHammerMod.name;
@@ -67,13 +69,13 @@ public class TeamCombatAbility extends Ability{
     public void addStats(Table t){
         super.addStats(t);
         t.row();
-        t.add(Core.bundle.format("stat.wh-range", Strings.autoFixed(range / tilesize, 2)));
+        t.add(WHStats.format("wh-range", Strings.autoFixed(range / tilesize, 2) + " " + mindustry.world.meta.StatUnit.blocks.localized()));
         t.row();
-        t.add(Core.bundle.format("stat.wh-team-combat-threshold", minUnits));
+        t.add(WHStats.format("wh-team-combat-threshold", minUnits));
         t.row();
-        t.add(Core.bundle.format("stat.wh-team-combat-max-count", maxUnits));
+        t.add(WHStats.format("wh-team-combat-max-count", maxUnits));
         t.row();
-        t.add(Core.bundle.format("stat.wh-team-combat-damage", Strings.autoFixed(damageBoostPerUnit * 100f, 2) + "%"));
+        t.add(WHStats.format("wh-team-combat-damage", Strings.autoFixed(damageBoostPerUnit * 100f, 2) + "%"));
     }
 
     @Override

@@ -1,15 +1,21 @@
 package wh.entities.abilities;
 
-import arc.*;
-import arc.audio.*;
-import arc.math.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
-import arc.util.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.entities.abilities.*;
-import mindustry.gen.*;
+import arc.Core;
+import arc.audio.Sound;
+import arc.math.Mathf;
+import arc.scene.ui.layout.Table;
+import arc.struct.IntMap;
+import arc.struct.IntSeq;
+import arc.struct.IntSet;
+import arc.util.Interval;
+import arc.util.Strings;
+import mindustry.content.Fx;
+import mindustry.entities.Effect;
+import mindustry.entities.Units;
+import mindustry.entities.abilities.Ability;
+import mindustry.gen.Sounds;
+import mindustry.gen.Unit;
+import wh.content.WHStats;
 
 import static mindustry.Vars.tilesize;
 import static wh.core.WarHammerMod.name;
@@ -187,14 +193,14 @@ public class EscortShieldAbility extends Ability{
     public void addStats(Table t){
         super.addStats(t);
         t.row();
-        t.add(Core.bundle.format("stat.wh-range", Strings.autoFixed(range / tilesize, 2)));
+        t.add(WHStats.format("wh-range", Strings.autoFixed(range / tilesize, 2) + " " + mindustry.world.meta.StatUnit.blocks.localized()));
         t.row();
-        t.add(Core.bundle.format("stat.wh-escort-shield-redirect", Strings.autoFixed(redirectPercent * 100f, 2) + "%"));
+        t.add(WHStats.format("wh-escort-shield-redirect", Strings.autoFixed(redirectPercent * 100f, 2) + "%"));
         t.row();
-        t.add(Core.bundle.format("stat.wh-escort-shield-self-reduction", Strings.autoFixed(selfDamageReduction * 100f, 2) + "%"));
+        t.add(WHStats.format("wh-escort-shield-self-reduction", Strings.autoFixed(selfDamageReduction * 100f, 2) + "%"));
         if(maxRedirect >= 0f){
             t.row();
-            t.add(Core.bundle.format("stat.wh-escort-shield-max-redirect", Strings.autoFixed(maxRedirect, 2)));
+            t.add(WHStats.format("wh-escort-shield-max-redirect", Strings.autoFixed(maxRedirect, 2)));
         }
     }
 

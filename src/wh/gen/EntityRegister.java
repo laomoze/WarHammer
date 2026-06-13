@@ -11,6 +11,7 @@ import wh.entities.RiftSpawner;
 import wh.entities.Spawner;
 import wh.entities.bullet.ApproachBullet.AB;
 import wh.entities.event.Trigger;
+import wh.entities.world.Psy.unused.PsychicFieldState;
 import wh.entities.world.entities.AirRaiderUnitType;
 import wh.entities.world.entities.powerArmorComp.PowerArmourUnit;
 
@@ -60,6 +61,7 @@ public final class EntityRegister{
         register("Spawner", Spawner.class, Spawner::new);
         register("AirborneSpawner", AirborneSpawner.class, AirborneSpawner::new);
         register("RiftSpawner", RiftSpawner.class, RiftSpawner::new);
+        register("PsychicFieldState", PsychicFieldState.class, PsychicFieldState::new);
 
         register("PortableAutoEventTrigger", Trigger.class, Trigger::new);
 

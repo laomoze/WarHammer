@@ -3242,8 +3242,10 @@ public final class WHUnitTypes {
         airA6 = new WHUnitType("airA6") {
             {
                 constructor = PayloadUnit::create;
+
                 circleTarget = true;
                 circleTargetRadius = 150;
+                omniMovement = false;
 
                 speed = 1.7f;
                 rotateSpeed = 0.3f;
@@ -3530,7 +3532,7 @@ public final class WHUnitTypes {
                     {
                         x = 80 / 4f;
                         y = 24 / 4f;
-                        reload = 180;
+                        reload = 150;
                         rotate = false;
                         inaccuracy = 1.2f;
                         shootSound = WHSounds.energyShoot;
@@ -3543,7 +3545,7 @@ public final class WHUnitTypes {
                                 height = 35;
                                 drag = -0.01f;
                                 lifetime = 53f;//360
-                                pierceCap = 2;
+                                pierceCap = 3;
                                 pierce = true;
                                 pierceBuilding = true;
                                 lightningDamage = 50;
@@ -3654,13 +3656,14 @@ public final class WHUnitTypes {
                         shootSound = shootMissile;
                         shootCone = 20f;
                         velocityRnd = 0.12f;
+                        range = 360;
                         bullet = new LightningLinkerBulletType(4.3f, 200) {{
                             size = width = height = 10;
-                            scaleLife = false;
-                            collides = true;
+                            scaleLife = true;
+                            collides = false;
                             drag = 0.01f;
                             lifetime = 180.6f;//360
-                            keepVelocity = false;
+                            keepVelocity = true;
                             frontColor = WHPal.SkyBlueF;
                             lightningColor = lightColor = hitColor = trailColor = backColor = WHPal.SkyBlue;
                             linkLightingDamage = 110;
@@ -4097,7 +4100,7 @@ public final class WHUnitTypes {
                     shootY = 20 / 4f;
                     ejectEffect = Fx.casing2;
                     shootSound = shootArtillery;
-                    markBullet = bullet = new ArtilleryBulletType(4.5f, 80, "shell") {{
+                    markBullet = bullet = new ArtilleryBulletType(4.5f, 60, "shell") {{
                         shootEffect = Fx.shootBig;
                         smokeEffect = shootBigSmoke;
                         knockback = 0.8f;
@@ -4120,7 +4123,7 @@ public final class WHUnitTypes {
                                         WHFx.generalExplosion(10, hitColor, splashDamageRadius, 10, false));
                         fragBullets = 3;
                         fragLifeMax = 1.5f;
-                        fragBullet = new BasicBulletType(4f, 30, "shell") {{
+                        fragBullet = new BasicBulletType(4f, 20, "shell") {{
                             splashDamage = 20;
                             splashDamageRadius = 20f;
                             lifetime = 10;
@@ -14672,7 +14675,7 @@ public final class WHUnitTypes {
         }
         applyAirLineAbility(airA3,
                 heal -> {
-                    heal.healAmount = 200;
+                    heal.healAmount = 100;
                     heal.healPercent = 0.03f;
                 },
                 close -> {
@@ -14682,8 +14685,8 @@ public final class WHUnitTypes {
                 });
         applyAirLineAbility(airA4,
                 heal -> {
-                    heal.healAmount = 500;
-                    heal.healPercent = 0.03f;
+                    heal.healAmount = 200;
+                    heal.healPercent = 0.02f;
                 },
                 close -> {
                     close.damageBoostPerEnemy = 0.04f;
@@ -14692,8 +14695,8 @@ public final class WHUnitTypes {
                 });
         applyAirLineAbility(airA5,
                 heal -> {
-                    heal.healAmount = 800;
-                    heal.healPercent = 0.03f;
+                    heal.healAmount = 300;
+                    heal.healPercent = 0.02f;
                 },
                 close -> {
                     close.damageBoostPerEnemy = 0.05f;
@@ -14704,7 +14707,7 @@ public final class WHUnitTypes {
         applyAirLineAbility(airA7,
                 heal -> {
                     heal.healAmount = 2000;
-                    heal.healPercent = 0.04f;
+                    heal.healPercent = 0.02f;
                 },
                 close -> {
                     close.damageBoostPerEnemy = 0.03f;
@@ -14735,7 +14738,7 @@ public final class WHUnitTypes {
         applyAirLineAbility(airB5,
                 heal -> {
                     heal.healAmount = 500;
-                    heal.healPercent = 0.05f;
+                    heal.healPercent = 0.04f;
                 },
                 close -> {
                     close.damageBoostPerEnemy = 0.02f;

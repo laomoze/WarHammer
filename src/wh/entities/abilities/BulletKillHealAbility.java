@@ -9,6 +9,7 @@ import mindustry.content.Fx;
 import mindustry.entities.Effect;
 import mindustry.entities.abilities.Ability;
 import mindustry.gen.*;
+import wh.content.WHStats;
 
 import static arc.graphics.g2d.Draw.color;
 import static arc.graphics.g2d.Lines.stroke;
@@ -71,15 +72,15 @@ public class BulletKillHealAbility extends Ability implements BulletKillListener
         super.addStats(t);
         if(healAmount > 0f){
             t.row();
-            t.add(Core.bundle.format("stat.wh-kill-heal-flat", Strings.autoFixed(healAmount, 2)));
+            t.add(WHStats.format("wh-kill-heal-flat", Strings.autoFixed(healAmount, 2)));
         }
         if(healPercent > 0f){
             t.row();
-            t.add(Core.bundle.format("stat.wh-kill-heal-percent", Strings.autoFixed(healPercent * 100f, 2) + "%"));
+            t.add(WHStats.format("wh-kill-heal-percent", Strings.autoFixed(healPercent * 100f, 2) + "%"));
         }
         if(minTargetMaxHealth > 0f){
             t.row();
-            t.add(Core.bundle.format("stat.wh-kill-heal-target-threshold", Strings.autoFixed(minTargetMaxHealth, 0)));
+            t.add(WHStats.format("wh-kill-heal-target-threshold", Strings.autoFixed(minTargetMaxHealth, 0)));
         }
     }
 

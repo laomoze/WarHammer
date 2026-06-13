@@ -27,6 +27,7 @@ import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 import mindustry.type.UnitType;
 import mindustry.world.meta.StatValues;
+import wh.content.WHStats;
 import wh.core.WHSettings;
 import wh.graphics.Drawn;
 import wh.graphics.PositionLightning;
@@ -74,11 +75,11 @@ public class ContinueEnergyFieldAbility extends EnergyFieldAbility{
         t.row();
         t.add(abilityStat("maxtargets", maxTargets));
         t.row();
-        t.add(Core.bundle.format("stat.wh-shots", shots));
+        t.add(WHStats.format("wh-shots", shots));
         t.row();
         t.add(Core.bundle.format("bullet.damage", damage));
         t.row();
-        t.add(Core.bundle.format("stat.wh-unitDamage", unitDamage));
+        t.add(WHStats.format("wh-unitDamage", unitDamage));
         if(status != StatusEffects.none){
             t.row();
             t.add((status.hasEmoji() ? status.emoji() : "") + "[stat]" + status.localizedName).with(l -> StatValues.withTooltip(l, status));

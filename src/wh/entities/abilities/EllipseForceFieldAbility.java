@@ -1,21 +1,27 @@
 package wh.entities.abilities;
 
-import arc.*;
-import arc.func.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.entities.abilities.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.ui.*;
-import wh.content.*;
-import wh.graphics.*;
+import arc.Core;
+import arc.func.Cons;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.math.Mathf;
+import arc.scene.ui.layout.Table;
+import arc.util.Strings;
+import arc.util.Time;
+import mindustry.Vars;
+import mindustry.content.Fx;
+import mindustry.entities.Effect;
+import mindustry.entities.abilities.Ability;
+import mindustry.gen.Bullet;
+import mindustry.gen.Groups;
+import mindustry.gen.Unit;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.ui.Bar;
+import wh.content.WHContent;
+import wh.content.WHStats;
+import wh.graphics.Drawn;
 
 import static mindustry.Vars.tilesize;
 import static wh.core.WarHammerMod.name;
@@ -273,26 +279,26 @@ public class EllipseForceFieldAbility extends Ability{
     @Override
     public void addStats(Table t){
         super.addStats(t);
-        t.add(Core.bundle.format("stat.wh-range", Strings.autoFixed(radius / tilesize, 2)));
+        t.add(WHStats.format("wh-range", Strings.autoFixed(radius / tilesize, 2) + " " + mindustry.world.meta.StatUnit.blocks.localized()));
         t.row();
         t.add(abilityStat("shield", Strings.autoFixed(max, 2)));
         t.row();
         if(damageReduction){
             t.row();
-            t.add(Core.bundle.format("stat.wh-damage-reduction", Strings.autoFixed(damageReductionAmount * 100, 2) + "%"));
+            t.add(WHStats.format("wh-damage-reduction", Strings.autoFixed(damageReductionAmount * 100, 2) + "%"));
         }
         t.add(abilityStat("repairspeed", Strings.autoFixed(regen * 60f, 2)));
         t.row();
         if(percentRegen){
-            t.add(Core.bundle.format("stat.wh-extra-percent-regen", Strings.autoFixed(percentRegenAmount * 60, 2) + "%"));
+            t.add(WHStats.format("wh-extra-percent-regen", Strings.autoFixed(percentRegenAmount * 60, 2) + "%"));
             t.row();
         }
         t.add(abilityStat("cooldown", Strings.autoFixed(cooldown / 60f, 2)));
         t.row();
-        t.add(Core.bundle.format("stat.wh-reflect-chance", Strings.autoFixed(reflectChance * 100, 2) + "%"));
+        t.add(WHStats.format("wh-reflect-chance", Strings.autoFixed(reflectChance * 100, 2) + "%"));
         t.row();
         if(Regen){
-            t.add(Core.bundle.format("stat.wh-regen", Strings.autoFixed(regenThreshold*100,2) + "%"));
+            t.add(WHStats.format("wh-regen", Strings.autoFixed(regenThreshold * 100f, 2) + "%"));
             t.row();
         }
     }

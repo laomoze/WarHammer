@@ -20,6 +20,7 @@ import mindustry.gen.Entityc;
 import mindustry.gen.Unit;
 import mindustry.type.UnitType;
 import mindustry.type.Weapon;
+import wh.content.WHStats;
 import wh.ui.UIUtils;
 
 /**
@@ -231,12 +232,12 @@ public class HealthStateWeapon extends Weapon {
 
         if (thresholdEnabled(shootRequireHealthf)) {
             t.row();
-            t.add(Core.bundle.format("stat.wh-health-enable-fire", Strings.autoFixed(shootRequireHealthf * 100f, 1) + "%"));
+            t.add(WHStats.format("wh-health-enable-fire", Strings.autoFixed(shootRequireHealthf * 100f, 1) + "%"));
         }
 
         if (thresholdEnabled(switchBulletHealthf) && lowHealthBullet != null) {
             t.row();
-            t.add(Core.bundle.format("stat.wh-health-switch-bullet", Strings.autoFixed(switchBulletHealthf * 100f, 1) + "%"));
+            t.add(WHStats.format("wh-health-switch-bullet", Strings.autoFixed(switchBulletHealthf * 100f, 1) + "%"));
             t.row();
             t.add(Core.bundle.get("stat.wh-health-switch-bullet-list"));
             t.row();

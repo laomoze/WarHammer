@@ -1,11 +1,13 @@
 package wh.entities;
 
-import arc.math.geom.*;
-import arc.util.io.*;
-import mindustry.entities.*;
+import arc.math.geom.Position;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.entities.EntityGroup;
 import mindustry.gen.*;
-import mindustry.world.*;
-import mindustry.world.blocks.environment.*;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import mindustry.world.blocks.environment.Floor;
 
 import static mindustry.Vars.player;
 
@@ -97,6 +99,11 @@ public abstract class WHBaseEntity implements Posc, Drawc{
 
     @Override
     public Block blockOn(){
+        return null;
+    }
+
+    @Override
+    public Building buildOn() {
         return null;
     }
 

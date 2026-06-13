@@ -348,12 +348,10 @@ public class WHBlocksEnvironment {
 
         oreShale1 = new Floor("ore-shale-1") {{
             variants = 3;
-            blendGroup = oreShale;
         }};
 
         oreShale2 = new Floor("ore-shale-2") {{
             variants = 4;
-            blendGroup = oreShale;
         }};
 
         oreSalt = new Floor("ore-salt") {{

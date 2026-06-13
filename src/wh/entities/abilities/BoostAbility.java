@@ -17,6 +17,7 @@ import mindustry.gen.Unit;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Trail;
 import mindustry.type.UnitType;
+import wh.content.WHStats;
 
 import static wh.core.WarHammerMod.name;
 
@@ -180,7 +181,7 @@ public class BoostAbility extends Ability{
         super.addStats(t);
         if(velocityMultiple > 1f){
             t.row();
-            t.add(Core.bundle.format("stat.wh-max-boost-percent", Strings.autoFixed((velocityMultiple - 1f) * 100f, 2) + "%"));
+            t.add(WHStats.format("wh-max-boost-percent", Strings.autoFixed((velocityMultiple - 1f) * 100f, 2) + "%"));
         }
     }
 

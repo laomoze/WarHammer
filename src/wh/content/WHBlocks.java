@@ -58,7 +58,6 @@ import mindustry.world.blocks.production.*;
 import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.blocks.storage.StorageBlock;
 import mindustry.world.blocks.units.RepairTower;
-import mindustry.world.blocks.units.UnitFactory;
 import mindustry.world.consumers.ConsumeCoolant;
 import mindustry.world.consumers.ConsumeItemFlammable;
 import mindustry.world.consumers.ConsumeItemRadioactive;
@@ -71,6 +70,7 @@ import wh.entities.bullet.laser.ChainLightingBulletType;
 import wh.entities.bullet.laser.LaserBeamBulletType;
 import wh.entities.bullet.laser.LightingContinuousFlameBulletType;
 import wh.entities.bullet.laser.LightingContinuousLaserBullet;
+import wh.entities.world.Psy.*;
 import wh.entities.world.blocks.defense.AirRaider;
 import wh.entities.world.blocks.defense.AirRaiderCallBlock;
 import wh.entities.world.blocks.defense.ReactionArmorShieldWall;
@@ -110,7 +110,7 @@ import static wh.graphics.WHPal.*;
 import static wh.util.WHUtils.rand;
 
 public final class WHBlocks {
-    public final static float FACTORY_PAD_33 = 4;
+    public final static float FACTORY_PAD_33 = 3.5f;
 
     //factory
     public static Block
@@ -126,7 +126,7 @@ public final class WHBlocks {
     public static Block
             T2sandSeparator, cobaltNitrideChamber, petroleumConverter,
             armorCompressor, ceramiteSteelFoundry, cryofluidMixer, combustibleCrafter,
-            entanglementSynthesizer, T2ManganeseSteelFurnace, promethiumRefinery;
+            entanglementSynthesizer, T2ManganeseSteelFurnace, promethiumRefinery, psychicTransmuter;
 
     public static Block
             heatSiliconSmelter, T2WaterPurifier, combustibleSeparator,
@@ -179,7 +179,8 @@ public final class WHBlocks {
             powerNode, t2PowerNode, compositeNode, armorPowerTower,
             ventDistiller, combustionGenerator, oxidationGenerator, turboGenerator,
             crackingGenerator, T2thermalGenerator, decayGenerator, smallPromethiumReactor,
-            T2impactReactor, promethiunmRector, plaRector, warpImpactReactor,
+            T2impactReactor, promethiunmRector, plaRector, warpImpactReactor, warpSiphon, warpSuppressor, psychicTransmitter, deathHarvester,
+            psychicSandboxSource, psychicFactory, psychicCondenser,
 
     smallBattery, smallBatteryRebel,
             midBattery, midBatteryRebel,
@@ -188,6 +189,7 @@ public final class WHBlocks {
     //effect
     public static Block
             armorIlluminator, searchlight,
+            psychicProbe,
             armoredVault, armoredContainer,
             wrapProjector, wrapOverdrive, shelterDome,
             repairTower, voidShield, ionShield,
@@ -195,7 +197,7 @@ public final class WHBlocks {
             strongholdCore, T2strongholdCore, T3strongholdCore;
 
     //units
-    public static Block airFactory, groundFactory, mechaFactory, tankFactory,
+    public static Block airFactory, groundFactory, mechaFactory, tankFactory, psychicConstructor,
             t2Module, t3Module, t4Module, t5Module, t6Module, jumpBeacon, energyWarpGate, airborneDeploymentBeacon,
             t2PayloadMassDriver, MechanicalArm,
             armorPayloadConveyor, armorPayloadRouter,
@@ -874,6 +876,7 @@ public final class WHBlocks {
                 liquidCapacity = 60;
                 itemCapacity = 0;
 
+                squareSprite = false;
                 rotate = true;
                 invertFlip = true;
                 consumePower(2f);
@@ -1235,6 +1238,7 @@ public final class WHBlocks {
                 requirements(Category.crafting, with(Items.silicon, 100, WHItems.ceramite, 70, WHItems.manganeseSteel, 70));
                 health = 2000;
                 hasItems = hasPower = true;
+                squareSprite = false;
                 craftTime = 45;
                 itemCapacity = 40;
                 size = 3;
@@ -1618,6 +1622,7 @@ public final class WHBlocks {
 
                 health = 900;
                 hasItems = hasPower = true;
+                squareSprite = false;
                 craftTime = 120;
                 itemCapacity = 12;
                 liquidCapacity = 120;
@@ -2756,6 +2761,7 @@ public final class WHBlocks {
             hasShadow = true;
             size = 1;
             speed = 16f / 138f;//why?
+            health = 100;
             displayedSpeed = 15;
             hasItems = true;
             itemCapacity = 2;
@@ -2764,7 +2770,7 @@ public final class WHBlocks {
 
         steelDust = new CoverdConveyor("steel-dust") {{
 
-            requirements(Category.distribution, with(WHItems.cobalt, 2, WHItems.manganeseSteel, 2, Items.plastanium, 1));
+            requirements(Category.distribution, with(WHItems.cobalt, 1, WHItems.manganeseSteel, 1, Items.plastanium, 1));
 
             health = 200;
             underBullets = true;
@@ -3609,6 +3615,161 @@ public final class WHBlocks {
             consumeItems(with(WHItems.culverCrystal, 1, WHItems.sealedPromethium, 1));
         }};
 
+        /*warpSiphon = new PsychicHarvesterBlock("warp-siphon") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 30, WHItems.resonantCrystal, 25, Items.silicon, 60, Items.phaseFabric, 20));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 2;
+            health = 560;
+            psychicCapacity = 90f;
+            fieldRangeX = 8f;
+            fieldRangeY = 8f;
+            fieldSampleSpacing = 2;
+            baseOperation = 0.18f;
+            concentrationOperation = 1.85f;
+            fluxOperationScale = 0.55f;
+            maxOperation = 2.1f;
+            minConcentration = 0.012f;
+            disturbanceWindow = 0.065f;
+            fieldInfluenceRadius = 5f;
+            fieldDrainScale = 0.03f;
+            researchCostMultiplier = 0.35f;
+        }};
+
+        warpSuppressor = new PsychicSuppressorBlock("warp-suppressor") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 40, WHItems.resonantCrystal, 35, Items.silicon, 90, Items.phaseFabric, 30));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 2;
+            health = 620;
+            psychicCapacity = 0f;
+            fieldRangeX = 7f;
+            fieldRangeY = 7f;
+            fieldSampleSpacing = 2;
+            baseOperation = 0.16f;
+            concentrationOperation = 0.72f;
+            fluxOperationScale = 0.55f;
+            maxOperation = 1.3f;
+            minConcentration = 0.02f;
+            fieldInfluenceRadius = 7f;
+            fieldInfluenceScale = 0.06f;
+            suppressFieldScale = 1.15f;
+            researchCostMultiplier = 0.4f;
+        }};*/
+
+        psychicTransmitter = new PsychicTransmitterBlock("psychic-transmitter") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 25, WHItems.resonantCrystal, 18, Items.silicon, 50));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 2;
+            health = 420;
+            psychicCapacity = 90f;
+            passivePsychicLoss = 0.005f;
+            fullOverride = "power-node";
+            linkRange = 12;
+            transferRate = 18f;
+            distanceFalloff = 0.72f;
+            researchCostMultiplier = 0.35f;
+        }};
+
+        deathHarvester = new PsychicDeathHarvesterBlock("death-harvester") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 35, WHItems.resonantCrystal, 30, Items.silicon, 80, Items.phaseFabric, 15));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 2;
+            health = 520;
+            psychicCapacity = 140f;
+            passivePsychicLoss = 0.003f;
+            deathRange = 14f;
+            baseDeathGain = 1.8f;
+            healthDeathScale = 0.065f;
+            maxDeathGain = 18f;
+            bossMultiplier = 1.45f;
+            researchCostMultiplier = 0.4f;
+        }};
+
+        psychicSandboxSource = new PsychicSandboxSourceBlock("psychic-sandbox-source") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 15, Items.silicon, 25, Items.metaglass, 20));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 2;
+            health = 320;
+            psychicCapacity = 180f;
+            generationRate = 12f;
+            researchCostMultiplier = 0.2f;
+        }};
+
+        psychicFactory = new PsychicFactoryBlock("psychic-factory") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 30, WHItems.resonantCrystal, 18, Items.graphite, 50, Items.silicon, 45));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 2;
+            health = 460;
+            hasItems = true;
+            hasPower = true;
+            itemCapacity = 20;
+            psychicCapacity = 120f;
+            craftTime = 90f;
+            psychicPerCraft = 16f;
+            consumeItems(with(WHItems.combustible, 1, WHItems.resonantCrystal, 1));
+            consumePower(90f / 60f);
+            researchCostMultiplier = 0.3f;
+        }};
+
+        psychicTransmuter = new PsychicMultiCrafterBlock("psychic-transmuter") {{
+            requirements(Category.crafting, BuildVisibility.sandboxOnly, with(Items.copper, 1));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            alwaysUnlocked = true;
+            size = 3;
+            health = 680;
+            hasPower = true;
+            itemCapacity = 80;
+            maxList = 12;
+            useBlockDrawer = true;
+            psychicCapacity = 240f;
+            passivePsychicLoss = 0.01f;
+            autoGenerateItemRecipes = true;
+            autoCraftTime = 75f;
+            autoPowerUse = 90f / 60f;
+            autoPsychicBase = 6f;
+            autoPsychicCostScale = 12f;
+            drawer = new DrawMulti(
+                    new DrawDefault(),
+                    new DrawCircles() {{
+                        color = WHItems.entanglement.color.cpy().lerp(Pal.accent, 0.2f);
+                        amount = 3;
+                        radius = 10f;
+                        strokeMax = 1.4f;
+                    }},
+                    new DrawParticles() {{
+                        color = WHItems.entanglement.color.cpy().a(0.7f);
+                        particles = 12;
+                        particleSize = 4f;
+                        particleRad = 10f;
+                    }},
+                    new DrawGlowRegion("-glow") {{
+                        color = WHItems.entanglement.color.cpy();
+                        alpha = 0.5f;
+                        glowIntensity = 0.35f;
+                        glowScale = 10f;
+                        rotateSpeed = 0.8f;
+                    }}
+            );
+            researchCostMultiplier = 0.2f;
+        }};
+
+        psychicCondenser = new PsychicAttributeSourceBlock("psychic-condenser") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 35, WHItems.resonantCrystal, 20, WHItems.ceramite, 25, Items.metaglass, 40));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 3;
+            health = 540;
+            psychicCapacity = 160f;
+            generationRate = 2.6f;
+            attribute = WHBlocksEnvironment.hasPromethium;
+            secondaryAttribute = Attribute.steam;
+            secondaryScale = 0.5f;
+            attributeRadius = 1;
+            baseEfficiency = 0.15f;
+            boostScale = 0.32f;
+            maxBoost = 6f;
+            consumePower(60f / 60f);
+            researchCostMultiplier = 0.35f;
+        }};
+
         smallBattery = new Battery("small-battery") {
             {
                 requirements(Category.power, with(WHItems.manganese, 50, WHItems.cobalt, 20, Items.silicon, 30));
@@ -3968,10 +4129,11 @@ public final class WHBlocks {
         };
 
         //units
-        airFactory = new UnitFactory("air-factory") {{
+        airFactory = new PsychicUnitFactory("air-factory") {{
             requirements(Category.units, with(Items.graphite, 35, Items.silicon, 120, WHItems.manganeseSteel, 25f));
 
             size = 3;
+            psychicCapacity = 0f;
             plans = Seq.with(
                     new UnitPlan(WHUnitTypes.airA1, 60f * 30, with(Items.graphite, 50,
                             Items.metaglass, 30, Items.silicon, 70)),
@@ -3983,8 +4145,9 @@ public final class WHBlocks {
             researchCostMultiplier = 0.5f;
         }};
 
-        groundFactory = new UnitFactory("ground-factory") {{
+        groundFactory = new PsychicUnitFactory("ground-factory") {{
             requirements(Category.units, with(Items.graphite, 50, WHItems.manganese, 150, Items.silicon, 100));
+            psychicCapacity = 0f;
             plans = Seq.with(
                     new UnitPlan(WHUnitTypes.M1, 60f * 20, with(Items.graphite, 30,
                             Items.silicon, 30, WHItems.chromium, 30))
@@ -3995,9 +4158,10 @@ public final class WHBlocks {
             researchCostMultiplier = 0.5f;
         }};
 
-        mechaFactory = new UnitFactory("mecha-factory") {{
+        mechaFactory = new PsychicUnitFactory("mecha-factory") {{
             requirements(Category.units, with(WHItems.manganeseSteel, 100, Items.tungsten, 120, Items.silicon, 100, Items.plastanium, 50));
 
+            psychicCapacity = 0f;
             plans = Seq.with(
                     new UnitPlan(WHUnitTypes.Mecha2, 60f * 60, with(WHItems.manganeseSteel, 50,
                             WHItems.uranium, 100, Items.silicon, 150, Items.plastanium, 35))
@@ -4009,10 +4173,11 @@ public final class WHBlocks {
             researchCostMultiplier = 0.75f;
         }};
 
-        tankFactory = new UnitFactory("tank-factory") {{
+        tankFactory = new PsychicUnitFactory("tank-factory") {{
             requirements(Category.units, with(WHItems.molybdenum, 1000, Items.silicon, 1500, WHItems.manganeseSteel, 800, WHItems.ceramite, 300, WHItems.resonantCrystal, 200));
 
             size = 7;
+            psychicCapacity = 0f;
             consumePower(30f);
             consumeLiquid(Liquids.nitrogen, 40 / 60f);
             consumeLiquid(WHLiquids.refinePromethium, 30 / 60f);
@@ -4028,6 +4193,26 @@ public final class WHBlocks {
             );
 
             researchCostMultiplier = 0.75f;
+        }};
+
+        psychicConstructor = new PsychicUnitFactory("psychic-constructor") {{
+            requirements(Category.units, BuildVisibility.sandboxOnly, with(Items.copper, 1));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            alwaysUnlocked = true;
+            size = 3;
+            health = 760;
+            hasPower = true;
+            fogRadius = 3;
+            consumePower(180f / 60f);
+            psychicCapacity = 220f;
+            passivePsychicLoss = 0.01f;
+            plans = Seq.with(
+                    new PsychicUnitFactory.PsychicUnitPlan(WHUnitTypes.airA1, 60f * 12f, 18f, new ItemStack[0]),
+                    new PsychicUnitFactory.PsychicUnitPlan(WHUnitTypes.M1, 60f * 15f, 24f, new ItemStack[0]),
+                    new PsychicUnitFactory.PsychicUnitPlan(WHUnitTypes.Mecha2, 60f * 24f, 40f, new ItemStack[0]),
+                    new PsychicUnitFactory.PsychicUnitPlan(WHUnitTypes.tankA1, 60f * 30f, 56f, new ItemStack[0])
+            );
+            researchCostMultiplier = 0.2f;
         }};
 
         t2Module = new MultReconstructor("t2-modification-module") {{
@@ -5067,7 +5252,7 @@ public final class WHBlocks {
         }};
 
 
-        Torrent = new LiquidTurret("Vortex") {
+        Torrent = new LiquidTurret("Torrent") {
             {
                 requirements(Category.turret, with(Items.metaglass, 150, Items.plastanium, 100, WHItems.manganeseSteel, 80));
 
@@ -5088,7 +5273,6 @@ public final class WHBlocks {
 
                 ammo(
                         WHLiquids.swageWater, new LiquidBulletType(WHLiquids.swageWater) {{
-                            lifetime = 290 / 4f;
                             speed = 4f;
                             knockback = 1.7f;
                             puddleSize = 8f;
@@ -5098,21 +5282,21 @@ public final class WHBlocks {
                             statusDuration = 60f * 4f;
                             damage = 0.2f;
                             layer = EFFECT_BOTTOM;
+                            limitRange(this, 5);
                         }},
                         Liquids.water, new LiquidBulletType(Liquids.water) {{
-                            lifetime = 290 / 4f;
                             speed = 4f;
                             knockback = 1.7f;
                             puddleSize = 8f;
                             orbSize = 4f;
                             drag = 0.002f;
-                            ammoMultiplier = 0.5f;
+                            ammoMultiplier = 2;
                             statusDuration = 60f * 4f;
                             damage = 0.2f;
                             layer = EFFECT_BOTTOM;
+                            limitRange(this, 5);
                         }},
                         Liquids.slag, new LiquidBulletType(Liquids.slag) {{
-                            lifetime = 290 / 4f;
                             speed = 4f;
                             knockback = 1.3f;
                             puddleSize = 8f;
@@ -5121,9 +5305,9 @@ public final class WHBlocks {
                             drag = 0.004f;
                             ammoMultiplier = 0.5f;
                             statusDuration = 60f * 4f;
+                            limitRange(this, 5);
                         }},
                         Liquids.cryofluid, new LiquidBulletType(Liquids.cryofluid) {{
-                            lifetime = 290 / 4f;
                             speed = 4f;
                             knockback = 1.3f;
                             puddleSize = 8f;
@@ -5132,9 +5316,9 @@ public final class WHBlocks {
                             ammoMultiplier = 0.5f;
                             statusDuration = 60f * 4f;
                             damage = 0.2f;
+                            limitRange(this, 5);
                         }},
                         Liquids.oil, new LiquidBulletType(Liquids.oil) {{
-                            lifetime = 290 / 4f;
                             speed = 4f;
                             knockback = 1.3f;
                             puddleSize = 8f;
@@ -5144,11 +5328,13 @@ public final class WHBlocks {
                             statusDuration = 60f * 4f;
                             damage = 0.2f;
                             layer = EFFECT_BOTTOM;
+                            limitRange(this, 5);
                         }}
                 );
 
                 drawer = new DrawMulti(new DrawTurret(WarHammerMod.name("turret-")));
                 flags = EnumSet.of(BlockFlag.turret, BlockFlag.extinguisher);
+
             }
 
             @Override
@@ -5289,12 +5475,12 @@ public final class WHBlocks {
                 liquidCapacity = 120f;
                 shootEffect = Fx.shootLiquid;
                 squareSprite = false;
-                range = 290f;
+                float r = range = 300;
                 fogRadiusMultiplier = 0.3f;
 
                 ammo(
                         WHLiquids.swageWater, new LiquidBulletType(WHLiquids.swageWater) {{
-                            lifetime = 290 / 4f;
+                            lifetime = r / 4f;
                             speed = 4f;
                             knockback = 1.7f;
                             puddleSize = 8f;
@@ -5306,19 +5492,19 @@ public final class WHBlocks {
                             layer = EFFECT_BOTTOM;
                         }},
                         Liquids.water, new LiquidBulletType(Liquids.water) {{
-                            lifetime = 290 / 4f;
+                            lifetime = r / 4f;
                             speed = 4f;
                             knockback = 1.7f;
                             puddleSize = 8f;
                             orbSize = 4f;
                             drag = 0.002f;
-                            ammoMultiplier = 0.3f;
+                            ammoMultiplier = 1f;
                             statusDuration = 60f * 4f;
                             damage = 0.2f;
                             layer = EFFECT_BOTTOM;
                         }},
                         Liquids.slag, new LiquidBulletType(Liquids.slag) {{
-                            lifetime = 290 / 4f;
+                            lifetime = r / 4f;
                             speed = 4f;
                             knockback = 1.3f;
                             puddleSize = 8f;
@@ -5329,7 +5515,7 @@ public final class WHBlocks {
                             statusDuration = 60f * 4f;
                         }},
                         Liquids.cryofluid, new LiquidBulletType(Liquids.cryofluid) {{
-                            lifetime = 290 / 4f;
+                            lifetime = r / 4f;
                             speed = 4f;
                             knockback = 1.3f;
                             puddleSize = 8f;
@@ -5340,7 +5526,7 @@ public final class WHBlocks {
                             damage = 0.2f;
                         }},
                         Liquids.oil, new LiquidBulletType(Liquids.oil) {{
-                            lifetime = 290 / 4f;
+                            lifetime = r / 4f;
                             speed = 4f;
                             knockback = 1.3f;
                             puddleSize = 8f;

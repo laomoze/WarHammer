@@ -37,6 +37,7 @@ public class WHShaders{
     public static OutlineShader powerArea, powerDynamicArea;
     public static ConvexLensShader convex;
     public static RectLensShader convexRect;
+    public static @Nullable PsychicTideShader psychicTide;
 
     private WHShaders(){
     }
@@ -61,6 +62,12 @@ public class WHShaders{
         convex = new ConvexLensShader();
         convexRect = new RectLensShader();
         hexagonalShield = new HexagonalTextureShieldShader();
+        try {
+            psychicTide = new PsychicTideShader();
+        } catch (Throwable t) {
+            psychicTide = null;
+            Log.err("Failed to load psychic tide shader.", t);
+        }
     }
 
 
@@ -545,6 +552,26 @@ public class WHShaders{
             this.setUniformi("u_blackholecount", blackHoles.length / 4);
             this.setUniform4fv("u_blackholes", blackHoles, 0, blackHoles.length);
             this.setUniform4fv("u_blackholeStrengths", blackHoleStrengths, 0, blackHoleStrengths.length);
+        }
+    }
+
+    public static class PsychicTideShader extends Shader {
+        public PsychicTideShader() {
+            super(
+                    files.internal("shaders/screenspace.vert"),
+                    tree.get("shaders/psychicTide.frag")
+            );
+        }
+
+        @Override
+        public void apply() {
+            float camWidth = Math.max(Core.camera.width, 0.0001f);
+            float camHeight = Math.max(Core.camera.height, 0.0001f);
+            setUniformf("u_time", Time.time);
+            setUniformf("u_campos",
+                    Core.camera.position.x - camWidth / 2f,
+                    Core.camera.position.y - camHeight / 2f);
+            setUniformf("u_resolution", camWidth, camHeight);
         }
     }
 }

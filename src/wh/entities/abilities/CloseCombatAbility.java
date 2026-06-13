@@ -1,11 +1,13 @@
 package wh.entities.abilities;
 
-import arc.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import mindustry.entities.*;
-import mindustry.entities.abilities.*;
-import mindustry.gen.*;
+import arc.Core;
+import arc.scene.ui.layout.Table;
+import arc.util.Interval;
+import arc.util.Strings;
+import mindustry.entities.Units;
+import mindustry.entities.abilities.Ability;
+import mindustry.gen.Unit;
+import wh.content.WHStats;
 
 import static mindustry.Vars.tilesize;
 import static wh.core.WarHammerMod.name;
@@ -70,11 +72,11 @@ public class CloseCombatAbility extends Ability{
     public void addStats(Table t){
         super.addStats(t);
         t.row();
-        t.add(Core.bundle.format("stat.wh-range", Strings.autoFixed(range / tilesize, 2)));
+        t.add(WHStats.format("wh-range", Strings.autoFixed(range / tilesize, 2) + " " + mindustry.world.meta.StatUnit.blocks.localized()));
         t.row();
-        t.add(Core.bundle.format("stat.wh-close-combat-max-count", maxEnemies));
+        t.add(WHStats.format("wh-close-combat-max-count", maxEnemies));
         t.row();
-        t.add(Core.bundle.format("stat.wh-close-combat-damage", Strings.autoFixed(damageBoostPerEnemy * 100f, 2) + "%"));
+        t.add(WHStats.format("wh-close-combat-damage", Strings.autoFixed(damageBoostPerEnemy * 100f, 2) + "%"));
     }
 
     @Override
