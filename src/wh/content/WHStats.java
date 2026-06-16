@@ -16,6 +16,8 @@ public class WHStats{
             psychicProduction = new Stat("wh-psychic-production", StatCat.function),
             psychicConsumption = new Stat("wh-psychic-consumption", StatCat.function),
             psychicSuppression = new Stat("wh-psychic-suppression", StatCat.function),
+            psychicStability = new Stat("wh-psychic-stability", StatCat.function),
+            psychicPressureBoost = new Stat("wh-psychic-pressure-boost", StatCat.function),
             psychicLoss = new Stat("wh-psychic-loss", StatCat.function),
             psychicThreshold = new Stat("wh-psychic-threshold", StatCat.function),
             psychicFieldWidth = new Stat("wh-psychic-field-width", StatCat.function),

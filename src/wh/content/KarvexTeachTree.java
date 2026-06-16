@@ -561,6 +561,28 @@ public final class KarvexTeachTree {
                 });
             });
         });
+
+        node(WHBlocks.psychicSandboxSource, () -> {
+            node(WHBlocks.psychicTransmitter, () -> {
+                node(WHBlocks.psychicValve, () -> {
+                    node(WHBlocks.psychicAnchor, () -> {
+                        node(WHBlocks.psychicOverpressurePump, () -> {
+                            node(WHBlocks.psychicVoid, () -> {
+                                node(WHBlocks.frontlineNode, () -> {
+                                    node(WHBlocks.deathHarvester, () -> {
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+
+            node(WHBlocks.psychicFactory, () -> {
+                node(WHBlocks.psychicCondenser, () -> {
+                });
+            });
+        });
     }
 
     private static void buildDefenseBranch() {
