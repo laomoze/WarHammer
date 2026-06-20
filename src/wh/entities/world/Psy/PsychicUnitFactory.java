@@ -19,17 +19,15 @@ public class PsychicUnitFactory extends UnitFactory {
     public float passivePsychicLoss = 0f;
     public Color psychicColor = Color.valueOf("9f74ff");
     public Color overloadColor = Color.valueOf("ffb16a");
-    public Color disorderColor = Color.valueOf("d065ff");
     public float overloadDecay = 0.03f;
-    public float disorderDecay = 0.02f;
     public float overloadBlockScale = 0.35f;
-    public float disorderBiasScale = 0.2f;
-    public float disorderPsychicLoss = 0.018f;
+    public float overloadHealthLoss = 1.2f;
+    public float overloadDangerThreshold = 0.35f;
+    public float overloadDangerExponent = 2.2f;
 
     public PsychicUnitFactory(String name) {
         super(name);
         sync = true;
-        buildType = PsychicUnitFactoryBuild::new;
     }
 
     @Override
@@ -70,17 +68,6 @@ public class PsychicUnitFactory extends UnitFactory {
                 }
         ));
 
-        addBar("psychic-overload", (PsychicUnitFactoryBuild build) -> new PsychicBar(
-                () -> bundleFormat("bar.wh-psychic-overload", Strings.autoFixed(Mathf.clamp(build.overload) * 100f, 0)),
-                () -> overloadColor,
-                () -> Mathf.clamp(build.overload)
-        ));
-
-        addBar("psychic-disorder", (PsychicUnitFactoryBuild build) -> new PsychicBar(
-                () -> bundleFormat("bar.wh-psychic-disorder", Strings.autoFixed(Mathf.clamp(build.disorder) * 100f, 0)),
-                () -> disorderColor,
-                () -> Mathf.clamp(build.disorder)
-        ));
     }
 
     protected String bundleFormat(String key, Object... args) {
@@ -120,7 +107,7 @@ public class PsychicUnitFactory extends UnitFactory {
     public class PsychicUnitFactoryBuild extends UnitFactoryBuild implements PsychicNetworkNode {
         public final PsychicModule psychic = new PsychicModule();
         public float overload;
-        public float disorder;
+        public float overloadExposure;
 
         public float psychicStored() {
             return psychic.amount();
@@ -137,7 +124,7 @@ public class PsychicUnitFactory extends UnitFactory {
 
         @Override
         public float inputPotential() {
-            return psychicStored() + disorder * disorderBiasScale;
+            return psychicStored();
         }
 
         public float psychicSpace() {
@@ -160,11 +147,17 @@ public class PsychicUnitFactory extends UnitFactory {
             if (passivePsychicLoss > 0f) {
                 psychic.remove(passivePsychicLoss / 60f * delta());
             }
-            if (disorder > PsychicNetworkNode.epsilon) {
-                psychic.remove(disorder * disorderPsychicLoss / 60f * delta());
+            if (overload > PsychicNetworkNode.epsilon) {
+                overloadExposure += delta() / 60f * Mathf.clamp(overload);
+            } else {
+                overloadExposure = Mathf.approachDelta(overloadExposure, 0f, 0.03f);
+            }
+            if (overload > overloadDangerThreshold && overloadHealthLoss > 0f) {
+                float severity = Mathf.pow(Math.max(overload - overloadDangerThreshold, 0f), overloadDangerExponent);
+                float exposureScale = 1f + overloadExposure;
+                damage(severity * exposureScale * overloadHealthLoss / 60f * delta());
             }
             overload = Mathf.approachDelta(overload, 0f, overloadDecay);
-            disorder = Mathf.approachDelta(disorder, 0f, disorderDecay);
             psychic.clamp(psychicCapacity);
         }
 
@@ -207,7 +200,7 @@ public class PsychicUnitFactory extends UnitFactory {
 
         @Override
         public float energyTransferScale() {
-            return Mathf.clamp(1f - overload * 0.2f - disorder * 0.12f, 0.2f, 1f);
+            return Mathf.clamp(1f - overload * 0.2f, 0.2f, 1f);
         }
 
         @Override
@@ -230,11 +223,6 @@ public class PsychicUnitFactory extends UnitFactory {
         @Override
         public void onEnergyOverload(float amount) {
             overload = Math.max(overload + amount, 0f);
-        }
-
-        @Override
-        public void onEnergyDisorder(float amount) {
-            disorder = Math.max(disorder + amount, 0f);
         }
 
         @Override
@@ -261,7 +249,7 @@ public class PsychicUnitFactory extends UnitFactory {
 
         @Override
         public byte version() {
-            return 5;
+            return 7;
         }
 
         @Override
@@ -269,25 +257,24 @@ public class PsychicUnitFactory extends UnitFactory {
             super.write(write);
             psychic.write(write);
             write.f(overload);
-            write.f(disorder);
+            write.f(overloadExposure);
         }
 
         @Override
         public void read(Reads read, byte revision) {
             super.read(read, revision);
-            if (revision >= 4) {
-                psychic.read(read);
-            } else {
+            if (revision < 4) {
                 psychic.clear();
+            } else {
+                psychic.read(read);
             }
 
-            if (revision >= 5) {
-                overload = Math.max(read.f(), 0f);
-                disorder = Math.max(read.f(), 0f);
-            } else {
-                overload = 0f;
-                disorder = 0f;
+            overload = revision >= 5 ? Math.max(read.f(), 0f) : 0f;
+
+            if (revision == 6) {
+                read.f(); // 跳过旧版遗留字段
             }
+            overloadExposure = revision >= 6 ? Math.max(read.f(), 0f) : 0f;
         }
     }
 }

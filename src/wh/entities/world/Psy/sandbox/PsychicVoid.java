@@ -10,7 +10,6 @@ public class PsychicVoid extends PsychicBlock {
         outputsPsychicLinks = false;
         configurable = false;
         drawArrow = false;
-        buildType = PsychicVoidBuild::new;
     }
 
     public class PsychicVoidBuild extends PsychicBuild {
@@ -33,7 +32,6 @@ public class PsychicVoid extends PsychicBlock {
         protected void updatePsychicState() {
             psychic.clear();
             overload = 0f;
-            disorder = 0f;
             networkStability = 0f;
             pressureBoost = 0f;
         }

@@ -310,6 +310,8 @@ public final class KarvexTeachTree {
             node(WHBlocks.basicUnloader, () -> {
                 node(WHBlocks.armoredContainer, () -> {
                     node(WHBlocks.armoredVault, () -> {
+                        node(WHBlocks.psychicCoreWarehouse, () -> {
+                        });
                     });
                     node(WHBlocks.steelUnloader, () -> {
                     });
@@ -562,15 +564,15 @@ public final class KarvexTeachTree {
             });
         });
 
-        node(WHBlocks.psychicSandboxSource, () -> {
-            node(WHBlocks.psychicTransmitter, () -> {
-                node(WHBlocks.psychicValve, () -> {
-                    node(WHBlocks.psychicAnchor, () -> {
-                        node(WHBlocks.psychicOverpressurePump, () -> {
-                            node(WHBlocks.psychicVoid, () -> {
-                                node(WHBlocks.frontlineNode, () -> {
-                                    node(WHBlocks.deathHarvester, () -> {
-                                    });
+        node(WHBlocks.psySource, () -> {
+            node(WHBlocks.psyNode, () -> {
+                node(WHBlocks.psyVoid, () -> {
+                    node(WHBlocks.psyRequiem, () -> {
+                        node(WHBlocks.psyResonator, () -> {
+                            node(WHBlocks.psyAmplifier, () -> {
+                                node(WHBlocks.psySink, () -> {
+                                });
+                                node(WHBlocks.psyBeacon, () -> {
                                 });
                             });
                         });
@@ -578,8 +580,8 @@ public final class KarvexTeachTree {
                 });
             });
 
-            node(WHBlocks.psychicFactory, () -> {
-                node(WHBlocks.psychicCondenser, () -> {
+            node(WHBlocks.psyFactory, () -> {
+                node(WHBlocks.psyCondenser, () -> {
                 });
             });
         });
@@ -621,6 +623,8 @@ public final class KarvexTeachTree {
                 });
 
                 node(WHBlocks.repairTower, () -> {
+                    node(WHBlocks.psychicRepairTower, () -> {
+                    });
                     node(WHBlocks.shelterDome, () -> {
                     });
                 });

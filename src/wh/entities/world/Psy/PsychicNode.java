@@ -1,6 +1,7 @@
 package wh.entities.world.Psy;
 
 import arc.Core;
+import arc.func.Cons2;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Lines;
@@ -25,11 +26,13 @@ import mindustry.graphics.Pal;
 import mindustry.input.Placement;
 import mindustry.world.Edges;
 import mindustry.world.Tile;
+import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
 import wh.core.WHSettings;
 import wh.graphics.Drawn;
 import wh.graphics.PositionLightning;
+import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 import wh.util.WHUtils;
 
@@ -59,7 +62,7 @@ public class PsychicNode extends PsychicBlock {
     public float downstreamPressureBoost = 0.55f;
 
     public float overloadLightningChance = 0.03f;
-    public float overloadLightningThreshold = 0.08f;
+    public float overloadLightningThreshold = 0.2f;
     public float overloadLightningRange = 8f;
     public float overloadLightningWidth = 1.35f;
     public int overloadLightningBolts = 2;
@@ -85,7 +88,6 @@ public class PsychicNode extends PsychicBlock {
         update = true;
         sync = true;
         drawArrow = false;
-        buildType = PsychicNodeBuild::new;
     }
 
     @Override
@@ -93,6 +95,24 @@ public class PsychicNode extends PsychicBlock {
         super.setStats();
         PsychicStatValues.add(stats, WHStats.psychicTransferRate, transferRate, StatUnit.perSecond);
         PsychicStatValues.add(stats, WHStats.psychicLinkRange, linkRange, StatUnit.blocks);
+        stats.add(Stat.output, table -> table.add(bundleFormat("bar.wh-psychic-budget", Strings.autoFixed(transferRate, 2))));
+    }
+
+    @Override
+    public void setBars() {
+        super.setBars();
+
+        addBar("psychic-flow", (PsychicNodeBuild build) -> new PsychicBar(
+                () -> bundleFormat("bar.wh-psychic-budget", Strings.autoFixed(build.displayFlowRate(), 2)),
+                () -> laserColor1,
+                () -> transferRate <= 0.0001f ? 0f : Mathf.clamp(build.displayFlowRate() / transferRate)
+        ));
+
+        addBar("psychic-overload", (PsychicNodeBuild build) -> new PsychicBar(
+                () -> bundleFormat("bar.wh-psychic-overload", Strings.autoFixed(Mathf.clamp(build.overload) * 100f, 0)),
+                () -> overloadColor,
+                () -> Mathf.clamp(build.overload)
+        ));
     }
 
     @Override
@@ -104,19 +124,33 @@ public class PsychicNode extends PsychicBlock {
 
     @Override
     public void drawPlace(int x, int y, int rotation, boolean valid) {
-        super.drawPlace(x, y, rotation, valid);
-
-        drawPlaceDirection(x, y, rotation, outputSide(rotation), true, Pal.placing);
-        for (int i = 0; i < 4; i++) {
-            if (i != outputSide(rotation)) {
-                drawPlaceDirection(x, y, rotation, i, false, Pal.place);
-            }
-        }
-
-        drawPlaceMarkers(x, y, rotation);
+        drawBasePlacement(x, y, rotation, valid);
+        drawDefaultNodePlacementPreview(x, y, rotation);
     }
 
-    protected void drawPlaceDirection(int x, int y, int rotation, int direction, boolean output, Color color) {
+    /**
+     * 绘制方块通用的放置底图，子类可复用后叠加自己的方向预览。
+     */
+    protected void drawBasePlacement(int x, int y, int rotation, boolean valid) {
+        super.drawPlace(x, y, rotation, valid);
+    }
+
+    /**
+     * 绘制普通灵能节点的默认放置预览：一侧输出，其余三侧输入。
+     */
+    protected void drawDefaultNodePlacementPreview(int x, int y, int rotation) {
+        drawPlacementLinkPreview(x, y, rotation, outputSide(rotation), true, Pal.placing);
+        for (int i = 0; i < 4; i++) {
+            if (i != outputSide(rotation)) {
+                drawPlacementLinkPreview(x, y, rotation, i, false, Pal.place);
+            }
+        }
+    }
+
+    /**
+     * 沿指定方向绘制一条放置期的连接预览线，并在可连接目标上标出框选。
+     */
+    protected void drawPlacementLinkPreview(int x, int y, int rotation, int direction, boolean output, Color color) {
         int maxLen = linkRange + size / 2;
         Building dest = null;
         var dir = Geometry.d4[direction];
@@ -134,10 +168,10 @@ public class PsychicNode extends PsychicBlock {
         }
 
         Tile target = dest == null ? Vars.world.tile(x + dir.x * maxLen, y + dir.y * maxLen) : dest.tile;
-        previewEdgePoint(x, y, target, Tmp.v1);
+        resolvePlacementSourceEdgePoint(x, y, direction, target, Tmp.v1);
 
         if (dest != null) {
-            previewTargetEdgePoint(dest, x, y, Tmp.v2);
+            resolvePlacementTargetEdgePoint(dest, x, y, Mathf.mod(direction + 2, 4), Tmp.v2);
         } else {
             Tmp.v2.set(x * tilesize + dir.x * maxLen * tilesize, y * tilesize + dir.y * maxLen * tilesize);
         }
@@ -149,63 +183,62 @@ public class PsychicNode extends PsychicBlock {
         }
     }
 
-    protected void previewEdgePoint(int x, int y, Tile other, Vec2 out) {
-        Tile edge = other == null ? null : Edges.getFacingEdge(this, x, y, other);
-        if (edge == null) {
-            out.set(x * tilesize + offset, y * tilesize + offset);
-        } else {
-            edgePoint(edge, other, out);
-        }
-    }
-
-    protected void previewTargetEdgePoint(Building dest, int x, int y, Vec2 out) {
-        Tile other = Vars.world.tile(x, y);
-        Tile edge = other == null ? null : Edges.getFacingEdge(dest.block, dest.tileX(), dest.tileY(), other);
-        if (edge == null) {
-            out.set(dest.x, dest.y);
-        } else {
-            edgePoint(edge, other, out);
-        }
-    }
-
-    protected void edgePoint(Tile edge, Tile other, Vec2 out) {
-        if (edge == null || other == null) {
-            if (edge == null) {
-                out.setZero();
-            } else {
-                out.set(edge.worldx(), edge.worldy());
-            }
+    /**
+     * 求放置中本方朝向目标的边缘发射点。
+     */
+    protected void resolvePlacementSourceEdgePoint(int x, int y, int direction, Tile other, Vec2 out) {
+        if (other == null) {
+            resolveBlockSidePoint(x * tilesize + offset, y * tilesize + offset, size, direction, out);
             return;
         }
 
-        int dx = Integer.compare(other.x, edge.x);
-        int dy = Integer.compare(other.y, edge.y);
-        if (Math.abs(other.x - edge.x) >= Math.abs(other.y - edge.y)) {
-            dy = 0;
+        Tile edge = Edges.getFacingEdge(this, x, y, other);
+        resolveTileEdgePoint(edge, direction, out);
+    }
+
+    /**
+     * 求放置中目标方块朝向本方的边缘接收点。
+     */
+    protected void resolvePlacementTargetEdgePoint(Building dest, int sourceX, int sourceY, int direction, Vec2 out) {
+        Tile source = Vars.world.tile(sourceX, sourceY);
+        Tile edge = source == null ? dest.tile : Edges.getFacingEdge(dest.block, dest.tileX(), dest.tileY(), source);
+        resolveTileEdgePoint(edge, direction, out);
+    }
+
+    /**
+     * 根据方块中心、尺寸和方向，求这一侧正中的边缘点。
+     */
+    protected void resolveBlockSidePoint(float centerX, float centerY, int blockSize, int direction, Vec2 out) {
+        Point2 dir = Geometry.d4[Mathf.mod(direction, 4)];
+        float half = blockSize * tilesize / 2f;
+        out.set(centerX + dir.x * half, centerY + dir.y * half);
+    }
+
+    /**
+     * 根据边缘 tile 和方向，求该 tile 外侧的连线端点。
+     */
+    protected void resolveTileEdgePoint(Tile edge, int direction, Vec2 out) {
+        if (edge == null) {
+            out.setZero();
+            return;
+        }
+
+        Point2 dir = Geometry.d4[Mathf.mod(direction, 4)];
+        out.set(edge.worldx() + dir.x * tilesize / 2f, edge.worldy() + dir.y * tilesize / 2f);
+    }
+
+    /**
+     * 按目标向量主轴方向，求更贴近目标侧的边缘点。
+     */
+    protected void resolveAxisAlignedSidePoint(float centerX, float centerY, int blockSize, Vec2 toward, Vec2 out) {
+        float half = blockSize * tilesize / 2f;
+        if (Math.abs(toward.x) >= Math.abs(toward.y)) {
+            out.set(centerX + Mathf.sign(toward.x) * half, centerY);
         } else {
-            dx = 0;
-        }
-
-        out.set(edge.worldx() + dx * tilesize / 2f, edge.worldy() + dy * tilesize / 2f);
-    }
-
-    protected void drawPlaceMarkers(int x, int y, int rotation) {
-        float worldX = x * tilesize + offset;
-        float worldY = y * tilesize + offset;
-        float radius = size * tilesize * 0.78f;
-
-        var out = Geometry.d4[outputSide(rotation)];
-        Drawf.arrow(worldX, worldY, worldX + out.x * radius, worldY + out.y * radius, radius, 4f, Pal.placing);
-        Drawf.square(worldX + out.x * radius * 0.72f, worldY + out.y * radius * 0.72f, 3.5f, 0f, Pal.placing);
-
-        for (int i = 0; i < 4; i++) {
-            if (i == outputSide(rotation)) continue;
-
-            var dir = Geometry.d4[i];
-            Drawf.arrow(worldX + dir.x * radius, worldY + dir.y * radius, worldX, worldY, radius * 0.72f, 3.5f, Pal.place);
-            Drawf.square(worldX + dir.x * radius * 0.72f, worldY + dir.y * radius * 0.72f, 3f, 45f, Pal.place);
+            out.set(centerX, centerY + Mathf.sign(toward.y) * half);
         }
     }
+
 
     protected boolean linkValidPreview(Building other, mindustry.game.Team team, boolean output) {
         if (other == null || other.team != team || !other.isAdded() || !(other instanceof PsychicNetworkNode node))
@@ -216,7 +249,7 @@ public class PsychicNode extends PsychicBlock {
     protected boolean previewLinkMatchesDirection(int direction, boolean output, Building other) {
         if (!(other instanceof PsychicNodeBuild node)) return true;
         int sideFacingThis = Mathf.mod(direction + 2, 4);
-        return output ? node.isInputSide(sideFacingThis) : node.outputSide() == sideFacingThis;
+        return output ? node.canReceiveFromSide(sideFacingThis) : node.canOutputToSide(sideFacingThis);
     }
 
     protected boolean linkValid(Building self, Building other) {
@@ -228,11 +261,11 @@ public class PsychicNode extends PsychicBlock {
     }
 
     protected boolean canReceiveLink(PsychicNetworkNode node) {
-        return node != null && node.acceptEnergy(null);
+        return node != null && node.acceptsPsychicLinks();
     }
 
     protected boolean canOutputLink(PsychicNetworkNode node) {
-        return node != null && node.outputEnergy();
+        return node != null && node.outputsPsychicLinks();
     }
 
     @Override
@@ -257,7 +290,91 @@ public class PsychicNode extends PsychicBlock {
         public int lastTileChanges = -1;
         public float lastPull;
         public float lastPush;
+        public float displayFlowRate;
         public byte beamFlowSign;
+
+        /**
+         * 获取方块在 x 或 y 轴上所覆盖的最小 tile 坐标。
+         */
+        protected int minTileOnAxis(Building build, boolean xAxis) {
+            return (xAxis ? build.tileX() : build.tileY()) - (build.block.size - 1) / 2;
+        }
+
+        /**
+         * 获取方块在 x 或 y 轴上所覆盖的最大 tile 坐标。
+         */
+        protected int maxTileOnAxis(Building build, boolean xAxis) {
+            return (xAxis ? build.tileX() : build.tileY()) + build.block.size / 2;
+        }
+
+        /**
+         * 枚举两块在相对边缘上真正重合的 tile 对。
+         * 如果没有重合边缘，就退回到 facing edge 的单对连接。
+         */
+        protected void eachAlignedBeamTilePair(Building from, Building to, int fromDirection, int toDirection, Cons2<Tile, Tile> consumer) {
+            if (from == null || to == null) return;
+
+            boolean horizontal = fromDirection == 0 || fromDirection == 2;
+            int fromFixed = horizontal ? (fromDirection == 0 ? maxTileOnAxis(from, true) : minTileOnAxis(from, true))
+                    : (fromDirection == 1 ? maxTileOnAxis(from, false) : minTileOnAxis(from, false));
+            int toFixed = horizontal ? (toDirection == 0 ? maxTileOnAxis(to, true) : minTileOnAxis(to, true))
+                    : (toDirection == 1 ? maxTileOnAxis(to, false) : minTileOnAxis(to, false));
+
+            int fromMin = horizontal ? minTileOnAxis(from, false) : minTileOnAxis(from, true);
+            int fromMax = horizontal ? maxTileOnAxis(from, false) : maxTileOnAxis(from, true);
+            int toMin = horizontal ? minTileOnAxis(to, false) : minTileOnAxis(to, true);
+            int toMax = horizontal ? maxTileOnAxis(to, false) : maxTileOnAxis(to, true);
+
+            int overlapMin = Math.max(fromMin, toMin);
+            int overlapMax = Math.min(fromMax, toMax);
+
+            if (overlapMin <= overlapMax) {
+                for (int axis = overlapMin; axis <= overlapMax; axis++) {
+                    Tile fromTile = horizontal ? Vars.world.tile(fromFixed, axis) : Vars.world.tile(axis, fromFixed);
+                    Tile toTile = horizontal ? Vars.world.tile(toFixed, axis) : Vars.world.tile(axis, toFixed);
+                    if (fromTile != null && toTile != null) {
+                        consumer.get(fromTile, toTile);
+                    }
+                }
+                return;
+            }
+
+            Tile fromEdge = Edges.getFacingEdge(from, to);
+            Tile toEdge = Edges.getFacingEdge(to, from);
+            if (fromEdge != null && toEdge != null) {
+                consumer.get(fromEdge, toEdge);
+            }
+        }
+
+        /**
+         * 选出一对代表性的主连线端点，供粒子和方向判断复用。
+         */
+        protected boolean resolvePrimaryBeamEndpoints(Building from, Building to, int fromDirection, int toDirection) {
+            final Tile[] bestFrom = {null};
+            final Tile[] bestTo = {null};
+            final float[] bestDistance = {Float.MAX_VALUE};
+            boolean horizontal = fromDirection == 0 || fromDirection == 2;
+            float centerAxis = horizontal ? (from.y + to.y) * 0.5f : (from.x + to.x) * 0.5f;
+
+            Tmp.v1.setZero();
+            Tmp.v2.setZero();
+
+            eachAlignedBeamTilePair(from, to, fromDirection, toDirection, (fromTile, toTile) -> {
+                float axis = horizontal ? (fromTile.worldy() + toTile.worldy()) * 0.5f : (fromTile.worldx() + toTile.worldx()) * 0.5f;
+                float distance = Math.abs(axis - centerAxis);
+                if (distance < bestDistance[0]) {
+                    bestDistance[0] = distance;
+                    bestFrom[0] = fromTile;
+                    bestTo[0] = toTile;
+                }
+            });
+
+            if (bestFrom[0] == null) return false;
+
+            resolveTileEdgePoint(bestFrom[0], fromDirection, Tmp.v1);
+            resolveTileEdgePoint(bestTo[0], toDirection, Tmp.v2);
+            return true;
+        }
 
         @Override
         public void updateTile() {
@@ -271,11 +388,13 @@ public class PsychicNode extends PsychicBlock {
             if (!enabled) {
                 lastPull = 0f;
                 lastPush = 0f;
+                displayFlowRate = Mathf.lerpDelta(displayFlowRate, 0f, 0.08f);
                 return;
             }
 
             lastPull = transferBudget() - pullInputs(transferBudget());
             lastPush = transferBudget() - pushOutput(transferBudget());
+            displayFlowRate = Mathf.lerpDelta(displayFlowRate, ratePerSecond(Math.max(lastPull, lastPush)), 0.12f);
             updateBeamVisuals();
             updateOverloadLightning();
         }
@@ -306,16 +425,8 @@ public class PsychicNode extends PsychicBlock {
 
             if (team == mindustry.game.Team.derelict || Mathf.zero(Renderer.laserOpacity)) return;
 
-            int out = outputSide();
             Draw.z(Layer.power - 0.05f);
-
-            drawInputBeams();
-
-            if (dests[out] != null && links[out] != null && connection[out] > PsychicNetworkNode.epsilon) {
-                drawLaser(out, (laserWidth + Mathf.absin(pulseScl, pulseMag)) * connection[out]);
-                drawFlowParticles(out);
-            }
-
+            drawBeamVisuals();
             Draw.reset();
         }
 
@@ -353,6 +464,7 @@ public class PsychicNode extends PsychicBlock {
             Arrays.fill(beamPotentialDiff, 0f);
             Arrays.fill(beamEffectAlpha, 0f);
             Arrays.fill(flowMemory, 0f);
+            displayFlowRate = 0f;
             beamFlowSign = 0;
         }
 
@@ -360,17 +472,42 @@ public class PsychicNode extends PsychicBlock {
             return transferRate / 60f * delta();
         }
 
-        protected void updateBeamCache() {
-            int out = outputSide();
-            beamFlowRate[out] = Mathf.approachDelta(beamFlowRate[out], 0f, Math.max(transferRate * 0.04f, flowParticleMinRate));
-            beamPotentialDiff[out] = Mathf.approachDelta(beamPotentialDiff[out], 0f, flowParticleMinPotential * 0.04f);
-            beamEffectAlpha[out] = Mathf.approachDelta(beamEffectAlpha[out], 0f, flowParticleFadeSpeed);
+        public float displayFlowRate() {
+            return displayFlowRate;
+        }
 
-            if (beamEffectAlpha[out] <= PsychicNetworkNode.epsilon) {
-                beamFlowRate[out] = 0f;
-                beamPotentialDiff[out] = 0f;
-                beamFlowSign = 0;
+        @Override
+        public float warmup() {
+            float linkWarmup = 0f;
+            for (int i = 0; i < 4; i++) {
+                linkWarmup = Math.max(linkWarmup, connection[i]);
             }
+
+            float flowWarmup = transferRate <= 0.0001f ? 0f : Mathf.clamp(displayFlowRate / transferRate);
+            return Mathf.clamp(Math.max(super.warmup(), Math.max(linkWarmup, flowWarmup)));
+        }
+
+        @Override
+        public float progress() {
+            return transferRate <= 0.0001f ? 0f : Mathf.clamp(displayFlowRate / transferRate);
+        }
+
+        protected void updateBeamCache() {
+            boolean active = false;
+            for (int i = 0; i < 4; i++) {
+                beamFlowRate[i] = Mathf.approachDelta(beamFlowRate[i], 0f, Math.max(transferRate * 0.04f, flowParticleMinRate));
+                beamPotentialDiff[i] = Mathf.approachDelta(beamPotentialDiff[i], 0f, flowParticleMinPotential * 0.04f);
+                beamEffectAlpha[i] = Mathf.approachDelta(beamEffectAlpha[i], 0f, flowParticleFadeSpeed);
+
+                if (beamEffectAlpha[i] <= PsychicNetworkNode.epsilon) {
+                    beamFlowRate[i] = 0f;
+                    beamPotentialDiff[i] = 0f;
+                } else {
+                    active = true;
+                }
+            }
+
+            if (!active) beamFlowSign = 0;
         }
 
         protected void updateFlowMemory() {
@@ -420,7 +557,7 @@ public class PsychicNode extends PsychicBlock {
         protected boolean linkMatchesDirection(int direction, boolean output, Building other) {
             if (!(other instanceof PsychicNodeBuild node)) return true;
             int sideFacingThis = Mathf.mod(direction + 2, 4);
-            return output ? node.isInputSide(sideFacingThis) : node.outputSide() == sideFacingThis;
+            return output ? node.canReceiveFromSide(sideFacingThis) : node.canOutputToSide(sideFacingThis);
         }
 
         protected boolean sourceClaimedByBetterInput(Building source, int direction) {
@@ -522,7 +659,7 @@ public class PsychicNode extends PsychicBlock {
 
                 lastPull += moved;
                 rememberFlowDirection(i, moved, pressure);
-                rememberInputFlow(moved, pressure);
+                rememberInputFlow(i, moved, pressure);
                 afterBeamTransfer(i, other, moved * efficiency, false);
                 budget -= moved / memoryScale;
             }
@@ -555,6 +692,14 @@ public class PsychicNode extends PsychicBlock {
             return PsychicNode.this.outputSide(rotation);
         }
 
+        protected boolean canReceiveFromSide(int direction) {
+            return isInputSide(direction);
+        }
+
+        protected boolean canOutputToSide(int direction) {
+            return direction == outputSide();
+        }
+
         protected float linkEfficiency(int direction, Building other) {
             return other instanceof PsychicNodeBuild ? 1f : buildingEfficiency(other);
         }
@@ -573,10 +718,13 @@ public class PsychicNode extends PsychicBlock {
             );
         }
 
-        protected void rememberInputFlow(float moved, float pressure) {
+        protected void rememberInputFlow(int direction, float moved, float pressure) {
             if (pressure <= PsychicNetworkNode.epsilon || moved <= PsychicNetworkNode.epsilon) return;
-            int out = outputSide();
-            beamPotentialDiff[out] = Math.max(beamPotentialDiff[out], pressure);
+            float rate = ratePerSecond(moved);
+            beamFlowRate[direction] = Math.max(beamFlowRate[direction], rate);
+            beamPotentialDiff[direction] = Math.max(beamPotentialDiff[direction], pressure);
+            beamEffectAlpha[direction] = 1f;
+            beamFlowSign = 1;
         }
 
         protected void rememberOutputFlow(float moved, float pressure) {
@@ -616,6 +764,18 @@ public class PsychicNode extends PsychicBlock {
             PositionLightning.createEffect(Tmp.v1, Tmp.v2, psychicColor, overloadLightningBolts, overloadLightningWidth);
         }
 
+        protected void drawBeamVisuals() {
+            int out = outputSide();
+
+            drawInputBeams();
+            drawInputFlowParticles();
+
+            if (dests[out] != null && links[out] != null && connection[out] > PsychicNetworkNode.epsilon) {
+                drawLaser(out, (laserWidth + Mathf.absin(pulseScl, pulseMag)) * connection[out]);
+                drawFlowParticles(out);
+            }
+        }
+
         protected float buildingEfficiency(Building other) {
             float distance = Math.max(Math.abs(other.tileX() - tile.x), Math.abs(other.tileY() - tile.y));
             float normalized = Mathf.clamp((distance - 1f) / Math.max(linkRange - 1f, 1f));
@@ -635,6 +795,21 @@ public class PsychicNode extends PsychicBlock {
         }
 
         protected void afterBeamTransfer(int direction, Building other, float amount, boolean pushing) {
+            if (amount <= PsychicNetworkNode.epsilon || !WHSettings.effectEnabled()) return;
+
+            float normalized = Mathf.clamp(ratePerSecond(amount) / Math.max(transferRate, 0.0001f));
+            if (!Mathf.chanceDelta(overloadLightningChance * normalized)) return;
+
+            Building from = pushing ? this : other;
+            Building to = pushing ? other : this;
+            int fromDirection = pushing ? direction : Mathf.mod(direction + 2, 4);
+            int toDirection = pushing ? Mathf.mod(direction + 2, 4) : direction;
+
+            if (!resolvePrimaryBeamEndpoints(from, to, fromDirection, toDirection)) return;
+
+            Vec2 fromPoint = new Vec2(Tmp.v1);
+            Vec2 toPoint = new Vec2(Tmp.v2);
+            PositionLightning.createEffect(fromPoint, toPoint, psychicColor, Math.max(1, overloadLightningBolts - 1), Math.max(0.9f, overloadLightningWidth * 0.8f));
         }
 
         protected void drawInputBeams() {
@@ -648,27 +823,52 @@ public class PsychicNode extends PsychicBlock {
             }
         }
 
+        protected void drawInputFlowParticles() {
+            for (int i = 0; i < 4; i++) {
+                if (!isInputSide(i)) continue;
+
+                Building source = inputLink(i);
+                if (!linkValid(this, source)) continue;
+
+                drawFlowParticles(i, source, this, Mathf.mod(i + 2, 4), i);
+            }
+        }
+
         protected void drawInputLaser(int direction, Building source, float width) {
-            if (!beamEnds(source, this)) return;
+            if (!resolvePrimaryBeamEndpoints(source, this, Mathf.mod(direction + 2, 4), direction)) return;
 
             float pulse = (1f - Math.max(psychicFraction(), source instanceof PsychicBuild build ? build.psychicFraction() : 0f)) * 0.86f +
                     Mathf.absin(3f, pulseMag);
             Draw.color(Tmp.c1.set(laserColor1).lerp(laserColor2, pulse).a(Renderer.laserOpacity));
-            Drawf.laser(laser, laserEnd, laserEnd, Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y, width, true);
+            eachAlignedBeamTilePair(source, this, Mathf.mod(direction + 2, 4), direction, (fromTile, toTile) -> {
+                resolveTileEdgePoint(fromTile, Mathf.mod(direction + 2, 4), Tmp.v3);
+                resolveTileEdgePoint(toTile, direction, Tmp.v4);
+                Drawf.laser(laser, laserEnd, laserEnd, Tmp.v3.x, Tmp.v3.y, Tmp.v4.x, Tmp.v4.y, width, true);
+            });
         }
 
         protected void drawLaser(int direction, float width) {
             Building other = links[direction];
-            if (!linkValid(this, other) || !beamEnds(direction)) return;
+            if (!linkValid(this, other) || !resolvePrimaryBeamEndpoints(this, other, direction, Mathf.mod(direction + 2, 4)))
+                return;
 
             Draw.color(Tmp.c1.set(laserColor1).lerp(laserColor2, beamDrawPower(other, pulseMag)).a(Renderer.laserOpacity));
-            Drawf.laser(laser, laserEnd, laserEnd, Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y, width, true);
+            eachAlignedBeamTilePair(this, other, direction, Mathf.mod(direction + 2, 4), (fromTile, toTile) -> {
+                resolveTileEdgePoint(fromTile, direction, Tmp.v3);
+                resolveTileEdgePoint(toTile, Mathf.mod(direction + 2, 4), Tmp.v4);
+                Drawf.laser(laser, laserEnd, laserEnd, Tmp.v3.x, Tmp.v3.y, Tmp.v4.x, Tmp.v4.y, width, true);
+            });
         }
 
         protected void drawFlowParticles(int direction) {
-            if (!WHSettings.effectEnabled() || beamEffectAlpha[direction] <= PsychicNetworkNode.epsilon || beamFlowSign == 0)
-                return;
-            if (!beamEnds(direction)) return;
+            Building other = links[direction];
+            if (!linkValid(this, other)) return;
+            drawFlowParticles(direction, this, other, direction, Mathf.mod(direction + 2, 4));
+        }
+
+        protected void drawFlowParticles(int direction, Building from, Building to, int fromDirection, int toDirection) {
+            if (!WHSettings.effectEnabled() || beamEffectAlpha[direction] <= PsychicNetworkNode.epsilon) return;
+            if (!resolvePrimaryBeamEndpoints(from, to, fromDirection, toDirection)) return;
 
             float rate = Math.max(beamFlowRate[direction], flowParticleMinRate);
             float pressure = Math.max(beamPotentialDiff[direction], flowParticleMinPotential);
@@ -688,22 +888,29 @@ public class PsychicNode extends PsychicBlock {
                 float lenScl = rand.random(0.65f, 1.35f);
                 float alphaScl = rand.random(0.55f, 1f);
                 float fin = ((Time.time + offset) % flowParticleLife) / flowParticleLife;
-                if (beamFlowSign < 0) fin = 1f - fin;
                 float slope = Interp.pow2Out.apply(Mathf.slope(fin));
                 float len = flowParticleLen * lenScl * (0.45f + 0.55f * slope);
+                float offsetLen = hitSize() / 2.5f * rand.random(-1f, 1f);
+                float cx = Mathf.lerp(Tmp.v1.x, Tmp.v2.x, fin) + Angles.trnsx(angle + 90f, offsetLen);
+                float cy = Mathf.lerp(Tmp.v1.y, Tmp.v2.y, fin) + Angles.trnsy(angle + 90f, offsetLen);
+                float hx = Angles.trnsx(angle, len / 2f);
+                float hy = Angles.trnsy(angle, len / 2f);
 
                 Draw.color(Tmp.c1.set(psychicColor).lerp(laserColor1, 0.35f + 0.25f * widthScl).a(alpha * alphaScl));
-                Tmp.v3.set(Tmp.v1).lerp(Tmp.v2, fin);
-                Tmp.v4.trns(angle, len / 2f);
                 Lines.stroke(flowParticleWidth * widthScl * slope);
-                Lines.line(Tmp.v3.x - Tmp.v4.x, Tmp.v3.y - Tmp.v4.y, Tmp.v3.x + Tmp.v4.x, Tmp.v3.y + Tmp.v4.y, false);
+                Lines.line(cx - hx, cy - hy, cx + hx, cy + hy, false);
             }
             Lines.stroke(1f);
         }
 
         protected void drawDashedLink(Building from, Building to, Color color) {
-            if (!beamEnds(from, to)) return;
-            Drawf.dashLine(color, Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y);
+            int dir = directionTo(from, to);
+            if (dir == -1) return;
+            eachAlignedBeamTilePair(from, to, dir, Mathf.mod(dir + 2, 4), (fromTile, toTile) -> {
+                resolveTileEdgePoint(fromTile, dir, Tmp.v3);
+                resolveTileEdgePoint(toTile, Mathf.mod(dir + 2, 4), Tmp.v4);
+                Drawf.dashLine(color, Tmp.v3.x, Tmp.v3.y, Tmp.v4.x, Tmp.v4.y);
+            });
         }
 
         protected float linkDistanceScale(int direction) {
@@ -715,22 +922,14 @@ public class PsychicNode extends PsychicBlock {
         }
 
         protected boolean beamEnds(int direction) {
-            return beamEnds(this, links[direction]);
+            return resolvePrimaryBeamEndpoints(this, links[direction], direction, Mathf.mod(direction + 2, 4));
         }
 
-        protected boolean beamEnds(Building from, Building to) {
-            if (from == null || to == null) return false;
-
-            Tile fromEdge = Edges.getFacingEdge(from, to);
-            Tile toEdge = Edges.getFacingEdge(to, from);
-            if (fromEdge == null || toEdge == null || fromEdge == toEdge) return false;
-
-            int dst = Math.max(Math.abs(fromEdge.x - toEdge.x), Math.abs(fromEdge.y - toEdge.y));
-            if (dst <= 1) return false;
-
-            edgePoint(fromEdge, toEdge, Tmp.v1);
-            edgePoint(toEdge, fromEdge, Tmp.v2);
-            return true;
+        protected int directionTo(Building from, Building to) {
+            int dx = to.tileX() - from.tileX(), dy = to.tileY() - from.tileY();
+            if (dx == 0 && dy != 0) return dy > 0 ? 1 : 3;
+            if (dy == 0 && dx != 0) return dx > 0 ? 0 : 2;
+            return -1;
         }
 
         protected int linkedCount() {
@@ -750,10 +949,8 @@ public class PsychicNode extends PsychicBlock {
                     Strings.autoFixed(psychicStored(), 2),
                     Strings.autoFixed(psychicCapacity(), 0)) +
                     "\n" + bundleFormat("bar.wh-psychic-links", linkedCount()) +
-                    " | " + bundleFormat("bar.wh-psychic-pull", Strings.autoFixed(ratePerSecond(lastPull), 2)) +
-                    "\n" + bundleFormat("bar.wh-psychic-push", Strings.autoFixed(ratePerSecond(lastPush), 2)) +
-                    " | " + bundleFormat("bar.wh-psychic-overload", Strings.autoFixed(Mathf.clamp(overload) * 100f, 0)) +
-                    "\n" + bundleFormat("bar.wh-psychic-disorder", Strings.autoFixed(Mathf.clamp(disorder) * 100f, 0));
+                    " | " + bundleFormat("bar.wh-psychic-budget", Strings.autoFixed(displayFlowRate, 2)) +
+                    " | " + bundleFormat("bar.wh-psychic-overload", Strings.autoFixed(Mathf.clamp(overload) * 100f, 0));
         }
     }
 }

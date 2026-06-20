@@ -2764,7 +2764,7 @@ public final class WHUnitTypes {
                                         Draw.z(Layer.effect);
                                         Angles.randLenVectors(e.id, 1, range * rand1 * e.fout(), (x1, y1) -> {
                                             trail.length = (int) (cur * len);
-                                            trail.update(x1 + x, y1 + y, w * e.fout());
+                                            trail.update(x1 + x, y1 + y, e.fout(), w * e.fout());
                                         });
                                     });
 
@@ -2778,7 +2778,7 @@ public final class WHUnitTypes {
                                         Draw.z(Layer.effect);
                                         Angles.randLenVectors(e.id, 1, range * rand1 * e.fout(), rand2 * e.fout(), 360, (x1, y1) -> {
                                             trail.length = (int) (cur * len);
-                                            trail.update(x1 + x, y1 + y, w * e.fout());
+                                            trail.update(x1 + x, y1 + y, e.fout(), w * e.fout());
                                         });
                                     });
 
@@ -2793,7 +2793,7 @@ public final class WHUnitTypes {
                                                 dy = WHUtils.dy(y, range * e.fout(Interp.pow2In) + random * range, e.time * 2f * rand.random(0.3f, 1.5f) + random * 360);
                                         Draw.z(Layer.effect);
                                         trail.length = (int) (cur * len);
-                                        trail.update(dx, dy, w * e.fout());
+                                        trail.update(dx, dy, e.fout(), w * e.fout());
                                     });
 
                             @Override

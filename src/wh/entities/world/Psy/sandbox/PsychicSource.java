@@ -16,7 +16,6 @@ public class PsychicSource extends PsychicBlock {
         outputsPsychicLinks = true;
         configurable = false;
         drawArrow = false;
-        buildType = PsychicSourceBuild::new;
     }
 
     @Override
@@ -54,7 +53,6 @@ public class PsychicSource extends PsychicBlock {
         protected void updatePsychicState() {
             psychic.clear();
             overload = 0f;
-            disorder = 0f;
             networkStability = 0f;
             pressureBoost = 0f;
         }

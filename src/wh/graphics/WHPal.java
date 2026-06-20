@@ -36,6 +36,7 @@ public final class WHPal {
     public static Color molybdenumAlloyColor;
     public static Color resonantCrystalColor;
     public static Color BossColor;
+    public static Color PayColor;
 
     private WHPal() {
     }
@@ -46,6 +47,7 @@ public final class WHPal {
         Heat = Color.valueOf("FF4040");
 
         BossColor = Team.crux.color.cpy().lerp(Pal.slagOrange, 0.15f);
+        PayColor = Color.valueOf("D8BFFFFF");
 
         ancient = Items.surgeAlloy.color.cpy().lerp(Pal.accent, 0.115F);
         ancientHeat = Color.red.cpy().mul(1.075F);

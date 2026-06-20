@@ -17,7 +17,7 @@ import mindustry.game.SpawnGroup;
 import mindustry.gen.Groups;
 import mindustry.graphics.Layer;
 import mindustry.maps.Map;
-import wh.entities.world.Psy.PsychicDeathHarvesterBlock;
+import wh.entities.world.Psy.PsychicRequiemBlock;
 import wh.graphics.WHShaders;
 
 import java.util.Arrays;
@@ -429,7 +429,7 @@ public final class PsychicField {
         Events.on(EventType.UnitDestroyEvent.class, e -> {
             if (!active() || e.unit == null) return;
             influences.addUnitDeath(e.unit);
-            PsychicDeathHarvesterBlock.handleUnitDeath(e.unit);
+            PsychicRequiemBlock.handleUnitDeath(e.unit);
         });
 
         Events.on(EventType.BlockDestroyEvent.class, e -> {

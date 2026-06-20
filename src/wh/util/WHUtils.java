@@ -9,6 +9,7 @@ import arc.Core;
 import arc.func.Boolf;
 import arc.func.Cons;
 import arc.func.Floatc2;
+import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
 import arc.graphics.g2d.TextureRegion;
@@ -35,6 +36,7 @@ import mindustry.entities.Units;
 import mindustry.entities.bullet.BulletType;
 import mindustry.game.Team;
 import mindustry.gen.*;
+import mindustry.graphics.Drawf;
 import mindustry.type.Item;
 import mindustry.type.Liquid;
 import mindustry.type.UnitType;
@@ -51,7 +53,7 @@ import static mindustry.Vars.*;
 import static mindustry.core.World.toTile;
 import static wh.graphics.Drawn.cycle_100;
 
-public final class WHUtils{
+public final class WHUtils {
     public static final Rand rand = new Rand(0);
 
     private static Tile tileParma;
@@ -68,6 +70,8 @@ public final class WHUtils{
     static final Vec2 v3 = new Vec2();
     static final Vec2 v4 = new Vec2();
     static final Vec2 v5 = new Vec2();
+    static final Vec3 v31 = new Vec3();
+    static final Vec3 v32 = new Vec3();
     private static final FloatSeq distances = new FloatSeq();
     private static float maxDst = 0f;
 
@@ -75,12 +79,12 @@ public final class WHUtils{
     private static EntityCollisions mover = new EntityCollisions();
 
 
-    private WHUtils(){
+    private WHUtils() {
     }
 
     @Contract(pure = true)
-    public static int reverse(int rotation){
-        return switch(rotation){
+    public static int reverse(int rotation) {
+        return switch (rotation) {
             case 0 -> 2;
             case 2 -> 0;
             case 1 -> 3;
@@ -89,11 +93,11 @@ public final class WHUtils{
         };
     }
 
-    public static TextureRegion[][] splitUnLayers(String name, int size){
+    public static TextureRegion[][] splitUnLayers(String name, int size) {
         return splitUnLayers(Core.atlas.find(name), size);
     }
 
-    public static TextureRegion[][] splitUnLayers(TextureRegion region, int size){
+    public static TextureRegion[][] splitUnLayers(TextureRegion region, int size) {
         int x = region.getX();
         int y = region.getY();
         int width = region.width;
@@ -104,9 +108,9 @@ public final class WHUtils{
 
         int startX = x;
         TextureRegion[][] tiles = new TextureRegion[sw][sh];
-        for(int cy = 0; cy < sh; cy++, y += size){
+        for (int cy = 0; cy < sh; cy++, y += size) {
             x = startX;
-            for(int cx = 0; cx < sw; cx++, x += size){
+            for (int cx = 0; cx < sw; cx++, x += size) {
                 tiles[cx][cy] = new TextureRegion(region.texture, x, y, size, size);
             }
         }
@@ -114,35 +118,35 @@ public final class WHUtils{
         return tiles;
     }
 
-    public static TextureRegion[][] splitLayers(String name, int size, int layerCount){
+    public static TextureRegion[][] splitLayers(String name, int size, int layerCount) {
         TextureRegion[][] layers = new TextureRegion[layerCount][];
 
-        for(int i = 0; i < layerCount; i++){
+        for (int i = 0; i < layerCount; i++) {
             layers[i] = split(name, size, i);
         }
         return layers;
     }
 
-    public static TextureRegion[] split(String name, int size, int layer){
+    public static TextureRegion[] split(String name, int size, int layer) {
         TextureRegion textures = atlas.find(name);
         int margin = 0;
         int countX = textures.width / size;
         TextureRegion[] tiles = new TextureRegion[countX];
 
-        for(int i = 0; i < countX; i++){
+        for (int i = 0; i < countX; i++) {
             tiles[i] = new TextureRegion(textures, i * (margin + size), layer * (margin + size), size, size);
         }
         return tiles;
     }
 
-    public static TextureRegion[][] splitLayers2(String name, int size, int width, int height){
+    public static TextureRegion[][] splitLayers2(String name, int size, int width, int height) {
         TextureRegion base = Core.atlas.find(name);
-        if(base == null) throw new IllegalArgumentException("Texture not found: " + name);
+        if (base == null) throw new IllegalArgumentException("Texture not found: " + name);
 
         TextureRegion[][] layers = new TextureRegion[height / size][width / size];
 
-        for(int y = 0; y < height / size; y++){
-            for(int x = 0; x < width / size; x++){
+        for (int y = 0; y < height / size; y++) {
+            for (int x = 0; x < width / size; x++) {
                 layers[y][x] = new TextureRegion(base, x * size, y * size, size, size);
             }
         }
@@ -151,11 +155,12 @@ public final class WHUtils{
 
     /**
      * Gets multiple regions inside a {@link TextureRegion}.
-     * @param width The amount of regions horizontally.
+     *
+     * @param width  The amount of regions horizontally.
      * @param height The amount of regions vertically.
      */
 
-    public static TextureRegion[] split(String name, int size, int width, int height){
+    public static TextureRegion[] split(String name, int size, int width, int height) {
         TextureRegion reg = Core.atlas.find(name);
         int textureSize = width * height;
         TextureRegion[] regions = new TextureRegion[textureSize];
@@ -163,9 +168,9 @@ public final class WHUtils{
         float tileWidth = (reg.u2 - reg.u) / width;
         float tileHeight = (reg.v2 - reg.v) / height;
 
-        for(int i = 0; i < textureSize; i++){
-            float tileX = ((float)(i % width)) / width;
-            float tileY = ((float)(i / width)) / height;
+        for (int i = 0; i < textureSize; i++) {
+            float tileX = ((float) (i % width)) / width;
+            float tileY = ((float) (i / width)) / height;
             TextureRegion region = new TextureRegion(reg);
 
             //start coordinate
@@ -182,26 +187,28 @@ public final class WHUtils{
         return regions;
     }
 
-    /** {@link Tile#relativeTo(int, int)} does not account for building rotation. */
-    public static int relativeDirection(Building from, Building to){
-        if(from == null || to == null) return -1;
-        if(from.x == to.x && from.y > to.y) return (7 - from.rotation) % 4;
-        if(from.x == to.x && from.y < to.y) return (5 - from.rotation) % 4;
-        if(from.x > to.x && from.y == to.y) return (6 - from.rotation) % 4;
-        if(from.x < to.x && from.y == to.y) return (4 - from.rotation) % 4;
+    /**
+     * {@link Tile#relativeTo(int, int)} does not account for building rotation.
+     */
+    public static int relativeDirection(Building from, Building to) {
+        if (from == null || to == null) return -1;
+        if (from.x == to.x && from.y > to.y) return (7 - from.rotation) % 4;
+        if (from.x == to.x && from.y < to.y) return (5 - from.rotation) % 4;
+        if (from.x > to.x && from.y == to.y) return (6 - from.rotation) % 4;
+        if (from.x < to.x && from.y == to.y) return (4 - from.rotation) % 4;
         return -1;
     }
 
     @Contract(value = "_, _ -> new", pure = true)
-    public static @NotNull Position pos(float x, float y){
-        return new Position(){
+    public static @NotNull Position pos(float x, float y) {
+        return new Position() {
             @Override
-            public float getX(){
+            public float getX() {
                 return x;
             }
 
             @Override
-            public float getY(){
+            public float getY() {
                 return y;
             }
         };
@@ -209,31 +216,76 @@ public final class WHUtils{
 
     /**
      * 计算x轴偏移后的坐标
-     * @param px 原始x坐标
-     * @param r 偏移距离
+     *
+     * @param px    原始x坐标
+     * @param r     偏移距离
      * @param angle 偏移角度(度)
      * @return 计算得到的x坐标
      */
-    public static float dx(float px, float r, float angle){
-        return px + r * (float)Math.cos(angle * Math.PI / 180);
+    public static float dx(float px, float r, float angle) {
+        return px + r * (float) Math.cos(angle * Math.PI / 180);
     }
 
-    public static float dy(float py, float r, float angle){
-        return py + r * (float)Math.sin(angle * Math.PI / 180);
+    public static float dy(float py, float r, float angle) {
+        return py + r * (float) Math.sin(angle * Math.PI / 180);
+    }
+
+    public static void randLenVectorsVec3(long seed, int amount, float radius, float rotation, float spread, float pitchRange, Cons<Vec3> cons) {
+        rand.setSeed(seed);
+        for (int i = 0; i < amount; i++) {
+            float len = rand.random(radius);
+            float yaw = rotation + rand.range(spread / 2f);
+            float pitch = rand.range(pitchRange);
+            v31.set(len, 0f, 0f).rotate(Vec3.Z, yaw).rotate(Vec3.Y, pitch);
+            cons.get(v31);
+        }
+    }
+
+    public static void randLenVectorsVec3(long seed, int amount, float radius, float pitchRange, Cons<Vec3> cons) {
+        randLenVectorsVec3(seed, amount, radius, 0f, 360f, pitchRange, cons);
+    }
+
+    public static Vec2 projectVec3(float baseX, float baseY, Vec3 vec, float perspectiveScale, float heightScale, Vec2 out) {
+        out.set(baseX, baseY).add(vec.x, vec.y + vec.z * heightScale);
+        if (Core.camera != null) {
+            getParallaxFrom(out, Core.camera.position, vec.z * perspectiveScale);
+        }
+        return out;
+    }
+
+    public static Vec2 parallaxVec3(float baseX, float baseY, Vec3 vec, float heightScale, float perspectiveScale, Vec2 out) {
+        return projectVec3(baseX, baseY, vec, perspectiveScale, heightScale, out);
+    }
+
+    public static Vec2 parallaxVec3(float baseX, float baseY, Vec3 vec, Vec2 out) {
+        return parallaxVec3(baseX, baseY, vec, 0.18f, 0.5f, out);
+    }
+
+    public static float getParallaxFrom(float from, float ref, float elevation) {
+        return from + (from - ref) * elevation * renderer.getDisplayScale() / 50;
+    }
+
+    public static Vec2 getParallaxFrom(Vec2 from, Vec2 ref, float elevation) {
+        return getParallaxFrom(from, ref, elevation, renderer.getDisplayScale() / 50);
+    }
+
+    public static Vec2 getParallaxFrom(Vec2 from, Vec2 ref, float elevation, float scale) {
+        return from.add(v1.set(from).sub(ref).scl(elevation * scale));
     }
 
     /**
      * 计算椭圆上某点旋转后的坐标
-     * @param px 椭圆中心x坐标
-     * @param py 椭圆中心y坐标
-     * @param a 椭圆长轴半径
-     * @param b 椭圆短轴半径
+     *
+     * @param px       椭圆中心x坐标
+     * @param py       椭圆中心y坐标
+     * @param a        椭圆长轴半径
+     * @param b        椭圆短轴半径
      * @param rotation 椭圆旋转角度(度)
-     * @param angle 要计算的点在椭圆上的角度(度)
-     * @param xy 返回坐标类型(0=x坐标, 1=y坐标)
+     * @param angle    要计算的点在椭圆上的角度(度)
+     * @param xy       返回坐标类型(0=x坐标, 1=y坐标)
      * @return 旋转后的x或y坐标
      */
-    public static float ellipseXY(float px, float py, float a, float b, float rotation, float angle, int xy){
+    public static float ellipseXY(float px, float py, float a, float b, float rotation, float angle, int xy) {
         float x = a * Mathf.cosDeg(angle);
         float y = b * Mathf.sinDeg(angle);
         float xRotated = x * Mathf.cosDeg(rotation) - y * Mathf.sinDeg(rotation) + px;
@@ -241,22 +293,23 @@ public final class WHUtils{
         return xy == 0 ? xRotated : yRotated;
     }
 
-    public static void superEllipse(float angle, float r, float centerX, float centerY, float rotation, Vec2 out){
+    public static void superEllipse(float angle, float r, float centerX, float centerY, float rotation, Vec2 out) {
         superEllipse(angle, r, r, 4, centerX, centerY, rotation, out);
     }
 
     /**
      * 返回旋转 + 平移后的超椭圆上任意一点
-     * @param angle 参数角度 0~2π（0 对应最右端）
-     * @param a x 半轴
-     * @param b y 半轴
-     * @param n 超椭圆指数（2=椭圆，4≈矩形）
-     * @param centerX 中心偏移 x
-     * @param centerY 中心偏移 y
+     *
+     * @param angle    参数角度 0~2π（0 对应最右端）
+     * @param a        x 半轴
+     * @param b        y 半轴
+     * @param n        超椭圆指数（2=椭圆，4≈矩形）
+     * @param centerX  中心偏移 x
+     * @param centerY  中心偏移 y
      * @param rotation 即时旋转角（rad）
-     * @param out 输出向量
+     * @param out      输出向量
      */
-    public static void superEllipse(float angle, float a, float b, float n, float centerX, float centerY, float rotation, Vec2 out){
+    public static void superEllipse(float angle, float a, float b, float n, float centerX, float centerY, float rotation, Vec2 out) {
         float cosT = Mathf.cosDeg(angle);
         float sinT = Mathf.sinDeg(angle);
         float x = a * Mathf.sign(cosT) * Mathf.pow(Math.abs(cosT), 2f / n);
@@ -265,13 +318,13 @@ public final class WHUtils{
         float cosR = Mathf.cosDeg(rotation);
         float sinR = Mathf.sinDeg(rotation);
         out.set(x * cosR - y * sinR,
-        x * sinR + y * cosR);
+                x * sinR + y * cosR);
 
         out.add(centerX, centerY);
     }
 
-    public static float findLaserPierceLength(Bullet b, int pierceCap, boolean laser, float length, float angle){
-        if(!(b instanceof LaserDataBullet data)) return 0;
+    public static float findLaserPierceLength(Bullet b, int pierceCap, boolean laser, float length, float angle) {
+        if (!(b instanceof LaserDataBullet data)) return 0;
         v1.trnsExact(angle, length);
         rect.setPosition(b.x, b.y).setSize(v1.x, v1.y).normalize().grow(3f);
         data.stop = false;
@@ -279,19 +332,19 @@ public final class WHUtils{
 
         distances.clear();
 
-        if(b.type.collidesGround && b.type.collidesTiles){
+        if (b.type.collidesGround && b.type.collidesTiles) {
             World.raycast(b.tileX(), b.tileY(), World.toTile(b.x + v1.x), World.toTile(b.y + v1.y), (x, y) -> {
                 //add distance to list so it can be processed
                 var build = world.build(x, y);
 
-                if(build != null && build.team != b.team && build.collide(b) && b.checkUnderBuild(build, x * tilesize, y * tilesize)){
+                if (build != null && build.team != b.team && build.collide(b) && b.checkUnderBuild(build, x * tilesize, y * tilesize)) {
                     Tmp.v2.trns(b.rotation(), length * 1.5f).add(b);
                     float dst = Intersector.distanceLinePoint(b.x, b.y, Tmp.v2.x, Tmp.v2.y, build.x, build.y);
                     float dst2 = b.dst(build)/*-build.hitSize()*0.7f+dst*/;
                     distances.add(dst2);
                     data.stop = false;
 
-                    if(laser && build.absorbLasers()){
+                    if (laser && build.absorbLasers()) {
 
                         maxDst = dst2;
                         data.stop = true;
@@ -305,8 +358,8 @@ public final class WHUtils{
         Units.nearbyEnemies(b.team, rect, u -> {
             u.hitbox(hitRect);
 
-            if(u.checkTarget(b.type.collidesAir, b.type.collidesGround) && u.hittable() &&
-            Intersector.intersectSegmentRectangle(b.x, b.y, b.x + v1.x, b.y + v1.y, hitRect)){
+            if (u.checkTarget(b.type.collidesAir, b.type.collidesGround) && u.hittable() &&
+                    Intersector.intersectSegmentRectangle(b.x, b.y, b.x + v1.x, b.y + v1.y, hitRect)) {
                 Tmp.v2.trns(b.rotation(), length * 1.5f).add(b);
                 float dst = Intersector.distanceLinePoint(b.x, b.y, Tmp.v2.x, Tmp.v2.y, u.x, u.y);
                 float dst2 = b.dst(u) - u.hitSize() * 0.7f + dst;
@@ -323,25 +376,25 @@ public final class WHUtils{
         return Math.min(distances.size < pierceCap || pierceCap < 0 ? length : Math.max(6f, distances.get(pierceCap - 1)), maxDst);
     }
 
-    public static float findLaserPierceLength2(Bullet b, int pierceCap, boolean laser, float length, float angle){
+    public static float findLaserPierceLength2(Bullet b, int pierceCap, boolean laser, float length, float angle) {
         v1.trnsExact(angle, length);
         rect.setPosition(b.x, b.y).setSize(v1.x, v1.y).normalize().grow(3f);
         maxDst = Float.POSITIVE_INFINITY;
 
         distances.clear();
 
-        if(b.type.collidesGround && b.type.collidesTiles){
+        if (b.type.collidesGround && b.type.collidesTiles) {
             World.raycast(b.tileX(), b.tileY(), World.toTile(b.x + v1.x), World.toTile(b.y + v1.y), (x, y) -> {
                 //add distance to list so it can be processed
                 var build = world.build(x, y);
 
-                if(build != null && build.team != b.team && build.collide(b) && b.checkUnderBuild(build, x * tilesize, y * tilesize)){
+                if (build != null && build.team != b.team && build.collide(b) && b.checkUnderBuild(build, x * tilesize, y * tilesize)) {
                     Tmp.v2.trns(b.rotation(), length * 1.5f).add(b);
                     float dst = Intersector.distanceLinePoint(b.x, b.y, Tmp.v2.x, Tmp.v2.y, build.x, build.y);
                     float dst2 = b.dst(build)/*-build.hitSize()*0.7f+dst*/;
                     distances.add(dst2);
 
-                    if(laser && build.absorbLasers()){
+                    if (laser && build.absorbLasers()) {
 
                         maxDst = dst2;
                         return true;
@@ -354,8 +407,8 @@ public final class WHUtils{
         Units.nearbyEnemies(b.team, rect, u -> {
             u.hitbox(hitRect);
 
-            if(u.checkTarget(b.type.collidesAir, b.type.collidesGround) && u.hittable() &&
-            Intersector.intersectSegmentRectangle(b.x, b.y, b.x + v1.x, b.y + v1.y, hitRect)){
+            if (u.checkTarget(b.type.collidesAir, b.type.collidesGround) && u.hittable() &&
+                    Intersector.intersectSegmentRectangle(b.x, b.y, b.x + v1.x, b.y + v1.y, hitRect)) {
                 Tmp.v2.trns(b.rotation(), length * 1.5f).add(b);
                 float dst = Intersector.distanceLinePoint(b.x, b.y, Tmp.v2.x, Tmp.v2.y, u.x, u.y);
                 float dst2 = b.dst(u) - u.hitSize() * 0.7f + dst;
@@ -374,14 +427,14 @@ public final class WHUtils{
     private static final Seq<Collided> collided = new Seq<>();
     private static final Pool<Collided> collidePool = Pools.get(Collided.class, Collided::new);
 
-    public static void collideLine(Bullet hitter, Team team, float x, float y, float angle, float length, boolean large, boolean laser, int pierceCap){
+    public static void collideLine(Bullet hitter, Team team, float x, float y, float angle, float length, boolean large, boolean laser, int pierceCap) {
         length = findLaserPierceLength(hitter, pierceCap, laser, length, angle);
         float buildingEdgeEpsilon = 0.5f;
 
         collidedBlocks.clear();
         v1.trnsExact(angle, length);
 
-        if(hitter.type.collidesGround && hitter.type.collidesTiles){
+        if (hitter.type.collidesGround && hitter.type.collidesTiles) {
             v2.set(x, y);
             v3.set(v2).add(v1);
             World.raycastEachWorld(x, y, v3.x, v3.y, (cx, cy) -> {
@@ -412,12 +465,12 @@ public final class WHUtils{
         float x2 = v1.x + x, y2 = v1.y + y;
 
         Units.nearbyEnemies(team, rect, u -> {
-            if(u.checkTarget(hitter.type.collidesAir, hitter.type.collidesGround) && u.hittable()){
+            if (u.checkTarget(hitter.type.collidesAir, hitter.type.collidesGround) && u.hittable()) {
                 u.hitbox(hitRect);
 
                 Vec2 vec = Geometry.raycastRect(x, y, x2, y2, hitRect.grow(expand * 2));
 
-                if(vec != null){
+                if (vec != null) {
                     collided.add(collidePool.obtain().set(vec.x, vec.y, u));
                 }
             }
@@ -426,22 +479,22 @@ public final class WHUtils{
         int[] collideCount = {0};
         collided.sort(c -> hitter.dst2(c.x, c.y));
         collided.each(c -> {
-            if(hitter.damage > 0 && (pierceCap <= 0 || collideCount[0] < pierceCap)){
-                if(c.target instanceof Unit u){
+            if (hitter.damage > 0 && (pierceCap <= 0 || collideCount[0] < pierceCap)) {
+                if (c.target instanceof Unit u) {
                     u.collision(hitter, c.x, c.y);
                     hitter.collision(u, c.x, c.y);
                     collideCount[0]++;
-                }else if(c.target instanceof Building tile){
+                } else if (c.target instanceof Building tile) {
                     float health = tile.health;
 
-                    if(tile.team != team && tile.collide(hitter)){
+                    if (tile.team != team && tile.collide(hitter)) {
                         tile.collision(hitter);
                         hitter.type.hit(hitter, c.x, c.y);
                         collideCount[0]++;
                     }
 
                     //try to heal the tile
-                    if(hitter.type.testCollision(hitter, tile)){
+                    if (hitter.type.testCollision(hitter, tile)) {
                         hitter.type.hitTile(hitter, tile, c.x, c.y, health, false);
                     }
                 }
@@ -454,14 +507,15 @@ public final class WHUtils{
 
     /**
      * 人为移动子弹
-     * @param b 要移动的子弹
-     * @param endX 结束坐标X
-     * @param endY 结束坐标Y
+     *
+     * @param b     要移动的子弹
+     * @param endX  结束坐标X
+     * @param endY  结束坐标Y
      * @param speed 速度
      */
-    public static void movePoint(Bullet b, float endX, float endY, float speed){
+    public static void movePoint(Bullet b, float endX, float endY, float speed) {
         // 计算两点之间的距离
-        float distance = (float)Math.sqrt(Math.pow(endX - b.x, 2) + Math.pow(endY - b.y, 2));
+        float distance = (float) Math.sqrt(Math.pow(endX - b.x, 2) + Math.pow(endY - b.y, 2));
 
         float moveSpeed = distance * speed;
 
@@ -478,37 +532,37 @@ public final class WHUtils{
             b.set(endX, endY);
         }
 */
-        if(Math.abs(b.x - endX) < 1e-4f && Math.abs(b.y - endY) < 1e-4f){
+        if (Math.abs(b.x - endX) < 1e-4f && Math.abs(b.y - endY) < 1e-4f) {
             b.set(endX, endY);
-        }else{
+        } else {
             b.set(b.x + dx * moveDistance, b.y + dy * moveDistance);
         }
     }
 
 
-    public static Bullet anyOtherCreate(Bullet bullet, BulletType bt, Entityc shooter, Entityc owner, Team team, float x, float y, float angle, float damage, float velocityScl, float lifetimeScl, Object data, Mover mover, float aimX, float aimY, @Nullable Teamc target){
-        if(bt == null) return null;
+    public static Bullet anyOtherCreate(Bullet bullet, BulletType bt, Entityc shooter, Entityc owner, Team team, float x, float y, float angle, float damage, float velocityScl, float lifetimeScl, Object data, Mover mover, float aimX, float aimY, @Nullable Teamc target) {
+        if (bt == null) return null;
         angle += bt.angleOffset + Mathf.range(bt.randomAngleOffset);
 
-        if(!Mathf.chance(bt.createChance)) return null;
-        if(bt.ignoreSpawnAngle) angle = 0;
-        if(bt.spawnUnit != null){
+        if (!Mathf.chance(bt.createChance)) return null;
+        if (bt.ignoreSpawnAngle) angle = 0;
+        if (bt.spawnUnit != null) {
             //don't spawn units clientside!
-            if(!net.client()){
+            if (!net.client()) {
                 Unit spawned = bt.spawnUnit.create(team);
                 spawned.set(x, y);
                 spawned.rotation = angle;
                 //immediately spawn at top speed, since it was launched
-                if(bt.spawnUnit.missileAccelTime <= 0f){
+                if (bt.spawnUnit.missileAccelTime <= 0f) {
                     spawned.vel.trns(angle, bt.spawnUnit.speed);
                 }
                 //assign unit owner
-                if(spawned.controller() instanceof MissileAI ai){
-                    if(shooter instanceof Unit unit){
+                if (spawned.controller() instanceof MissileAI ai) {
+                    if (shooter instanceof Unit unit) {
                         ai.shooter = unit;
                     }
 
-                    if(shooter instanceof ControlBlock control){
+                    if (shooter instanceof ControlBlock control) {
                         ai.shooter = control.unit();
                     }
 
@@ -517,7 +571,7 @@ public final class WHUtils{
                 Units.notifyUnitSpawn(spawned);
             }
             //Since bullet init is never called, handle killing shooter here
-            if(bt.killShooter && owner instanceof Healthc h && !h.dead()) h.kill();
+            if (bt.killShooter && owner instanceof Healthc h && !h.dead()) h.kill();
 
             //no bullet returned
             return null;
@@ -530,7 +584,7 @@ public final class WHUtils{
         bullet.time = 0f;
         bullet.originX = x;
         bullet.originY = y;
-        if(!(aimX == -1f && aimY == -1f)){
+        if (!(aimX == -1f && aimY == -1f)) {
             bullet.aimTile = target instanceof Building b ? b.tile : world.tileWorld(aimX, aimY);
         }
         bullet.aimX = aimX;
@@ -547,21 +601,60 @@ public final class WHUtils{
         bullet.damage = (damage < 0 ? bt.damage : damage) * bullet.damageMultiplier();
         bullet.buildingDamageMultiplier = bt.buildingDamageMultiplier;
         //reset trail
-        if(bullet.trail != null){
+        if (bullet.trail != null) {
             bullet.trail.clear();
         }
         bullet.add();
 
-        if(bt.keepVelocity && owner instanceof Velc v) bullet.vel.add(v.vel());
+        if (bt.keepVelocity && owner instanceof Velc v) bullet.vel.add(v.vel());
         return bullet;
     }
 
-    public static void drawTiledFramesBar(float w, float h, float x, float y, Liquid liquid, float alpha){
+    public static void drawTiledFramesBar(float w, float h, float x, float y, Liquid liquid, float alpha) {
         TextureRegion region = renderer.fluidFrames[liquid.gas ? 1 : 0][liquid.getAnimationFrame()];
 
         Draw.color(liquid.color, liquid.color.a * alpha);
         Draw.rect(region, x + w / 2f, y + h / 2f, w, h);
         Draw.color();
+    }
+
+    public static void drawTiledFramesGas(int size, float x, float y, float padding, Liquid liquid, Color color, float alpha) {
+        drawTiledFramesGas(size, x, y, padding, padding, padding, padding, liquid, color, alpha);
+    }
+
+    public static void drawTiledFramesGas(int size, float x, float y, float padLeft, float padRight, float padTop, float padBottom, Liquid liquid, Color color, float alpha) {
+        TextureRegion region = renderer.fluidFrames[1][liquid.getAnimationFrame()];
+        TextureRegion toDraw = Tmp.tr1;
+
+        float leftBounds = size / 2f * tilesize - padRight;
+        float bottomBounds = size / 2f * tilesize - padTop;
+        Color drawColor = Tmp.c1.set(color).a(color.a);
+
+        for (int sx = 0; sx < size; sx++) {
+            for (int sy = 0; sy < size; sy++) {
+                float relx = sx - (size - 1) / 2f, rely = sy - (size - 1) / 2f;
+
+                toDraw.set(region);
+
+                float rightBorder = relx * tilesize + padLeft, topBorder = rely * tilesize + padBottom;
+                float squishX = rightBorder + tilesize / 2f - leftBounds, squishY = topBorder + tilesize / 2f - bottomBounds;
+                float ox = 0f, oy = 0f;
+
+                if (squishX >= 8 || squishY >= 8) continue;
+
+                if (squishX > 0) {
+                    toDraw.setWidth(toDraw.width - squishX * 4f);
+                    ox = -squishX / 2f;
+                }
+
+                if (squishY > 0) {
+                    toDraw.setY(toDraw.getY() + squishY * 4f);
+                    oy = -squishY / 2f;
+                }
+
+                Drawf.liquid(toDraw, x + rightBorder + ox, y + topBorder + oy, alpha, drawColor);
+            }
+        }
     }
 
    /* public static float findLaserLength(Bullet b, float angle, float length){
@@ -661,14 +754,14 @@ public final class WHUtils{
     }
 */
 
-    public static Rand rand(long id){
+    public static Rand rand(long id) {
         rand.setSeed(id);
         return rand;
     }
 
-    public static <T> void shuffle(Seq<T> seq, Rand rand){
+    public static <T> void shuffle(Seq<T> seq, Rand rand) {
         T[] items = seq.items;
-        for(int i = seq.size - 1; i >= 0; i--){
+        for (int i = seq.size - 1; i >= 0; i--) {
             int ii = Mathf.random(i);
             T temp = items[i];
             items[i] = items[ii];
@@ -676,85 +769,87 @@ public final class WHUtils{
         }
     }
 
-    public static Seq<Tile> getAcceptableTiles(int x, int y, int range, Boolf<Tile> bool){
-        Seq<Tile> tiles = new Seq<>(true, (int)(Mathf.pow(range, 2) * Mathf.pi), Tile.class);
+    public static Seq<Tile> getAcceptableTiles(int x, int y, int range, Boolf<Tile> bool) {
+        Seq<Tile> tiles = new Seq<>(true, (int) (Mathf.pow(range, 2) * Mathf.pi), Tile.class);
         Geometry.circle(x, y, range, (x1, y1) -> {
-            if((tileParma = world.tile(x1, y1)) != null && bool.get(tileParma)){
+            if ((tileParma = world.tile(x1, y1)) != null && bool.get(tileParma)) {
                 tiles.add(world.tile(x1, y1));
             }
         });
         return tiles;
     }
 
-    private static void clearTmp(){
+    private static void clearTmp() {
         tileParma = null;
         collidedBlocks.clear();
         tiles.clear();
     }
 
-    public static void limitRangeWithoutNew(ItemTurret turret, float margin){
-        for(ObjectMap.Entry<Item, BulletType> entry : turret.ammoTypes.entries()){
+    public static void limitRangeWithoutNew(ItemTurret turret, float margin) {
+        for (ObjectMap.Entry<Item, BulletType> entry : turret.ammoTypes.entries()) {
             entry.value.lifetime = (turret.range + margin) / entry.value.speed;
         }
     }
 
-    public static float regSize(UnitType type){
+    public static float regSize(UnitType type) {
         return type.hitSize / tilesize / tilesize / 3.25f;
     }
 
-    /** [0]For flying, [1] for navy, [2] for ground,[3] for hover */
-    public static Seq<Boolf<Tile>> formats(){
+    /**
+     * [0]For flying, [1] for navy, [2] for ground,[3] for hover
+     */
+    public static Seq<Boolf<Tile>> formats() {
         Seq<Boolf<Tile>> seq = new Seq<>(4);
 
         seq.add(
-        tile -> world.getQuadBounds(Tmp.r1).contains(tile.getBounds(Tmp.r2)),
-        tile -> tile.floor().isLiquid && !tile.cblock().solid && !tile.floor().solid && !tile.overlay().solid && !tile.block().solidifes,
-        tile -> !tile.floor().isDeep() && !tile.cblock().solid && !tile.floor().solid && !tile.overlay().solid && !tile.block().solidifes,
-        tile -> !tile.cblock().solid && !tile.floor().solid && !tile.overlay().solid && !tile.block().solidifes
+                tile -> world.getQuadBounds(Tmp.r1).contains(tile.getBounds(Tmp.r2)),
+                tile -> tile.floor().isLiquid && !tile.cblock().solid && !tile.floor().solid && !tile.overlay().solid && !tile.block().solidifes,
+                tile -> !tile.floor().isDeep() && !tile.cblock().solid && !tile.floor().solid && !tile.overlay().solid && !tile.block().solidifes,
+                tile -> !tile.cblock().solid && !tile.floor().solid && !tile.overlay().solid && !tile.block().solidifes
         );
 
         return seq;
     }
 
-    public static Boolf<Tile> ableToSpawn(UnitType type){
+    public static Boolf<Tile> ableToSpawn(UnitType type) {
         Boolf<Tile> boolf;
 
         Seq<Boolf<Tile>> boolves = formats();
 
-        if(type.flying){
+        if (type.flying) {
             boolf = boolves.get(0);
-        }else if(type.hovering){
+        } else if (type.hovering) {
             boolf = boolves.get(3);
-        }else if(WaterMovec.class.isAssignableFrom(type.constructor.get().getClass())){
+        } else if (WaterMovec.class.isAssignableFrom(type.constructor.get().getClass())) {
             boolf = boolves.get(1);
-        }else{
+        } else {
             boolf = boolves.get(2);
         }
 
         return boolf;
     }
 
-    public static Seq<Tile> ableToSpawn(UnitType type, float x, float y, float range){
+    public static Seq<Tile> ableToSpawn(UnitType type, float x, float y, float range) {
         Seq<Tile> tSeq = new Seq<>(Tile.class);
         Boolf<Tile> boolf = ableToSpawn(type);
         return tSeq.addAll(getAcceptableTiles(toTile(x), toTile(y), toTile(range), boolf));
     }
 
-    public static boolean hasAnyValidSpawnPosition(UnitType type, float x, float y, float range){
-        if(type == null) return false;
+    public static boolean hasAnyValidSpawnPosition(UnitType type, float x, float y, float range) {
+        if (type == null) return false;
         //获取可生成的位置
         Seq<Tile> validTiles = ableToSpawn(type, x, y, range);
         return validTiles.any();
     }
 
     public static boolean ableToSpawnPoints(Seq<Vec2> spawnPoints, UnitType type,
-                                            float x, float y, float range, int num, long seed){
+                                            float x, float y, float range, int num, long seed) {
         Seq<Tile> tSeq = ableToSpawn(type, x, y, range);
         rand.setSeed(seed);
-        for(int i = 0; i < num; i++){
+        for (int i = 0; i < num; i++) {
             // 将 Tile 序列转换为数组并清空原序列
             Tile[] positions = tSeq.shrink();
-            if(positions.length < num) return false;
+            if (positions.length < num) return false;
             spawnPoints.add(new Vec2().set(positions[rand.nextInt(positions.length)]));
             spawnPoints.shrink();
         }
@@ -763,38 +858,38 @@ public final class WHUtils{
     }
 
 
-    public static boolean spawnUnit(Team team, float x, float y, float angle, float spawnRange, float spawnReloadTime, float spawnDelay, UnitType type, int spawnNum, boolean airdrop, Cons<Spawner> modifier){
-        if(type == null) return false;
+    public static boolean spawnUnit(Team team, float x, float y, float angle, float spawnRange, float spawnReloadTime, float spawnDelay, UnitType type, int spawnNum, boolean airdrop, Cons<Spawner> modifier) {
+        if (type == null) return false;
         clearTmp();
         Seq<Vec2> vectorSeq = new Seq<>();
 
-        if(!ableToSpawnPoints(vectorSeq, type, x, y, spawnRange, spawnNum, rand.nextLong())) return false;
+        if (!ableToSpawnPoints(vectorSeq, type, x, y, spawnRange, spawnNum, rand.nextLong())) return false;
 
         int i = 0;
-        for(Vec2 s : vectorSeq){
+        for (Vec2 s : vectorSeq) {
             Spawner spawner = Pools.obtain(Spawner.class, Spawner::new);
             spawner.init(type, team, s, angle, spawnReloadTime + i * spawnDelay, airdrop);
 
             modifier.get(spawner);
-            if(!net.client()) spawner.add();
+            if (!net.client()) spawner.add();
             i++;
         }
         return true;
     }
 
-    public static float rotator_90(){
+    public static float rotator_90() {
         return 90 * Interp.pow5.apply(Mathf.curve(cycle_100(), 0.15f, 0.85f));
     }
 
 
-    public static void tri(float x, float y, float width, float length, float angle){
+    public static void tri(float x, float y, float width, float length, float angle) {
         float wx = Angles.trnsx(angle + 90, width), wy = Angles.trnsy(angle + 90, width);
         Fill.tri(x + wx, y + wy, x - wx, y - wy, Angles.trnsx(angle, length) + x, Angles.trnsy(angle, length) + y);
     }
 
-    public static void randLenVectors(long seed, int amount, float length, float minLength, float angle, float range, Floatc2 cons){
+    public static void randLenVectors(long seed, int amount, float length, float minLength, float angle, float range, Floatc2 cons) {
         rand.setSeed(seed);
-        for(int i = 0; i < amount; i++){
+        for (int i = 0; i < amount; i++) {
             tV.trns(angle + rand.range(range), minLength + rand.random(length));
             cons.get(tV.x, tV.y);
         }

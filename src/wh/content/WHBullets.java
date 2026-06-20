@@ -652,7 +652,7 @@ public class WHBullets{
                 Draw.z(Layer.effect);
                 Angles.randLenVectors(e.id, 1, range * e.fout(), WHFx.rand.random(0.5f, 1f) * e.fout() * 60, 360f, (x1, y1) -> {
                     trail.length = (int)(cur * len);
-                    trail.update(x1 + x, y1 + y, w * e.fout());
+                    trail.update(x1 + x, y1 + y, e.fout(), w * e.fout());
                 });
             });
 
@@ -2605,6 +2605,7 @@ public class WHBullets{
                 trailChance = 0.11f;
                 trailInterval = 6;
                 hitEffect = despawnEffect = new MultiEffect(
+                        WHFx.arcBurst3D(90, hitColor, 1, 70, 5, 120, 2),
                 WHFx.instRotation(60, hitColor, 40, 90, false),
                 WHFx.square(60, hitColor, 10, 40, 3),
                 WHFx.generalExplosion(30, hitColor, 40, 10, true)

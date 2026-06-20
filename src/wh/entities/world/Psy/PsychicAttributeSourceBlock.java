@@ -38,7 +38,6 @@ public class PsychicAttributeSourceBlock extends PsychicBlock {
         outputsPsychicLinks = true;
         configurable = false;
         drawArrow = false;
-        buildType = PsychicAttributeSourceBuild::new;
     }
 
     @Override
@@ -133,7 +132,7 @@ public class PsychicAttributeSourceBlock extends PsychicBlock {
 
             efficiencyScale = efficiencyAt(tile.x, tile.y);
             float produced = 0f;
-            if (enabled && generationRate > 0f && efficiencyScale > 0f) {
+            if (enabled && canConsume() && generationRate > 0f && efficiencyScale > 0f) {
                 produced = addPsychic(generationRate * efficiencyScale / 60f * delta());
             }
 
@@ -175,6 +174,16 @@ public class PsychicAttributeSourceBlock extends PsychicBlock {
                             "\n" + bundleFormat("bar.wh-psychic-production", Strings.autoFixed(productionRate, 2)),
                     x, y, block.size * tilesize * 1.15f, psychicColor, false
             );
+        }
+
+        @Override
+        public float warmup() {
+            return warmup;
+        }
+
+        @Override
+        public float progress() {
+            return Mathf.clamp(productionRate / Math.max(generationRate * maxEfficiency(), 0.0001f));
         }
     }
 }

@@ -21,12 +21,11 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
     public float passivePsychicLoss = 0f;
     public Color psychicColor = Color.valueOf("9f74ff");
     public Color overloadColor = Color.valueOf("ffb16a");
-    public Color disorderColor = Color.valueOf("d065ff");
     public float overloadDecay = 0.03f;
-    public float disorderDecay = 0.02f;
     public float overloadBlockScale = 0.35f;
-    public float disorderBiasScale = 0.2f;
-    public float disorderPsychicLoss = 0.018f;
+    public float overloadHealthLoss = 1.2f;
+    public float overloadDangerThreshold = 0.35f;
+    public float overloadDangerExponent = 2.2f;
     public boolean autoGenerateItemRecipes = false;
     public float autoCraftTime = 90f;
     public float autoPowerUse = 1.2f;
@@ -36,7 +35,6 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
     public PsychicMultiCrafterBlock(String name) {
         super(name);
         sync = true;
-        buildType = PsychicMultiCrafterBuild::new;
     }
 
     @Override
@@ -82,17 +80,6 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
                 }
         ));
 
-        addBar("psychic-overload", (PsychicMultiCrafterBuild build) -> new PsychicBar(
-                () -> bundleFormat("bar.wh-psychic-overload", Strings.autoFixed(Mathf.clamp(build.overload) * 100f, 0)),
-                () -> overloadColor,
-                () -> Mathf.clamp(build.overload)
-        ));
-
-        addBar("psychic-disorder", (PsychicMultiCrafterBuild build) -> new PsychicBar(
-                () -> bundleFormat("bar.wh-psychic-disorder", Strings.autoFixed(Mathf.clamp(build.disorder) * 100f, 0)),
-                () -> disorderColor,
-                () -> Mathf.clamp(build.disorder)
-        ));
     }
 
     protected String bundleFormat(String key, Object... args) {
@@ -166,7 +153,7 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
     public class PsychicMultiCrafterBuild extends MultiCrafterBuild implements PsychicNetworkNode {
         public final PsychicModule psychic = new PsychicModule();
         public float overload;
-        public float disorder;
+        public float overloadExposure;
 
         public float psychicStored() {
             return psychic.amount();
@@ -183,7 +170,7 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
 
         @Override
         public float inputPotential() {
-            return psychicStored() + disorder * disorderBiasScale;
+            return psychicStored();
         }
 
         public float psychicSpace() {
@@ -206,11 +193,17 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
             if (passivePsychicLoss > 0f) {
                 psychic.remove(passivePsychicLoss / 60f * delta());
             }
-            if (disorder > PsychicNetworkNode.epsilon) {
-                psychic.remove(disorder * disorderPsychicLoss / 60f * delta());
+            if (overload > PsychicNetworkNode.epsilon) {
+                overloadExposure += delta() / 60f * Mathf.clamp(overload);
+            } else {
+                overloadExposure = Mathf.approachDelta(overloadExposure, 0f, 0.03f);
+            }
+            if (overload > overloadDangerThreshold && overloadHealthLoss > 0f) {
+                float severity = Mathf.pow(Math.max(overload - overloadDangerThreshold, 0f), overloadDangerExponent);
+                float exposureScale = 1f + overloadExposure;
+                damage(severity * exposureScale * overloadHealthLoss / 60f * delta());
             }
             overload = Mathf.approachDelta(overload, 0f, overloadDecay);
-            disorder = Mathf.approachDelta(disorder, 0f, disorderDecay);
             psychic.clamp(psychicCapacity);
         }
 
@@ -249,7 +242,7 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
 
         @Override
         public float energyTransferScale() {
-            return Mathf.clamp(1f - overload * 0.2f - disorder * 0.12f, 0.2f, 1f);
+            return Mathf.clamp(1f - overload * 0.2f, 0.2f, 1f);
         }
 
         @Override
@@ -272,11 +265,6 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
         @Override
         public void onEnergyOverload(float amount) {
             overload = Math.max(overload + amount, 0f);
-        }
-
-        @Override
-        public void onEnergyDisorder(float amount) {
-            disorder = Math.max(disorder + amount, 0f);
         }
 
         @Override
@@ -303,7 +291,7 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
 
         @Override
         public byte version() {
-            return 3;
+            return 5;
         }
 
         @Override
@@ -311,25 +299,24 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
             super.write(write);
             psychic.write(write);
             write.f(overload);
-            write.f(disorder);
+            write.f(overloadExposure);
         }
 
         @Override
         public void read(Reads read, byte revision) {
             super.read(read, revision);
-            if (revision >= 2) {
-                psychic.read(read);
-            } else {
+            if (revision < 2) {
                 psychic.clear();
+            } else {
+                psychic.read(read);
             }
 
-            if (revision >= 3) {
-                overload = Math.max(read.f(), 0f);
-                disorder = Math.max(read.f(), 0f);
-            } else {
-                overload = 0f;
-                disorder = 0f;
+            overload = revision >= 3 ? Math.max(read.f(), 0f) : 0f;
+
+            if (revision == 4) {
+                read.f(); // 跳过旧版遗留字段
             }
+            overloadExposure = revision >= 4 ? Math.max(read.f(), 0f) : 0f;
         }
     }
 }

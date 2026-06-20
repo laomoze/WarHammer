@@ -84,6 +84,7 @@ import wh.entities.world.blocks.others.Randomer;
 import wh.entities.world.blocks.others.SearchlightBlock;
 import wh.entities.world.blocks.production.*;
 import wh.entities.world.blocks.storage.FrontlineCoreBlock;
+import wh.entities.world.blocks.storage.PsychicCoreWarehouseBlock;
 import wh.entities.world.blocks.storage.UnloaderF;
 import wh.entities.world.blocks.unit.AirBorne.AirborneUnitCallBlock;
 import wh.entities.world.blocks.unit.ConfigurableUnitAssembler;
@@ -128,7 +129,7 @@ public final class WHBlocks {
     public static Block
             T2sandSeparator, cobaltNitrideChamber, petroleumConverter,
             armorCompressor, ceramiteSteelFoundry, cryofluidMixer, combustibleCrafter,
-            entanglementSynthesizer, T2ManganeseSteelFurnace, promethiumRefinery, psychicTransmuter;
+            entanglementSynthesizer, T2ManganeseSteelFurnace, promethiumRefinery;
 
     public static Block
             heatSiliconSmelter, T2WaterPurifier, combustibleSeparator,
@@ -182,21 +183,26 @@ public final class WHBlocks {
             ventDistiller, combustionGenerator, oxidationGenerator, turboGenerator,
             crackingGenerator, T2thermalGenerator, decayGenerator, smallPromethiumReactor,
             T2impactReactor, promethiunmRector, plaRector, warpImpactReactor, warpSiphon, warpSuppressor,
-            psychicTransmitter, psychicValve, psychicAnchor, psychicOverpressurePump, frontlineNode, deathHarvester,
-            psychicFactory, psychicCondenser,
-            psychicVoid, psychicSandboxSource,
-
-    smallBattery, smallBatteryRebel,
+            smallBattery, smallBatteryRebel,
             midBattery, midBatteryRebel,
             largeBattery, largeBatteryRebel;
+
+    //Psy
+    public static Block
+            psychicTransmuter,
+            psyNode, psyTower, psyRouter,
+            psyContainer, psyRequiem, psyResonator,
+            psyAmplifier, psySink, psyBeacon,
+            psyFactory, psyCondenser,
+            psyVoid, psySource;
 
     //effect
     public static Block
             armorIlluminator, searchlight,
             psychicProbe,
-            armoredVault, armoredContainer,
+            armoredVault, armoredContainer, psychicCoreWarehouse,
             wrapProjector, wrapOverdrive, shelterDome,
-            repairTower, voidShield, ionShield,
+            repairTower, psychicRepairTower, voidShield, ionShield,
             selectProjector, launchPad, landingPad,
             strongholdCore, T2strongholdCore, T3strongholdCore;
 
@@ -3659,63 +3665,67 @@ public final class WHBlocks {
             researchCostMultiplier = 0.4f;
         }};*/
 
-        psychicTransmitter = new PsychicNode("psychic-node") {{
+        psyNode = new PsychicNode("psychic-node") {{
             requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 25, WHItems.resonantCrystal, 18, Items.silicon, 50));
             buildVisibility = BuildVisibility.sandboxOnly;
             size = 1;
             health = 420;
-            psychicCapacity = 100;
-            passivePsychicLoss = 0.005f;
-            linkRange = 12;
-            transferRate = 200;
-            distanceFalloff = 0.72f;
+            psychicCapacity = 200;
+            linkRange = 10;
+            transferRate = 100;
+            distanceFalloff = 0.2f;
+            passivePsychicLoss = 0.1f;
             researchCostMultiplier = 0.35f;
         }};
 
-        psychicValve = new PsychicValveBlock("psychic-valve") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 30, WHItems.resonantCrystal, 16, Items.silicon, 45));
+        psyTower = new PsychicNode("psychic-tower") {{
+            requirements(Category.power, with(WHItems.cobaltNitride, 25, WHItems.resonantCrystal, 18, Items.silicon, 50));
+            size = 3;
+            health = 420;
+            psychicCapacity = 600;
+            linkRange = 30;
+            transferRate = 300;
+            distanceFalloff = 0.1f;
+            passivePsychicLoss = 0.25f;
+            researchCostMultiplier = 0.35f;
+        }};
+
+        psyRouter = new PsychicRouterBlock("psychic-router") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 32, WHItems.resonantCrystal, 18, Items.silicon, 50));
             buildVisibility = BuildVisibility.sandboxOnly;
             size = 1;
             health = 400;
-            psychicCapacity = 70f;
-            fullOverride = "power-node";
+            psychicCapacity = 200;
             linkRange = 10;
-            transferRate = 100;
-            forwardBoost = 1.35f;
+            transferRate = 300;
+            distanceFalloff = 0.1f;
+            passivePsychicLoss = 0.25f;
             researchCostMultiplier = 0.35f;
         }};
 
-        psychicAnchor = new PsychicAnchorBlock("psychic-anchor") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 35, WHItems.resonantCrystal, 24, WHItems.ceramite, 20, Items.silicon, 60));
+        psyContainer = new PsychicContainerBlock("psychic-container") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 40, WHItems.resonantCrystal, 24, Items.silicon, 60, Items.metaglass, 25));
             buildVisibility = BuildVisibility.sandboxOnly;
-            size = 1;
-            health = 460;
-            psychicCapacity = 90f;
-            anchorRange = 11f;
-            passivePsychicLoss = 0.002f;
-            stabilityPerSecond = 0.16f;
-            disorderCleanPerSecond = 0.1f;
-            overloadCleanPerSecond = 0.08f;
-            psychicUsePerSecond = 4f;
-            researchCostMultiplier = 0.38f;
+            size = 3;
+            health = 2000;
+            psychicCapacity = 1500;
+            passivePsychicLoss = 10;
+            drawer = new DrawMulti(
+                    new DrawPsyTile(WHPal.PayColor, FACTORY_PAD_33),
+                    new DrawParticles() {{
+                        color = WHPal.PayColor;
+                        alpha = 0.6f;
+                        particleSize = 4f;
+                        particles = 10;
+                        particleRad = 12f;
+                        particleLife = 140f;
+                    }},
+                    new DrawDefault()
+            );
+            researchCostMultiplier = 0.35f;
         }};
 
-        psychicOverpressurePump = new PsychicOverpressurePumpBlock("psychic-overpressure-pump") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 32, WHItems.resonantCrystal, 30, Items.phaseFabric, 12, Items.silicon, 70));
-            buildVisibility = BuildVisibility.sandboxOnly;
-            size = 2;
-            health = 430;
-            psychicCapacity = 100f;
-            pumpRange = 12f;
-            passivePsychicLoss = 0.004f;
-            psychicUsePerSecond = 5f;
-            pressureBoostPerSecond = 0.24f;
-            selfOverloadPerSecond = 0.12f;
-            selfDisorderPerSecond = 0.06f;
-            researchCostMultiplier = 0.4f;
-        }};
-
-        psychicVoid = new PsychicVoid("psychic-void") {{
+        psyVoid = new PsychicVoid("psychic-void") {{
             requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 50, WHItems.resonantCrystal, 45, Items.phaseFabric, 25, Items.silicon, 90));
             buildVisibility = BuildVisibility.sandboxOnly;
             size = 1;
@@ -3723,24 +3733,7 @@ public final class WHBlocks {
             researchCostMultiplier = 0.45f;
         }};
 
-        frontlineNode = new PsychicFrontlineNodeBlock("frontline-node") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 36, WHItems.resonantCrystal, 28, Items.phaseFabric, 18, Items.silicon, 80));
-            buildVisibility = BuildVisibility.sandboxOnly;
-            size = 1;
-            health = 500;
-            psychicCapacity = 120f;
-            fullOverride = "power-node";
-            linkRange = 12;
-            transferRate = 100;
-            battleRange = 16f;
-            damageGainScale = 0.022f;
-            maxBattleGain = 1.8f;
-            surgeThreshold = 0.3f;
-            surgeBoost = 1.55f;
-            researchCostMultiplier = 0.42f;
-        }};
-
-        deathHarvester = new PsychicDeathHarvesterBlock("death-harvester") {{
+        psyRequiem = new PsychicRequiemBlock("psychic-requiem") {{
             requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 35, WHItems.resonantCrystal, 30, Items.silicon, 80, Items.phaseFabric, 15));
             buildVisibility = BuildVisibility.sandboxOnly;
             size = 2;
@@ -3755,7 +3748,66 @@ public final class WHBlocks {
             researchCostMultiplier = 0.4f;
         }};
 
-        psychicSandboxSource = new PsychicSource("psychic-resource") {{
+        psyResonator = new PsychicResonatorBlock("psychic-resonator") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 45, WHItems.resonantCrystal, 24, WHItems.ceramite, 20, Items.silicon, 90));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 3;
+            health = 640;
+            psychicCapacity = 180f;
+            passivePsychicLoss = 0.004f;
+            range = 16f;
+            baseProduction = 0.25f;
+            factoryContribution = 0.45f;
+            factoryWarmupWeight = 0.7f;
+            factoryTimeScaleWeight = 0.22f;
+            unitContribution = 0.2f;
+            buffContribution = 0.12f;
+            bossBonus = 1.6f;
+            maxProduction = 10f;
+            researchCostMultiplier = 0.4f;
+
+        }};
+
+        psyAmplifier = new PsychicAmplifierBlock("psychic-amplifier") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 30, WHItems.resonantCrystal, 22, Items.silicon, 70));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 2;
+            health = 520;
+            psychicCapacity = 120f;
+            psychicUse = 0.8f;
+            boost = 1.45f;
+            range = 12f;
+            overloadPerSecond = 0.08f;
+            researchCostMultiplier = 0.38f;
+        }};
+
+        psySink = new PsychicSplitGateBlock("psychic-split-gate") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 35, WHItems.resonantCrystal, 20, WHItems.ceramite, 18, Items.silicon, 65));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 1;
+            health = 430;
+            psychicCapacity = 80f;
+            linkRange = 10;
+            transferRate = 100f;
+            safePressure = 24f;
+            overPressureRange = 28f;
+            sideSplit = 0.35f;
+            researchCostMultiplier = 0.38f;
+        }};
+
+        psyBeacon = new PsychicBeaconBlock("psychic-beacon") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 40, WHItems.resonantCrystal, 26, WHItems.entanglement, 16, Items.phaseFabric, 10));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 2;
+            health = 580;
+            psychicCapacity = 140f;
+            psychicUse = 0.7f;
+            boost = 1.18f;
+            range = 11f;
+            researchCostMultiplier = 0.4f;
+        }};
+
+        psySource = new PsychicSource("psychic-resource") {{
             requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 15, Items.silicon, 25, Items.metaglass, 20));
             buildVisibility = BuildVisibility.sandboxOnly;
             size = 1;
@@ -3763,7 +3815,7 @@ public final class WHBlocks {
             generationRate = 1000;
         }};
 
-        psychicFactory = new PsychicFactoryBlock("psychic-factory") {{
+        psyFactory = new PsychicFactoryBlock("psychic-factory") {{
             requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 30, WHItems.resonantCrystal, 18, Items.graphite, 50, Items.silicon, 45));
             buildVisibility = BuildVisibility.sandboxOnly;
             size = 2;
@@ -3821,11 +3873,12 @@ public final class WHBlocks {
             researchCostMultiplier = 0.2f;
         }};
 
-        psychicCondenser = new PsychicAttributeSourceBlock("psychic-condenser") {{
+        psyCondenser = new PsychicAttributeSourceBlock("psychic-condenser") {{
             requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 35, WHItems.resonantCrystal, 20, WHItems.ceramite, 25, Items.metaglass, 40));
             buildVisibility = BuildVisibility.sandboxOnly;
             size = 3;
             health = 540;
+            hasPower = true;
             psychicCapacity = 160f;
             generationRate = 2.6f;
             attribute = WHBlocksEnvironment.hasPromethium;
@@ -3963,6 +4016,21 @@ public final class WHBlocks {
             }
         };
 
+        psychicCoreWarehouse = new PsychicCoreWarehouseBlock("psychic-core-warehouse") {{
+            requirements(Category.effect, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 80, WHItems.resonantCrystal, 55, WHItems.entanglement, 30, WHItems.ceramite, 80));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 3;
+            health = 1200;
+            armor = 8;
+            itemCapacity = 4000;
+            coreCapacityBonus = 8000;
+            psychicCapacity = 180f;
+            psychicUse = 0.45f;
+            linkRangeX = 20;
+            linkRangeY = 12;
+            researchCostMultiplier = 0.45f;
+        }};
+
         launchPad = new LaunchPad("launch-pad") {{
             requirements(Category.effect, with(WHItems.armorAlloy, 80, WHItems.cobaltNitride, 120, Items.carbide, 80, WHItems.resonantCrystal, 60));
             size = 3;
@@ -4094,6 +4162,40 @@ public final class WHBlocks {
                 }
             }
         };
+
+        psychicRepairTower = new PsychicRepairTowerBlock("psychic-repair-tower") {{
+            requirements(Category.effect, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 90, WHItems.resonantCrystal, 70, WHItems.entanglement, 45, WHItems.ceramite, 80));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 3;
+            health = 1600;
+            range = 220f;
+            healAmount = 900f / 60f;
+            psychicCapacity = 180f;
+            psychicUse = 0.7f;
+            circleSpeed = 75f;
+            circleStroke = 8f;
+            squareRad = 8f;
+            squareSpinScl = 1.2f;
+            glowMag = 0.3f;
+            glowScl = 12f;
+            consumePower(900f / 60f);
+            drawer = new DrawMulti(
+                    new DrawDefault(),
+                    new DrawGlowRegion("-glow") {{
+                        color = Pal.heal;
+                        alpha = 0.45f;
+                        glowIntensity = 0.35f;
+                        glowScale = 10f;
+                    }},
+                    new DrawPulseShape() {{
+                        square = false;
+                        color = Pal.heal.cpy();
+                        stroke = 2.2f;
+                        radiusScl = 1.5f;
+                    }}
+            );
+            researchCostMultiplier = 0.5f;
+        }};
 
         voidShield = new BaseForceProjector("fortless-level-void-shield") {
             {
@@ -4492,7 +4594,7 @@ public final class WHBlocks {
                         Draw.z(Layer.effect - 0.001f);
                         Angles.randLenVectors(e.id + index, 1, range * rand1 * e.fout() + 10, rand2 * e.fout(), 360, (x1, y1) -> {
                             trail.length = (int) (cur * len);
-                            trail.update(x1 + x, y1 + y, w * e.fout());
+                            trail.update(x1 + x, y1 + y, e.fout(), w * e.fout());
                         });
                     });
 

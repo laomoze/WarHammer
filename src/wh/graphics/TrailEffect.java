@@ -1,19 +1,28 @@
 package wh.graphics;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.util.*;
-import mindustry.entities.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.world.blocks.*;
-import wh.content.*;
-import wh.core.*;
+import arc.Core;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.pooling.Pools;
+import mindustry.entities.Effect;
+import mindustry.gen.Bullet;
+import mindustry.gen.EffectState;
+import mindustry.gen.Posc;
+import mindustry.gen.Rotc;
+import mindustry.graphics.Trail;
+import mindustry.world.blocks.RotBlock;
+import wh.content.WHFx;
+import wh.core.WHSettings;
+import wh.util.WHUtils;
 
-import java.util.*;
-
-import static mindustry.Vars.state;
+import java.util.Arrays;
 
 public class TrailEffect extends Effect{
     /** How many trails to create. */
@@ -89,41 +98,44 @@ public class TrailEffect extends Effect{
         return this;
     }
 
-    @Override
-    public void render(EffectContainer e){
+    protected void updateTrails(TrailEffectState state) {
         if(!WHSettings.effectEnabled()) return;
         if(length <= 0 || width <= 0) return;
-        Trail[] trails = new Trail[0];
-        float followX = e.x;
-        float followY = e.y;
-        float followRotation = e.rotation;
-        if(e.data instanceof TrailData data){
-            trails = data.trails;
-            if(data.manualBulletFollow){
-                if(!state.isPaused()){
-                    updateBulletFollow(data);
-                }
-                followX = data.followX;
-                followY = data.followY;
-                followRotation = data.followRotation;
-                // Keep container coordinates synced for updater code that reads e.x/e.y directly.
-                e.x = followX;
-                e.y = followY;
-                e.rotation = followRotation;
-            }
+        if (!(state.data instanceof TrailData data)) return;
+
+        float followX = state.x;
+        float followY = state.y;
+        float followRotation = state.rotation;
+        if (data.manualBulletFollow) {
+            updateBulletFollow(data);
+            followX = data.followX;
+            followY = data.followY;
+            followRotation = data.followRotation;
+            state.x = followX;
+            state.y = followY;
+            state.rotation = followRotation;
         }
 
-        float width = Mathf.curve(e.fin(), 0, 0.1f) * this.width;
-        if(!state.isPaused()){
-            float f = e.fout();
-            if(f > 0f){
-                for(int i = 0; i < trails.length; i++){
-                    Trail trail = trails[i];
-                    trailUpdater.update(e, trail, followX, followY, width, length, i);
-                }
-            }else{
-                Arrays.fill(trails, null);
+        float trailWidth = Mathf.curve(state.fin(), 0f, 0.1f) * this.width;
+        float f = state.fout();
+        if (f > 0f) {
+            data.container.set(state.id, state.color, state.time, state.lifetime, followRotation, followX, followY, data);
+            for (int i = 0; i < data.trails.length; i++) {
+                CTrail trail = (CTrail) data.trails[i];
+                trailUpdater.update(data.container, trail, followX, followY, trailWidth, length, i);
             }
+        } else {
+            Arrays.fill(data.trails, null);
+        }
+    }
+
+    @Override
+    public void render(EffectContainer e) {
+        if (!WHSettings.effectEnabled()) return;
+        if (length <= 0 || width <= 0) return;
+        Trail[] trails = new Trail[0];
+        if (e.data instanceof TrailData data) {
+            trails = data.trails;
         }
 
         float l = e.fin(ColorInterp);
@@ -142,13 +154,13 @@ public class TrailEffect extends Effect{
     }
 
     public interface TrailUpdater{
-        void update(EffectContainer e, Trail trail, float x, float y, float width, float length, int index);
+        void update(EffectContainer e, CTrail trail, float x, float y, float width, float length, int index);
     }
 
     @Override
     protected void add(float x, float y, float rotation, Color color, Object data){
         if(!WHSettings.effectEnabled()) return;
-        EffectState entity = EffectState.create();
+        TrailEffectState entity = TrailEffectState.create();
         entity.effect = this;
         entity.rotation = baseRotation + rotation;
         entity.lifetime = lifetime;
@@ -202,6 +214,7 @@ public class TrailEffect extends Effect{
 
     private static class TrailData{
         final Trail[] trails;
+        final EffectContainer container = new EffectContainer();
         final Object sourceData;
         final boolean manualBulletFollow;
         final boolean keepRotationWithSource;
@@ -249,22 +262,127 @@ public class TrailEffect extends Effect{
         }
     }
 
+    public static class TrailEffectState extends EffectState {
+        public static TrailEffectState create() {
+            return Pools.obtain(TrailEffectState.class, TrailEffectState::new);
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if (effect instanceof TrailEffect trail && isAdded()) {
+                trail.updateTrails(this);
+            }
+        }
+    }
+
     public class CTrail extends Trail{
+        public float lastZ = 0f;
+
         public CTrail(int length){
             super(length);
         }
 
         @Override
-        public void drawCap(Color color, float width){
-            if(points.size > 0){
+        public void update(float x, float y, float width) {
+            update(x, y, 0f, width);
+        }
+
+        public void update(float x, float y, float z, float width) {
+            int count = (int) (counter += Time.delta);
+            counter -= count;
+
+            if (count > 0) {
+                int toRemove = points.size + (count - 1 - length) * 4;
+                if (toRemove > 0 && points.size > 0) {
+                    points.removeRange(0, Math.min(toRemove - 1, points.size - 1));
+                }
+
+                if (count == 1 || lastX == -1f) {
+                    points.add(x, y, z, width);
+                } else {
+                    for (int i = 0; i < count; i++) {
+                        float f = (i + 1f) / count;
+                        points.add(Mathf.lerp(lastX, x, f), Mathf.lerp(lastY, y, f), Mathf.lerp(lastZ, z, f), Mathf.lerp(lastW, width, f));
+                    }
+                }
+            }
+
+            lastAngle = -Angles.angleRad(x, y, lastX, lastY);
+            lastX = x;
+            lastY = y;
+            lastZ = z;
+            lastW = width;
+        }
+
+        @Override
+        public void draw(Color color, float width) {
+            if (points.size >= 4) {
                 Draw.color(color);
                 float[] items = points.items;
-                int i = points.size - 3;
-                float x1 = items[i], y1 = items[i + 1], w1 = items[i + 2], w = w1 * width / ((float)points.size / 3) * i / 3f * 2f;
+                float lastAngle = this.lastAngle;
+                float size = width / (points.size / 4f);
+
+                for (int i = 0; i < points.size; i += 4) {
+                    float x1 = items[i], y1 = items[i + 1], z1 = items[i + 2], w1 = items[i + 3];
+                    float x2, y2, z2, w2;
+
+                    if (i < points.size - 4) {
+                        x2 = items[i + 4];
+                        y2 = items[i + 5];
+                        z2 = items[i + 6];
+                        w2 = items[i + 7];
+                    } else {
+                        x2 = lastX;
+                        y2 = lastY;
+                        z2 = lastZ;
+                        w2 = lastW;
+                    }
+
+                    if (w1 <= 0.001f || w2 <= 0.001f) continue;
+
+                    Tmp.v1.set(x1, y1);
+                    Tmp.v2.set(x2, y2);
+                    float p1 = Math.max(z1, 0f);
+                    float p2 = Math.max(z2, 0f);
+                    WHUtils.getParallaxFrom(Tmp.v1, Core.camera.position, p1 / 32f);
+                    WHUtils.getParallaxFrom(Tmp.v2, Core.camera.position, p2 / 32f);
+                    if (Tmp.v1.dst2(Tmp.v2) < 0.001f) continue;
+
+                    float z2a = -Angles.angleRad(Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y);
+                    float z1a = i == 0 ? z2a : lastAngle;
+
+                    float cx = Mathf.sin(z1a) * i / 4f * size * w1;
+                    float cy = Mathf.cos(z1a) * i / 4f * size * w1;
+                    float nx = Mathf.sin(z2a) * (i / 4f + 1f) * size * w2;
+                    float ny = Mathf.cos(z2a) * (i / 4f + 1f) * size * w2;
+
+                    Fill.quad(
+                            Tmp.v1.x - cx, Tmp.v1.y - cy,
+                            Tmp.v1.x + cx, Tmp.v1.y + cy,
+                            Tmp.v2.x + nx, Tmp.v2.y + ny,
+                            Tmp.v2.x - nx, Tmp.v2.y - ny
+                    );
+                    lastAngle = z2a;
+                }
+                Draw.reset();
+            }
+        }
+
+        @Override
+        public void drawCap(Color color, float width){
+            if (points.size >= 4) {
+                Draw.color(color);
+                float[] items = points.items;
+                int i = points.size - 4;
+                float x1 = items[i], y1 = items[i + 1], z1 = items[i + 2], w1 = items[i + 3];
+                float w = w1 * width / ((float) points.size / 4f) * i / 4f * 2f;
                 if(w1 <= 0.001f) return;
-                Draw.rect("circle-bullet", x1, y1, w, w, -Mathf.radDeg * lastAngle + 180f);
-                if(drawTri) Drawn.tri(x1, y1, w / 1.7f, w * 2.1f, -Mathf.radDeg * lastAngle + 180f);
-                if(drawTri) Drawn.tri(x1, y1, w / 1.7f, w * 0.5f, -Mathf.radDeg * lastAngle);
+                Tmp.v1.set(x1, y1);
+                WHUtils.getParallaxFrom(Tmp.v1, Core.camera.position, Math.max(z1, 0f) / 32f);
+                Draw.rect("circle-bullet", Tmp.v1.x, Tmp.v1.y, w, w, -Mathf.radDeg * lastAngle + 180f);
+                if (drawTri) Drawn.tri(Tmp.v1.x, Tmp.v1.y, w / 1.7f, w * 2.1f, -Mathf.radDeg * lastAngle + 180f);
+                if (drawTri) Drawn.tri(Tmp.v1.x, Tmp.v1.y, w / 1.7f, w * 0.5f, -Mathf.radDeg * lastAngle);
                 Draw.reset();
             }
         }

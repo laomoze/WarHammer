@@ -27,7 +27,6 @@ public class PsychicFactoryBlock extends PsychicBlock {
         outputsPsychicLinks = true;
         configurable = false;
         drawArrow = false;
-        buildType = PsychicFactoryBuild::new;
     }
 
     @Override
@@ -89,6 +88,21 @@ public class PsychicFactoryBlock extends PsychicBlock {
 
         public float progressFraction() {
             return craftTime <= 0.0001f ? 0f : Mathf.clamp(progress / craftTime);
+        }
+
+        @Override
+        public float warmup() {
+            return warmup;
+        }
+
+        @Override
+        public float totalProgress() {
+            return activityTotalProgress;
+        }
+
+        @Override
+        public float progress() {
+            return progressFraction();
         }
 
         @Override

@@ -12,12 +12,14 @@ import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
+import wh.content.WHStats;
 import wh.graphics.Drawn;
 import wh.ui.PsychicBar;
+import wh.ui.PsychicStatValues;
 
 import static mindustry.Vars.tilesize;
 
-public class PsychicDeathHarvesterBlock extends PsychicBlock {
+public class PsychicRequiemBlock extends PsychicBlock {
     public float deathRange = 12f;
     public float baseDeathGain = 1.6f;
     public float healthDeathScale = 0.055f;
@@ -25,20 +27,19 @@ public class PsychicDeathHarvesterBlock extends PsychicBlock {
     public float bossMultiplier = 1.35f;
     public float warmupSpeed = 0.05f;
 
-    public PsychicDeathHarvesterBlock(String name) {
+    public PsychicRequiemBlock(String name) {
         super(name);
         acceptsPsychicLinks = false;
         outputsPsychicLinks = true;
         configurable = false;
         drawArrow = false;
-        buildType = PsychicDeathHarvesterBuild::new;
     }
 
     public static void handleUnitDeath(Unit unit) {
         if (unit == null) return;
 
         Groups.build.each(build -> {
-            if (build instanceof PsychicDeathHarvesterBuild harvester) {
+            if (build instanceof PsychicRequiemBuild harvester) {
                 harvester.harvestUnitDeath(unit);
             }
         });
@@ -48,13 +49,14 @@ public class PsychicDeathHarvesterBlock extends PsychicBlock {
     public void setStats() {
         super.setStats();
         stats.add(Stat.range, deathRange, StatUnit.blocks);
+        PsychicStatValues.add(stats, WHStats.psychicHarvest, maxDeathGain, StatUnit.perSecond);
     }
 
     @Override
     public void setBars() {
         super.setBars();
 
-        addBar("psychic-death-gain", (PsychicDeathHarvesterBuild build) -> new PsychicBar(
+        addBar("psychic-death-gain", (PsychicRequiemBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-harvest", Strings.autoFixed(build.gainRate, 2)),
                 () -> psychicColor,
                 () -> Mathf.clamp(build.gainRate / Math.max(baseDeathGain * 3f, 0.0001f))
@@ -79,7 +81,7 @@ public class PsychicDeathHarvesterBlock extends PsychicBlock {
         Draw.reset();
     }
 
-    public class PsychicDeathHarvesterBuild extends PsychicBuild {
+    public class PsychicRequiemBuild extends PsychicBuild {
         public float gainRate;
         public float warmup;
         public float gainedThisFrame;
@@ -150,6 +152,16 @@ public class PsychicDeathHarvesterBlock extends PsychicBlock {
                             " | " + bundleFormat("bar.wh-psychic-harvest", Strings.autoFixed(gainRate, 2)),
                     x, y, block.size * tilesize * 1.1f, psychicColor, false
             );
+        }
+
+        @Override
+        public float warmup() {
+            return warmup;
+        }
+
+        @Override
+        public float progress() {
+            return Mathf.clamp(gainRate / Math.max(baseDeathGain * 3f, 0.0001f));
         }
     }
 }
