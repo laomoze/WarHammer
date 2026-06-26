@@ -1,8 +1,6 @@
 package wh.entities.world.Psy;
 
-import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Fill;
 import arc.graphics.g2d.Lines;
 import arc.math.Mathf;
 import arc.struct.Bits;
@@ -15,7 +13,6 @@ import mindustry.graphics.Pal;
 import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
-import wh.graphics.Drawn;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
@@ -161,19 +158,8 @@ public class PsychicResonatorBlock extends PsychicBlock {
         @Override
         public void draw() {
             super.draw();
-
             float stored = psychicFraction();
-            float pulse = Mathf.absin(7f, 0.8f + warmup * 1.3f);
             float radius = block.size * tilesize * (0.38f + stored * 0.2f + warmup * 0.12f);
-
-            Draw.z(Layer.effect);
-            Draw.color(psychicColor, Color.white, 0.12f + warmup * 0.16f);
-            Draw.alpha(0.15f + stored * 0.22f + warmup * 0.18f);
-            Lines.stroke(1.1f + warmup * 1.5f);
-            Lines.circle(x, y, radius + pulse * 0.2f);
-            Fill.square(x, y, radius * 0.44f + pulse * 0.08f, 45f);
-            Draw.reset();
-
             if (stored > 0.001f || warmup > 0.001f) {
                 Drawf.light(x, y, radius * 2.7f, psychicColor, 0.2f + stored * 0.24f + warmup * 0.12f);
             }
@@ -183,15 +169,14 @@ public class PsychicResonatorBlock extends PsychicBlock {
         public void drawSelect() {
             super.drawSelect();
             drawRange(x, y);
-            Drawn.overlayText(
+            drawSelectText(
                     bundleFormat("bar.wh-psychic-storage",
                             Strings.autoFixed(psychicStored(), 2),
-                            Strings.autoFixed(psychicCapacity(), 0)) +
-                            " | " + bundleFormat("bar.wh-psychic-production", Strings.autoFixed(productionRate, 2)) +
-                            "\n" + bundleFormat("bar.wh-psychic-resonance",
+                            Strings.autoFixed(psychicCapacity(), 0)),
+                    bundleFormat("bar.wh-psychic-production", Strings.autoFixed(productionRate, 2)),
+                    bundleFormat("bar.wh-psychic-resonance",
                             Strings.autoFixed(buildingScore, 2),
-                            Strings.autoFixed(unitScore, 2)),
-                    x, y, block.size * tilesize * 1.15f, psychicColor, false
+                            Strings.autoFixed(unitScore, 2))
             );
         }
 

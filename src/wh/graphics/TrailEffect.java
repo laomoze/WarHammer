@@ -119,7 +119,7 @@ public class TrailEffect extends Effect{
         float trailWidth = Mathf.curve(state.fin(), 0f, 0.1f) * this.width;
         float f = state.fout();
         if (f > 0f) {
-            data.container.set(state.id, state.color, state.time, state.lifetime, followRotation, followX, followY, data);
+            data.container.set(state.id, state.color, state.time, state.lifetime, followRotation, followX, followY, data.sourceData);
             for (int i = 0; i < data.trails.length; i++) {
                 CTrail trail = (CTrail) data.trails[i];
                 trailUpdater.update(data.container, trail, followX, followY, trailWidth, length, i);

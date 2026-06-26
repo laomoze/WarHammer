@@ -62,7 +62,7 @@ public class PsychicBeaconBlock extends PsychicBlock {
         @Override
         public void updateTile() {
             super.updateTile();
-            boolean active = enabled && hasPsychic(psychicUse / 60f * delta());
+            boolean active = updateConsumeRecipe(enabled && hasPsychic(psychicUse / 60f * delta()));
             if (active) {
                 float used = drainPsychic(psychicUse / 60f * delta());
                 useRate = Mathf.lerpDelta(useRate, used * 60f / Math.max(delta(), 0.0001f), 0.16f);

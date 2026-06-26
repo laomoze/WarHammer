@@ -16,16 +16,14 @@ import arc.math.Angles;
 import arc.math.Interp;
 import arc.math.Mathf;
 import arc.math.Rand;
-import arc.math.geom.Geometry;
-import arc.math.geom.Position;
-import arc.math.geom.Vec2;
-import arc.math.geom.Vec3;
+import arc.math.geom.*;
 import arc.util.Structs;
 import arc.util.Time;
 import arc.util.Tmp;
 import mindustry.content.Fx;
 import mindustry.entities.Effect;
 import mindustry.entities.effect.MultiEffect;
+import mindustry.gen.Building;
 import mindustry.gen.Unit;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
@@ -59,6 +57,7 @@ public final class WHFx {
     public static final Vec2 v9 = new Vec2();
     public static final Vec3 v31 = new Vec3();
     public static final int[] oneArr = new int[]{1};
+    private static final Bezier<Vec2> Bezier = new Bezier<>();
     //保留
     public static Effect healReceiveCircle;
     public static Effect healSendCircle;
@@ -328,6 +327,7 @@ public final class WHFx {
         }).drawTri(true);
     }
 
+
     public static TrailEffect trailCircleHitSpark(float lifetime, Color color, int num, float range, float stroke, float length) {
         int intensity = WHSettings.detailCount(num, 3);
         return new TrailEffect(lifetime, range * 2, color, color, intensity, (int) length, stroke).trailUpdater((e, trail, x, y, width, len, index) -> {
@@ -339,6 +339,68 @@ public final class WHFx {
             });
         });
     }
+
+    public static TrailEffect trailDeathSiphon(float lifetime, Color color, float width, int length) {
+        return new TrailEffect(lifetime, 1000f, color, color, 1, length, width).layer(Layer.effect + 0.01f).trailUpdater((e, trail, x, y, w, len, index) -> {
+            if (!(e.data instanceof Building target) || !target.isAdded()) return;
+
+            float tx = target.x;
+            float ty = target.y;
+            float dst = Mathf.dst(x, y, tx, ty);
+            float pathProgress = e.fin(Interp.smooth);
+            float widthProgress = Interp.slope.apply(pathProgress);
+
+            rand.setSeed(e.id);
+            float angle = Angles.angle(x, y, tx, ty);
+            float bend = Mathf.clamp(dst * 0.2f, tilesize * 5, tilesize * 8) * rand.random(0.5f, 1f) * Mathf.sign(rand.random(0, 1f) > 0.5f);
+
+            Bezier.set(
+                    Tmp.v1.set(x, y),
+                    Tmp.v2.set((x + tx) * 0.5f + Angles.trnsx(angle + 90f, bend), (y + ty) * 0.5f + Angles.trnsy(angle + 90f, bend)),
+                    Tmp.v3.set(tx, ty)
+            );
+
+
+            Bezier.valueAt(Tmp.v4, pathProgress);
+            trail.length = (int) (Mathf.curve(e.fin(), 0, 0.25f) * Mathf.curve(e.fout(), 0, 0.1f) * length);
+            trail.update(Tmp.v4.x, Tmp.v4.y, 0f, w * widthProgress);
+            trail.draw(color, w * widthProgress);
+            trail.drawCap(color, w * widthProgress);
+        });
+    }
+
+    public static TrailEffect trailBezier(float lifetime, Color color, int num, float range, float stroke, float length, boolean in) {
+        int intensity = WHSettings.detailCount(num, 1);
+        return new TrailEffect(lifetime, range * 2, color, color, intensity, (int) length, stroke).trailUpdater((e, trail, x, y, width, len, index) -> {
+            long id = e.id + index;
+            rand.setSeed(id);
+
+            float pathProgress = in ? e.fout(Interp.smooth) : e.fin(Interp.smooth);
+
+            eachHeightVector(e.id + id, 1, pathProgress * range, e.rotation, 360f, 60 * e.fin(), 1f, (vx, vy, height) -> {
+                float tx = x + vx;
+                float ty = y + vy;
+
+                float angle = Angles.angle(x, y, tx, ty);
+                float bend = Mathf.clamp(range * 0.2f, tilesize * 5, tilesize * 8) * rand.random(0.5f, 1f) * Mathf.sign(rand.random(0, 1f) > 0.5f);
+
+                Bezier.set(
+                        Tmp.v1.set(x, y),
+                        Tmp.v2.set((x + tx) * 0.5f + Angles.trnsx(angle + 90f, bend),
+                                (y + ty) * 0.5f + Angles.trnsy(angle + 90f, bend)),
+                        Tmp.v3.set(tx, ty)
+                );
+
+                Bezier.valueAt(Tmp.v4, pathProgress);
+
+                trail.length = (int) (Mathf.curve(pathProgress, 0f, 0.25f) * Mathf.curve(pathProgress, 0f, 0.1f) * length);
+                trail.update(Tmp.v4.x, Tmp.v4.y, height, Interp.slope.apply(pathProgress) * stroke);
+                trail.draw(color, width * pathProgress);
+                trail.drawCap(color, width * pathProgress);
+            });
+        });
+    }
+
 
 
     public static Effect smoothColorRect(float lifetime, Color out, float rad) {

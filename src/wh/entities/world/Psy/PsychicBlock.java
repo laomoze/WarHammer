@@ -14,10 +14,14 @@ import mindustry.entities.units.BuildPlan;
 import mindustry.gen.Building;
 import mindustry.gen.Groups;
 import mindustry.world.Block;
+import mindustry.world.consumers.*;
 import mindustry.world.draw.DrawBlock;
 import mindustry.world.draw.DrawDefault;
+import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
+import wh.core.WHSettings;
+import wh.graphics.Drawn;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
@@ -43,6 +47,7 @@ public abstract class PsychicBlock extends Block {
     public Color overloadColor = Color.valueOf("ffb16a");
     public boolean acceptsPsychicLinks = true;
     public boolean outputsPsychicLinks = true;
+    public float consumeCraftTime = 60f;
 
     public PsychicBlock(String name) {
         super(name);
@@ -85,6 +90,19 @@ public abstract class PsychicBlock extends Block {
         if (passivePsychicLoss > 0f) {
             PsychicStatValues.add(stats, WHStats.psychicLoss, passivePsychicLoss, StatUnit.perSecond);
         }
+
+        PsychicStatValues.add(stats, WHStats.psychicThreshold, overloadDangerThreshold * 100f, StatUnit.percent);
+        stats.add(WHStats.psychicLinkReceive, bundleFormat(acceptsPsychicLinks ? "stat.wh-psychic-link-receive-on" : "stat.wh-psychic-link-receive-off"));
+        stats.add(WHStats.psychicLinkOutput, bundleFormat(outputsPsychicLinks ? "stat.wh-psychic-link-output-on" : "stat.wh-psychic-link-output-off"));
+        if (hasItemOrLiquidRecipe()) {
+            stats.add(Stat.productionTime, consumeCraftTime / 60f, StatUnit.seconds);
+        }
+    }
+
+    @Override
+    public void init() {
+        autoEnableConsumeModules();
+        super.init();
     }
 
     @Override
@@ -106,6 +124,36 @@ public abstract class PsychicBlock extends Block {
         return Core.bundle != null && Core.bundle.has(key) ? Core.bundle.format(key, args) : key;
     }
 
+    protected void autoEnableConsumeModules() {
+        hasItems |= hasItemConsumer();
+        hasLiquids |= hasLiquidConsumer();
+
+        if (hasPowerConsumer()) {
+            hasPower = true;
+            consumesPower = true;
+        }
+    }
+
+    protected boolean hasItemOrLiquidRecipe() {
+        return consumeCraftTime > 0.0001f && (hasItemConsumer() || hasLiquidConsumer());
+    }
+
+    protected boolean hasItemConsumer() {
+        return findConsumer(consume -> consume instanceof ConsumeItems || consume instanceof ConsumeItemFilter) != null;
+    }
+
+    protected boolean hasLiquidConsumer() {
+        return findConsumer(consume ->
+                consume instanceof ConsumeLiquids ||
+                        consume instanceof ConsumeLiquidBase ||
+                        consume instanceof ConsumeLiquidsDynamic
+        ) != null;
+    }
+
+    protected boolean hasPowerConsumer() {
+        return findConsumer(consume -> consume instanceof ConsumePower) != null;
+    }
+
     public class PsychicBuild extends Building implements PsychicNetworkNode {
         public final PsychicModule psychic = new PsychicModule();
         public float overload;
@@ -113,6 +161,7 @@ public abstract class PsychicBlock extends Block {
         public float pressureBoost;
         public float overloadExposure;
         public float activityTotalProgress;
+        public float consumeProgress;
 
         public float psychicStored() {
             return psychic.amount();
@@ -279,6 +328,30 @@ public abstract class PsychicBlock extends Block {
             psychic.clamp(psychicCapacity());
         }
 
+        protected boolean updateConsumeRecipe(boolean active) {
+            if (!active) {
+                if (PsychicBlock.this.hasItemOrLiquidRecipe()) {
+                    consumeProgress = 0f;
+                }
+                return false;
+            }
+
+            if (!canConsume()) return false;
+            if (!PsychicBlock.this.hasItemOrLiquidRecipe()) return true;
+
+            consumeProgress += edelta();
+            while (consumeProgress >= PsychicBlock.this.consumeCraftTime) {
+                consume();
+                consumeProgress -= PsychicBlock.this.consumeCraftTime;
+            }
+            return true;
+        }
+
+        protected float consumeProgressFraction() {
+            if (!PsychicBlock.this.hasItemOrLiquidRecipe()) return 0f;
+            return Mathf.clamp(consumeProgress / Math.max(PsychicBlock.this.consumeCraftTime, 0.0001f));
+        }
+
         protected boolean shouldTakeOverloadDamage() {
             return overload > overloadDangerThreshold;
         }
@@ -297,6 +370,22 @@ public abstract class PsychicBlock extends Block {
         @Override
         public void draw() {
             drawer.draw(this);
+        }
+
+        protected void drawSelectText(String... lines) {
+            if (!WHSettings.psychicDebugHud()) return;
+            if (lines == null || lines.length == 0) return;
+
+            StringBuilder builder = new StringBuilder();
+            for (String line : lines) {
+                if (line == null || line.trim().isEmpty()) continue;
+                if (builder.length() != 0) builder.append('\n');
+                builder.append(line);
+            }
+
+            if (builder.length() == 0) return;
+
+            Drawn.overlayText(builder.toString(), x, y, block.size * tilesize * 1.15f, psychicColor, false);
         }
 
         @Override

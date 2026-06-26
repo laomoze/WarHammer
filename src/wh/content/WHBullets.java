@@ -4798,8 +4798,8 @@ public class WHBullets{
 
         ColossusCeramite = new ShieldBreakerType(4, 300, 100){{
 
-            splashDamage = 300;
-            splashDamageRadius = 150;
+            splashDamage = 500;
+            splashDamageRadius = 100;
 
             scaleLife = true;
             collidesTiles = false;
@@ -4862,9 +4862,9 @@ public class WHBullets{
                 trailLength = 12;
                 trailWidth = 2;
                 trailChance = 0.01f;
-                damage = 100;
+                damage = 250;
                 splashDamageRadius = 64;
-                splashDamage = 100;
+                splashDamage = 250;
                 despawnEffect = hitEffect = new MultiEffect(
                 WHFx.square(40, hitColor, 10, splashDamageRadius, 5),
                 WHFx.generalExplosion(25, hitColor, splashDamageRadius, 10, false));
@@ -4872,7 +4872,7 @@ public class WHBullets{
 
         }};
 
-        ColossusMolybdenumAlloy = new ShieldBreakerType(8, 400, 150){{
+        ColossusMolybdenumAlloy = new ShieldBreakerType(8, 800, 500) {{
 
             shootPattern = new ShootPattern(){{
                 shots = 2;
@@ -4886,7 +4886,7 @@ public class WHBullets{
             pierce = true;
             pierceCap = 4;
             splashDamageRadius = 64;
-            splashDamage = 100;
+            splashDamage = 250;
 
             rangeChange = 3 * 8f;
 
@@ -4937,13 +4937,13 @@ public class WHBullets{
             fragBullet = new SizeDamageBullet(){
                 {
                     sizeDamageCreate.lightning = 1;
-                    sizeDamageCreate.lightningDamage = 12;
+                    sizeDamageCreate.lightningDamage = 18;
                     sizeDamageCreate.lightningLength = 10;
                     damageInterp = Interp.pow2In;
 
                     lifetime = 20;
                     maxDamageMultiple = 6;
-                    hitSizeDamage = 100;
+                    hitSizeDamage = 150;
                     maxHitSizeScale = 40f;
                     hitSizeLightingScale = 4;
 
@@ -4970,7 +4970,7 @@ public class WHBullets{
                 }
             };
         }};
-        ColossusRefineCeramite = new CritBulletType(7f, 1000, name("pierce")){
+        ColossusRefineCeramite = new CritBulletType(7f, 1600, name("pierce")) {
             {
                 rangeChange = 48;
                 reloadMultiplier = 0.8f;
@@ -5027,17 +5027,16 @@ public class WHBullets{
 
                 despawnSound = hitSound = explosionArtilleryShockBig;
 
-                fragBullets = 8;
-                fragBullet = new CritBulletType(2f, 220, "circle"){{
+                fragBullets = 9;
+                fragBullet = new CritBulletType(2f, 500, "circle") {{
 
                     collidesTiles = false;
                     collides = false;
                     collidesAir = false;
-                    scaleLife = true;
 
                     critMultiplier = 2;
                     buildingDamageMultiplier = 0.2f;
-                    critChance = 0.1f;
+                    critChance = 0.15f;
                     width = height = 10f;
                     shrinkY = shrinkX = 0.7f;
                     backColor = trailColor = lightColor = lightningColor = hitColor = WHItems.refineCeramite.color.cpy();
@@ -5045,13 +5044,15 @@ public class WHBullets{
                     trailEffect = Fx.missileTrail;
                     trailParam = 3.5f;
                     splashDamage = damage;
-                    splashDamageRadius = 40;
+                    splashDamageRadius = 60;
+
+                    homingPower = 0.001f;
 
                     lifetime = 9f;
 
                     lightning = 2;
                     lightningLength = lightningLengthRand = 4;
-                    lightningDamage = 30;
+                    lightningDamage = 40;
 
                     hitSoundVolume /= 2.2f;
                     despawnShake = hitShake = 4f;
@@ -5072,11 +5073,11 @@ public class WHBullets{
                             b.lightning = 1;
                             b.lightningDamage = 20;
                             b.lightningLength = b.lightningLengthRand = 12;
-                            hitSizeLightingScale = 1;
+                            hitSizeLightingScale = 3;
 
                             lifetime = 20;
-                            maxDamageMultiple = 5;
-                            hitSizeDamage = 60;
+                            maxDamageMultiple = 4;
+                            hitSizeDamage = 150;
                             maxHitSizeScale = UnitTypes.vanquish.hitSize * 2;
 
                             hitSizeColor = hitColor = lightningColor = frontColor = trailColor = backColor = WHItems.refineCeramite.color.cpy();

@@ -30,7 +30,6 @@ import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
 import wh.core.WHSettings;
-import wh.graphics.Drawn;
 import wh.graphics.PositionLightning;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
@@ -451,7 +450,14 @@ public class PsychicNode extends PsychicBlock {
                 Drawf.square(source.x, source.y, source.block.size * tilesize / 2f + 2.5f, 0f, Pal.place);
             }
 
-            Drawn.overlayText(debugText(), x, y, block.size * tilesize * 1.1f, psychicColor, false);
+            drawSelectText(
+                    bundleFormat("bar.wh-psychic-storage",
+                            Strings.autoFixed(psychicStored(), 2),
+                            Strings.autoFixed(psychicCapacity(), 0)),
+                    bundleFormat("bar.wh-psychic-links", linkedCount()),
+                    bundleFormat("bar.wh-psychic-budget", Strings.autoFixed(displayFlowRate, 2)),
+                    bundleFormat("bar.wh-psychic-overload", Strings.autoFixed(Mathf.clamp(overload) * 100f, 0))
+            );
         }
 
         @Override
@@ -944,13 +950,5 @@ public class PsychicNode extends PsychicBlock {
             return moved * 60f / Math.max(delta(), 0.0001f);
         }
 
-        protected String debugText() {
-            return bundleFormat("bar.wh-psychic-storage",
-                    Strings.autoFixed(psychicStored(), 2),
-                    Strings.autoFixed(psychicCapacity(), 0)) +
-                    "\n" + bundleFormat("bar.wh-psychic-links", linkedCount()) +
-                    " | " + bundleFormat("bar.wh-psychic-budget", Strings.autoFixed(displayFlowRate, 2)) +
-                    " | " + bundleFormat("bar.wh-psychic-overload", Strings.autoFixed(Mathf.clamp(overload) * 100f, 0));
-        }
     }
 }

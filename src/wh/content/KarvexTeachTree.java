@@ -567,7 +567,7 @@ public final class KarvexTeachTree {
         node(WHBlocks.psySource, () -> {
             node(WHBlocks.psyNode, () -> {
                 node(WHBlocks.psyVoid, () -> {
-                    node(WHBlocks.psyRequiem, () -> {
+                    node(WHBlocks.spiritualSiphon, () -> {
                         node(WHBlocks.psyResonator, () -> {
                             node(WHBlocks.psyAmplifier, () -> {
                                 node(WHBlocks.psySink, () -> {

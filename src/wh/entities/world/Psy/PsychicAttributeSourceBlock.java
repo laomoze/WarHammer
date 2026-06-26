@@ -15,7 +15,6 @@ import mindustry.world.meta.Attribute;
 import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
-import wh.graphics.Drawn;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
@@ -132,7 +131,8 @@ public class PsychicAttributeSourceBlock extends PsychicBlock {
 
             efficiencyScale = efficiencyAt(tile.x, tile.y);
             float produced = 0f;
-            if (enabled && canConsume() && generationRate > 0f && efficiencyScale > 0f) {
+            boolean active = updateConsumeRecipe(enabled && generationRate > 0f && efficiencyScale > 0f);
+            if (active) {
                 produced = addPsychic(generationRate * efficiencyScale / 60f * delta());
             }
 
@@ -166,13 +166,12 @@ public class PsychicAttributeSourceBlock extends PsychicBlock {
         public void drawSelect() {
             super.drawSelect();
             drawAttributeArea(x, y);
-            Drawn.overlayText(
+            drawSelectText(
                     bundleFormat("bar.wh-psychic-storage",
                             Strings.autoFixed(psychicStored(), 2),
-                            Strings.autoFixed(psychicCapacity(), 0)) +
-                            " | " + bundleFormat("bar.wh-psychic-efficiency", Strings.autoFixed(efficiencyScale * 100f, 0)) +
-                            "\n" + bundleFormat("bar.wh-psychic-production", Strings.autoFixed(productionRate, 2)),
-                    x, y, block.size * tilesize * 1.15f, psychicColor, false
+                            Strings.autoFixed(psychicCapacity(), 0)),
+                    bundleFormat("bar.wh-psychic-efficiency", Strings.autoFixed(efficiencyScale * 100f, 0)),
+                    bundleFormat("bar.wh-psychic-production", Strings.autoFixed(productionRate, 2))
             );
         }
 

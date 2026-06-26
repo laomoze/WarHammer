@@ -10,7 +10,6 @@ import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
-import wh.graphics.Drawn;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
@@ -129,13 +128,12 @@ public class PsychicFactoryBlock extends PsychicBlock {
         @Override
         public void drawSelect() {
             super.drawSelect();
-            Drawn.overlayText(
+            drawSelectText(
                     bundleFormat("bar.wh-psychic-storage",
                             Strings.autoFixed(psychicStored(), 2),
-                            Strings.autoFixed(psychicCapacity(), 0)) +
-                            " | " + bundleFormat("bar.wh-psychic-production", Strings.autoFixed(productionRate, 2)) +
-                            "\n" + bundleFormat("bar.wh-psychic-craft", Strings.autoFixed(progressFraction() * 100f, 0)),
-                    x, y, block.size * tilesize * 1.15f, psychicColor, false
+                            Strings.autoFixed(psychicCapacity(), 0)),
+                    bundleFormat("bar.wh-psychic-production", Strings.autoFixed(productionRate, 2)),
+                    bundleFormat("bar.wh-psychic-craft", Strings.autoFixed(progressFraction() * 100f, 0))
             );
         }
     }

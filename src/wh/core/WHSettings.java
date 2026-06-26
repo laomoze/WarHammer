@@ -13,6 +13,7 @@ public final class WHSettings{
     public static final String distortionEnabledKey = "wh-distortion-enabled";
     public static final String distortionStrengthKey = "wh-distortion-strength";
     public static final String carrierDebugHudKey = "wh-carrier-debug-hud";
+    public static final String psychicDebugHudKey = "wh-psychic-debug-hud";
     public static final String fullTechCoverageKey = "wh-full-tech-coverage";
     private static final String categoryName = "WarHammer设置";
 
@@ -36,6 +37,7 @@ public final class WHSettings{
             table.checkPref(distortionEnabledKey, true);
             table.sliderPref(distortionStrengthKey, 100, 0, 100, 5, i -> i + "%");
             table.checkPref(carrierDebugHudKey, false);
+            table.checkPref(psychicDebugHudKey, false);
             table.checkPref(fullTechCoverageKey, false);
         });
     }
@@ -46,6 +48,7 @@ public final class WHSettings{
         setDefault(distortionEnabledKey, true);
         setDefault(distortionStrengthKey, 100);
         setDefault(carrierDebugHudKey, false);
+        setDefault(psychicDebugHudKey, false);
         setDefault(fullTechCoverageKey, false);
     }
 
@@ -125,6 +128,10 @@ public final class WHSettings{
 
     public static boolean carrierDebugHud(){
         return Core.settings.getBool(carrierDebugHudKey, false);
+    }
+
+    public static boolean psychicDebugHud() {
+        return Core.settings.getBool(psychicDebugHudKey, false);
     }
 
     public static boolean fullTechCoverage() {

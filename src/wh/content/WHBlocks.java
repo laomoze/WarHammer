@@ -191,7 +191,7 @@ public final class WHBlocks {
     public static Block
             psychicTransmuter,
             psyNode, psyTower, psyRouter,
-            psyContainer, psyRequiem, psyResonator,
+            psyContainer, spiritualSiphon, psyResonator,
             psyAmplifier, psySink, psyBeacon,
             psyFactory, psyCondenser,
             psyVoid, psySource;
@@ -199,7 +199,6 @@ public final class WHBlocks {
     //effect
     public static Block
             armorIlluminator, searchlight,
-            psychicProbe,
             armoredVault, armoredContainer, psychicCoreWarehouse,
             wrapProjector, wrapOverdrive, shelterDome,
             repairTower, psychicRepairTower, voidShield, ionShield,
@@ -3675,6 +3674,21 @@ public final class WHBlocks {
             transferRate = 100;
             distanceFalloff = 0.2f;
             passivePsychicLoss = 0.1f;
+            drawer = new DrawMulti(
+                    new DrawDefault(),
+                    new DrawCircles() {{
+                        color = WHPal.PsyColor;
+                        amount = 1;
+                        radius = 3.4f;
+                        strokeMax = 1.15f;
+                    }},
+                    new DrawGlowRegion() {{
+                        color = WHPal.PsyColor;
+                        alpha = 0.45f;
+                        glowScale = 8f;
+                        glowIntensity = 0.25f;
+                    }}
+            );
             researchCostMultiplier = 0.35f;
         }};
 
@@ -3687,6 +3701,21 @@ public final class WHBlocks {
             transferRate = 300;
             distanceFalloff = 0.1f;
             passivePsychicLoss = 0.25f;
+            drawer = new DrawMulti(
+                    new DrawDefault(),
+                    new DrawCircles() {{
+                        color = WHPal.PsyColor;
+                        amount = 2;
+                        radius = 7.5f;
+                        strokeMax = 1.3f;
+                    }},
+                    new DrawGlowRegion() {{
+                        color = WHPal.PsyColor;
+                        alpha = 0.5f;
+                        glowScale = 10f;
+                        glowIntensity = 0.3f;
+                    }}
+            );
             researchCostMultiplier = 0.35f;
         }};
 
@@ -3700,6 +3729,21 @@ public final class WHBlocks {
             transferRate = 300;
             distanceFalloff = 0.1f;
             passivePsychicLoss = 0.25f;
+            drawer = new DrawMulti(
+                    new DrawDefault(),
+                    new DrawPulseShape() {{
+                        color = WHPal.PsyColor;
+                        stroke = 1.1f;
+                        radiusScl = 0.95f;
+                        timeScl = 5f;
+                    }},
+                    new DrawGlowRegion() {{
+                        color = WHPal.PsyColor;
+                        alpha = 0.42f;
+                        glowScale = 8f;
+                        glowIntensity = 0.22f;
+                    }}
+            );
             researchCostMultiplier = 0.35f;
         }};
 
@@ -3709,11 +3753,11 @@ public final class WHBlocks {
             size = 3;
             health = 2000;
             psychicCapacity = 1500;
-            passivePsychicLoss = 10;
+            passivePsychicLoss = 1;
             drawer = new DrawMulti(
-                    new DrawPsyTile(WHPal.PayColor, FACTORY_PAD_33),
+                    new DrawPsyTile(WHPal.PsyColor, FACTORY_PAD_33),
                     new DrawParticles() {{
-                        color = WHPal.PayColor;
+                        color = WHPal.PsyColor;
                         alpha = 0.6f;
                         particleSize = 4f;
                         particles = 10;
@@ -3725,28 +3769,64 @@ public final class WHBlocks {
             researchCostMultiplier = 0.35f;
         }};
 
-        psyVoid = new PsychicVoid("psychic-void") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 50, WHItems.resonantCrystal, 45, Items.phaseFabric, 25, Items.silicon, 90));
-            buildVisibility = BuildVisibility.sandboxOnly;
-            size = 1;
-            health = 520;
-            researchCostMultiplier = 0.45f;
-        }};
 
-        psyRequiem = new PsychicRequiemBlock("psychic-requiem") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 35, WHItems.resonantCrystal, 30, Items.silicon, 80, Items.phaseFabric, 15));
-            buildVisibility = BuildVisibility.sandboxOnly;
-            size = 2;
-            health = 520;
-            psychicCapacity = 140f;
-            passivePsychicLoss = 0.003f;
-            deathRange = 14f;
-            baseDeathGain = 1.8f;
-            healthDeathScale = 0.065f;
-            maxDeathGain = 18f;
-            bossMultiplier = 1.45f;
+        spiritualSiphon = new PsychicRequiemBlock("spiritual-siphon") {{
+            requirements(Category.power, with(WHItems.cobaltNitride, 35, WHItems.resonantCrystal, 30, Items.silicon, 80, Items.phaseFabric, 15));
+            size = 3;
+            health = 1000;
+            psychicCapacity = 100;
+            passivePsychicLoss = 0.2f;
+            deathRange = 25;
+            baseDeathGain = 3f;
+            healthDeathScale = 0.4f;
+            maxDeathGain = 20f;
+            bossMultiplier = 1.5f;
+            drawer = new DrawMulti(
+                    new DrawRegion("-bottom"),
+                    new DrawPsyTile(WHPal.PsyColor, FACTORY_PAD_33),
+                    new DrawCrucibleFlame() {{
+                        flameRad = 1.5f;
+                        particleSize = 4f;
+                        particleRad = 7f;
+                        flameColor = midColor = WHPal.PsyColor;
+                        particleInterp = f -> Interp.smooth.apply(Interp.slope.apply(f));
+                    }},
+                    new DrawDefault(),
+                    new DrawBlockParts() {{
+                        parts.addAll(new EffectSpawnerPart() {{
+                                         width = height = 4;
+                                         useProgress = true;
+                                         effectChance = 0.03f;
+                                         effectColor = WHPal.PsyColor.cpy();
+                                         effect = WHFx.trailBezier(90, effectColor, 2, deathRange * tilesize / 2, 1.2f, 15, true);
+                                     }},
+                                new EffectSpawnerPart() {{
+                                    width = height = 4;
+                                    useProgress = true;
+                                    effectChance = 0.025f;
+                                    effectColor = WHPal.PsyColor.cpy();
+                                    effect = new Effect(90, (e) -> {
+                                        color(effectColor);
+                                        rand.setSeed(e.id);
+                                        int intensity = WHSettings.detailCount(4, 1);
+                                        float size = 2;
+                                        drawHeightCircles(e.id, intensity, e.x, e.y, e.fout(Interp.pow2In) * deathRange * tilesize, e.rotation, 360f,
+                                                deathRange * tilesize / 2 * 0.02f, e.fout(), (x, y, height) -> {
+                                                    float s = Mathf.curve(e.fin(), 0f, 0.1f) * e.fout(Interp.smooth) * (size + rand.range(size / 3.0F));
+                                                    Fill.square(x, y, s, 45.0F);
+                                                    Drawf.light(x, y, s * 2.25F, effectColor, 0.7F);
+                                                });
+                                    });
+                                    ;
+                                }});
+                    }}
+            );
+
+            consumePower(600 / 60f);
+
             researchCostMultiplier = 0.4f;
         }};
+
 
         psyResonator = new PsychicResonatorBlock("psychic-resonator") {{
             requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 45, WHItems.resonantCrystal, 24, WHItems.ceramite, 20, Items.silicon, 90));
@@ -3764,6 +3844,29 @@ public final class WHBlocks {
             buffContribution = 0.12f;
             bossBonus = 1.6f;
             maxProduction = 10f;
+            drawer = new DrawMulti(
+                    new DrawDefault(),
+                    new DrawCircles() {{
+                        color = WHPal.PsyColor;
+                        amount = 2;
+                        radius = 9f;
+                        strokeMax = 1.35f;
+                    }},
+                    new DrawParticles() {{
+                        color = WHPal.PsyColor;
+                        alpha = 0.55f;
+                        particleSize = 3.2f;
+                        particles = 6;
+                        particleRad = 9f;
+                        particleLife = 60f;
+                    }},
+                    new DrawGlowRegion() {{
+                        color = WHPal.PsyColor;
+                        alpha = 0.45f;
+                        glowScale = 9f;
+                        glowIntensity = 0.28f;
+                    }}
+            );
             researchCostMultiplier = 0.4f;
 
         }};
@@ -3778,6 +3881,21 @@ public final class WHBlocks {
             boost = 1.45f;
             range = 12f;
             overloadPerSecond = 0.08f;
+            drawer = new DrawMulti(
+                    new DrawDefault(),
+                    new DrawPulseShape() {{
+                        color = WHPal.PsyColor;
+                        stroke = 1.25f;
+                        radiusScl = 1.2f;
+                        timeScl = 5f;
+                    }},
+                    new DrawGlowRegion() {{
+                        color = WHPal.PsyColor;
+                        alpha = 0.46f;
+                        glowScale = 9f;
+                        glowIntensity = 0.28f;
+                    }}
+            );
             researchCostMultiplier = 0.38f;
         }};
 
@@ -3792,6 +3910,21 @@ public final class WHBlocks {
             safePressure = 24f;
             overPressureRange = 28f;
             sideSplit = 0.35f;
+            drawer = new DrawMulti(
+                    new DrawDefault(),
+                    new DrawPulseShape() {{
+                        color = WHPal.PsyColor;
+                        stroke = 1.15f;
+                        radiusScl = 1.05f;
+                        timeScl = 5.5f;
+                    }},
+                    new DrawGlowRegion() {{
+                        color = WHPal.PsyColor;
+                        alpha = 0.42f;
+                        glowScale = 8f;
+                        glowIntensity = 0.24f;
+                    }}
+            );
             researchCostMultiplier = 0.38f;
         }};
 
@@ -3804,6 +3937,21 @@ public final class WHBlocks {
             psychicUse = 0.7f;
             boost = 1.18f;
             range = 11f;
+            drawer = new DrawMulti(
+                    new DrawDefault(),
+                    new DrawCircles() {{
+                        color = WHPal.PsyColor;
+                        amount = 1;
+                        radius = 5.5f;
+                        strokeMax = 1.2f;
+                    }},
+                    new DrawGlowRegion() {{
+                        color = WHPal.PsyColor;
+                        alpha = 0.45f;
+                        glowScale = 9f;
+                        glowIntensity = 0.25f;
+                    }}
+            );
             researchCostMultiplier = 0.4f;
         }};
 
@@ -3828,6 +3976,21 @@ public final class WHBlocks {
             psychicPerCraft = 16f;
             consumeItems(with(WHItems.combustible, 1, WHItems.resonantCrystal, 1));
             consumePower(90f / 60f);
+            drawer = new DrawMulti(
+                    new DrawDefault(),
+                    new DrawPulseShape() {{
+                        color = WHPal.PsyColor;
+                        stroke = 1.15f;
+                        radiusScl = 1.15f;
+                        timeScl = 4.5f;
+                    }},
+                    new DrawGlowRegion() {{
+                        color = WHPal.PsyColor;
+                        alpha = 0.5f;
+                        glowScale = 10f;
+                        glowIntensity = 0.32f;
+                    }}
+            );
             researchCostMultiplier = 0.3f;
         }};
 
@@ -3889,8 +4052,32 @@ public final class WHBlocks {
             boostScale = 0.32f;
             maxBoost = 6f;
             consumePower(60f / 60f);
+            drawer = new DrawMulti(
+                    new DrawDefault(),
+                    new DrawCircles() {{
+                        color = WHPal.PsyColor;
+                        amount = 2;
+                        radius = 8f;
+                        strokeMax = 1.25f;
+                    }},
+                    new DrawGlowRegion() {{
+                        color = WHPal.PsyColor;
+                        alpha = 0.48f;
+                        glowScale = 10f;
+                        glowIntensity = 0.3f;
+                    }}
+            );
             researchCostMultiplier = 0.35f;
         }};
+
+        psyVoid = new PsychicVoid("psychic-void") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 50, WHItems.resonantCrystal, 45, Items.phaseFabric, 25, Items.silicon, 90));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 1;
+            health = 520;
+            researchCostMultiplier = 0.45f;
+        }};
+
 
         smallBattery = new Battery("small-battery") {
             {
