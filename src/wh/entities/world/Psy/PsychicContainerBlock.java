@@ -2,6 +2,7 @@ package wh.entities.world.Psy;
 
 import arc.math.Mathf;
 import mindustry.graphics.Drawf;
+import wh.graphics.WHPal;
 
 import static mindustry.Vars.tilesize;
 
@@ -33,7 +34,7 @@ public class PsychicContainerBlock extends PsychicBlock {
             super.draw();
             if (warmup <= 0.001f) return;
             float frac = psychicFraction();
-            Drawf.light(x, y, block.size * tilesize * glowRadius, psychicColor, 0.12f + frac * 0.22f);
+            Drawf.light(x, y, block.size * tilesize * glowRadius, WHPal.PsyColor, 0.12f + frac * 0.22f);
         }
 
         @Override
@@ -42,3 +43,4 @@ public class PsychicContainerBlock extends PsychicBlock {
         }
     }
 }
+

@@ -15,6 +15,7 @@ import mindustry.world.meta.Attribute;
 import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
+import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
@@ -52,13 +53,13 @@ public class PsychicAttributeSourceBlock extends PsychicBlock {
 
         addBar("psychic-production", (PsychicAttributeSourceBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-production", Strings.autoFixed(build.productionRate, 2)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 () -> generationRate <= 0.0001f ? 0f : build.productionRate / Math.max(generationRate * maxEfficiency(), 0.0001f)
         ));
 
         addBar("psychic-efficiency", (PsychicAttributeSourceBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-efficiency", Strings.autoFixed(build.efficiencyScale * 100f, 0)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 () -> Mathf.clamp(build.efficiencyScale / Math.max(maxEfficiency(), 0.0001f))
         ));
     }
@@ -150,7 +151,7 @@ public class PsychicAttributeSourceBlock extends PsychicBlock {
             float radius = block.size * tilesize * (0.34f + stored * 0.18f + warmup * 0.1f);
 
             Draw.z(Layer.effect);
-            Draw.color(psychicColor, Color.white, 0.1f + warmup * 0.16f);
+            Draw.color(WHPal.PsyColor, Color.white, 0.1f + warmup * 0.16f);
             Draw.alpha(0.14f + stored * 0.2f + warmup * 0.18f);
             Lines.stroke(1f + warmup * 1.4f);
             Lines.circle(x, y, radius + pulse * 0.16f);
@@ -158,7 +159,7 @@ public class PsychicAttributeSourceBlock extends PsychicBlock {
             Draw.reset();
 
             if (stored > 0.001f || warmup > 0.001f) {
-                Drawf.light(x, y, radius * 2.6f, psychicColor, 0.18f + stored * 0.25f + warmup * 0.12f);
+                Drawf.light(x, y, radius * 2.6f, WHPal.PsyColor, 0.18f + stored * 0.25f + warmup * 0.12f);
             }
         }
 
@@ -186,3 +187,4 @@ public class PsychicAttributeSourceBlock extends PsychicBlock {
         }
     }
 }
+

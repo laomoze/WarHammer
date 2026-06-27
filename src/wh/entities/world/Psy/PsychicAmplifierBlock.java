@@ -11,6 +11,7 @@ import mindustry.graphics.Pal;
 import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
+import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
@@ -43,7 +44,7 @@ public class PsychicAmplifierBlock extends PsychicBlock {
         super.setBars();
         addBar("psychic-use", (PsychicAmplifierBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-use", Strings.autoFixed(build.useRate, 2)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 () -> psychicUse <= 0.0001f ? 0f : build.useRate / psychicUse
         ));
     }
@@ -76,12 +77,12 @@ public class PsychicAmplifierBlock extends PsychicBlock {
             super.draw();
             if (warmup <= 0.001f) return;
             Draw.z(Layer.effect);
-            Draw.color(psychicColor, Color.white, 0.15f + warmup * 0.15f);
+            Draw.color(WHPal.PsyColor, Color.white, 0.15f + warmup * 0.15f);
             Draw.alpha(0.15f + warmup * 0.2f);
             Lines.stroke(1.2f + warmup);
             Lines.circle(x, y, range * tilesize * (0.55f + 0.08f * Mathf.absin(6f, 1f)));
             Draw.reset();
-            Drawf.light(x, y, range * tilesize * 0.9f, psychicColor, 0.15f + warmup * 0.18f);
+            Drawf.light(x, y, range * tilesize * 0.9f, WHPal.PsyColor, 0.15f + warmup * 0.18f);
         }
 
         @Override
@@ -101,3 +102,4 @@ public class PsychicAmplifierBlock extends PsychicBlock {
         }
     }
 }
+

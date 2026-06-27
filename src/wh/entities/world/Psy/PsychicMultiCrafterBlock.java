@@ -3,46 +3,34 @@ package wh.entities.world.Psy;
 import arc.Core;
 import arc.graphics.Color;
 import arc.math.Mathf;
-import arc.struct.Seq;
+import arc.scene.ui.ImageButton;
+import arc.scene.ui.ScrollPane;
+import arc.scene.ui.layout.Table;
 import arc.util.Strings;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
-import mindustry.Vars;
-import mindustry.type.Item;
-import mindustry.type.ItemStack;
+import mindustry.ui.Styles;
 import mindustry.world.meta.StatUnit;
+import mindustry.world.meta.StatValues;
 import wh.content.WHStats;
 import wh.entities.world.blocks.production.MultiCrafter;
+import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
+import wh.ui.PsychicImage;
 import wh.ui.PsychicStatValues;
 
 public class PsychicMultiCrafterBlock extends MultiCrafter {
     public float psychicCapacity = 180f;
     public float passivePsychicLoss = 0f;
-    public Color psychicColor = Color.valueOf("9f74ff");
-    public Color overloadColor = Color.valueOf("ffb16a");
     public float overloadDecay = 0.03f;
     public float overloadBlockScale = 0.35f;
     public float overloadHealthLoss = 1.2f;
     public float overloadDangerThreshold = 0.35f;
     public float overloadDangerExponent = 2.2f;
-    public boolean autoGenerateItemRecipes = false;
-    public float autoCraftTime = 90f;
-    public float autoPowerUse = 1.2f;
-    public float autoPsychicBase = 4f;
-    public float autoPsychicCostScale = 14f;
 
     public PsychicMultiCrafterBlock(String name) {
         super(name);
         sync = true;
-    }
-
-    @Override
-    public void init() {
-        if (autoGenerateItemRecipes && craftPlans.isEmpty()) {
-            populateAutoRecipes();
-        }
-        super.init();
     }
 
     @Override
@@ -67,66 +55,22 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
                 () -> bundleFormat("bar.wh-psychic-storage",
                         Strings.autoFixed(build.psychicStored(), 2),
                         Strings.autoFixed(psychicCapacity, 0)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 build::psychicFraction
         ));
 
         addBar("psychic-use", (PsychicMultiCrafterBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-use", Strings.autoFixed(build.currentPsychicUse(), 2)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 () -> {
                     float peak = peakPsychicUse();
                     return peak <= 0.0001f ? 0f : build.currentPsychicUse() / peak;
                 }
         ));
-
     }
 
     protected String bundleFormat(String key, Object... args) {
         return Core.bundle != null && Core.bundle.has(key) ? Core.bundle.format(key, args) : key;
-    }
-
-    protected void populateAutoRecipes() {
-        Seq<Item> items = Vars.content.items().select(item -> item != null && !item.hidden);
-        items.sort(item -> item.id);
-
-        for (Item item : items) {
-            int amount = autoOutputAmount(item);
-            float craftTime = autoCraftTimeFor(item, amount);
-            float psychicCost = autoPsychicCostFor(item, amount);
-
-            PsychicCraftPlan plan = new PsychicCraftPlan();
-            plan.craftTime = craftTime;
-            plan.outputItems = new ItemStack[]{new ItemStack(item, amount)};
-            plan.craftEffect = mindustry.content.Fx.none;
-            if (autoPowerUse > 0f) {
-                plan.consumePower(autoPowerUse);
-            }
-            plan.psychicCost = psychicCost;
-            craftPlans.add(plan);
-        }
-    }
-
-    protected int autoOutputAmount(Item item) {
-        float score = item.cost * 1.35f + item.hardness * 0.75f +
-                item.explosiveness + item.flammability + item.radioactivity + item.charge;
-        if (score <= 0.8f) return 8;
-        if (score <= 1.5f) return 5;
-        if (score <= 2.8f) return 3;
-        if (score <= 4.2f) return 2;
-        return 1;
-    }
-
-    protected float autoCraftTimeFor(Item item, int amount) {
-        float score = item.cost * 1.2f + item.hardness * 0.5f + item.radioactivity * 0.4f + item.charge * 0.3f;
-        return autoCraftTime + score * 18f + Math.max(0, 6 - amount) * 6f;
-    }
-
-    protected float autoPsychicCostFor(Item item, int amount) {
-        float score = item.cost * 1.4f + item.hardness * 0.8f +
-                item.explosiveness * 0.6f + item.flammability * 0.35f +
-                item.radioactivity * 0.9f + item.charge * 0.55f;
-        return autoPsychicBase + score * autoPsychicCostScale + Math.max(1, amount) * 0.8f;
     }
 
     protected float psychicCost(CraftPlan plan) {
@@ -144,6 +88,37 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
             peak = Math.max(peak, psychicUsePerSecond(plan));
         }
         return peak;
+    }
+
+    protected void buildPsychicRecipe(Table table, CraftPlan plan) {
+        float cost = psychicCost(plan);
+
+        table.left().defaults().left();
+        table.table(flow -> {
+            flow.left().defaults().left().padRight(6f);
+            flow.add(new PsychicImage(cost)).size(40f).padRight(4f);
+            flow.add(bundleFormat("ui.wh-psychic-cost-per-craft", Strings.autoFixed(cost, 2)));
+            flow.add("[lightgray] ->[]").padLeft(2f).padRight(2f);
+
+            if (plan.outputItems.length > 0) {
+                StatValues.items(plan.craftTime, plan.outputItems).display(flow);
+            }
+
+            if (plan.outputLiquids.length > 0) {
+                if (plan.outputItems.length > 0) flow.add("  ");
+                StatValues.liquids(1f, plan.outputLiquids).display(flow);
+            }
+        }).left().growX();
+        table.row();
+
+        if (plan.craftTime > 0.0001f) {
+            table.add(bundleFormat(
+                    "ui.wh-psychic-recipe-detail",
+                    Strings.autoFixed(plan.craftTime / 60f, 2),
+                    Strings.autoFixed(psychicUsePerSecond(plan), 2)
+            )).left();
+            table.row();
+        }
     }
 
     public static class PsychicCraftPlan extends CraftPlan {
@@ -290,6 +265,86 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
         }
 
         @Override
+        public void buildConfiguration(Table table) {
+            Table rtc = new Table();
+            rtc.left().defaults().size(55);
+
+            Table cont = new Table().top();
+            cont.left().defaults().left().growX();
+
+            Runnable rebuild = () -> {
+                rtc.clearChildren();
+                if (hasDoubleOutput) {
+                    for (int i = 0; i < rotationIcon.length; i++) {
+                        var button = new ImageButton();
+                        int j = i;
+                        button.table(img -> img.image(rotationIcon[j]).color(Color.white).size(40).pad(10f));
+                        button.changed(() -> configure(new int[]{j, craftPlanIndex()}));
+                        button.update(() -> button.setChecked(rotation == j));
+                        button.setStyle(Styles.clearNoneTogglei);
+                        rtc.add(button).tooltip(String.valueOf(i * 90));
+                    }
+                }
+
+                cont.clearChildren();
+                for (CraftPlan plan : craftPlans) {
+                    var button = new ImageButton();
+                    button.table(info -> {
+                        info.left().defaults().left().growX();
+                        buildPsychicRecipe(info, plan);
+
+                        if (plan.hasConsumers) {
+                            info.table(from -> {
+                                from.left().defaults().left();
+                                for (var cons : plan.consumers) {
+                                    if (cons != plan.consPower) {
+                                        cons.build(this, from);
+                                    }
+                                }
+                            }).left().padTop(4f);
+                            info.row();
+                        }
+
+                        if (plan.powerProduction > 0f || plan.heatOutput > 0f) {
+                            info.table(extra -> {
+                                extra.left().defaults().left().padRight(8f);
+                                if (plan.powerProduction > 0f) {
+                                    StatValues.number(plan.powerProduction * 60f, StatUnit.powerSecond).display(extra);
+                                }
+                                if (plan.heatOutput > 0f) {
+                                    StatValues.number(plan.heatOutput, StatUnit.heatUnits).display(extra);
+                                }
+                            }).left().padTop(2f);
+                        }
+                    }).grow().left().pad(5f);
+
+                    button.setStyle(Styles.clearNoneTogglei);
+                    button.changed(() -> configure(new int[]{rotation, craftPlans.indexOf(plan)}));
+                    button.update(() -> button.setChecked(this.craftPlan == plan));
+                    cont.add(button).growX();
+                    cont.row();
+                }
+            };
+
+            rebuild.run();
+
+            Table main = new Table().background(Styles.black6);
+            main.add(rtc).left().row();
+
+            ScrollPane pane = new ScrollPane(cont, Styles.smallPane);
+            pane.setScrollingDisabled(true, false);
+
+            if (block != null) {
+                pane.setScrollYForce(block.selectScroll);
+                pane.update(() -> block.selectScroll = pane.getScrollY());
+            }
+
+            pane.setOverscroll(false, false);
+            main.add(pane).maxHeight(100 * maxList);
+            table.top().add(main);
+        }
+
+        @Override
         public byte version() {
             return 5;
         }
@@ -314,9 +369,11 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
             overload = revision >= 3 ? Math.max(read.f(), 0f) : 0f;
 
             if (revision == 4) {
-                read.f(); // 跳过旧版遗留字段
+                read.f();
             }
             overloadExposure = revision >= 4 ? Math.max(read.f(), 0f) : 0f;
         }
     }
 }
+
+

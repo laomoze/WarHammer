@@ -15,6 +15,7 @@ import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
 import wh.content.WHStatusEffects;
+import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
@@ -50,7 +51,7 @@ public class PsychicBeaconBlock extends PsychicBlock {
         super.setBars();
         addBar("psychic-use", (PsychicBeaconBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-use", Strings.autoFixed(build.useRate, 2)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 () -> psychicUse <= 0.0001f ? 0f : build.useRate / psychicUse
         ));
     }
@@ -85,12 +86,12 @@ public class PsychicBeaconBlock extends PsychicBlock {
             super.draw();
             if (warmup <= 0.001f) return;
             Draw.z(Layer.effect);
-            Draw.color(psychicColor, Color.white, 0.1f + warmup * 0.15f);
+            Draw.color(WHPal.PsyColor, Color.white, 0.1f + warmup * 0.15f);
             Draw.alpha(0.14f + warmup * 0.2f);
             Lines.stroke(1f + warmup);
             Lines.square(x, y, range * tilesize * 0.45f, Time.time * 0.8f);
             Draw.reset();
-            Drawf.light(x, y, range * tilesize * 0.7f, psychicColor, 0.14f + warmup * 0.16f);
+            Drawf.light(x, y, range * tilesize * 0.7f, WHPal.PsyColor, 0.14f + warmup * 0.16f);
         }
 
         @Override
@@ -110,3 +111,4 @@ public class PsychicBeaconBlock extends PsychicBlock {
         }
     }
 }
+

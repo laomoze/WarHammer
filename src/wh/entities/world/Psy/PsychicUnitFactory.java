@@ -11,13 +11,13 @@ import mindustry.type.UnitType;
 import mindustry.world.blocks.units.UnitFactory;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
+import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
 public class PsychicUnitFactory extends UnitFactory {
     public float psychicCapacity = 120f;
     public float passivePsychicLoss = 0f;
-    public Color psychicColor = Color.valueOf("9f74ff");
     public Color overloadColor = Color.valueOf("ffb16a");
     public float overloadDecay = 0.03f;
     public float overloadBlockScale = 0.35f;
@@ -55,13 +55,13 @@ public class PsychicUnitFactory extends UnitFactory {
                 () -> bundleFormat("bar.wh-psychic-storage",
                         Strings.autoFixed(build.psychicStored(), 2),
                         Strings.autoFixed(psychicCapacity, 0)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 build::psychicFraction
         ));
 
         addBar("psychic-use", (PsychicUnitFactoryBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-use", Strings.autoFixed(build.currentPsychicUse(), 2)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 () -> {
                     float peak = peakPsychicUse();
                     return peak <= 0.0001f ? 0f : build.currentPsychicUse() / peak;
@@ -278,3 +278,5 @@ public class PsychicUnitFactory extends UnitFactory {
         }
     }
 }
+
+

@@ -14,6 +14,7 @@ import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHFx;
 import wh.content.WHStats;
+import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
@@ -62,7 +63,7 @@ public class PsychicRequiemBlock extends PsychicBlock {
 
         addBar("psychic-death-gain", (PsychicRequiemBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-harvest", Strings.autoFixed(build.gainRate, 2)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 () -> Mathf.clamp(build.gainRate / Math.max(baseDeathGain * 3f, 0.0001f))
         ));
     }
@@ -158,8 +159,8 @@ public class PsychicRequiemBlock extends PsychicBlock {
             float accepted = addPsychic(gain);
             if (accepted > 0.0001f) {
                 gainedThisFrame += accepted;
-                WHFx.trailDeathSiphon(60, psychicColor, Math.max(unit.hitSize / 20, 2), (int) Mathf.clamp(unit.hitSize * 0.9f, 10f, 20))
-                        .at(unit.x, unit.y, unit.hitSize, psychicColor, this);
+                WHFx.trailDeathSiphon(60, WHPal.PsyColor, Math.max(unit.hitSize / 20, 2), (int) Mathf.clamp(unit.hitSize * 0.9f, 10f, 20))
+                        .at(unit.x, unit.y, unit.hitSize, WHPal.PsyColor, this);
             }
         }
 
@@ -179,7 +180,7 @@ public class PsychicRequiemBlock extends PsychicBlock {
             float radius = block.size * tilesize * (0.42f + stored * 0.18f + warmup * 0.12f);
 
             if (stored > 0.001f || warmup > 0.001f) {
-                Drawf.light(x, y, radius * 2.4f, psychicColor, 0.2f + stored * 0.22f + warmup * 0.1f);
+                Drawf.light(x, y, radius * 2.4f, WHPal.PsyColor, 0.2f + stored * 0.22f + warmup * 0.1f);
             }
         }
 
@@ -206,3 +207,4 @@ public class PsychicRequiemBlock extends PsychicBlock {
         }
     }
 }
+

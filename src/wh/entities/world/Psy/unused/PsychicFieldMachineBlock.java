@@ -5,6 +5,7 @@ import arc.util.Strings;
 import mindustry.ui.Bar;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
+import wh.graphics.WHPal;
 
 import static mindustry.Vars.tilesize;
 
@@ -34,7 +35,7 @@ public abstract class PsychicFieldMachineBlock extends PsychicFieldBlock {
 
         addBar("psychic-operation", (PsychicFieldMachineBuild build) -> new Bar(
                 () -> operationLabel() + " " + Strings.autoFixed(build.operationRate, 2) + "/s",
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 () -> maxOperation <= 0.0001f ? 0f : build.operationRate / maxOperation
         ));
     }
@@ -92,3 +93,4 @@ public abstract class PsychicFieldMachineBlock extends PsychicFieldBlock {
         }
     }
 }
+

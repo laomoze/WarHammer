@@ -31,6 +31,7 @@ import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
 import wh.core.WHSettings;
 import wh.graphics.PositionLightning;
+import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 import wh.util.WHUtils;
@@ -767,7 +768,7 @@ public class PsychicNode extends PsychicBlock {
             float angle = Mathf.random(360f);
             Tmp.v1.trns(angle, Mathf.random(range * 0.2f, range * 0.65f)).add(x, y);
             Tmp.v2.trns(angle + Mathf.random(100f, 180f), Mathf.random(range * 0.2f, range * 0.65f)).add(x, y);
-            PositionLightning.createEffect(Tmp.v1, Tmp.v2, psychicColor, overloadLightningBolts, overloadLightningWidth);
+            PositionLightning.createEffect(Tmp.v1, Tmp.v2, WHPal.PsyColor, overloadLightningBolts, overloadLightningWidth);
         }
 
         protected void drawBeamVisuals() {
@@ -815,7 +816,7 @@ public class PsychicNode extends PsychicBlock {
 
             Vec2 fromPoint = new Vec2(Tmp.v1);
             Vec2 toPoint = new Vec2(Tmp.v2);
-            PositionLightning.createEffect(fromPoint, toPoint, psychicColor, Math.max(1, overloadLightningBolts - 1), Math.max(0.9f, overloadLightningWidth * 0.8f));
+            PositionLightning.createEffect(fromPoint, toPoint, WHPal.PsyColor, Math.max(1, overloadLightningBolts - 1), Math.max(0.9f, overloadLightningWidth * 0.8f));
         }
 
         protected void drawInputBeams() {
@@ -902,7 +903,7 @@ public class PsychicNode extends PsychicBlock {
                 float hx = Angles.trnsx(angle, len / 2f);
                 float hy = Angles.trnsy(angle, len / 2f);
 
-                Draw.color(Tmp.c1.set(psychicColor).lerp(laserColor1, 0.35f + 0.25f * widthScl).a(alpha * alphaScl));
+                Draw.color(Tmp.c1.set(WHPal.PsyColor).lerp(laserColor1, 0.35f + 0.25f * widthScl).a(alpha * alphaScl));
                 Lines.stroke(flowParticleWidth * widthScl * slope);
                 Lines.line(cx - hx, cy - hy, cx + hx, cy + hy, false);
             }

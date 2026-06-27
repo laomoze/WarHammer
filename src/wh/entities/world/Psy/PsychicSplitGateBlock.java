@@ -10,6 +10,7 @@ import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
+import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
@@ -51,7 +52,7 @@ public class PsychicSplitGateBlock extends PsychicNode {
         super.setBars();
         addBar("psychic-split", (PsychicSplitGateBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-transfer-scale", Strings.autoFixed(build.sideFlowRatio() * 100f, 0)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 build::sideFlowRatio
         ));
     }
@@ -288,3 +289,4 @@ public class PsychicSplitGateBlock extends PsychicNode {
         }
     }
 }
+

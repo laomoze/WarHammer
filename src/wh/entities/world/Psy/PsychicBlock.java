@@ -22,6 +22,7 @@ import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
 import wh.core.WHSettings;
 import wh.graphics.Drawn;
+import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
@@ -43,7 +44,6 @@ public abstract class PsychicBlock extends Block {
     public float overloadHealthLoss = 1.2f;
     public float overloadDangerThreshold = 0.35f;
     public float overloadDangerExponent = 2.2f;
-    public Color psychicColor = Color.valueOf("9f74ff");
     public Color overloadColor = Color.valueOf("ffb16a");
     public boolean acceptsPsychicLinks = true;
     public boolean outputsPsychicLinks = true;
@@ -115,7 +115,7 @@ public abstract class PsychicBlock extends Block {
                 () -> bundleFormat("bar.wh-psychic-storage",
                         Strings.autoFixed(build.psychicStored(), 2),
                         Strings.autoFixed(psychicCapacity, 0)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 build::psychicFraction
         ));
     }
@@ -310,7 +310,7 @@ public abstract class PsychicBlock extends Block {
                 psychic.remove(PsychicBlock.this.passivePsychicLoss / 60f * delta());
             }
 
-            // 过载会持续累积暴露值，避免它只停留在状态条上而没有实际影响。
+            // Overload builds exposure over time so it has gameplay impact beyond the bar state.
             if (overload > PsychicNetworkNode.epsilon) {
                 overloadExposure += delta() / 60f * Mathf.clamp(overload);
             } else {
@@ -385,7 +385,7 @@ public abstract class PsychicBlock extends Block {
 
             if (builder.length() == 0) return;
 
-            Drawn.overlayText(builder.toString(), x, y, block.size * tilesize * 1.15f, psychicColor, false);
+            Drawn.overlayText(builder.toString(), x, y, block.size * tilesize * 1.15f, WHPal.PsyColor, false);
         }
 
         @Override
@@ -439,3 +439,5 @@ public abstract class PsychicBlock extends Block {
         }
     }
 }
+
+

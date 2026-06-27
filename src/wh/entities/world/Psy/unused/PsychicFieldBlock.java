@@ -9,6 +9,7 @@ import mindustry.ui.Bar;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
 import wh.entities.world.Psy.PsychicBlock;
+import wh.graphics.WHPal;
 
 import static mindustry.Vars.tilesize;
 
@@ -37,13 +38,13 @@ public abstract class PsychicFieldBlock extends PsychicBlock {
 
         addBar("psychic-field", (PsychicFieldBuild build) -> new Bar(
                 () -> bundleFormat("bar.wh-psychic-field", Strings.autoFixed(build.fieldConcentration, 3)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 () -> build.fieldConcentration
         ));
 
         addBar("psychic-flux", (PsychicFieldBuild build) -> new Bar(
                 () -> bundleFormat("bar.wh-psychic-flux", Strings.autoFixed(build.fieldFlux, 3)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 () -> Mathf.clamp(build.fieldFlux * 12f)
         ));
     }
@@ -79,7 +80,7 @@ public abstract class PsychicFieldBlock extends PsychicBlock {
         float height = fieldRangeY * 2f * tilesize;
 
         Draw.z(Layer.overlayUI);
-        Draw.color(psychicColor);
+        Draw.color(WHPal.PsyColor);
         Draw.alpha(0.7f);
         Lines.stroke(1.2f);
         Lines.rect(worldX - width / 2f, worldY - height / 2f, width, height);
@@ -194,3 +195,4 @@ public abstract class PsychicFieldBlock extends PsychicBlock {
         }
     }
 }
+

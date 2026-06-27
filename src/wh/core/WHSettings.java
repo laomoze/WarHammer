@@ -36,6 +36,7 @@ public final class WHSettings{
             table.sliderPref(regularEffectScaleKey, 100, 25, 100, 5, i -> i + "%");
             table.checkPref(distortionEnabledKey, true);
             table.sliderPref(distortionStrengthKey, 100, 0, 100, 5, i -> i + "%");
+            table.pref(new WHTitleSetting("@wh.settings.debug-hud"));
             table.checkPref(carrierDebugHudKey, false);
             table.checkPref(psychicDebugHudKey, false);
             table.checkPref(fullTechCoverageKey, false);
@@ -144,5 +145,18 @@ public final class WHSettings{
 
     public static boolean laserDebugLengths() {
         return carrierDebugHud();
+    }
+
+    private static class WHTitleSetting extends mindustry.ui.dialogs.SettingsMenuDialog.SettingsTable.Setting {
+        WHTitleSetting(String name) {
+            super(name);
+        }
+
+        @Override
+        public void add(mindustry.ui.dialogs.SettingsMenuDialog.SettingsTable table) {
+            table.row();
+            table.add(title).color(arc.graphics.Color.lightGray).left().padTop(6f).padBottom(2f);
+            table.row();
+        }
     }
 }

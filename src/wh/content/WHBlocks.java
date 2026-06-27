@@ -25,6 +25,7 @@ import arc.util.io.Writes;
 import mindustry.content.*;
 import mindustry.entities.Effect;
 import mindustry.entities.Mover;
+import mindustry.entities.TargetPriority;
 import mindustry.entities.UnitSorts;
 import mindustry.entities.bullet.*;
 import mindustry.entities.effect.*;
@@ -84,7 +85,6 @@ import wh.entities.world.blocks.others.Randomer;
 import wh.entities.world.blocks.others.SearchlightBlock;
 import wh.entities.world.blocks.production.*;
 import wh.entities.world.blocks.storage.FrontlineCoreBlock;
-import wh.entities.world.blocks.storage.PsychicCoreWarehouseBlock;
 import wh.entities.world.blocks.storage.UnloaderF;
 import wh.entities.world.blocks.unit.AirBorne.AirborneUnitCallBlock;
 import wh.entities.world.blocks.unit.ConfigurableUnitAssembler;
@@ -152,7 +152,8 @@ public final class WHBlocks {
             electronicPneumaticDrill, MechanicalQuarry,
             sandExcavator, lavaDrill,
             heavyCuttingDrill, SpecialCuttingDrill, highEnergyDrill,
-            heavyExtractor, strengthenOilExtractor,
+            heavyExtractor, basicExtractor,
+            strengthenOilExtractor,
             promethiumExtractor, slagExtractor, integratedCompressor;
     //liquid
     public static Block lightConduit, steelConduit, armorFluidRouter,
@@ -199,7 +200,7 @@ public final class WHBlocks {
     //effect
     public static Block
             armorIlluminator, searchlight,
-            armoredVault, armoredContainer, psychicCoreWarehouse,
+            armoredVault, armoredContainer, remoteVault,
             wrapProjector, wrapOverdrive, shelterDome,
             repairTower, psychicRepairTower, voidShield, ionShield,
             selectProjector, launchPad, landingPad,
@@ -2461,14 +2462,32 @@ public final class WHBlocks {
             }
         };
 
-        heavyExtractor = new EnhancedWaterExtractor("heavy-extractor") {
+        basicExtractor = new Fracker("basic-extractor") {
             {
-                requirements(Category.production, with(WHItems.ceramite, 50, Items.silicon, 80, WHItems.cobaltNitride, 50, WHItems.resonantCrystal, 50));
-                health = 600;
-                size = 3;
+                requirements(Category.production, with(WHItems.manganese, 30, WHItems.cobaltNitride, 50, WHItems.manganeseSteel, 50));
+                health = 400;
+                size = 2;
                 hasPower = true;
                 hasLiquids = true;
                 liquidCapacity = 50;
+                pumpAmount = 15 / 60f;
+                rotateSpeed = 1.5f;
+                result = WHLiquids.swageWater;
+                attribute = Attribute.water;
+
+                consumePower(120 / 60f);
+                researchCostMultiplier = 0.5f;
+            }
+        };
+
+        heavyExtractor = new EnhancedWaterExtractor("heavy-extractor") {
+            {
+                requirements(Category.production, with(WHItems.ceramite, 50, Items.silicon, 80, WHItems.cobaltNitride, 50, WHItems.resonantCrystal, 50));
+                health = 1200;
+                size = 3;
+                hasPower = true;
+                hasLiquids = true;
+                liquidCapacity = 120;
                 itemCapacity = 10;
                 pumpAmount = 30 / 60f;
                 rotateSpeed = 1.3f;
@@ -2497,7 +2516,7 @@ public final class WHBlocks {
                 baseEfficiency = 0.5f;
                 attribute = Attribute.oil;
                 itemUseTime = 120;
-                consumeLiquid(WHLiquids.swageWater, 20 / 60f);
+                consumeLiquid(WHLiquids.swageWater, 15 / 60f);
                 consumePower(3);
                 researchCostMultiplier = 0.6f;
             }
@@ -3122,7 +3141,7 @@ public final class WHBlocks {
         };
 
         ventDistiller = new ThermalGenerator("vent-distiller") {{
-            requirements(Category.production, with(WHItems.manganese, 70, WHItems.chromium, 50));
+            requirements(Category.power, with(WHItems.manganese, 70, WHItems.chromium, 50));
 
             attribute = Attribute.steam;
             group = BlockGroup.liquids;
@@ -3674,21 +3693,6 @@ public final class WHBlocks {
             transferRate = 100;
             distanceFalloff = 0.2f;
             passivePsychicLoss = 0.1f;
-            drawer = new DrawMulti(
-                    new DrawDefault(),
-                    new DrawCircles() {{
-                        color = WHPal.PsyColor;
-                        amount = 1;
-                        radius = 3.4f;
-                        strokeMax = 1.15f;
-                    }},
-                    new DrawGlowRegion() {{
-                        color = WHPal.PsyColor;
-                        alpha = 0.45f;
-                        glowScale = 8f;
-                        glowIntensity = 0.25f;
-                    }}
-            );
             researchCostMultiplier = 0.35f;
         }};
 
@@ -3701,21 +3705,6 @@ public final class WHBlocks {
             transferRate = 300;
             distanceFalloff = 0.1f;
             passivePsychicLoss = 0.25f;
-            drawer = new DrawMulti(
-                    new DrawDefault(),
-                    new DrawCircles() {{
-                        color = WHPal.PsyColor;
-                        amount = 2;
-                        radius = 7.5f;
-                        strokeMax = 1.3f;
-                    }},
-                    new DrawGlowRegion() {{
-                        color = WHPal.PsyColor;
-                        alpha = 0.5f;
-                        glowScale = 10f;
-                        glowIntensity = 0.3f;
-                    }}
-            );
             researchCostMultiplier = 0.35f;
         }};
 
@@ -3729,21 +3718,6 @@ public final class WHBlocks {
             transferRate = 300;
             distanceFalloff = 0.1f;
             passivePsychicLoss = 0.25f;
-            drawer = new DrawMulti(
-                    new DrawDefault(),
-                    new DrawPulseShape() {{
-                        color = WHPal.PsyColor;
-                        stroke = 1.1f;
-                        radiusScl = 0.95f;
-                        timeScl = 5f;
-                    }},
-                    new DrawGlowRegion() {{
-                        color = WHPal.PsyColor;
-                        alpha = 0.42f;
-                        glowScale = 8f;
-                        glowIntensity = 0.22f;
-                    }}
-            );
             researchCostMultiplier = 0.35f;
         }};
 
@@ -4006,11 +3980,6 @@ public final class WHBlocks {
             useBlockDrawer = true;
             psychicCapacity = 240f;
             passivePsychicLoss = 0.01f;
-            autoGenerateItemRecipes = true;
-            autoCraftTime = 75f;
-            autoPowerUse = 90f / 60f;
-            autoPsychicBase = 6f;
-            autoPsychicCostScale = 12f;
             drawer = new DrawMulti(
                     new DrawDefault(),
                     new DrawCircles() {{
@@ -4192,31 +4161,32 @@ public final class WHBlocks {
 
         armoredVault = new StorageBlock("armored-vault") {
             {
-                requirements(Category.effect, with(WHItems.cobalt, 500, Items.silicon, 1000, WHItems.armorAlloy, 500, WHItems.ceramite, 500));
+                requirements(Category.effect, with(WHItems.cobalt, 500, Items.silicon, 1000, WHItems.armorAlloy, 250, WHItems.ceramite, 500));
 
                 health = 3600;
                 size = 3;
                 itemCapacity = 10 * 1000;
                 researchCostMultiplier = 0.3f;
-                category = Category.effect;
                 armor = 12;
             }
         };
 
-        psychicCoreWarehouse = new PsychicCoreWarehouseBlock("psychic-core-warehouse") {{
-            requirements(Category.effect, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 80, WHItems.resonantCrystal, 55, WHItems.entanglement, 30, WHItems.ceramite, 80));
-            buildVisibility = BuildVisibility.sandboxOnly;
+        remoteVault = new PsyStorageBlock("remote-vault") {
+            {
+                requirements(Category.effect, with(WHItems.manganeseSteel, 500, WHItems.molybdenumAlloy, 200, WHItems.ceramite, 500, WHItems.entanglement, 200));
             size = 3;
-            health = 1200;
+                health = 3600;
             armor = 8;
-            itemCapacity = 4000;
-            coreCapacityBonus = 8000;
-            psychicCapacity = 180f;
-            psychicUse = 0.45f;
-            linkRangeX = 20;
-            linkRangeY = 12;
+                psychicCapacity = 100;
+                psychicUse = 15;
+                linkRange = 30;
+
+                priority = TargetPriority.core;
+                flags = EnumSet.of(BlockFlag.core);
+
             researchCostMultiplier = 0.45f;
-        }};
+            }
+        };
 
         launchPad = new LaunchPad("launch-pad") {{
             requirements(Category.effect, with(WHItems.armorAlloy, 80, WHItems.cobaltNitride, 120, Items.carbide, 80, WHItems.resonantCrystal, 60));

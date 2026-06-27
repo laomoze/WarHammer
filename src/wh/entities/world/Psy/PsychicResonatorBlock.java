@@ -5,14 +5,16 @@ import arc.graphics.g2d.Lines;
 import arc.math.Mathf;
 import arc.struct.Bits;
 import arc.util.Strings;
+import arc.util.Tmp;
 import mindustry.Vars;
-import mindustry.entities.Units;
+import mindustry.gen.Groups;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
+import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
@@ -52,7 +54,7 @@ public class PsychicResonatorBlock extends PsychicBlock {
 
         addBar("psychic-production", (PsychicResonatorBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-production", Strings.autoFixed(build.productionRate, 2)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 () -> maxProduction <= 0.0001f ? 0f : build.productionRate / maxProduction
         ));
 
@@ -60,7 +62,7 @@ public class PsychicResonatorBlock extends PsychicBlock {
                 () -> bundleFormat("bar.wh-psychic-resonance",
                         Strings.autoFixed(build.buildingScore, 2),
                         Strings.autoFixed(build.unitScore, 2)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 () -> Mathf.clamp((build.buildingScore + build.unitScore) / Math.max(maxProduction, 0.0001f))
         ));
     }
@@ -79,7 +81,7 @@ public class PsychicResonatorBlock extends PsychicBlock {
         Draw.color(Pal.accent);
         Draw.alpha(0.75f);
         Lines.stroke(1.2f);
-        Lines.circle(worldX, worldY, range * tilesize);
+        Lines.rect(worldX - range * tilesize, worldY - range * tilesize, range * 2f * tilesize, range * 2f * tilesize);
         Draw.reset();
     }
 
@@ -120,10 +122,10 @@ public class PsychicResonatorBlock extends PsychicBlock {
             float rangeWorld = range * tilesize;
             final float[] total = {0f};
 
-            Vars.indexer.eachBlock(team, x, y, rangeWorld, other -> other != this && other.isAdded(), other -> {
+            Vars.indexer.eachBlock(team, Tmp.r1.setCentered(x, y, rangeWorld * 2f), other -> other != this && other.isAdded(), other -> {
                 float sizeFactor = Math.max(other.block.size, 1);
                 float activity = Mathf.clamp(other.warmup() * factoryWarmupWeight + Math.max(other.timeScale() - 1f, 0f) * factoryTimeScaleWeight + 0.35f, 0.1f, 2f);
-                float falloff = 1f - Mathf.dst(x, y, other.x, other.y) / rangeWorld;
+                float falloff = 1f - Math.max(Math.abs(other.x - x), Math.abs(other.y - y)) / rangeWorld;
                 total[0] += sizeFactor * activity * Math.max(falloff, 0.15f) * factoryContribution;
             });
 
@@ -134,12 +136,13 @@ public class PsychicResonatorBlock extends PsychicBlock {
             float rangeWorld = range * tilesize;
             final float[] total = {0f};
 
-            Units.nearby(team, x, y, rangeWorld, unit -> {
+            Groups.unit.intersect(x - rangeWorld, y - rangeWorld, rangeWorld * 2f, rangeWorld * 2f, unit -> {
+                if (unit.team != team) return;
                 float volume = Math.max(unit.hitSize, 4f) / 8f;
                 float buffed = 1f + countStatuses(unit.statusBits()) * buffContribution;
                 if (unit.isBoss()) buffed *= bossBonus;
                 float moving = 0.75f + Mathf.clamp(unit.vel.len() / Math.max(unit.speed(), 0.0001f), 0f, 1.5f) * 0.35f;
-                float falloff = 1f - Mathf.dst(x, y, unit.x, unit.y) / rangeWorld;
+                float falloff = 1f - Math.max(Math.abs(unit.x - x), Math.abs(unit.y - y)) / rangeWorld;
                 total[0] += volume * buffed * moving * Math.max(falloff, 0.2f) * unitContribution;
             });
 
@@ -161,7 +164,7 @@ public class PsychicResonatorBlock extends PsychicBlock {
             float stored = psychicFraction();
             float radius = block.size * tilesize * (0.38f + stored * 0.2f + warmup * 0.12f);
             if (stored > 0.001f || warmup > 0.001f) {
-                Drawf.light(x, y, radius * 2.7f, psychicColor, 0.2f + stored * 0.24f + warmup * 0.12f);
+                Drawf.light(x, y, radius * 2.7f, WHPal.PsyColor, 0.2f + stored * 0.24f + warmup * 0.12f);
             }
         }
 
@@ -191,3 +194,4 @@ public class PsychicResonatorBlock extends PsychicBlock {
         }
     }
 }
+

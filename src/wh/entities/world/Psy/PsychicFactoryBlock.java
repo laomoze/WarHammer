@@ -10,6 +10,7 @@ import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
+import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
@@ -40,13 +41,13 @@ public class PsychicFactoryBlock extends PsychicBlock {
 
         addBar("psychic-production", (PsychicFactoryBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-production", Strings.autoFixed(build.productionRate, 2)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 () -> productionPerSecond() <= 0.0001f ? 0f : build.productionRate / productionPerSecond()
         ));
 
         addBar("psychic-craft", (PsychicFactoryBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-craft", Strings.autoFixed(build.progressFraction() * 100f, 0)),
-                () -> psychicColor,
+                () -> WHPal.PsyColor,
                 build::progressFraction
         ));
     }
@@ -113,7 +114,7 @@ public class PsychicFactoryBlock extends PsychicBlock {
             float radius = block.size * tilesize * (0.32f + stored * 0.18f + warmup * 0.08f);
 
             Draw.z(Layer.effect);
-            Draw.color(psychicColor, Color.white, 0.12f + warmup * 0.14f);
+            Draw.color(WHPal.PsyColor, Color.white, 0.12f + warmup * 0.14f);
             Draw.alpha(0.16f + stored * 0.2f + warmup * 0.14f);
             Lines.stroke(1f + warmup * 1.3f);
             Lines.square(x, y, radius + pulse * 0.18f, 45f);
@@ -121,7 +122,7 @@ public class PsychicFactoryBlock extends PsychicBlock {
             Draw.reset();
 
             if (stored > 0.001f || warmup > 0.001f) {
-                Drawf.light(x, y, radius * 2.3f, psychicColor, 0.18f + stored * 0.22f + warmup * 0.12f);
+                Drawf.light(x, y, radius * 2.3f, WHPal.PsyColor, 0.18f + stored * 0.22f + warmup * 0.12f);
             }
         }
 
@@ -138,3 +139,4 @@ public class PsychicFactoryBlock extends PsychicBlock {
         }
     }
 }
+

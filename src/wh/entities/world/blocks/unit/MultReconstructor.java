@@ -1,36 +1,55 @@
 package wh.entities.world.blocks.unit;
 
-import arc.*;
-import arc.Graphics.*;
-import arc.Graphics.Cursor.*;
-import arc.audio.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.ui.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
+import arc.Core;
+import arc.Events;
+import arc.Graphics.Cursor;
+import arc.Graphics.Cursor.SystemCursor;
+import arc.audio.Sound;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
+import arc.scene.ui.ButtonGroup;
+import arc.scene.ui.ImageButton;
+import arc.scene.ui.layout.Table;
+import arc.struct.ObjectMap;
+import arc.struct.Seq;
 import arc.util.*;
-import arc.util.io.*;
-import mindustry.*;
-import mindustry.ai.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
-import mindustry.game.EventType.*;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.ai.UnitCommand;
+import mindustry.content.Fx;
+import mindustry.content.Items;
+import mindustry.entities.Effect;
+import mindustry.entities.Units;
+import mindustry.entities.units.BuildPlan;
+import mindustry.game.EventType.UnitCreateEvent;
 import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.io.*;
-import mindustry.logic.*;
-import mindustry.type.*;
-import mindustry.ui.*;
-import mindustry.world.blocks.payloads.*;
-import mindustry.world.blocks.units.*;
-import mindustry.world.consumers.*;
-import mindustry.world.meta.*;
-import wh.graphics.*;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.io.TypeIO;
+import mindustry.logic.LAccess;
+import mindustry.type.Item;
+import mindustry.type.ItemStack;
+import mindustry.type.UnitType;
+import mindustry.ui.Bar;
+import mindustry.ui.Fonts;
+import mindustry.ui.Styles;
+import mindustry.world.blocks.payloads.Payload;
+import mindustry.world.blocks.payloads.UnitPayload;
+import mindustry.world.blocks.units.UnitBlock;
+import mindustry.world.consumers.ConsumeItemDynamic;
+import mindustry.world.meta.Stat;
+import mindustry.world.meta.StatUnit;
+import mindustry.world.meta.StatValues;
+import wh.graphics.Drawn;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.state;
+import static mindustry.Vars.tilesize;
 
 public class MultReconstructor extends UnitBlock{
     public ObjectMap<UnitType[], ItemStack[]> upgradeCosts = new ObjectMap<>();
@@ -161,6 +180,15 @@ public class MultReconstructor extends UnitBlock{
         }
         consumeBuilder.each(c -> c.multiplier = b -> state.rules.unitCost(b.team));
         super.init();
+    }
+
+    public boolean usesUpgradeItem(Item item) {
+        for (ItemStack[] costs : upgradeCosts.values()) {
+            if (Structs.contains(costs, stack -> stack.item == item)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public class MultipleConsumerReconstructorBuild extends UnitBuild{
@@ -402,20 +430,8 @@ public class MultReconstructor extends UnitBlock{
 
         @Override
         public boolean acceptItem(Building source, Item item){
-            if(payload != null && payload.unit != null){
-                UnitType currentUnit = payload.unit.type;
-                for(ObjectMap.Entry<UnitType[], ItemStack[]> plan : upgradeCosts.entries()){
-                    if(plan.key[0] == currentUnit){
-                        if(Structs.contains(plan.value, stack -> stack.item == item)){
-                            return constructing && items.get(item) < getMaximumAccepted(item);
-                        }
-                    }
-                }
-            }
-            return super.acceptItem(source, item);
+            return usesUpgradeItem(item) && items.get(item) < getMaximumAccepted(item);
         }
-
-        ;
 
         @Override
         public Object config(){

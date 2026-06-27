@@ -308,12 +308,12 @@ public final class KarvexTeachTree {
 
             });
             node(WHBlocks.basicUnloader, () -> {
+                node(WHBlocks.steelUnloader, () -> {
+                });
                 node(WHBlocks.armoredContainer, () -> {
                     node(WHBlocks.armoredVault, () -> {
-                        node(WHBlocks.psychicCoreWarehouse, () -> {
-                        });
                     });
-                    node(WHBlocks.steelUnloader, () -> {
+                    node(WHBlocks.remoteVault, () -> {
                     });
                     node(WHBlocks.landingPad, () -> {
                     });
@@ -420,7 +420,9 @@ public final class KarvexTeachTree {
 
             node(WHBlocks.sandExcavator, () -> {
                 node(WHBlocks.slagExtractor, () -> {
-                    node(WHBlocks.heavyExtractor, () -> {
+                    node(WHBlocks.basicExtractor, () -> {
+                        node(WHBlocks.heavyExtractor, () -> {
+                        });
                     });
                 });
                 node(WHBlocks.promethiumExtractor, () -> {

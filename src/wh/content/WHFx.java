@@ -320,9 +320,10 @@ public final class WHFx {
         return new TrailEffect(lifetime, range * 2, color, color, intensity, (int) length, stroke).trailUpdater((e, trail, x, y, width, len, index) -> {
             long id = e.id + index * 45L;
             rand.setSeed(id);
-            eachHeightVector(e.id + id, 1, e.fin(Interp.pow3Out) * range, e.rotation, 360f, 60 * e.fin(), 1f, (vx, vy, height) -> {
+            eachHeightVector(e.id + id, 1, e.fin(Interp.pow3Out) * range, e.rotation, 360f, 60 * e.fin(pow2Out), 1f, (vx, vy, height) -> {
                 trail.length = (int) (len * WHFx.fout(e.fin(), 0.06f));
-                trail.update(x + vx, y + vy, height, width * e.fout());
+                trail.update(x + vx, y + vy, height, width * e.fout() * WHFx.fout(e.fin(), 0.15f));
+                trail.drawCap(e.color, width * e.fout() * WHFx.fout(e.fin(), 0.15f));
             });
         }).drawTri(true);
     }
@@ -335,7 +336,8 @@ public final class WHFx {
             rand.setSeed(id);
             eachHeightVector(e.id + id, 1, e.fin(Interp.pow3Out) * range, e.rotation, 360f, 60 * e.fin(), 1f, (vx, vy, height) -> {
                 trail.length = (int) (len * WHFx.fout(e.fin(), 0.06f));
-                trail.update(x + vx, y + vy, height, width * e.fout());
+                trail.update(x + vx, y + vy, height, width * e.fout() * WHFx.fout(e.fin(), 0.15f));
+                trail.drawCap(e.color, width * e.fout() * WHFx.fout(e.fin(), 0.15f));
             });
         });
     }

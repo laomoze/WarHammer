@@ -24,40 +24,50 @@ import wh.util.WHUtils;
 
 import java.util.Arrays;
 
-public class TrailEffect extends Effect{
-    /** How many trails to create. */
+public class TrailEffect extends Effect {
+    /**
+     * How many trails to create.
+     */
     public int amount = 10;
-    /** How many points long each trail is. */
+    /**
+     * How many points long each trail is.
+     */
     public int length = 10;
-    /** Radius of the trail. */
+    /**
+     * Radius of the trail.
+     */
     public float width = 1;
 
     public @Nullable Color colorFrom;
-    /** If null, uses effect color. */
+    /**
+     * If null, uses effect color.
+     */
     public @Nullable Color colorTo;
 
     public Interp ColorInterp = Interp.linear;
 
-    /** Custom trail movement function */
+    /**
+     * Custom trail movement function
+     */
     public TrailUpdater trailUpdater = (e, trail, x, y, width, length, index) -> {
     };
 
     public Boolean drawTri = false;
 
 
-    public TrailEffect(float lifetime, float clipSize){
+    public TrailEffect(float lifetime, float clipSize) {
         this.lifetime = lifetime;
         this.clip = clipSize;
     }
 
 
-    public TrailEffect(float lifetime, float clipSize, int amount){
+    public TrailEffect(float lifetime, float clipSize, int amount) {
         this(lifetime, clipSize);
         this.amount = amount;
     }
 
 
-    public TrailEffect(float lifetime, float clipSize, int amount, int length, float width){
+    public TrailEffect(float lifetime, float clipSize, int amount, int length, float width) {
         this(lifetime, clipSize, amount);
         this.length = length;
         this.width = width;
@@ -65,7 +75,7 @@ public class TrailEffect extends Effect{
         this.colorTo = null;
     }
 
-    public TrailEffect(float lifetime, float clipSize, Color colorFrom, Color colorTo, int amount, int length, float width){
+    public TrailEffect(float lifetime, float clipSize, Color colorFrom, Color colorTo, int amount, int length, float width) {
         this(lifetime, clipSize, amount);
         this.length = length;
         this.width = width;
@@ -73,34 +83,34 @@ public class TrailEffect extends Effect{
         this.colorTo = colorTo;
     }
 
-    public TrailEffect trailUpdater(TrailUpdater updater){
+    public TrailEffect trailUpdater(TrailUpdater updater) {
         this.trailUpdater = updater;
         return this;
     }
 
-    public TrailEffect layer(float l){
+    public TrailEffect layer(float l) {
         layer = l;
         return this;
     }
 
-    public TrailEffect startDelay(float d){
+    public TrailEffect startDelay(float d) {
         startDelay = d;
         return this;
     }
 
-    public TrailEffect colorInterp(Interp e){
+    public TrailEffect colorInterp(Interp e) {
         ColorInterp = e;
         return this;
     }
 
-    public TrailEffect drawTri(boolean b){
+    public TrailEffect drawTri(boolean b) {
         drawTri = b;
         return this;
     }
 
     protected void updateTrails(TrailEffectState state) {
-        if(!WHSettings.effectEnabled()) return;
-        if(length <= 0 || width <= 0) return;
+        if (!WHSettings.effectEnabled()) return;
+        if (length <= 0 || width <= 0) return;
         if (!(state.data instanceof TrailData data)) return;
 
         float followX = state.x;
@@ -139,27 +149,27 @@ public class TrailEffect extends Effect{
         }
 
         float l = e.fin(ColorInterp);
-        if(colorFrom != null || colorTo != null){
+        if (colorFrom != null || colorTo != null) {
             Tmp.c1.set(colorFrom == null ? e.color : colorFrom).lerp(colorTo == null ? e.color : colorTo, l);
-        }else{
+        } else {
             Tmp.c1.set(e.color);
         }
 
-        for(Trail trail : trails){
-            if(trail != null){
+        for (Trail trail : trails) {
+            if (trail != null) {
                 trail.draw(Tmp.c1, width);
                 trail.drawCap(Tmp.c1, width * WHFx.fout(e.fin(), 0.15f));
             }
         }
     }
 
-    public interface TrailUpdater{
+    public interface TrailUpdater {
         void update(EffectContainer e, CTrail trail, float x, float y, float width, float length, int index);
     }
 
     @Override
-    protected void add(float x, float y, float rotation, Color color, Object data){
-        if(!WHSettings.effectEnabled()) return;
+    protected void add(float x, float y, float rotation, Color color, Object data) {
+        if (!WHSettings.effectEnabled()) return;
         TrailEffectState entity = TrailEffectState.create();
         entity.effect = this;
         entity.rotation = baseRotation + rotation;
@@ -168,16 +178,16 @@ public class TrailEffect extends Effect{
         entity.color.set(color);
 
         Trail[] trails = new Trail[amount];
-        for(int i = 0; i < amount; i++){
+        for (int i = 0; i < amount; i++) {
             trails[i] = new CTrail(length);
         }
 
         float worldRotation = baseRotation + rotation;
         entity.data = new TrailData(trails, data, x, y, worldRotation, followParent, rotWithParent);
-        TrailData d = (TrailData)entity.data;
-        if(followParent && !d.manualBulletFollow){
+        TrailData d = (TrailData) entity.data;
+        if (followParent && !d.manualBulletFollow) {
             Posc parentPos = resolveFollowParent(d.sourceData);
-            if(parentPos != null){
+            if (parentPos != null) {
                 entity.parent = parentPos;
                 boolean parentSupportsRotation = parentPos instanceof Rotc || parentPos instanceof RotBlock;
                 entity.rotWithParent = rotWithParent && parentSupportsRotation;
@@ -186,8 +196,8 @@ public class TrailEffect extends Effect{
         entity.add();
     }
 
-    private @Nullable Posc resolveFollowParent(Object sourceData){
-        if(sourceData instanceof Posc posc){
+    private @Nullable Posc resolveFollowParent(Object sourceData) {
+        if (sourceData instanceof Posc posc) {
             return posc;
         }
         return null;
@@ -196,23 +206,23 @@ public class TrailEffect extends Effect{
     /**
      * 子弹作为 sourceData 时不再使用 EffectState.parent 跟随，避免子弹回收复用导致的坐标跳变。
      */
-    private void updateBulletFollow(TrailData data){
-        if(!(data.sourceData instanceof Bullet bullet)) return;
-        if(!bullet.isAdded() || bullet.id != data.sourceEntityId) return;
+    private void updateBulletFollow(TrailData data) {
+        if (!(data.sourceData instanceof Bullet bullet)) return;
+        if (!bullet.isAdded() || bullet.id != data.sourceEntityId) return;
 
-        if(data.keepRotationWithSource){
+        if (data.keepRotationWithSource) {
             float sourceRot = bullet.rotation();
             data.followX = bullet.x + Angles.trnsx(sourceRot + data.offsetPos, data.offsetX, data.offsetY);
             data.followY = bullet.y + Angles.trnsy(sourceRot + data.offsetPos, data.offsetX, data.offsetY);
             data.followRotation = sourceRot + data.offsetRot;
-        }else{
+        } else {
             data.followX = bullet.x + data.offsetX;
             data.followY = bullet.y + data.offsetY;
             data.followRotation = data.baseRotation;
         }
     }
 
-    private static class TrailData{
+    private static class TrailData {
         final Trail[] trails;
         final EffectContainer container = new EffectContainer();
         final Object sourceData;
@@ -228,7 +238,7 @@ public class TrailEffect extends Effect{
         float followY;
         float followRotation;
 
-        TrailData(Trail[] trails, Object sourceData, float effectX, float effectY, float effectRotation, boolean followParent, boolean rotWithParent){
+        TrailData(Trail[] trails, Object sourceData, float effectX, float effectY, float effectRotation, boolean followParent, boolean rotWithParent) {
             this.trails = trails;
             this.sourceData = sourceData;
             this.baseRotation = effectRotation;
@@ -236,21 +246,21 @@ public class TrailEffect extends Effect{
             this.followY = effectY;
             this.followRotation = effectRotation;
 
-            if(followParent && sourceData instanceof Bullet bullet){
+            if (followParent && sourceData instanceof Bullet bullet) {
                 manualBulletFollow = true;
                 keepRotationWithSource = rotWithParent;
                 sourceEntityId = bullet.id;
                 offsetX = effectX - bullet.x;
                 offsetY = effectY - bullet.y;
-                if(keepRotationWithSource){
+                if (keepRotationWithSource) {
                     float sourceRot = bullet.rotation();
                     offsetPos = -sourceRot;
                     offsetRot = effectRotation - sourceRot;
-                }else{
+                } else {
                     offsetPos = 0f;
                     offsetRot = 0f;
                 }
-            }else{
+            } else {
                 manualBulletFollow = false;
                 keepRotationWithSource = false;
                 sourceEntityId = -1;
@@ -276,10 +286,10 @@ public class TrailEffect extends Effect{
         }
     }
 
-    public class CTrail extends Trail{
+    public class CTrail extends Trail {
         public float lastZ = 0f;
 
-        public CTrail(int length){
+        public CTrail(int length) {
             super(length);
         }
 
@@ -288,7 +298,7 @@ public class TrailEffect extends Effect{
             update(x, y, 0f, width);
         }
 
-        public void update(float x, float y, float z, float width) {
+     /*   public void update(float x, float y, float z, float width) {
             int count = (int) (counter += Time.delta);
             counter -= count;
 
@@ -313,7 +323,46 @@ public class TrailEffect extends Effect{
             lastY = y;
             lastZ = z;
             lastW = width;
+        }*/
+
+        public void update(float x, float y, float z, float width) {
+            int count = (int) (counter += Time.delta);
+            counter -= count;
+
+            if (count > 0) {
+                int toRemove = points.size + (count - 1 - length) * 4;
+                if (toRemove > 0 && points.size > 0) {
+                    points.removeRange(0, Math.min(toRemove - 1, points.size - 1));
+                }
+
+                if (count == 1 || lastX == -1f) {
+                    points.add(x, y, z, width);
+                } else {
+                    for (int i = 0; i < count; i++) {
+                        float f = (i + 1f) / count;
+                        points.add(
+                                Mathf.lerp(lastX, x, f),
+                                Mathf.lerp(lastY, y, f),
+                                Mathf.lerp(lastZ, z, f),
+                                Mathf.lerp(lastW, width, f)
+                        );
+                    }
+                }
+            }
+
+            if (lastX != -1f && lastY != -1f) {
+                float dx = x - lastX, dy = y - lastY;
+                if (dx * dx + dy * dy > 0.0001f) {
+                    lastAngle = Mathf.atan2(dy, dx);
+                }
+            }
+
+            lastX = x;
+            lastY = y;
+            lastZ = z;
+            lastW = width;
         }
+
 
         @Override
         public void draw(Color color, float width) {
@@ -369,22 +418,59 @@ public class TrailEffect extends Effect{
             }
         }
 
+        /*   @Override
+           public void drawCap(Color color, float width){
+               if (points.size >= 4) {
+                   Draw.color(color);
+                   float[] items = points.items;
+                   int i = points.size - 4;
+                   float x1 = items[i], y1 = items[i + 1], z1 = items[i + 2], w1 = items[i + 3];
+                   float w = w1 * width / ((float) points.size / 4f) * i / 4f * 2f;
+                   if(w1 <= 0.001f) return;
+                   Tmp.v1.set(x1, y1);
+                   WHUtils.getParallaxFrom(Tmp.v1, Core.camera.position, Math.max(z1, 0f) / 32f);
+                   float angle = Mathf.radDeg * lastAngle;
+
+                   Draw.rect("circle-bullet", Tmp.v1.x, Tmp.v1.y, w, w, angle + 180f);
+                   if (drawTri) Drawn.tri(Tmp.v1.x, Tmp.v1.y, w / 1.7f, w * 2.1f, angle + 180f);
+                   if (drawTri) Drawn.tri(Tmp.v1.x, Tmp.v1.y, w / 1.7f, w * 0.5f, angle);
+                   Draw.reset();
+               }
+           }*/
         @Override
-        public void drawCap(Color color, float width){
-            if (points.size >= 4) {
-                Draw.color(color);
-                float[] items = points.items;
-                int i = points.size - 4;
-                float x1 = items[i], y1 = items[i + 1], z1 = items[i + 2], w1 = items[i + 3];
-                float w = w1 * width / ((float) points.size / 4f) * i / 4f * 2f;
-                if(w1 <= 0.001f) return;
-                Tmp.v1.set(x1, y1);
-                WHUtils.getParallaxFrom(Tmp.v1, Core.camera.position, Math.max(z1, 0f) / 32f);
-                Draw.rect("circle-bullet", Tmp.v1.x, Tmp.v1.y, w, w, -Mathf.radDeg * lastAngle + 180f);
-                if (drawTri) Drawn.tri(Tmp.v1.x, Tmp.v1.y, w / 1.7f, w * 2.1f, -Mathf.radDeg * lastAngle + 180f);
-                if (drawTri) Drawn.tri(Tmp.v1.x, Tmp.v1.y, w / 1.7f, w * 0.5f, -Mathf.radDeg * lastAngle);
-                Draw.reset();
+        public void drawCap(Color color, float width) {
+            if (points.size < 8) return;
+
+            Draw.color(color);
+            float[] items = points.items;
+
+            int i1 = points.size - 4;
+            int i0 = points.size - 8;
+
+            float x0 = items[i0], y0 = items[i0 + 1], z0 = items[i0 + 2], w0 = items[i0 + 3];
+            float x1 = items[i1], y1 = items[i1 + 1], z1 = items[i1 + 2], w1 = items[i1 + 3];
+
+            float w = w1 * width / ((float) points.size / 4f) * (i1 / 4f) * 2f;
+            if (w1 <= 0.001f) return;
+
+            Tmp.v2.set(x0, y0);
+            Tmp.v1.set(x1, y1);
+
+            WHUtils.getParallaxFrom(Tmp.v2, Core.camera.position, Math.max(z0, 0f) / 32f);
+            WHUtils.getParallaxFrom(Tmp.v1, Core.camera.position, Math.max(z1, 0f) / 32f);
+
+            float angle = Angles.angle(Tmp.v2.x, Tmp.v2.y, Tmp.v1.x, Tmp.v1.y);
+
+            /* Draw.rect("circle-bullet", Tmp.v1.x, Tmp.v1.y, w, w, angle + 180f);*/
+            if (!drawTri) {
+                Fill.circle(Tmp.v1.x, Tmp.v1.y, w / 2);
+            } else {
+                Drawn.tri(Tmp.v1.x, Tmp.v1.y, w / 1.7f, w * 2.1f, angle);
+                Drawn.tri(Tmp.v1.x, Tmp.v1.y, w / 1.7f, w * 0.5f, angle + 180f);
             }
+
+            Draw.reset();
         }
+
     }
 }

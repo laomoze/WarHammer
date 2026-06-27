@@ -13,6 +13,7 @@ import mindustry.ui.Styles;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
 import wh.graphics.Drawn;
+import wh.graphics.WHPal;
 
 import static mindustry.Vars.tilesize;
 
@@ -97,7 +98,7 @@ public class PsychicHarvesterBlock extends PsychicFieldMachineBlock {
             float radius = block.size * tilesize * (0.4f + stored * 0.2f + warmup * 0.08f);
 
             Draw.z(Layer.effect);
-            Draw.color(psychicColor, Color.white, 0.08f + fieldConcentration * 0.25f);
+            Draw.color(WHPal.PsyColor, Color.white, 0.08f + fieldConcentration * 0.25f);
             Draw.alpha(0.18f + stored * 0.22f + warmup * 0.18f);
             Lines.stroke(1f + warmup * 1.5f);
             Lines.circle(x, y, radius + pulse * 0.35f);
@@ -112,7 +113,7 @@ public class PsychicHarvesterBlock extends PsychicFieldMachineBlock {
             Draw.reset();
 
             if (stored > 0.001f || warmup > 0.001f) {
-                Drawf.light(x, y, radius * 2.5f, psychicColor, 0.25f + stored * 0.35f + warmup * 0.1f);
+                Drawf.light(x, y, radius * 2.5f, WHPal.PsyColor, 0.25f + stored * 0.35f + warmup * 0.1f);
             }
         }
 
@@ -123,7 +124,7 @@ public class PsychicHarvesterBlock extends PsychicFieldMachineBlock {
                     "Psi " + Strings.autoFixed(psychicStored(), 2) + "/" + Strings.autoFixed(psychicCapacity(), 0) +
                             " | Disturb " + Strings.autoFixed(fieldDisturbance, 3) +
                             " | Gain " + Strings.autoFixed(operationRate, 2) + "/s",
-                    x, y, block.size * tilesize * 0.9f, psychicColor, false
+                    x, y, block.size * tilesize * 0.9f, WHPal.PsyColor, false
             );
         }
 
@@ -131,7 +132,7 @@ public class PsychicHarvesterBlock extends PsychicFieldMachineBlock {
         public void buildConfiguration(Table table) {
             table.table(Styles.black6, t -> {
                 t.defaults().left().pad(4f);
-                t.add("@block.wh-warp-siphon.name").color(psychicColor).row();
+                t.add("@block.wh-warp-siphon.name").color(WHPal.PsyColor).row();
                 t.label(() -> "Stored psychic: " + Strings.autoFixed(psychicStored(), 3) + " / " + Strings.autoFixed(psychicCapacity(), 0)).row();
                 t.label(() -> "Field area: " + Strings.autoFixed(fieldRangeX * 2f, 0) + " x " + Strings.autoFixed(fieldRangeY * 2f, 0)).row();
                 t.label(() -> "Field disturbance: " + Strings.autoFixed(fieldDisturbance, 4)).row();
@@ -142,3 +143,4 @@ public class PsychicHarvesterBlock extends PsychicFieldMachineBlock {
         }
     }
 }
+
