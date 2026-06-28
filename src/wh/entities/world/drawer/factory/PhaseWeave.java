@@ -1,12 +1,14 @@
 package wh.entities.world.drawer.factory;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import mindustry.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.world.draw.*;
+import arc.graphics.Blending;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.math.Mathf;
+import mindustry.Vars;
+import mindustry.gen.Building;
+import mindustry.graphics.Pal;
+import mindustry.world.draw.DrawBlock;
 
 
 public class PhaseWeave extends DrawBlock {
@@ -15,33 +17,34 @@ public class PhaseWeave extends DrawBlock {
     public Blending blending = Blending.additive;
     public Color color = Pal.accent;
     public float scale = 0.8f;
+
     @Override
     public void draw(Building build) {
 
         Draw.color(color);
-            Draw.blend(blending);
+        Draw.blend(blending);
 
-            Draw.alpha((0.5f + Mathf.absin(8f, 0.3f) ));
+        Draw.alpha((0.5f + Mathf.absin(8f, 0.3f)));
 
-            float moveX, moveY;
-            moveX = build.x + Mathf.sin(build.totalProgress() * 0.3f, 6 + Mathf.randomSeed(build.id, 1, moveScaleRand), Vars.tilesize / 6f * build.block.size);
-            moveY = build.y + Mathf.sin(build.totalProgress() * 0.3f + Mathf.randomSeed(build.id >> 1, moveScale), 6 + Mathf.randomSeed(build.id, 1, moveScaleRand), Vars.tilesize / 6f * build.block.size);
+        float moveX, moveY;
+        moveX = build.x + Mathf.sin(build.totalProgress() * 0.3f, 6 + Mathf.randomSeed(build.id, 1, moveScaleRand), Vars.tilesize / 6f * build.block.size);
+        moveY = build.y + Mathf.sin(build.totalProgress() * 0.3f + Mathf.randomSeed(build.id >> 1, moveScale), 6 + Mathf.randomSeed(build.id, 1, moveScaleRand), Vars.tilesize / 6f * build.block.size);
 
-            Lines.beginLine();
-            Lines.lineAngleCenter(
-                    build.x + Mathf.sin(build.totalProgress() * 0.7f, 10f, Vars.tilesize * build.block.size / 3f),
-            build.y, 90, Vars.tilesize * build.block.size * scale);
+        Lines.beginLine();
+        Lines.lineAngleCenter(
+                build.x + Mathf.sin(build.totalProgress() * 0.7f, 10f, Vars.tilesize * build.block.size / 3f),
+                build.y, 90, Vars.tilesize * build.block.size * scale);
 
-            Lines.lineAngleCenter(build.x, moveY, build.rotdeg(), build.block.size * Vars.tilesize * 0.9f);
+        Lines.lineAngleCenter(build.x, moveY, build.rotdeg(), build.block.size * Vars.tilesize * 0.9f);
         Lines.lineAngleCenter(build.x, moveY + 7f * Mathf.sin(build.totalProgress() * 0.3f, 6, 1), build.rotdeg(), build.block.size * Vars.tilesize * scale);
 
 
-            Lines.lineAngleCenter(moveX, build.y, build.rotdeg() + 90, build.block.size * Vars.tilesize * 0.9f);
+        Lines.lineAngleCenter(moveX, build.y, build.rotdeg() + 90, build.block.size * Vars.tilesize * 0.9f);
         Lines.lineAngleCenter(moveX + 7f * Mathf.sin(build.totalProgress() * 0.3f, 6, 1), build.y, build.rotdeg() + 90, build.block.size * Vars.tilesize * scale);
 
-            Lines.endLine(true);
+        Lines.endLine(true);
 
-            Draw.blend();
-            Draw.reset();
-        }
+        Draw.blend();
+        Draw.reset();
     }
+}

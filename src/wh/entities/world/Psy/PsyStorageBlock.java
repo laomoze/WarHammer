@@ -236,7 +236,7 @@ public class PsyStorageBlock extends StorageBlock {
             linkedCore = null;
             cachedCorePos = remoteCore == null ? -1 : remoteCore.pos();
 
-            if (remoteCore == null) {
+            if (psychic.amount() < 0.01f || remoteCore == null) {
                 items = emptyItems;
                 emptyItems.clear();
                 return;
@@ -448,7 +448,7 @@ public class PsyStorageBlock extends StorageBlock {
         }
 
         protected void drawBeamParticles(float x1, float y1, float x2, float y2, float angle) {
-            if (!WHSettings.effectEnabled() || linkWarmup <= 0.001f) return;
+            if (!WHSettings.effectEnabled() || linkWarmup < 0.5) return;
 
             float dst = Mathf.dst(x1, y1, x2, y2);
             if (dst <= beamParticleLength) return;
@@ -465,8 +465,9 @@ public class PsyStorageBlock extends StorageBlock {
                 float cx, cy;
                 float travel = Math.min(fin / Math.max(linkWarmup, 0.0001f), 1f);
                 float len = beamParticleLength * (0.45f + slope * 0.9f) * linkWarmup;
-                cx = Mathf.lerp(x1, x2, travel) + Angles.trnsx(angle + 90f, side);
-                cy = Mathf.lerp(y1, y2, travel) + Angles.trnsy(angle + 90f, side);
+                Tmp.v4.set(x1, y1).lerp(x2, y2, linkWarmup);
+                cx = Mathf.lerp(Tmp.v4.x, x1, travel) + Angles.trnsx(angle + 90f, side);
+                cy = Mathf.lerp(Tmp.v4.y, y1, travel) + Angles.trnsy(angle + 90f, side);
                 float hx = Angles.trnsx(angle, len / 2f);
                 float hy = Angles.trnsy(angle, len / 2f);
 

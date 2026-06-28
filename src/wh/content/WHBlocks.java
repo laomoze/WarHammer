@@ -190,7 +190,7 @@ public final class WHBlocks {
 
     //Psy
     public static Block
-            psychicTransmuter,
+            psychicConverter,
             psyNode, psyTower, psyRouter,
             psyContainer, spiritualSiphon, psyResonator,
             psyAmplifier, psySink, psyBeacon,
@@ -3968,40 +3968,87 @@ public final class WHBlocks {
             researchCostMultiplier = 0.3f;
         }};
 
-        psychicTransmuter = new PsychicMultiCrafterBlock("psychic-transmuter") {{
-            requirements(Category.crafting, BuildVisibility.sandboxOnly, with(Items.copper, 1));
+        psychicConverter = new PsychicMultiCrafterBlock("psychic-converter") {{
+            requirements(Category.power, with(WHItems.uranium, 100, WHItems.armorAlloy, 50, WHItems.ceramite, 100));
             buildVisibility = BuildVisibility.sandboxOnly;
             alwaysUnlocked = true;
             size = 3;
-            health = 680;
+            health = 1500;
             hasPower = true;
-            itemCapacity = 80;
-            maxList = 12;
+            itemCapacity = 30;
+            maxList = 4;
             useBlockDrawer = true;
-            psychicCapacity = 240f;
-            passivePsychicLoss = 0.01f;
+            psychicCapacity = 200;
+            passivePsychicLoss = 0.1f;
             drawer = new DrawMulti(
-                    new DrawDefault(),
+                    new DrawRegion("-bottom"),
                     new DrawCircles() {{
-                        color = WHItems.entanglement.color.cpy().lerp(Pal.accent, 0.2f);
+                        color = PsyColor;
+                        sides = 8;
                         amount = 3;
                         radius = 10f;
                         strokeMax = 1.4f;
                     }},
                     new DrawParticles() {{
-                        color = WHItems.entanglement.color.cpy().a(0.7f);
+                        color = PsyColor;
                         particles = 12;
                         particleSize = 4f;
                         particleRad = 10f;
                     }},
+                    new DrawRotateArcSmelt() {{
+                        flameColor = midColor = PsyColor;
+                        particles = 15;
+                        flameRad = 1.25f;
+                    }},
+                    new DrawDefault(),
                     new DrawGlowRegion("-glow") {{
-                        color = WHItems.entanglement.color.cpy();
+                        color = PsyColor.cpy().lerp(Color.white, 0.15f);
                         alpha = 0.5f;
                         glowIntensity = 0.35f;
                         glowScale = 10f;
-                        rotateSpeed = 0.8f;
+                    }},
+                    new DrawParticleFlow() {{
+                        startX = 0;
+                        startY = 0;
+                        endX = 0;
+                        endY = 25;
+                        length = 3;
+                        ignoreRot2_3 = true;
+                        particleLife = 75;
+                        particles = 10;
+                        color = PsyColor;
                     }}
             );
+
+            craftPlans = Seq.with(
+                    new PsychicCraftPlan() {{
+                        craftTime = 60;
+                        psychicCost = 10 * craftTime / 60;
+                        outputItems = with(WHItems.chromium, 2);
+                    }},
+                    new PsychicCraftPlan() {{
+                        craftTime = 60;
+                        psychicCost = 15 * craftTime / 60;
+                        outputItems = with(WHItems.cobalt, 2);
+                    }},
+                    new PsychicCraftPlan() {{
+                        craftTime = 90;
+                        psychicCost = 20 * craftTime / 60;
+                        outputItems = with(WHItems.uranium, 2);
+                    }},
+                    new PsychicCraftPlan() {{
+                        craftTime = 120;
+                        psychicCost = 25 * craftTime / 60;
+                        outputItems = with(WHItems.molybdenum, 2);
+                    }},
+                    new PsychicCraftPlan() {{
+                        craftTime = 180;
+                        psychicCost = 40 * craftTime / 60;
+                        outputItems = with(WHItems.vibranium, 2);
+
+                    }}
+            );
+
             researchCostMultiplier = 0.2f;
         }};
 
@@ -4174,9 +4221,9 @@ public final class WHBlocks {
         remoteVault = new PsyStorageBlock("remote-vault") {
             {
                 requirements(Category.effect, with(WHItems.manganeseSteel, 500, WHItems.molybdenumAlloy, 200, WHItems.ceramite, 500, WHItems.entanglement, 200));
-            size = 3;
+                size = 3;
                 health = 3600;
-            armor = 8;
+                armor = 8;
                 psychicCapacity = 100;
                 psychicUse = 15;
                 linkRange = 30;
@@ -4184,7 +4231,7 @@ public final class WHBlocks {
                 priority = TargetPriority.core;
                 flags = EnumSet.of(BlockFlag.core);
 
-            researchCostMultiplier = 0.45f;
+                researchCostMultiplier = 0.45f;
             }
         };
 

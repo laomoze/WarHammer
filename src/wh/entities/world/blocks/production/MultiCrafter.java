@@ -242,6 +242,28 @@ public class MultiCrafter extends PayloadBlock {
         return craftPlans.isEmpty() ? -1 : Mathf.clamp(index, 0, craftPlans.size - 1);
     }
 
+    public boolean planUnlocked(CraftPlan plan) {
+        if (plan == null) return false;
+
+        for (ItemStack stack : plan.outputItems) {
+            if (stack.item != null && !stack.item.unlockedNowHost()) {
+                return false;
+            }
+        }
+
+        for (LiquidStack stack : plan.outputLiquids) {
+            if (stack.liquid != null && !stack.liquid.unlockedNowHost()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public int firstUnlockedPlanIndex() {
+        return craftPlans.indexOf(this::planUnlocked);
+    }
+
     public class MultiCrafterBuild extends PayloadBlockBuild<Payload> implements HeatBlock, HeatConsumer {
         public CraftPlan craftPlan = craftPlans.any() ? craftPlans.get(0) : null;
         public float progress;
@@ -260,6 +282,26 @@ public class MultiCrafter extends PayloadBlock {
             return craftPlan == null || !craftPlans.contains(craftPlan) ? -1 : craftPlans.indexOf(craftPlan);
         }
 
+        protected boolean planUnlocked(CraftPlan plan) {
+            return MultiCrafter.this.planUnlocked(plan);
+        }
+
+        protected int firstUnlockedPlanIndex() {
+            return MultiCrafter.this.firstUnlockedPlanIndex();
+        }
+
+        protected void ensureUnlockedPlanSelected() {
+            if (craftPlan == null || planUnlocked(craftPlan)) return;
+
+            int next = firstUnlockedPlanIndex();
+            if (next == -1) {
+                craftPlan = null;
+                configs[1] = -1;
+            } else {
+                setCraftPlanIndex(next);
+            }
+        }
+
         public void setCraftPlanIndex(int index) {
             if (craftPlans.isEmpty() || index < 0) {
                 craftPlan = null;
@@ -268,7 +310,10 @@ public class MultiCrafter extends PayloadBlock {
             }
 
             int resolved = clampCraftPlanIndex(index);
-            craftPlan = craftPlans.get(resolved);
+            CraftPlan next = craftPlans.get(resolved);
+            if (!planUnlocked(next)) return;
+
+            craftPlan = next;
             configs[1] = resolved;
         }
 
@@ -631,6 +676,7 @@ public class MultiCrafter extends PayloadBlock {
         public transient boolean shouldConsumePower;
         @Override
         public void updateConsumption() {
+            ensureUnlockedPlanSelected();
             if (craftPlan == null) return;
 
             //everything is valid when cheating
@@ -723,6 +769,7 @@ public class MultiCrafter extends PayloadBlock {
                 cont.clearChildren();
                 for (CraftPlan craftPlan : craftPlans) {
                     var button = new ImageButton();
+                    boolean unlocked = planUnlocked(craftPlan);
                     button.table(info -> {
                         info.left();
                         info.table(from -> {
@@ -755,11 +802,22 @@ public class MultiCrafter extends PayloadBlock {
                             }
                         }).left().pad(6);
                     }).grow().left().pad(5);
+
+                    if (!unlocked) {
+                        button.table(lock -> {
+                            lock.top().right();
+                            lock.image(Icon.tree).size(18f).color(Pal.darkerGray).pad(6f);
+                        }).grow();
+                    }
+
                     button.setStyle(Styles.clearNoneTogglei);
                     button.changed(() -> {
-                        configure(new int[]{rotation, craftPlans.indexOf(craftPlan)});
+                        if (planUnlocked(craftPlan)) {
+                            configure(new int[]{rotation, craftPlans.indexOf(craftPlan)});
+                        }
                     });
                     button.update(() -> button.setChecked(this.craftPlan == craftPlan));
+                    button.setDisabled(() -> !planUnlocked(craftPlan));
                     cont.add(button);
                     cont.row();
                 }
@@ -831,6 +889,7 @@ public class MultiCrafter extends PayloadBlock {
             } else {
                 payloads.clear();
             }
+            ensureUnlockedPlanSelected();
         }
     }
 

@@ -3,23 +3,34 @@ package wh.entities.world.Psy;
 import arc.Core;
 import arc.graphics.Color;
 import arc.math.Mathf;
+import arc.scene.ui.Image;
 import arc.scene.ui.ImageButton;
 import arc.scene.ui.ScrollPane;
 import arc.scene.ui.layout.Table;
+import arc.util.Scaling;
 import arc.util.Strings;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
+import mindustry.type.ItemStack;
+import mindustry.type.LiquidStack;
 import mindustry.ui.Styles;
+import mindustry.world.consumers.Consume;
+import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
-import mindustry.world.meta.StatValues;
+import mindustry.world.meta.Stats;
 import wh.content.WHStats;
 import wh.entities.world.blocks.production.MultiCrafter;
 import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicImage;
 import wh.ui.PsychicStatValues;
+import wh.ui.UIUtils;
 
 public class PsychicMultiCrafterBlock extends MultiCrafter {
+    protected static final float statsPsychicWidth = 124f;
+    protected static final float configPsychicWidth = 116f;
+    protected static final float recipeTextScale = 1.18f;
+
     public float psychicCapacity = 180f;
     public float passivePsychicLoss = 0f;
     public float overloadDecay = 0.03f;
@@ -36,6 +47,48 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
     @Override
     public void setStats() {
         super.setStats();
+        stats.remove(Stat.output);
+        stats.add(Stat.output, table -> {
+            table.row();
+
+            for (CraftPlan plan : craftPlans) {
+                float cost = psychicCost(plan);
+
+                table.table(Styles.grayPanel, info -> {
+                    info.left().defaults().left();
+
+                    info.table(line -> {
+                        line.defaults().padBottom(2f);
+                        buildPsychicOutputLine(line, plan, cost, 24f, statsPsychicWidth, 8f);
+                    }).left().pad(9f);
+                    info.row();
+
+                    info.table(detail -> buildPsychicDetailLine(detail, plan))
+                            .left().padLeft(8f).padBottom(6f);
+                    info.row();
+
+                    Stats stat = new Stats();
+                    stat.timePeriod = plan.craftTime;
+                    if (plan.hasConsumers) {
+                        for (Consume c : plan.consumers) {
+                            c.display(stat);
+                        }
+                    }
+                    if (plan.heatRequirement > 0f) {
+                        stat.add(Stat.input, plan.heatRequirement, StatUnit.heatUnits);
+                        stat.add(Stat.maxEfficiency, (int) (plan.maxHeatEfficiency * 100f), StatUnit.percent);
+                    }
+                    if (plan.heatOutput > 0f) {
+                        stat.add(Stat.output, plan.heatOutput, StatUnit.heatUnits);
+                    }
+                    if (!stat.toMap().isEmpty()) {
+                        info.table(t -> UIUtils.statTurnTable(stat, t)).left().pad(6f);
+                    }
+                }).growX().left().pad(10f);
+                table.row();
+            }
+        });
+
         PsychicStatValues.add(stats, WHStats.psychicCapacity, psychicCapacity, StatUnit.none);
 
         float peakConsumption = 0f;
@@ -90,35 +143,74 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
         return peak;
     }
 
+    protected void buildPsychicCostLine(Table table, float cost, float iconSize) {
+        table.left().defaults().left();
+        table.add(new Image(PsychicImage.region())).size(iconSize).scaling(Scaling.fit).padRight(2f);
+        addOutline(table, "[accent]" + Strings.autoFixed(cost, 2) + "[]/[lightgray]次[]").left();
+    }
+
+    protected void buildPsychicOutputLine(Table table, CraftPlan plan, float cost, float iconSize, float psychicWidth, float gap) {
+        table.left().defaults().left();
+        table.table(costs -> buildPsychicCostLine(costs, cost, iconSize)).width(psychicWidth).left();
+        table.add("->").color(Color.lightGray).padLeft(gap).padRight(gap);
+        table.table(outputs -> {
+            outputs.left().defaults().left();
+            boolean hasOutput = false;
+
+            for (ItemStack stack : plan.outputItems) {
+                if (hasOutput) outputs.row();
+                buildItemOutput(outputs, stack, plan.craftTime);
+                hasOutput = true;
+            }
+
+            for (LiquidStack stack : plan.outputLiquids) {
+                if (hasOutput) outputs.row();
+                buildLiquidOutput(outputs, stack);
+                hasOutput = true;
+            }
+        }).left().growX();
+    }
+
+    protected void buildPsychicDetailLine(Table table, CraftPlan plan) {
+        table.left().defaults().left().padRight(10f);
+        addOutline(table, "[lightgray]" + Core.bundle.get("stat.productiontime") + "[] " + Strings.autoFixed(plan.craftTime / 60f, 2) + " " + StatUnit.seconds.localized()).left();
+        addOutline(table, "[lightgray]" + WHStats.psychicConsumption.localized() + "[] " + Strings.autoFixed(psychicUsePerSecond(plan), 2) + "/秒").left();
+    }
+
+    protected void buildItemOutput(Table table, ItemStack stack, float craftTime) {
+        float perSecond = craftTime <= 0.0001f ? 0f : stack.amount * 60f / craftTime;
+        table.left().defaults().left();
+        table.image(stack.item.fullIcon).size(22f).scaling(Scaling.fit).padRight(5f);
+        addOutline(table, stack.item.localizedName).left().padRight(6f);
+        addOutline(table, "[lightgray]" + stack.amount + "[]").left().padRight(4f);
+        addOutline(table, "[lightgray]" + Strings.autoFixed(perSecond, 3) + "/秒[]").left();
+    }
+
+    protected void buildLiquidOutput(Table table, LiquidStack stack) {
+        table.left().defaults().left();
+        table.image(stack.liquid.fullIcon).size(22f).scaling(Scaling.fit).padRight(5f);
+        addOutline(table, stack.liquid.localizedName).left().padRight(6f);
+        addOutline(table, "[lightgray]" + Strings.autoFixed(stack.amount, 3) + "/秒[]").left();
+    }
+
+    protected arc.scene.ui.layout.Cell<?> addOutline(Table table, String text) {
+        var label = table.add(text).style(Styles.outlineLabel).get();
+        label.setFontScale(recipeTextScale);
+        return table.getCell(label);
+    }
+
     protected void buildPsychicRecipe(Table table, CraftPlan plan) {
         float cost = psychicCost(plan);
 
         table.left().defaults().left();
-        table.table(flow -> {
-            flow.left().defaults().left().padRight(6f);
-            flow.add(new PsychicImage(cost)).size(40f).padRight(4f);
-            flow.add(bundleFormat("ui.wh-psychic-cost-per-craft", Strings.autoFixed(cost, 2)));
-            flow.add("[lightgray] ->[]").padLeft(2f).padRight(2f);
-
-            if (plan.outputItems.length > 0) {
-                StatValues.items(plan.craftTime, plan.outputItems).display(flow);
-            }
-
-            if (plan.outputLiquids.length > 0) {
-                if (plan.outputItems.length > 0) flow.add("  ");
-                StatValues.liquids(1f, plan.outputLiquids).display(flow);
-            }
-        }).left().growX();
+        table.table(line -> {
+            line.defaults().padBottom(2f);
+            buildPsychicOutputLine(line, plan, cost, 22f, configPsychicWidth, 6f);
+        }).left().growX().padBottom(2f);
         table.row();
 
-        if (plan.craftTime > 0.0001f) {
-            table.add(bundleFormat(
-                    "ui.wh-psychic-recipe-detail",
-                    Strings.autoFixed(plan.craftTime / 60f, 2),
-                    Strings.autoFixed(psychicUsePerSecond(plan), 2)
-            )).left();
-            table.row();
-        }
+        table.table(detail -> buildPsychicDetailLine(detail, plan)).left().padTop(2f);
+        table.row();
     }
 
     public static class PsychicCraftPlan extends CraftPlan {
@@ -266,23 +358,23 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
 
         @Override
         public void buildConfiguration(Table table) {
-            Table rtc = new Table();
-            rtc.left().defaults().size(55);
+            Table rotateTable = new Table();
+            rotateTable.left().defaults().size(40f).padRight(2f);
 
             Table cont = new Table().top();
-            cont.left().defaults().left().growX();
+            cont.left().defaults().growX().padBottom(2f);
 
             Runnable rebuild = () -> {
-                rtc.clearChildren();
+                rotateTable.clearChildren();
                 if (hasDoubleOutput) {
                     for (int i = 0; i < rotationIcon.length; i++) {
                         var button = new ImageButton();
                         int j = i;
-                        button.table(img -> img.image(rotationIcon[j]).color(Color.white).size(40).pad(10f));
+                        button.table(img -> img.image(rotationIcon[j]).color(Color.white).size(22f).pad(6f));
                         button.changed(() -> configure(new int[]{j, craftPlanIndex()}));
                         button.update(() -> button.setChecked(rotation == j));
                         button.setStyle(Styles.clearNoneTogglei);
-                        rtc.add(button).tooltip(String.valueOf(i * 90));
+                        rotateTable.add(button).tooltip(String.valueOf(i * 90));
                     }
                 }
 
@@ -301,22 +393,9 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
                                         cons.build(this, from);
                                     }
                                 }
-                            }).left().padTop(4f);
-                            info.row();
-                        }
-
-                        if (plan.powerProduction > 0f || plan.heatOutput > 0f) {
-                            info.table(extra -> {
-                                extra.left().defaults().left().padRight(8f);
-                                if (plan.powerProduction > 0f) {
-                                    StatValues.number(plan.powerProduction * 60f, StatUnit.powerSecond).display(extra);
-                                }
-                                if (plan.heatOutput > 0f) {
-                                    StatValues.number(plan.heatOutput, StatUnit.heatUnits).display(extra);
-                                }
                             }).left().padTop(2f);
                         }
-                    }).grow().left().pad(5f);
+                    }).grow().left().pad(4f);
 
                     button.setStyle(Styles.clearNoneTogglei);
                     button.changed(() -> configure(new int[]{rotation, craftPlans.indexOf(plan)}));
@@ -329,7 +408,13 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
             rebuild.run();
 
             Table main = new Table().background(Styles.black6);
-            main.add(rtc).left().row();
+            if (hasDoubleOutput) {
+                main.table(Styles.black3, head -> {
+                    head.left().defaults().left();
+                    head.add(bundleFormat("ui.wh-output-direction-label")).padRight(10f);
+                    head.add(rotateTable).left();
+                }).growX().pad(4f).row();
+            }
 
             ScrollPane pane = new ScrollPane(cont, Styles.smallPane);
             pane.setScrollingDisabled(true, false);
@@ -340,7 +425,7 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
             }
 
             pane.setOverscroll(false, false);
-            main.add(pane).maxHeight(100 * maxList);
+            main.add(pane).growX().maxHeight(62 * maxList).pad(4f);
             table.top().add(main);
         }
 
@@ -375,5 +460,3 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
         }
     }
 }
-
-
