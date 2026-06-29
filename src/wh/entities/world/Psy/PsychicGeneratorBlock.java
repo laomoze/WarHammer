@@ -6,8 +6,10 @@ import arc.graphics.g2d.Fill;
 import arc.graphics.g2d.Lines;
 import arc.math.Mathf;
 import arc.util.Strings;
+import mindustry.Vars;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
+import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
 import wh.graphics.WHPal;
@@ -16,36 +18,46 @@ import wh.ui.PsychicStatValues;
 
 import static mindustry.Vars.tilesize;
 
-public class PsychicFactoryBlock extends PsychicBlock {
+public class PsychicGeneratorBlock extends PsychicBlock {
     public float craftTime = 90f;
     public float psychicPerCraft = 12f;
+    public float powerPerSecond = 2f;
+    public float range = 12f;
     public float warmupSpeed = 0.05f;
+    public float fluctuationInterval = 180f;
+    public float negativeTimeScale = 0.7f;
+    public float positiveTimeScale = 1.25f;
+    public float fluctuationDuration = 120f;
 
-    public PsychicFactoryBlock(String name) {
+    public PsychicGeneratorBlock(String name) {
         super(name);
         acceptsPsychicLinks = false;
         outputsPsychicLinks = true;
         configurable = false;
         drawArrow = false;
+        hasPower = true;
+        outputsPower = true;
     }
 
     @Override
     public void setStats() {
         super.setStats();
         PsychicStatValues.add(stats, WHStats.psychicProduction, productionPerSecond(), StatUnit.perSecond);
+        stats.add(Stat.basePowerGeneration, powerPerSecond * 60f, StatUnit.powerSecond);
+        stats.add(Stat.range, range, StatUnit.blocks);
     }
 
     @Override
     public void setBars() {
         super.setBars();
 
-        addBar("psychic-production", (PsychicFactoryBuild build) -> new PsychicBar(
+        addBar("psychic-production", (PsychicGeneratorBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-production", Strings.autoFixed(build.productionRate, 2)),
                 () -> WHPal.PsyColor,
                 () -> productionPerSecond() <= 0.0001f ? 0f : build.productionRate / productionPerSecond()
         ));
 
-        addBar("psychic-craft", (PsychicFactoryBuild build) -> new PsychicBar(
+        addBar("psychic-craft", (PsychicGeneratorBuild build) -> new PsychicBar(
                 () -> bundleFormat("bar.wh-psychic-craft", Strings.autoFixed(build.progressFraction() * 100f, 0)),
                 () -> WHPal.PsyColor,
                 build::progressFraction
@@ -56,11 +68,13 @@ public class PsychicFactoryBlock extends PsychicBlock {
         return craftTime <= 0.0001f ? 0f : psychicPerCraft * 60f / craftTime;
     }
 
-    public class PsychicFactoryBuild extends PsychicBuild {
+    public class PsychicGeneratorBuild extends PsychicBuild {
         public float progress;
         public float warmup;
         public float productionRate;
         public float producedThisFrame;
+        public float fluctuationTimer;
+        public boolean negativePulse;
 
         @Override
         public void updateTile() {
@@ -70,6 +84,7 @@ public class PsychicFactoryBlock extends PsychicBlock {
             if (canCraft) {
                 progress += edelta();
                 warmup = Mathf.approachDelta(warmup, 1f, warmupSpeed);
+                fluctuationTimer += edelta();
             } else {
                 warmup = Mathf.approachDelta(warmup, 0f, warmupSpeed);
             }
@@ -81,13 +96,36 @@ public class PsychicFactoryBlock extends PsychicBlock {
                 progress -= craftTime;
             }
 
+            if (canCraft && fluctuationTimer >= fluctuationInterval) {
+                fluctuationTimer = 0f;
+                negativePulse = !negativePulse;
+                applyAreaFluctuation(negativePulse ? negativeTimeScale : positiveTimeScale, fluctuationDuration);
+            }
+
             float actual = producedThisFrame * 60f / Math.max(delta(), 0.0001f);
             productionRate = Mathf.lerpDelta(productionRate, actual, 0.18f);
             producedThisFrame = 0f;
         }
 
+        protected void applyAreaFluctuation(float targetScale, float duration) {
+            float worldRange = range * tilesize;
+            Vars.indexer.eachBlock(team, arc.util.Tmp.r1.setCentered(x, y, worldRange * 2f), other ->
+                    other != this && other.isAdded() && other.block.update && other.block.canOverdrive, other -> {
+                if (negativePulse) {
+                    other.applySlowdown(Math.max(targetScale, 0.001f), duration);
+                } else {
+                    other.applyBoost(Math.max(targetScale, 0.001f), duration);
+                }
+            });
+        }
+
         public float progressFraction() {
             return craftTime <= 0.0001f ? 0f : Mathf.clamp(progress / craftTime);
+        }
+
+        @Override
+        public float getPowerProduction() {
+            return enabled ? powerPerSecond * warmup : 0f;
         }
 
         @Override
@@ -129,6 +167,7 @@ public class PsychicFactoryBlock extends PsychicBlock {
         @Override
         public void drawSelect() {
             super.drawSelect();
+            Drawf.dashRect(WHPal.PsyColor, x - range * tilesize, y - range * tilesize, range * 2f * tilesize, range * 2f * tilesize);
             drawSelectText(
                     bundleFormat("bar.wh-psychic-storage",
                             Strings.autoFixed(psychicStored(), 2),
@@ -139,4 +178,3 @@ public class PsychicFactoryBlock extends PsychicBlock {
         }
     }
 }
-

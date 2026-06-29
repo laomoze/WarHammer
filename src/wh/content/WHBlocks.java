@@ -43,7 +43,6 @@ import mindustry.world.blocks.campaign.LandingPad;
 import mindustry.world.blocks.campaign.LaunchPad;
 import mindustry.world.blocks.defense.AutoDoor;
 import mindustry.world.blocks.defense.ForceProjector;
-import mindustry.world.blocks.defense.RegenProjector;
 import mindustry.world.blocks.defense.Wall;
 import mindustry.world.blocks.defense.turrets.*;
 import mindustry.world.blocks.distribution.*;
@@ -190,11 +189,12 @@ public final class WHBlocks {
 
     //Psy
     public static Block
-            psychicConverter,
+            psychicConverter, psychicReorganizer,
             psyNode, psyTower, psyRouter,
-            psyContainer, spiritualSiphon, psyResonator,
+            psychicCollector, spiritualSiphon,
+            psyContainer, psyResonator,
             psyAmplifier, psySink, psyBeacon,
-            psyFactory, psyCondenser,
+            psyFactory,
             psyVoid, psySource;
 
     //effect
@@ -3908,9 +3908,12 @@ public final class WHBlocks {
             size = 2;
             health = 580;
             psychicCapacity = 140f;
-            psychicUse = 0.7f;
-            boost = 1.18f;
             range = 11f;
+            squareRange = true;
+            preventOverlap = true;
+            addRecipe("assault", WHStatusEffects.assault, 1.18f, 0.7f, 12f);
+            addRecipe("bless", WHStatusEffects.bless, 1.12f, 0.85f, 16f);
+            addRecipe("energy-amplification", WHStatusEffects.energyAmplification, 1.25f, 1.1f, 14f);
             drawer = new DrawMulti(
                     new DrawDefault(),
                     new DrawCircles() {{
@@ -3937,7 +3940,7 @@ public final class WHBlocks {
             generationRate = 1000;
         }};
 
-        psyFactory = new PsychicFactoryBlock("psychic-factory") {{
+        psyFactory = new PsychicGeneratorBlock("psychic-factory") {{
             requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 30, WHItems.resonantCrystal, 18, Items.graphite, 50, Items.silicon, 45));
             buildVisibility = BuildVisibility.sandboxOnly;
             size = 2;
@@ -3948,6 +3951,12 @@ public final class WHBlocks {
             psychicCapacity = 120f;
             craftTime = 90f;
             psychicPerCraft = 16f;
+            powerPerSecond = 150f / 60f;
+            range = 10f;
+            fluctuationInterval = 180f;
+            fluctuationDuration = 120f;
+            negativeTimeScale = 0.7f;
+            positiveTimeScale = 1.25f;
             consumeItems(with(WHItems.combustible, 1, WHItems.resonantCrystal, 1));
             consumePower(90f / 60f);
             drawer = new DrawMulti(
@@ -3970,8 +3979,6 @@ public final class WHBlocks {
 
         psychicConverter = new PsychicMultiCrafterBlock("psychic-converter") {{
             requirements(Category.power, with(WHItems.uranium, 100, WHItems.armorAlloy, 50, WHItems.ceramite, 100));
-            buildVisibility = BuildVisibility.sandboxOnly;
-            alwaysUnlocked = true;
             size = 3;
             health = 1500;
             hasPower = true;
@@ -4015,7 +4022,7 @@ public final class WHBlocks {
                         length = 3;
                         ignoreRot2_3 = true;
                         particleLife = 75;
-                        particles = 10;
+                        particles = 5;
                         color = PsyColor;
                     }}
             );
@@ -4023,51 +4030,131 @@ public final class WHBlocks {
             craftPlans = Seq.with(
                     new PsychicCraftPlan() {{
                         craftTime = 60;
-                        psychicCost = 10 * craftTime / 60;
+                        psychicCost = 5 * craftTime / 60;
                         outputItems = with(WHItems.chromium, 2);
                     }},
                     new PsychicCraftPlan() {{
-                        craftTime = 60;
-                        psychicCost = 15 * craftTime / 60;
+                        craftTime = 90;
+                        psychicCost = 10 * craftTime / 60;
                         outputItems = with(WHItems.cobalt, 2);
                     }},
                     new PsychicCraftPlan() {{
-                        craftTime = 90;
-                        psychicCost = 20 * craftTime / 60;
+                        craftTime = 120;
+                        psychicCost = 15 * craftTime / 60;
                         outputItems = with(WHItems.uranium, 2);
                     }},
                     new PsychicCraftPlan() {{
-                        craftTime = 120;
-                        psychicCost = 25 * craftTime / 60;
+                        craftTime = 180;
+                        psychicCost = 20 * craftTime / 60;
                         outputItems = with(WHItems.molybdenum, 2);
                     }},
                     new PsychicCraftPlan() {{
-                        craftTime = 180;
-                        psychicCost = 40 * craftTime / 60;
+                        craftTime = 240;
+                        psychicCost = 25 * craftTime / 60;
                         outputItems = with(WHItems.vibranium, 2);
 
                     }}
             );
-
+            consumePower(500 / 60f);
             researchCostMultiplier = 0.2f;
         }};
 
-        psyCondenser = new PsychicAttributeSourceBlock("psychic-condenser") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 35, WHItems.resonantCrystal, 20, WHItems.ceramite, 25, Items.metaglass, 40));
-            buildVisibility = BuildVisibility.sandboxOnly;
+        psychicReorganizer = new PsychicMultiCrafterBlock("psychic-reorganizer") {{
+            requirements(Category.power, with(WHItems.uranium, 100, WHItems.entanglement, 50, WHItems.molybdenumAlloy, 50, WHItems.resonantCrystal, 100));
             size = 3;
-            health = 540;
+            health = 1500;
+            hasPower = true;
+            itemCapacity = 30;
+            maxList = 4;
+            useBlockDrawer = true;
+            psychicCapacity = 300;
+            passivePsychicLoss = 0.1f;
+            drawer = new DrawMulti(
+                    new DrawRegion("-bottom"),
+                    new DrawCircles() {{
+                        color = PsyColor;
+                        sides = 8;
+                        amount = 3;
+                        radius = 10f;
+                        strokeMax = 1.4f;
+                    }},
+                    new DrawParticles() {{
+                        color = PsyColor;
+                        particles = 12;
+                        particleSize = 4f;
+                        particleRad = 10f;
+                    }},
+                    new DrawCrucibleFlame() {{
+                        flameColor = midColor = PsyColor;
+                        particles = 15;
+                        flameRad = 1.25f;
+                    }},
+                    new DrawDefault(),
+                    new DrawParticleFlow() {{
+                        startX = 0;
+                        startY = 0;
+                        endX = 0;
+                        endY = 25;
+                        length = 1;
+                        ignoreRot2_3 = true;
+                        particleLife = 75;
+                        particles = 4;
+                        color = PsyColor;
+                    }}
+            );
+
+            craftPlans = Seq.with(
+                    new PsychicCraftPlan() {{
+                        craftTime = 120;
+                        psychicCost = 15 * craftTime / 60;
+                        outputItems = with(WHItems.cobaltNitride, 1);
+                    }},
+                    new PsychicCraftPlan() {{
+                        craftTime = 120;
+                        psychicCost = 15 * craftTime / 60;
+                        outputItems = with(WHItems.ceramite, 1);
+                    }},
+                    new PsychicCraftPlan() {{
+                        craftTime = 120;
+                        psychicCost = 20 * craftTime / 60;
+                        outputItems = with(WHItems.armorAlloy, 1);
+                    }},
+                    new PsychicCraftPlan() {{
+                        craftTime = 240;
+                        psychicCost = 30 * craftTime / 60;
+                        outputItems = with(WHItems.culverCrystal, 1);
+                    }},
+                    new PsychicCraftPlan() {{
+                        craftTime = 180;
+                        psychicCost = 30 * craftTime / 60;
+                        outputItems = with(WHItems.molybdenumAlloy, 1);
+                    }},
+                    new PsychicCraftPlan() {{
+                        craftTime = 300;
+                        psychicCost = 35 * craftTime / 60;
+                        outputItems = with(WHItems.refineCeramite, 1);
+                    }}
+            );
+
+            consumePower(1000 / 60f);
+            researchCostMultiplier = 0.2f;
+        }};
+
+        psychicCollector = new PsychicAttributeBlock("psychic-collector") {{
+            requirements(Category.power, with(WHItems.cobaltNitride, 35, WHItems.resonantCrystal, 20, WHItems.ceramite, 25, Items.metaglass, 40));
+            size = 3;
+            health = 800;
             hasPower = true;
             psychicCapacity = 160f;
-            generationRate = 2.6f;
-            attribute = WHBlocksEnvironment.hasPromethium;
+            generationRate = 5;
+            attribute = Attribute.heat;
             secondaryAttribute = Attribute.steam;
             secondaryScale = 0.5f;
             attributeRadius = 1;
-            baseEfficiency = 0.15f;
-            boostScale = 0.32f;
-            maxBoost = 6f;
-            consumePower(60f / 60f);
+            baseEfficiency = 0f;
+            boostScale = 0.25f;
+            maxBoost = 2f;
+            consumePower(300f / 60f);
             drawer = new DrawMulti(
                     new DrawDefault(),
                     new DrawCircles() {{
@@ -4075,12 +4162,6 @@ public final class WHBlocks {
                         amount = 2;
                         radius = 8f;
                         strokeMax = 1.25f;
-                    }},
-                    new DrawGlowRegion() {{
-                        color = WHPal.PsyColor;
-                        alpha = 0.48f;
-                        glowScale = 10f;
-                        glowIntensity = 0.3f;
                     }}
             );
             researchCostMultiplier = 0.35f;
@@ -4257,7 +4338,7 @@ public final class WHBlocks {
             researchCostMultiplier = 0.4f;
         }};
 
-        wrapProjector = new RegenProjector("wrap-projector") {
+        wrapProjector = new PsychicRegenProjectorBlock("wrap-projector") {
             {
                 requirements(Category.effect, with(Items.plastanium, 100, Items.silicon, 200, WHItems.manganeseSteel, 100, Items.carbide, 100));
 
@@ -4265,11 +4346,11 @@ public final class WHBlocks {
                 size = 3;
                 armor = 6;
                 canOverdrive = false;
-                healPercent = 3f / 60f;
+                healPercent = 4.5f / 60f;
                 squareSprite = true;
                 baseColor = Pal.sapBullet;
                 drawer = new DrawMulti(
-                        new DrawLiquidTile(Liquids.nitrogen, FACTORY_PAD_33),
+                        new DrawPsyTile(WHPal.PsyColor, FACTORY_PAD_33),
                         new DrawGlowRegion() {{
                             color = Pal.sapBullet;
                         }}, new DrawPulseShape() {{
@@ -4299,7 +4380,7 @@ public final class WHBlocks {
                 range = 50;
                 hasLiquids = true;
                 consumePower(15);
-                consumeLiquid(Liquids.nitrogen, 0.25f);
+                psychicUse = 15;
                 researchCostMultiplier = 0.7f;
             }
         };

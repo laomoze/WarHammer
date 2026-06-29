@@ -582,10 +582,6 @@ public final class KarvexTeachTree {
                 });
             });
 
-            node(WHBlocks.psyFactory, () -> {
-                node(WHBlocks.psyCondenser, () -> {
-                });
-            });
         });
     }
 

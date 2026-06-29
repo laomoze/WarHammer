@@ -1,28 +1,49 @@
 package wh.entities.world.blocks.effect;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.content.*;
-import mindustry.ctype.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.logic.*;
-import mindustry.ui.*;
-import mindustry.world.blocks.defense.turrets.Turret.*;
-import mindustry.world.blocks.payloads.*;
-import mindustry.world.meta.*;
-import wh.content.*;
-import wh.entities.world.blocks.unit.UnitCallBlock.*;
-import wh.graphics.*;
+import arc.Core;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.util.Nullable;
+import arc.util.Strings;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.content.Fx;
+import mindustry.ctype.Content;
+import mindustry.gen.Building;
+import mindustry.gen.Unit;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.logic.LAccess;
+import mindustry.logic.Ranged;
+import mindustry.ui.Bar;
+import mindustry.world.blocks.defense.turrets.Turret.TurretBuild;
+import mindustry.world.blocks.payloads.BuildPayload;
+import mindustry.world.blocks.payloads.Payload;
+import mindustry.world.blocks.payloads.PayloadBlock;
+import mindustry.world.blocks.payloads.UnitPayload;
+import mindustry.world.meta.Stat;
+import mindustry.world.meta.StatUnit;
+import wh.content.WHStats;
+import wh.entities.world.Psy.PsychicModule;
+import wh.entities.world.Psy.PsychicNetworkNode;
+import wh.entities.world.blocks.unit.UnitCallBlock.UnitCallBlockBuild;
+import wh.graphics.WHPal;
+import wh.ui.PsychicBar;
+import wh.ui.PsychicStatValues;
 
 import static mindustry.Vars.*;
 
 public class ShelterDome extends PayloadBlock{
+    public float psychicCapacity = 40f;
+    public float psychicPerUnit = 15f;
     public float maxPayloadSize = 3.9f;
     public float range = 160f;
     public float blockMaxSpeedBoost = 1.5f;
@@ -58,6 +79,13 @@ public class ShelterDome extends PayloadBlock{
         super.setBars();
 
         addBar("progress", (ShelterDomeBuild e) -> new Bar("bar.progress", Pal.ammo, e::reload));
+        addBar("psychic", (ShelterDomeBuild e) -> new PsychicBar(
+                () -> Core.bundle.format("bar.wh-psychic-storage",
+                        Strings.autoFixed(e.psychicStored(), 2),
+                        Strings.autoFixed(psychicCapacity, 0)),
+                () -> WHPal.PsyColor,
+                e::psychicFraction
+        ));
     }
 
     @Override
@@ -66,6 +94,7 @@ public class ShelterDome extends PayloadBlock{
         stats.add(Stat.speedIncrease, Core.bundle.get("stat.wh-block-boost") + "+" + (int)(blockMaxSpeedBoost * 100f - 100) + "%");
         stats.add(Stat.speedIncrease, Core.bundle.get("stat.wh-unit-block-boost") + "+" + (int)(payloadBlockMaxSpeedBoost * 100f - 100) + "%");
         stats.add(WHStats.payloadIsBuildRate, (int)(buildSpeedRate * 100f) + "%");
+        PsychicStatValues.add(stats, WHStats.psychicProduction, psychicPerUnit, StatUnit.none);
         stats.add(Stat.range, range / tilesize, StatUnit.blocks);
     }
 
@@ -78,9 +107,10 @@ public class ShelterDome extends PayloadBlock{
         indexer.eachBlock(player.team(), x * tilesize + offset, y * tilesize + offset, range, other -> other.block.canOverdrive, other -> Drawf.selected(other, Tmp.c1.set(baseColor).a(Mathf.absin(4f, 1f))));
     }
 
-    public class ShelterDomeBuild extends PayloadBlockBuild<Payload> implements Ranged{
+    public class ShelterDomeBuild extends PayloadBlockBuild<Payload> implements Ranged, PsychicNetworkNode {
         public float heat, progress = 0f, time;
         public @Nullable Payload consumePayload;
+        public final PsychicModule psychic = new PsychicModule();
 
 
         @Override
@@ -139,6 +169,7 @@ public class ShelterDome extends PayloadBlock{
         public void updateTile(){
             super.updateTile();
             heat = Mathf.lerpDelta(heat, consumePayload != null && efficiency > 0f ? 1f : 0f, 0.05f);
+            psychic.clamp(psychicCapacity);
 
             if(consumePayload != null){
                 float reload = consumePayload.buildTime() / deconstructSpeed;
@@ -155,6 +186,10 @@ public class ShelterDome extends PayloadBlock{
                     indexer.eachBlock(this, range(), other -> other.block.canOverdrive &&
                     !(other instanceof TurretBuild) && !(other instanceof PayloadBlockBuild<?>) && !(other instanceof UnitCallBlockBuild),
                     other -> other.applyBoost(getHeat() * blockMaxSpeedBoost, reload + 1f));
+
+                    if (consumePayload instanceof UnitPayload) {
+                        addPsychic(psychicPerUnit);
+                    }
 
                     Fx.breakBlock.at(x, y, consumePayload.size() / tilesize);
                     consumePayload = null;
@@ -176,6 +211,57 @@ public class ShelterDome extends PayloadBlock{
 
         public float getHeat(){
             return efficiency;
+        }
+
+        public float psychicStored() {
+            return psychic.amount();
+        }
+
+        public float psychicFraction() {
+            return psychic.fraction(psychicCapacity);
+        }
+
+        public float addPsychic(float amount) {
+            return psychic.add(amount, psychicCapacity);
+        }
+
+        public float drainPsychic(float amount) {
+            return psychic.remove(amount);
+        }
+
+        @Override
+        public boolean acceptEnergy(PsychicNetworkNode source) {
+            return false;
+        }
+
+        @Override
+        public boolean outputEnergy() {
+            return enabled && psychicStored() > PsychicNetworkNode.epsilon;
+        }
+
+        @Override
+        public float getEnergyNeed() {
+            return 0f;
+        }
+
+        @Override
+        public float getEnergy() {
+            return psychicStored();
+        }
+
+        @Override
+        public float getEnergyPotential() {
+            return psychicStored();
+        }
+
+        @Override
+        public float handleEnergy(float amount) {
+            return 0f;
+        }
+
+        @Override
+        public float removeEnergy(float amount) {
+            return drainPsychic(amount);
         }
 
         @Override
@@ -237,6 +323,7 @@ public class ShelterDome extends PayloadBlock{
             write.f(heat);
             write.f(time);
             Payload.write(consumePayload, write);
+            psychic.write(write);
         }
 
         @Override
@@ -247,6 +334,7 @@ public class ShelterDome extends PayloadBlock{
             heat = read.f();
             time = read.f();
             consumePayload = Payload.read(read);
+            psychic.read(read);
         }
     }
 }

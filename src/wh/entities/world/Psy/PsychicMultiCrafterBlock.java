@@ -182,7 +182,8 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
         table.left().defaults().left();
         table.image(stack.item.fullIcon).size(22f).scaling(Scaling.fit).padRight(5f);
         addOutline(table, stack.item.localizedName).left().padRight(6f);
-        addOutline(table, "[lightgray]" + stack.amount + "[]").left().padRight(4f);
+        addOutline(table, "[lightgray]x" + stack.amount + "[]").left().padRight(8f);
+        addOutline(table, "[gray]|[]").left().padRight(8f);
         addOutline(table, "[lightgray]" + Strings.autoFixed(perSecond, 3) + "/秒[]").left();
     }
 

@@ -21,7 +21,7 @@ import wh.ui.PsychicStatValues;
 
 import static mindustry.Vars.tilesize;
 
-public class PsychicAttributeSourceBlock extends PsychicBlock {
+public class PsychicAttributeBlock extends PsychicBlock {
     public Attribute attribute = Attribute.heat;
     public Attribute secondaryAttribute;
     public float secondaryScale = 0.35f;
@@ -32,7 +32,7 @@ public class PsychicAttributeSourceBlock extends PsychicBlock {
     public float generationRate = 3f;
     public float warmupSpeed = 0.05f;
 
-    public PsychicAttributeSourceBlock(String name) {
+    public PsychicAttributeBlock(String name) {
         super(name);
         acceptsPsychicLinks = false;
         outputsPsychicLinks = true;

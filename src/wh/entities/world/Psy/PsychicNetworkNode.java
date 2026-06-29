@@ -4,7 +4,7 @@ public interface PsychicNetworkNode {
     float epsilon = 0.0001f;
 
     default boolean acceptsPsychicLinks() {
-        return acceptEnergy(null);
+        return true;
     }
 
     default boolean outputsPsychicLinks() {
