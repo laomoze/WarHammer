@@ -58,6 +58,10 @@ public class DrawPsyTile extends DrawBlock {
             return psy.psychicFraction();
         }
 
+        if (build instanceof PsychicRegenProjectorBlock.PsychicRegenProjectorBuild psy) {
+            return psy.psychicFraction();
+        }
+
         if (build instanceof PsychicMultiCrafterBlock.PsychicMultiCrafterBuild psy) {
             return psy.psychicFraction();
         }

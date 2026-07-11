@@ -213,6 +213,7 @@ public class TubeConduit extends Conduit{
             ((b.rotation + 2) % 4 == rotation || (b.front() != this && back() == b)));
         }
 
+
         @Override
         public void draw(){
             int r = this.rotation;
@@ -221,7 +222,7 @@ public class TubeConduit extends Conduit{
             for(int i = 0; i < 4; i++){
                 if((blending & (1 << i)) != 0){
                     int dir = r - i;
-                    drawAt(x + Geometry.d4x(dir) * mindustry.Vars.tilesize * 0.75f, y + Geometry.d4y(dir) * mindustry.Vars.tilesize * 0.75f, 0, i == 0 ? r : dir, i != 0 ? SliceMode.bottom : SliceMode.top);
+                    drawAt(x + Geometry.d4x(dir) * mindustry.Vars.tilesize * 0.75f, y + Geometry.d4y(dir) * mindustry.Vars.tilesize * 0.75f, 0, i == 0 ? r : dir, i != 0 ? SliceMode.bottom : SliceMode.top, false);
                 }
             }
 
@@ -241,7 +242,7 @@ public class TubeConduit extends Conduit{
 
             Draw.z(Layer.block - 0.1f);
             Draw.scl(xscl, yscl);
-            drawAt(x, y, blendbits, r, SliceMode.none);
+            drawAt(x, y, blendbits, r, SliceMode.none, false);
             if (drawArrow) {
                 Draw.z(Layer.block);
                 Draw.rect(sliced(arrowRegion[blendbits], SliceMode.none), x, y, rotation * 90f);
@@ -269,7 +270,7 @@ public class TubeConduit extends Conduit{
         }
 
         @Override
-        protected void drawAt(float x, float y, int bits, int rotation, SliceMode slice){
+        protected void drawAt(float x, float y, int bits, int rotation, SliceMode slice, boolean glowing) {
             float angle = rotation * 90f;
             Draw.color(botColor);
             Draw.rect(sliced(botRegions[bits], slice), x, y, angle);
@@ -293,7 +294,7 @@ public class TubeConduit extends Conduit{
             Drawf.liquid(sliced(liquidr, slice), x + ox, y + oy, smoothLiquid, liquids.current().color.write(Tmp.c1).a(1f));
             Draw.scl(sx, sy);
 
-
+            Draw.rect(sliced(topRegion[0][tiling], slice), x, y, angle);
         }
 
         private int nonSquareLiquidBlendMask() {

@@ -1,14 +1,13 @@
 package wh.entities.world.Psy;
 
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Fill;
-import arc.graphics.g2d.Lines;
 import arc.math.Mathf;
 import arc.util.Strings;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
 import mindustry.Vars;
 import mindustry.graphics.Drawf;
-import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.ui.Bar;
 import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
 import wh.content.WHStats;
@@ -37,6 +36,7 @@ public class PsychicGeneratorBlock extends PsychicBlock {
         drawArrow = false;
         hasPower = true;
         outputsPower = true;
+        canOverdrive = false;
     }
 
     @Override
@@ -62,6 +62,12 @@ public class PsychicGeneratorBlock extends PsychicBlock {
                 () -> WHPal.PsyColor,
                 build::progressFraction
         ));
+
+        addBar("power-output", (PsychicGeneratorBuild build) -> new Bar(
+                () -> bundleFormat("bar.poweroutput", Strings.autoFixed(build.getPowerProduction() * 60f, 2)),
+                () -> Pal.powerBar,
+                () -> powerPerSecond <= 0.0001f ? 0f : build.getPowerProduction() / powerPerSecond
+        ));
     }
 
     protected float productionPerSecond() {
@@ -75,6 +81,44 @@ public class PsychicGeneratorBlock extends PsychicBlock {
         public float producedThisFrame;
         public float fluctuationTimer;
         public boolean negativePulse;
+
+        @Override
+        public byte version() {
+            return 5;
+        }
+
+        @Override
+        public void write(Writes write) {
+            super.write(write);
+            write.f(progress);
+            write.f(warmup);
+            write.f(productionRate);
+            write.f(fluctuationTimer);
+            write.bool(negativePulse);
+        }
+
+        @Override
+        public void read(Reads read, byte revision) {
+            super.read(read, revision);
+
+            if (revision >= 5) {
+                progress = Math.max(read.f(), 0f);
+                warmup = Mathf.clamp(read.f());
+                productionRate = Math.max(read.f(), 0f);
+                fluctuationTimer = Math.max(read.f(), 0f);
+                negativePulse = read.bool();
+            } else {
+                progress = 0f;
+                // Revision 4 did not persist warmup. Keep legacy generators alive
+                // long enough for their own power consumption to recover after loading.
+                warmup = powerPerSecond > 0.0001f ? 1f : 0f;
+                productionRate = 0f;
+                fluctuationTimer = 0f;
+                negativePulse = false;
+            }
+
+            producedThisFrame = 0f;
+        }
 
         @Override
         public void updateTile() {
@@ -135,7 +179,7 @@ public class PsychicGeneratorBlock extends PsychicBlock {
 
         @Override
         public float totalProgress() {
-            return activityTotalProgress;
+            return super.totalProgress();
         }
 
         @Override
@@ -148,16 +192,7 @@ public class PsychicGeneratorBlock extends PsychicBlock {
             super.draw();
 
             float stored = psychicFraction();
-            float pulse = Mathf.absin(6f, 0.7f + warmup * 1.1f);
             float radius = block.size * tilesize * (0.32f + stored * 0.18f + warmup * 0.08f);
-
-            Draw.z(Layer.effect);
-            Draw.color(WHPal.PsyColor, Color.white, 0.12f + warmup * 0.14f);
-            Draw.alpha(0.16f + stored * 0.2f + warmup * 0.14f);
-            Lines.stroke(1f + warmup * 1.3f);
-            Lines.square(x, y, radius + pulse * 0.18f, 45f);
-            Fill.square(x, y, radius * 0.42f + pulse * 0.1f, 45f);
-            Draw.reset();
 
             if (stored > 0.001f || warmup > 0.001f) {
                 Drawf.light(x, y, radius * 2.3f, WHPal.PsyColor, 0.18f + stored * 0.22f + warmup * 0.12f);

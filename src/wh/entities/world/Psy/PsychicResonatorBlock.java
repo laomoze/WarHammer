@@ -194,4 +194,3 @@ public class PsychicResonatorBlock extends PsychicBlock {
         }
     }
 }
-

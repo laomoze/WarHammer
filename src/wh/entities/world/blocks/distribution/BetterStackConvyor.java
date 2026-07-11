@@ -1,14 +1,17 @@
 package wh.entities.world.blocks.distribution;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import mindustry.graphics.*;
-import mindustry.world.*;
-import mindustry.world.blocks.distribution.*;
+import arc.Core;
+import arc.graphics.Blending;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.util.Tmp;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.world.Tile;
+import mindustry.world.blocks.distribution.StackConveyor;
 
 import static mindustry.Vars.*;
 
@@ -30,8 +33,9 @@ public class BetterStackConvyor extends StackConveyor{
     }
 
   public class BetterStackConvyorBuilding extends StackConveyorBuild{
+
       @Override
-      public void draw(){
+      public void drawCached() {
           Draw.z(Layer.block - 0.2f);
 
           Draw.rect(regions[state], x, y, rotdeg());
@@ -59,7 +63,10 @@ public class BetterStackConvyor extends StackConveyor{
                   Draw.rect(sliced(regions[0], SliceMode.top), x + Geometry.d4x(rotation) * tilesize*0.75f, y + Geometry.d4y(rotation) * tilesize*0.75f, rotation * 90f);
               }
           }
+      }
 
+      @Override
+      public void draw() {
           Draw.z(Layer.block - 0.1f);
 
           Tile from = world.tile(link);

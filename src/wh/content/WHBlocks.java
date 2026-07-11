@@ -57,7 +57,7 @@ import mindustry.world.blocks.power.*;
 import mindustry.world.blocks.production.*;
 import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.blocks.storage.StorageBlock;
-import mindustry.world.blocks.units.RepairTower;
+import mindustry.world.blocks.units.RepairTurret;
 import mindustry.world.consumers.ConsumeCoolant;
 import mindustry.world.consumers.ConsumeItemFlammable;
 import mindustry.world.consumers.ConsumeItemRadioactive;
@@ -190,19 +190,20 @@ public final class WHBlocks {
     //Psy
     public static Block
             psychicConverter, psychicReorganizer,
-            psyNode, psyTower, psyRouter,
+            psyNode, psyTower, psyRouter, psychicOverflowGate,
             psychicCollector, spiritualSiphon,
-            psyContainer, psyResonator,
-            psyAmplifier, psySink, psyBeacon,
-            psyFactory,
+            psyContainer, psyBeacon,
+            psychicGenerator, subspaceEngine,
+            remoteVault,
             psyVoid, psySource;
 
     //effect
     public static Block
             armorIlluminator, searchlight,
-            armoredVault, armoredContainer, remoteVault,
+            armoredVault, armoredContainer,
             wrapProjector, wrapOverdrive, shelterDome,
-            repairTower, psychicRepairTower, voidShield, ionShield,
+            repairTower, repairEquipment,
+            voidShield, ionShield,
             selectProjector, launchPad, landingPad,
             strongholdCore, T2strongholdCore, T3strongholdCore;
 
@@ -475,7 +476,7 @@ public final class WHBlocks {
                         craftEffect = Fx.smeltsmoke;
                         drawer = new DrawMulti(
                                 new DrawDefault(),
-                                new DrawBlockParts() {{
+                                new WHBlockParts() {{
                                     parts.addAll(new EffectSpawnerPart() {{
                                         width = height = 10;
                                         effectColor = WHItems.uranium.color.cpy();
@@ -1339,7 +1340,7 @@ public final class WHBlocks {
                             x = 27 / 4f;
                             y = -28 / 4f;
                         }},
-                        new DrawBlockParts() {
+                        new WHBlockParts() {
                             {
                                 parts.addAll(
                                         new RegionPart("-item2") {
@@ -1700,7 +1701,7 @@ public final class WHBlocks {
                 }}, new DrawRegion("-rotator", -2) {{
                     spinSprite = true;
                 }},
-                        new DrawRegion("-mid"), new DrawBlockParts() {
+                        new DrawRegion("-mid"), new WHBlockParts() {
                     {
                         parts.addAll(
                                 new RegionPart("-item1") {
@@ -1749,19 +1750,6 @@ public final class WHBlocks {
                                     effectColor = Pal.bulletYellowBack;
                                     effect = Fx.disperseTrail;
                                 }});
-                    }
-
-                    @Override
-                    public void draw(Building build) {
-                        if (parts.size > 0) {
-                            float progress = build.progress();
-
-                            var params = DrawPart.params.set(build.warmup(), 1f - progress, 1f - progress, 0f, 0f, 0f, build.x, build.y, build.rotdeg() + 90);
-
-                            for (var part : parts) {
-                                part.draw(params);
-                            }
-                        }
                     }
                 }, new DrawDefault());
                 craftEffect = new RadialEffect(Fx.surgeCruciSmoke, 4, 90f, 7f);
@@ -3643,92 +3631,62 @@ public final class WHBlocks {
             consumeItems(with(WHItems.culverCrystal, 1, WHItems.sealedPromethium, 1));
         }};
 
-        /*warpSiphon = new PsychicHarvesterBlock("warp-siphon") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 30, WHItems.resonantCrystal, 25, Items.silicon, 60, Items.phaseFabric, 20));
-            buildVisibility = BuildVisibility.sandboxOnly;
-            size = 2;
-            health = 560;
-            psychicCapacity = 90f;
-            fieldRangeX = 8f;
-            fieldRangeY = 8f;
-            fieldSampleSpacing = 2;
-            baseOperation = 0.18f;
-            concentrationOperation = 1.85f;
-            fluxOperationScale = 0.55f;
-            maxOperation = 2.1f;
-            minConcentration = 0.012f;
-            disturbanceWindow = 0.065f;
-            fieldInfluenceRadius = 5f;
-            fieldDrainScale = 0.03f;
-            researchCostMultiplier = 0.35f;
-        }};
-
-        warpSuppressor = new PsychicSuppressorBlock("warp-suppressor") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 40, WHItems.resonantCrystal, 35, Items.silicon, 90, Items.phaseFabric, 30));
-            buildVisibility = BuildVisibility.sandboxOnly;
-            size = 2;
-            health = 620;
-            psychicCapacity = 0f;
-            fieldRangeX = 7f;
-            fieldRangeY = 7f;
-            fieldSampleSpacing = 2;
-            baseOperation = 0.16f;
-            concentrationOperation = 0.72f;
-            fluxOperationScale = 0.55f;
-            maxOperation = 1.3f;
-            minConcentration = 0.02f;
-            fieldInfluenceRadius = 7f;
-            fieldInfluenceScale = 0.06f;
-            suppressFieldScale = 1.15f;
-            researchCostMultiplier = 0.4f;
-        }};*/
-
         psyNode = new PsychicNode("psychic-node") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 25, WHItems.resonantCrystal, 18, Items.silicon, 50));
-            buildVisibility = BuildVisibility.sandboxOnly;
+            requirements(Category.power, with(WHItems.cobaltNitride, 5, WHItems.manganeseSteel, 5, Items.silicon, 10));
             size = 1;
             health = 420;
-            psychicCapacity = 200;
+            psychicCapacity = 50;
             linkRange = 10;
-            transferRate = 100;
-            distanceFalloff = 0.2f;
+            transferRate = 150;
+            distanceFalloff = 0.15f;
             passivePsychicLoss = 0.1f;
             researchCostMultiplier = 0.35f;
         }};
 
         psyTower = new PsychicNode("psychic-tower") {{
-            requirements(Category.power, with(WHItems.cobaltNitride, 25, WHItems.resonantCrystal, 18, Items.silicon, 50));
+            requirements(Category.power, with(WHItems.ceramite, 50, WHItems.culverCrystal, 30, Items.silicon, 150));
             size = 3;
-            health = 420;
-            psychicCapacity = 600;
+            health = 1500;
+            psychicCapacity = 150;
             linkRange = 30;
-            transferRate = 300;
+            transferRate = 450;
             distanceFalloff = 0.1f;
             passivePsychicLoss = 0.25f;
             researchCostMultiplier = 0.35f;
         }};
 
         psyRouter = new PsychicRouterBlock("psychic-router") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 32, WHItems.resonantCrystal, 18, Items.silicon, 50));
-            buildVisibility = BuildVisibility.sandboxOnly;
+            requirements(Category.power, with(WHItems.cobaltNitride, 10, WHItems.manganeseSteel, 5, Items.silicon, 20));
             size = 1;
             health = 400;
-            psychicCapacity = 200;
+            psychicCapacity = 150;
             linkRange = 10;
-            transferRate = 300;
+            transferRate = 450;
             distanceFalloff = 0.1f;
             passivePsychicLoss = 0.25f;
             researchCostMultiplier = 0.35f;
         }};
 
+        psychicOverflowGate = new PsychicSplitGateBlock("psychic-overflow-gate") {{
+            requirements(Category.power, with(WHItems.cobaltNitride, 10, WHItems.manganeseSteel, 5, Items.silicon, 20));
+            size = 1;
+            health = 430;
+            psychicCapacity = 80f;
+            linkRange = 10;
+            transferRate = 150;
+            safePressure = 75;
+
+            researchCostMultiplier = 0.38f;
+        }};
+
         psyContainer = new PsychicContainerBlock("psychic-container") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 40, WHItems.resonantCrystal, 24, Items.silicon, 60, Items.metaglass, 25));
-            buildVisibility = BuildVisibility.sandboxOnly;
+            requirements(Category.power, with(Items.plastanium, 200, WHItems.culverCrystal, 50, WHItems.cobaltNitride, 40, WHItems.entanglement, 50));
             size = 3;
             health = 2000;
             psychicCapacity = 1500;
             passivePsychicLoss = 1;
             drawer = new DrawMulti(
+                    new DrawRegion("-bottom"),
                     new DrawPsyTile(WHPal.PsyColor, FACTORY_PAD_33),
                     new DrawParticles() {{
                         color = WHPal.PsyColor;
@@ -3745,14 +3703,14 @@ public final class WHBlocks {
 
 
         spiritualSiphon = new PsychicRequiemBlock("spiritual-siphon") {{
-            requirements(Category.power, with(WHItems.cobaltNitride, 35, WHItems.resonantCrystal, 30, Items.silicon, 80, Items.phaseFabric, 15));
+            requirements(Category.power, with(WHItems.ceramite, 150, WHItems.entanglement, 50, WHItems.culverCrystal, 70));
             size = 3;
             health = 1000;
             psychicCapacity = 100;
             passivePsychicLoss = 0.2f;
-            deathRange = 25;
-            baseDeathGain = 3f;
-            healthDeathScale = 0.4f;
+            deathRange = 30;
+            baseDeathGain = 4f;
+            healthDeathScale = 0.5f;
             maxDeathGain = 20f;
             bossMultiplier = 1.5f;
             drawer = new DrawMulti(
@@ -3766,7 +3724,7 @@ public final class WHBlocks {
                         particleInterp = f -> Interp.smooth.apply(Interp.slope.apply(f));
                     }},
                     new DrawDefault(),
-                    new DrawBlockParts() {{
+                    new WHBlockParts() {{
                         parts.addAll(new EffectSpawnerPart() {{
                                          width = height = 4;
                                          useProgress = true;
@@ -3779,203 +3737,360 @@ public final class WHBlocks {
                                     useProgress = true;
                                     effectChance = 0.025f;
                                     effectColor = WHPal.PsyColor.cpy();
-                                    effect = new Effect(90, (e) -> {
-                                        color(effectColor);
-                                        rand.setSeed(e.id);
-                                        int intensity = WHSettings.detailCount(4, 1);
-                                        float size = 2;
-                                        drawHeightCircles(e.id, intensity, e.x, e.y, e.fout(Interp.pow2In) * deathRange * tilesize, e.rotation, 360f,
-                                                deathRange * tilesize / 2 * 0.02f, e.fout(), (x, y, height) -> {
-                                                    float s = Mathf.curve(e.fin(), 0f, 0.1f) * e.fout(Interp.smooth) * (size + rand.range(size / 3.0F));
-                                                    Fill.square(x, y, s, 45.0F);
-                                                    Drawf.light(x, y, s * 2.25F, effectColor, 0.7F);
-                                                });
-                                    });
-                                    ;
+                                    effect = WHFx.squareIn(90, PsyColor, 4, deathRange * tilesize / 2, 2);
                                 }});
                     }}
             );
 
-            consumePower(600 / 60f);
+            consumePower(900 / 60f);
 
             researchCostMultiplier = 0.4f;
         }};
 
-
-        psyResonator = new PsychicResonatorBlock("psychic-resonator") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 45, WHItems.resonantCrystal, 24, WHItems.ceramite, 20, Items.silicon, 90));
-            buildVisibility = BuildVisibility.sandboxOnly;
-            size = 3;
-            health = 640;
-            psychicCapacity = 180f;
-            passivePsychicLoss = 0.004f;
-            range = 16f;
-            baseProduction = 0.25f;
-            factoryContribution = 0.45f;
-            factoryWarmupWeight = 0.7f;
-            factoryTimeScaleWeight = 0.22f;
-            unitContribution = 0.2f;
-            buffContribution = 0.12f;
-            bossBonus = 1.6f;
-            maxProduction = 10f;
-            drawer = new DrawMulti(
-                    new DrawDefault(),
-                    new DrawCircles() {{
-                        color = WHPal.PsyColor;
-                        amount = 2;
-                        radius = 9f;
-                        strokeMax = 1.35f;
-                    }},
-                    new DrawParticles() {{
-                        color = WHPal.PsyColor;
-                        alpha = 0.55f;
-                        particleSize = 3.2f;
-                        particles = 6;
-                        particleRad = 9f;
-                        particleLife = 60f;
-                    }},
-                    new DrawGlowRegion() {{
-                        color = WHPal.PsyColor;
-                        alpha = 0.45f;
-                        glowScale = 9f;
-                        glowIntensity = 0.28f;
-                    }}
-            );
-            researchCostMultiplier = 0.4f;
-
-        }};
-
-        psyAmplifier = new PsychicAmplifierBlock("psychic-amplifier") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 30, WHItems.resonantCrystal, 22, Items.silicon, 70));
-            buildVisibility = BuildVisibility.sandboxOnly;
-            size = 2;
-            health = 520;
-            psychicCapacity = 120f;
-            psychicUse = 0.8f;
-            boost = 1.45f;
-            range = 12f;
-            overloadPerSecond = 0.08f;
-            drawer = new DrawMulti(
-                    new DrawDefault(),
-                    new DrawPulseShape() {{
-                        color = WHPal.PsyColor;
-                        stroke = 1.25f;
-                        radiusScl = 1.2f;
-                        timeScl = 5f;
-                    }},
-                    new DrawGlowRegion() {{
-                        color = WHPal.PsyColor;
-                        alpha = 0.46f;
-                        glowScale = 9f;
-                        glowIntensity = 0.28f;
-                    }}
-            );
-            researchCostMultiplier = 0.38f;
-        }};
-
-        psySink = new PsychicSplitGateBlock("psychic-split-gate") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 35, WHItems.resonantCrystal, 20, WHItems.ceramite, 18, Items.silicon, 65));
-            buildVisibility = BuildVisibility.sandboxOnly;
-            size = 1;
-            health = 430;
-            psychicCapacity = 80f;
-            linkRange = 10;
-            transferRate = 100f;
-            safePressure = 24f;
-            overPressureRange = 28f;
-            sideSplit = 0.35f;
-            drawer = new DrawMulti(
-                    new DrawDefault(),
-                    new DrawPulseShape() {{
-                        color = WHPal.PsyColor;
-                        stroke = 1.15f;
-                        radiusScl = 1.05f;
-                        timeScl = 5.5f;
-                    }},
-                    new DrawGlowRegion() {{
-                        color = WHPal.PsyColor;
-                        alpha = 0.42f;
-                        glowScale = 8f;
-                        glowIntensity = 0.24f;
-                    }}
-            );
-            researchCostMultiplier = 0.38f;
-        }};
 
         psyBeacon = new PsychicBeaconBlock("psychic-beacon") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 40, WHItems.resonantCrystal, 26, WHItems.entanglement, 16, Items.phaseFabric, 10));
+            requirements(Category.power, with(Items.carbide, 300, WHItems.entanglement, 150, WHItems.resonantCrystal, 150));
             buildVisibility = BuildVisibility.sandboxOnly;
-            size = 2;
-            health = 580;
-            psychicCapacity = 140f;
-            range = 11f;
-            squareRange = true;
+            size = 3;
+            health = 2500;
+            psychicCapacity = 60;
+            range = 16;
             preventOverlap = true;
-            addRecipe("assault", WHStatusEffects.assault, 1.18f, 0.7f, 12f);
-            addRecipe("bless", WHStatusEffects.bless, 1.12f, 0.85f, 16f);
-            addRecipe("energy-amplification", WHStatusEffects.energyAmplification, 1.25f, 1.1f, 14f);
+            addRecipe(WHStatusEffects.powerEnhance1, 1, 5, 1);
+            addRecipe(WHStatusEffects.bless, 1.4f, 30, 1);
+            addRecipe(WHStatusEffects.assault, 1.3f, 35, 1);
+            addRecipe(WHStatusEffects.energyAmplification, 1.5f, 40, 1);
             drawer = new DrawMulti(
-                    new DrawDefault(),
-                    new DrawCircles() {{
-                        color = WHPal.PsyColor;
-                        amount = 1;
-                        radius = 5.5f;
-                        strokeMax = 1.2f;
-                    }},
-                    new DrawGlowRegion() {{
-                        color = WHPal.PsyColor;
-                        alpha = 0.45f;
+                    new DrawRegion("-bottom"),
+                    new DrawGlowRegion("-rotator") {{
+                        glowIntensity = 0.5f;
+                        rotateSpeed = 2f;
+                        alpha = 0.3f;
                         glowScale = 9f;
-                        glowIntensity = 0.25f;
-                    }}
+                        color = WHPal.PsyColor;
+                    }},
+                    new DrawGlowRegion("-rotator") {{
+                        glowIntensity = 0.5f;
+                        rotateSpeed = -4f;
+                        alpha = 0.3f;
+                        glowScale = 5f;
+                        color = WHPal.PsyColor;
+                    }},
+                    new DrawDefault(),
+                    new DrawCrucibleSquareFlame() {{
+                        flameColor = midColor = PsyColor;
+                    }},
+                    new WHBlockParts() {
+                        {
+                            parts.addAll(
+                                    new RegionPart("-part-l") {{
+                                        moveX = 9 / 4f;
+                                        progress = PartProgress.warmup;
+                                        moves.addAll(new PartMove(PartProgress.constant(0).mul(PartProgress.warmup).apply(PartProgress.warmup, (a, b) -> Mathf.absin(10, 1) * b), -9 / 4f, 0, 0));
+                                    }},
+                                    new RegionPart("-part-r") {{
+                                        moveX = -9 / 4f;
+                                        progress = PartProgress.warmup;
+                                        moves.addAll(new PartMove(PartProgress.constant(0).mul(PartProgress.warmup).apply(PartProgress.warmup, (a, b) -> Mathf.absin(10, 1) * b), 9 / 4f, 0, 0));
+                                    }},
+                                    new EffectSpawnerPart() {{
+                                        width = height = 4;
+                                        useProgress = true;
+                                        effectChance = 0.025f;
+                                        effectColor = WHPal.PsyColor.cpy();
+                                        effect = new Effect(90, (e) -> {
+                                            color(effectColor);
+                                            rand.setSeed(e.id);
+                                            int intensity = WHSettings.detailCount(4, 1);
+                                            float size = 2;
+                                            drawHeightCircles(e.id, intensity, e.x, e.y, e.fout(Interp.pow2In) * range * tilesize, e.rotation, 360f,
+                                                    range * tilesize / 2 * 0.02f, e.fout(), (x, y, height) -> {
+                                                        float s = Mathf.curve(e.fin(), 0f, 0.1f) * e.fout(Interp.smooth) * (size + rand.range(size / 3.0F));
+                                                        Fill.square(x, y, s, 45.0F);
+                                                        Drawf.light(x, y, s * 2.25F, effectColor, 0.7F);
+                                                    });
+                                        });
+                                    }},
+                                    new RegionPart("-light") {{
+                                        color = Color.white.cpy().a(0);
+                                        colorTo = PsyColor;
+                                        layer = Layer.effect;
+                                        outline = false;
+                                        yScl = 0;
+                                        growY = 1;
+                                        progress = PartProgress.warmup.add(-0.3f).mul(PartProgress.heat).sin(10, 0.3f);
+                                    }});
+                        }
+                    },
+                    new DrawDefault() {
+                        @Override
+                        public void draw(Building build) {
+                            if (build.warmup() < 0.03f) return;
+
+                            Draw.color(WHPal.PsyColor);
+                            Draw.z(Layer.effect);
+
+                            rand.setSeed(build.id);
+
+                            float warmup = build.warmup();
+                            float timeTri = (Time.time / 5f) % 360f;
+                            float timeOuter = (Time.time / 4f) % 360f;
+
+                            float sin = Mathf.sin(8f + rand.random(2f), 0.4f) * warmup;
+                            float rad = build.hitSize();
+
+                            Tmp.v1.trns(timeTri, sin, sin);
+                            float xa = build.x + Tmp.v1.x;
+                            float ya = build.y + Tmp.v1.y;
+
+
+                            Lines.stroke(2f * warmup + 0.5f * sin);
+                            Lines.poly(xa, ya, 3, rad, timeTri);
+
+
+                            float outerBase = timeOuter + rand.random(360f);
+                            for (int i = 0; i < 3; i++) {
+                                float an = outerBase + i * 120f;
+                                Tmp.v2.trns(an, 1.3f * rad);
+
+                                Drawn.tri(xa + Tmp.v2.x, ya + Tmp.v2.y, 3f, rad * 0.3f * warmup, an - 180f);
+                                Drawn.tri(xa + Tmp.v2.x, ya + Tmp.v2.y, 3f, rad * 0.7f * warmup +
+                                        Mathf.absin(10f + i, 1f) * 10f * warmup, an);
+                            }
+
+                            float lineBase = 45 + Drawn.rotator_120(Drawn.cycle(build.totalProgress(), 0, 120), 0.15f);
+                            for (int i = 0; i < 3; i++) {
+                                float an = lineBase + i * 120f;
+                                Tmp.v2.trns(an, rad * 0.8f);
+
+                                Lines.stroke(1.5f * warmup);
+                                Lines.lineAngle(build.x + Tmp.v2.x, build.y + Tmp.v2.y, an, 10f * warmup);
+                            }
+
+                            Draw.reset();
+                        }
+                    }
             );
+
+            consumePower(1200 / 60f);
             researchCostMultiplier = 0.4f;
         }};
 
-        psySource = new PsychicSource("psychic-resource") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 15, Items.silicon, 25, Items.metaglass, 20));
-            buildVisibility = BuildVisibility.sandboxOnly;
-            size = 1;
-            health = 320;
-            generationRate = 1000;
-        }};
+        psychicGenerator = new PsychicGeneratorBlock("psychic-generator") {{
+            requirements(Category.power, with(WHItems.cobalt, 50, Items.carbide, 20, WHItems.armorAlloy, 50));
 
-        psyFactory = new PsychicGeneratorBlock("psychic-factory") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 30, WHItems.resonantCrystal, 18, Items.graphite, 50, Items.silicon, 45));
-            buildVisibility = BuildVisibility.sandboxOnly;
-            size = 2;
-            health = 460;
-            hasItems = true;
-            hasPower = true;
-            itemCapacity = 20;
-            psychicCapacity = 120f;
-            craftTime = 90f;
-            psychicPerCraft = 16f;
-            powerPerSecond = 150f / 60f;
-            range = 10f;
+            size = 3;
+            health = 900;
+            hasPower = hasItems = true;
+            powerPerSecond = 700 / 60f;
+
             fluctuationInterval = 180f;
             fluctuationDuration = 120f;
             negativeTimeScale = 0.7f;
-            positiveTimeScale = 1.25f;
-            consumeItems(with(WHItems.combustible, 1, WHItems.resonantCrystal, 1));
-            consumePower(90f / 60f);
+            positiveTimeScale = 1.2f;
+            range = 7;
+
+            craftTime = 60;
+            psychicPerCraft = 20f;
+
+            consumePower(180 / 60f);
+            consumeItems(with(WHItems.combustible, 1, WHItems.entanglement, 1));
+
             drawer = new DrawMulti(
-                    new DrawDefault(),
+                    new DrawArcs() {{
+                        arcs = 5;
+                        flameRad = 3;
+                        circleStroke = circleSpace = 0;
+                        flameRadiusScl = 4f;
+                        flameRadiusMag = 0.5f;
+                        midColor = flameColor = PsyColor.cpy();
+                        arcRad = 8f;
+                        arcLife = 70f;
+                    }},
+                    new DrawCrucibleSquareFlame() {{
+                        flameColor = midColor = PsyColor;
+                        circleStroke = 1.5f;
+                        flameRad = 1.5f;
+                        particleSize = 5;
+                        particles = 10;
+                    }},
                     new DrawPulseShape() {{
                         color = WHPal.PsyColor;
-                        stroke = 1.15f;
-                        radiusScl = 1.15f;
-                        timeScl = 4.5f;
+                        stroke = 1.5f;
+                        square = false;
                     }},
-                    new DrawGlowRegion() {{
-                        color = WHPal.PsyColor;
-                        alpha = 0.5f;
-                        glowScale = 10f;
-                        glowIntensity = 0.32f;
-                    }}
+                    new DrawDefault()
+
             );
-            researchCostMultiplier = 0.3f;
         }};
+
+        subspaceEngine = new PsychicGeneratorBlock("subspace-engine") {
+            {
+                requirements(Category.power, with(WHItems.ceramite, 500, WHItems.molybdenumAlloy, 500, WHItems.protocolChip, 200, WHItems.sealedPromethium, 400));
+
+                size = 5;
+                health = 10000;
+                hasPower = hasItems = hasLiquids = true;
+                powerPerSecond = 10000 / 60f;
+                liquidCapacity = 600;
+
+                fluctuationInterval = 300;
+                fluctuationDuration = 300;
+
+                negativeTimeScale = 0.8f;
+                positiveTimeScale = 1.5f;
+                range = 9;
+
+                craftTime = 90;
+                psychicPerCraft = 90;
+                psychicCapacity = 500;
+                warmupSpeed = 0.002f;
+
+                consumePower(2000 / 60f);
+                consumeItems(with(WHItems.sealedPromethium, 2));
+                consumeLiquids(LiquidStack.with(Liquids.cryofluid, 60 / 60f));
+
+                PartProgress pg = PartProgress.warmup;
+                PartProgress pg0 = pg.compress(0f, 0.2f);
+                PartProgress pg1 = pg.compress(0.2f, 0.4f);
+                PartProgress pg2 = pg.compress(0.4f, 0.6f);
+                PartProgress pg3 = pg.compress(0.6f, 0.8f);
+                PartProgress pg4 = pg.compress(0.8f, 0.1f);
+
+                drawer = new DrawMulti(
+                        new DrawRegion("-bottom"),
+                        new DrawArcs() {{
+                            arcs = 5;
+                            flameRad = 0;
+                            circleSpace = 0;
+                            circleStroke = 0f;
+                            flameRadiusScl = 4f;
+                            flameRadiusMag = 0.5f;
+                            midColor = flameColor = WHPal.PsyColor;
+                            arcRad = 8f;
+                            arcLife = 70f;
+                        }},
+                        new DrawCrucibleSquareFlame() {{
+                            flameColor = midColor = PsyColor;
+                            circleStroke = 2;
+                            circleSpace = 8;
+                            flameRad = 2.5f;
+                            particleRad = 10f;
+                            particleSize = 3.5f;
+                            particles = 10;
+                        }},
+                        new DrawDefault(),
+                        new WHBlockParts() {
+                            {
+                                parts.addAll(
+
+                                        new RegionPart("-part-1") {{
+                                            outline = false;
+                                            layerOffset = 0.001f;
+                                            moveX = 9 / 4f;
+                                            moveY = -9 / 4f;
+                                            progress = pg0.curve(Interp.pow2In);
+                                            moves.addAll(new PartMove(PartProgress.constant(0).apply(PartProgress.warmup, (a, b) -> Mathf.sin(10 + 2, 1) * b), moveX / 2.5f, moveY / 2.5f, 0));
+                                            moves.addAll(new PartMove(PartProgress.constant(0).apply(PartProgress.warmup, (a, b) -> Mathf.sin(4, 1) * b), 0.2f, 0, 0));
+                                            moves.addAll(new PartMove(PartProgress.constant(0).apply(PartProgress.warmup, (a, b) -> Mathf.sin(4, 1) * b), 0, 0.2f, 0));
+                                        }},
+                                        new RegionPart("-part-2") {{
+                                            outline = false;
+                                            layerOffset = 0.001f;
+                                            moveX = -9 / 4f;
+                                            moveY = -9 / 4f;
+                                            progress = pg1.curve(Interp.pow2In);
+                                            moves.addAll(new PartMove(PartProgress.constant(0).apply(PartProgress.warmup, (a, b) -> Mathf.sin(10 + 4, 1) * b), moveX / 2.5f, moveY / 2.5f, 0));
+                                            moves.addAll(new PartMove(PartProgress.constant(0).apply(PartProgress.warmup, (a, b) -> Mathf.sin(4, 1) * b), 0.2f, 0, 0));
+                                            moves.addAll(new PartMove(PartProgress.constant(0).apply(PartProgress.warmup, (a, b) -> Mathf.sin(4, 1) * b), 0, 0.2f, 0));
+                                        }},
+                                        new RegionPart("-part-3") {{
+                                            outline = false;
+                                            layerOffset = 0.001f;
+                                            moveX = 9 / 4f;
+                                            moveY = 9 / 4f;
+                                            progress = pg2.curve(Interp.pow2In);
+                                            moves.addAll(new PartMove(PartProgress.constant(0).apply(PartProgress.warmup, (a, b) -> Mathf.sin(10 + 6, 1) * b), moveX / 2.5f, moveY / 2.5f, 0));
+                                            moves.addAll(new PartMove(PartProgress.constant(0).apply(PartProgress.warmup, (a, b) -> Mathf.sin(4, 1) * b), 0.2f, 0, 0));
+                                            moves.addAll(new PartMove(PartProgress.constant(0).apply(PartProgress.warmup, (a, b) -> Mathf.sin(4, 1) * b), 0, 0.2f, 0));
+                                        }},
+                                        new RegionPart("-part-4") {{
+                                            outline = false;
+                                            layerOffset = 0.001f;
+                                            moveX = -9 / 4f;
+                                            moveY = 9 / 4f;
+                                            progress = pg3.curve(Interp.pow2In);
+                                            moves.addAll(new PartMove(PartProgress.constant(0).apply(PartProgress.warmup, (a, b) -> Mathf.sin(10 + 8, 1) * b), moveX / 2.5f, moveY / 2.5f, 0));
+                                            moves.addAll(new PartMove(PartProgress.constant(0).apply(PartProgress.warmup, (a, b) -> Mathf.sin(4, 1) * b), 0.2f, 0, 0));
+                                            moves.addAll(new PartMove(PartProgress.constant(0).apply(PartProgress.warmup, (a, b) -> Mathf.sin(4, 1) * b), 0, 0.2f, 0));
+                                        }},
+                                        new RegionPart("-side-r") {{
+
+                                            x = 24 / 4f;
+                                            moveX = -24 / 4f;
+                                            progress = pg3.curve(Interp.pow2In);
+                                        }},
+
+                                        new RegionPart("-side-l") {{
+                                            x = -24 / 4f;
+                                            moveX = 24 / 4f;
+                                            progress = pg3.curve(Interp.pow2In);
+                                        }},
+                                        new RegionPart("-top") {{
+                                            layerOffset = 0.0001f;
+                                        /*moveRot = 180;
+                                        progress = PartProgress.reload.curve(Interp.smooth).apply(PartProgress.time, (t, o) -> (o * t/180f) % 1);*/
+                                        }}
+                                );
+                            }
+                        }
+                );
+                researchCostMultiplier = 0.4f;
+                buildType = subspaceEngineBuild::new;
+            }
+
+            public class subspaceEngineBuild extends PsychicGeneratorBuild {
+                @Override
+                public void draw() {
+                    super.draw();
+                    Draw.z(Layer.effect);
+                    float progress = Interp.pow2In.apply(Mathf.curve(warmup(), 0.8f, 1f));
+                    Tmp.v1.trns(90, hitSize() / 3.5f * progress);
+                    float ox = Tmp.v1.x, oy = Tmp.v1.y, sin = 1 - Mathf.absin(8, 0.1f);
+                    Draw.color(PsyColor);
+                    Drawn.wireCube(x + ox, y + oy, hitSize() / 3 * progress * 1.2f * sin, Time.time + 10f * progress, 1.5f, PsyColor);
+                    Draw.color(PsyColor);
+                    Fill.circle(x + ox, y + oy, hitSize() / 10 * progress * sin);
+                    Drawn.wireTorus(x + ox, y + oy, hitSize() / 1.3f * progress, 25, Time.time, 2 * sin, PsyColor);
+                    Drawn.wireTorus(x + ox, y + oy, hitSize() * progress, 40, -Time.time * 0.5f, 2 * sin, PsyColor);
+                }
+
+                public boolean createEffect = false;
+
+                @Override
+                public void updateTile() {
+                    super.updateTile();
+
+                    float progress = Interp.pow2In.apply(Mathf.curve(warmup(), 0.9f, 1f));
+                    Tmp.v2.trns(90, hitSize() / 4f * progress);
+                    float ox = Tmp.v2.x + x, oy = Tmp.v2.y + y, sin = 1 - Mathf.absin(10, 0.1f);
+
+                    if (warmup() > 0.9f && Mathf.chanceDelta(0.006f)) {
+                        WHFx.squareIn(90, PsyColor, 4, hitSize() / 2, 3).at(ox, oy);
+                        WHFx.trailBezier(90, PsyColor, 3, hitSize() / 2, 1.6f, 10, true).at(ox, oy);
+                    }
+
+                    if (warmup() > 0.9f && !createEffect) {
+                        WHFx.circleOut(45, PsyColor, hitSize()).at(ox, oy);
+                        WHFx.trailHitSpark(45, PsyColor, 5, hitSize(), 1.8f, 15).at(ox, oy);
+                        WHFx.trailBezier(45, PsyColor, 5, hitSize(), 1.6f, 10, false).at(ox, oy);
+                        createEffect = true;
+                    }
+                }
+            }
+
+            ;
+        };
 
         psychicConverter = new PsychicMultiCrafterBlock("psychic-converter") {{
             requirements(Category.power, with(WHItems.uranium, 100, WHItems.armorAlloy, 50, WHItems.ceramite, 100));
@@ -4156,13 +4271,18 @@ public final class WHBlocks {
             maxBoost = 2f;
             consumePower(300f / 60f);
             drawer = new DrawMulti(
-                    new DrawDefault(),
-                    new DrawCircles() {{
+
+                    new DrawCrucibleSquareFlame() {{
+                        flameColor = midColor = PsyColor;
+                        particles = 5;
+                        circleSpace = 4f;
+                    }},
+                    new DrawPulseShape() {{
                         color = WHPal.PsyColor;
-                        amount = 2;
-                        radius = 8f;
-                        strokeMax = 1.25f;
-                    }}
+                        stroke = 1.5f;
+                        square = false;
+                    }},
+                    new DrawDefault()
             );
             researchCostMultiplier = 0.35f;
         }};
@@ -4175,6 +4295,13 @@ public final class WHBlocks {
             researchCostMultiplier = 0.45f;
         }};
 
+        psySource = new PsychicSource("psychic-resource") {{
+            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 15, Items.silicon, 25, Items.metaglass, 20));
+            buildVisibility = BuildVisibility.sandboxOnly;
+            size = 1;
+            health = 320;
+            generationRate = 1000;
+        }};
 
         smallBattery = new Battery("small-battery") {
             {
@@ -4414,13 +4541,34 @@ public final class WHBlocks {
                 requirements(Category.effect, with(WHItems.cobaltNitride, 50, WHItems.ceramite, 100, WHItems.resonantCrystal, 50));
                 size = 4;
                 range = 360;
+                psychicPerUnit = 20;
                 consumePower(1200 / 60f);
                 researchCostMultiplier = 0.7f;
             }
         };
 
+        repairEquipment = new RepairTurret("repair-equipment") {{
+            requirements(Category.units, with(WHItems.cobalt, 100, Items.silicon, 150, Items.plastanium, 100));
+            size = 2;
+            length = 6f;
+            repairSpeed = 150 / 60f;
+            repairRadius = 160f;
 
-        repairTower = new RepairTower("energy-repair-tower") {
+            powerUse = 600f / 60f;
+
+            beamWidth = 1.1f;
+            pulseRadius = 6.1f;
+            coolantUse = 10 / 60f;
+            coolantMultiplier = 1.5f;
+
+            acceptCoolant = true;
+            ambientSoundVolume = 1.25f;
+
+            researchCostMultiplier = 0.5f;
+        }};
+
+
+        repairTower = new PsychicRepairTowerBlock("energy-repair-tower") {
             {
                 requirements(Category.effect, with(Items.plastanium, 400, WHItems.ceramite, 300, WHItems.entanglement, 200, WHItems.resonantCrystal, 200));
 
@@ -4435,52 +4583,15 @@ public final class WHBlocks {
                 squareSpinScl = 1.2f;
                 glowMag = 0.3f;
                 glowScl = 12f;
+
+                psychicCapacity = 100;
+                psychicUse = 15;
+
                 consumePower(1500 / 60f);
                 consumeLiquid(WHLiquids.refinePromethium, 10f / 60f);
                 researchCostMultiplier = 0.6f;
             }
-
-            public class RepairTowerBuild2 extends RepairTowerBuild {
-                @Override
-                public void draw() {
-                    super.draw();
-                }
-            }
         };
-
-        psychicRepairTower = new PsychicRepairTowerBlock("psychic-repair-tower") {{
-            requirements(Category.effect, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 90, WHItems.resonantCrystal, 70, WHItems.entanglement, 45, WHItems.ceramite, 80));
-            buildVisibility = BuildVisibility.sandboxOnly;
-            size = 3;
-            health = 1600;
-            range = 220f;
-            healAmount = 900f / 60f;
-            psychicCapacity = 180f;
-            psychicUse = 0.7f;
-            circleSpeed = 75f;
-            circleStroke = 8f;
-            squareRad = 8f;
-            squareSpinScl = 1.2f;
-            glowMag = 0.3f;
-            glowScl = 12f;
-            consumePower(900f / 60f);
-            drawer = new DrawMulti(
-                    new DrawDefault(),
-                    new DrawGlowRegion("-glow") {{
-                        color = Pal.heal;
-                        alpha = 0.45f;
-                        glowIntensity = 0.35f;
-                        glowScale = 10f;
-                    }},
-                    new DrawPulseShape() {{
-                        square = false;
-                        color = Pal.heal.cpy();
-                        stroke = 2.2f;
-                        radiusScl = 1.5f;
-                    }}
-            );
-            researchCostMultiplier = 0.5f;
-        }};
 
         voidShield = new BaseForceProjector("fortless-level-void-shield") {
             {

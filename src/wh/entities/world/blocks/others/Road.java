@@ -23,6 +23,8 @@ public class Road extends Block{
         underBullets = true;
         squareSprite = false;
         canPickup = false;
+        drawCached = true;
+        drawDynamic = false;
     }
 
     @Override
@@ -48,12 +50,16 @@ public class Road extends Block{
         @Override
         public void onProximityUpdate(){
             super.onProximityUpdate();
-            cachedRegionIndex = calcRegionIndex();
+            int next = calcRegionIndex();
+            if (!regionCached || next != cachedRegionIndex) {
+                cachedRegionIndex = next;
+                recache();
+            }
             regionCached = true;
         }
 
         @Override
-        public void draw(){
+        public void drawCached() {
             if(!regionCached){
                 cachedRegionIndex = calcRegionIndex();
                 regionCached = true;

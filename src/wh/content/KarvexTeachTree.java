@@ -566,23 +566,34 @@ public final class KarvexTeachTree {
             });
         });
 
-        node(WHBlocks.psySource, () -> {
             node(WHBlocks.psyNode, () -> {
-                node(WHBlocks.psyVoid, () -> {
+                node(WHBlocks.psyRouter, () -> {
+                    node(WHBlocks.psyContainer, () -> {
+                    });
+                    node(WHBlocks.psyTower, () -> {
+                    });
+                    node(WHBlocks.psychicOverflowGate, () -> {
+                    });
+                });
+
+
+                node(WHBlocks.psychicCollector, () -> {
                     node(WHBlocks.spiritualSiphon, () -> {
-                        node(WHBlocks.psyResonator, () -> {
-                            node(WHBlocks.psyAmplifier, () -> {
-                                node(WHBlocks.psySink, () -> {
-                                });
-                                node(WHBlocks.psyBeacon, () -> {
-                                });
-                            });
+                    });
+
+                    node(WHBlocks.psychicGenerator, () -> {
+                        node(WHBlocks.subspaceEngine, () -> {
+                        });
+                    });
+
+                    node(WHBlocks.psychicConverter, () -> {
+                        node(WHBlocks.psychicReorganizer, () -> {
                         });
                     });
                 });
+
             });
 
-        });
     }
 
     private static void buildDefenseBranch() {
@@ -619,12 +630,12 @@ public final class KarvexTeachTree {
                 }));
                 node(WHBlocks.selectProjector, () -> {
                 });
+                node(WHBlocks.shelterDome, () -> {
+                });
+            });
 
+            node(WHBlocks.repairEquipment, () -> {
                 node(WHBlocks.repairTower, () -> {
-                    node(WHBlocks.psychicRepairTower, () -> {
-                    });
-                    node(WHBlocks.shelterDome, () -> {
-                    });
                 });
             });
 

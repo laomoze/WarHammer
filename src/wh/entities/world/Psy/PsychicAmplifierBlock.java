@@ -102,4 +102,3 @@ public class PsychicAmplifierBlock extends PsychicBlock {
         }
     }
 }
-

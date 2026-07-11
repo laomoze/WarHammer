@@ -277,7 +277,6 @@ public class HeatDirectionBridge extends Block {
         public void draw() {
             Draw.rect(block.region, x, y);
             Draw.rect(dirRegion, x, y, rotdeg());
-
             Draw.z(Layer.power);
 
             Tile other = world.tile(link);

@@ -1,26 +1,40 @@
 
 package wh.entities.world.blocks.distribution;
 
-import arc.*;
-import arc.func.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.input.*;
-import mindustry.logic.*;
-import mindustry.type.*;
-import mindustry.world.*;
-import mindustry.world.blocks.*;
+import arc.Core;
+import arc.func.Boolf;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
+import arc.math.geom.Vec2;
+import arc.struct.Seq;
+import arc.util.Eachable;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.content.Blocks;
+import mindustry.entities.TargetPriority;
+import mindustry.entities.units.BuildPlan;
+import mindustry.gen.Building;
+import mindustry.gen.Sounds;
+import mindustry.gen.Teamc;
+import mindustry.gen.Unit;
+import mindustry.graphics.Layer;
+import mindustry.input.Placement;
+import mindustry.logic.LAccess;
+import mindustry.type.Item;
+import mindustry.world.Block;
+import mindustry.world.Edges;
+import mindustry.world.Tile;
+import mindustry.world.blocks.Autotiler;
 import mindustry.world.blocks.distribution.*;
-import mindustry.world.meta.*;
+import mindustry.world.meta.BlockGroup;
+import mindustry.world.meta.Stat;
+import mindustry.world.meta.StatUnit;
 
 import static mindustry.Vars.*;
 import static wh.core.WarHammerMod.name;
@@ -54,6 +68,8 @@ public class CoverdConveyor extends Block implements Autotiler{
         ambientSoundVolume = 0.0022f;
         unloadable = false;
         noUpdateDisabled = false;
+
+        drawCached = false;
     }
 
     @Override
@@ -167,6 +183,7 @@ public class CoverdConveyor extends Block implements Autotiler{
 
         public float clogHeat = 0f;
         public boolean capped, backCapped = false;
+        public boolean cacheValid;
 
         @Override
         public void draw(){
@@ -246,6 +263,13 @@ public class CoverdConveyor extends Block implements Autotiler{
         public void onProximityUpdate(){
             super.onProximityUpdate();
 
+            int prevBlendbits = blendbits;
+            int prevBlendsclx = blendsclx;
+            int prevBlendscly = blendscly;
+            int prevBlending = blending;
+            boolean prevCapped = capped;
+            boolean prevBackCapped = backCapped;
+
             int[] bits = buildBlending(tile, rotation, null, true);
             blendbits = bits[0];
             blendsclx = bits[1];
@@ -258,6 +282,12 @@ public class CoverdConveyor extends Block implements Autotiler{
             Building next = front(), prev = back();
             capped = next == null || next.team != team;
             backCapped = blendbits == 0 && (prev == null || prev.team != team);
+
+            if (!cacheValid || prevBlendbits != blendbits || prevBlendsclx != blendsclx || prevBlendscly != blendscly
+                    || prevBlending != blending || prevCapped != capped || prevBackCapped != backCapped) {
+                recache();
+                cacheValid = true;
+            }
         }
 
         @Override

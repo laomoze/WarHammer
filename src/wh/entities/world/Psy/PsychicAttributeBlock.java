@@ -1,8 +1,6 @@
 package wh.entities.world.Psy;
 
-import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Fill;
 import arc.graphics.g2d.Lines;
 import arc.math.Mathf;
 import arc.util.Strings;
@@ -145,18 +143,9 @@ public class PsychicAttributeBlock extends PsychicBlock {
         @Override
         public void draw() {
             super.draw();
-
             float stored = psychicFraction();
             float pulse = Mathf.absin(8f, 0.9f + warmup * 1.2f);
             float radius = block.size * tilesize * (0.34f + stored * 0.18f + warmup * 0.1f);
-
-            Draw.z(Layer.effect);
-            Draw.color(WHPal.PsyColor, Color.white, 0.1f + warmup * 0.16f);
-            Draw.alpha(0.14f + stored * 0.2f + warmup * 0.18f);
-            Lines.stroke(1f + warmup * 1.4f);
-            Lines.circle(x, y, radius + pulse * 0.16f);
-            Fill.square(x, y, radius * 0.36f + pulse * 0.08f, 45f);
-            Draw.reset();
 
             if (stored > 0.001f || warmup > 0.001f) {
                 Drawf.light(x, y, radius * 2.6f, WHPal.PsyColor, 0.18f + stored * 0.25f + warmup * 0.12f);
@@ -187,4 +176,3 @@ public class PsychicAttributeBlock extends PsychicBlock {
         }
     }
 }
-

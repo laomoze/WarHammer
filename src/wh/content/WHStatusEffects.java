@@ -72,13 +72,13 @@ public final class WHStatusEffects{
             speedMultiplier = 0.9f;
             damage = -900 / 60f;
             buildSpeedMultiplier = 1.1f;
-            effectChance = 0.05f;
+            effectChance = 0.03f;
             parentizeEffect = true;
-            applyEffect = effect = new Effect(120, e -> {
+            applyEffect = effect = new Effect(60, e -> {
                 Draw.color(Color.valueOf("F4EEADFF"));
                 if(!(e.data instanceof Unit u)) return;
                 rand.setSeed(e.id);
-                Lines.stroke(2 * e.fout());
+                Lines.stroke(2 * Mathf.curve(e.fin(), 0, 0.2f) * e.fout());
                 Lines.circle(e.x, e.y, u.hitSize / 2 * rand.random(0.3f, 1f) * e.fin() + 10f);
             });
             init(() -> {

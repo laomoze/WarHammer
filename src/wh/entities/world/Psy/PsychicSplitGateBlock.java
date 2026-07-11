@@ -18,8 +18,6 @@ import static mindustry.Vars.tilesize;
 
 public class PsychicSplitGateBlock extends PsychicNode {
     public float safePressure = 20f;
-    public float overPressureRange = 25f;
-    public float sideSplit = 0.35f;
     public float splitDamageThreshold = 0.999f;
 
     public PsychicSplitGateBlock(String name) {
@@ -79,21 +77,12 @@ public class PsychicSplitGateBlock extends PsychicNode {
         protected float sideFlowRatio() {
             Building main = links[outputSide()];
             if (!(main instanceof PsychicNetworkNode node) || !node.acceptEnergy(this)) {
-                return hasSideOutput() ? sideSplit : 0f;
+                return hasSideOutput() ? 1f : 0f;
             }
 
             float pressure = getEnergyPressure(node);
             if (pressure <= safePressure) return 0f;
-            return sideSplitScale(pressure);
-        }
-
-        protected boolean splitFullyActive() {
-            return sideFlowRatio() >= splitDamageThreshold && hasSideOutput();
-        }
-
-        protected float sideSplitScale(float pressure) {
-            float range = Math.max(overPressureRange, 0.0001f);
-            return sideSplit * Mathf.clamp((pressure - safePressure) / range);
+            return Mathf.clamp((pressure - safePressure) / Math.max(pressure, 0.0001f));
         }
 
         protected boolean hasSideOutput() {
@@ -241,7 +230,7 @@ public class PsychicSplitGateBlock extends PsychicNode {
 
         @Override
         protected boolean shouldTakeOverloadDamage() {
-            return overload >= 0.999f && splitFullyActive();
+            return overload >= 0.999f && sideFlowRatio() >= splitDamageThreshold && hasSideOutput();
         }
 
         @Override
@@ -289,4 +278,3 @@ public class PsychicSplitGateBlock extends PsychicNode {
         }
     }
 }
-

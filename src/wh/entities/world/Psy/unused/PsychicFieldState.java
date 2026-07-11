@@ -2,8 +2,8 @@ package wh.entities.world.Psy.unused;
 
 import arc.util.io.Reads;
 import arc.util.io.Writes;
+import mindustry.game.Team;
 import mindustry.gen.Groups;
-import mindustry.gen.Player;
 import mindustry.gen.Syncc;
 import wh.entities.WHBaseEntity;
 import wh.gen.EntityRegister;
@@ -97,7 +97,7 @@ public class PsychicFieldState extends WHBaseEntity implements Syncc {
     }
 
     @Override
-    public boolean isSyncHidden(Player player) {
+    public boolean isSyncHidden(Team team) {
         return true;
     }
 

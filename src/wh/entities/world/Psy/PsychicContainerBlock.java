@@ -20,7 +20,8 @@ public class PsychicContainerBlock extends PsychicBlock {
 
         @Override
         public float inputPotential() {
-            return psychicStored() * 0.2f;
+            // Storage should remain an attractive sink while it still has free capacity.
+            return psychicSpace() > PsychicNetworkNode.epsilon ? 0f : psychicStored();
         }
 
         @Override
@@ -43,4 +44,3 @@ public class PsychicContainerBlock extends PsychicBlock {
         }
     }
 }
-

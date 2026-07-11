@@ -1,21 +1,29 @@
 package wh.entities.world.blocks.defense;
 
-import arc.*;
-import arc.audio.*;
-import arc.func.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.world.meta.*;
+import arc.Core;
+import arc.audio.Sound;
+import arc.func.Cons;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Mathf;
+import arc.math.geom.Intersector;
+import arc.util.Time;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.content.Fx;
+import mindustry.entities.Effect;
+import mindustry.gen.Bullet;
+import mindustry.gen.Groups;
+import mindustry.gen.Sounds;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.world.meta.Stat;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.renderer;
+import static mindustry.Vars.tilesize;
 
 public class ReactionArmorShieldWall extends ReactionArmorWall{
     public float shieldHealth = 900f;
@@ -44,8 +52,7 @@ public class ReactionArmorShieldWall extends ReactionArmorWall{
             bullet.absorb();
             paramBlock.hitSound.at(bullet.x, bullet.y, 1f + Mathf.range(0.1f), paramBlock.hitSoundVolume);
             paramBlock.absorbEffect.at(bullet);
-            paramEntity.hit = 1f;
-            paramEntity.shield -= bullet.type.shieldDamage(bullet);
+            paramEntity.absorbBullet(bullet);
         }
     };
 
@@ -70,6 +77,11 @@ public class ReactionArmorShieldWall extends ReactionArmorWall{
     public class ReactionArmorShieldWallBuild extends ReactionArmorWallBuild{
         public float shield = shieldHealth, shieldRadius = 0f;
         public float breakTimer;
+
+        public void absorbBullet(Bullet bullet) {
+            hit = 1f;
+            shield -= bullet.type.shieldDamage(bullet);
+        }
 
         @Override
         public boolean canConsume(){
@@ -134,7 +146,7 @@ public class ReactionArmorShieldWall extends ReactionArmorWall{
 
             shieldRadius = Mathf.lerpDelta(shieldRadius, broken() ? 0f : 1f, 0.12f);
 
-            if(shield <= 0.00001f){
+            if (shield <= 0.00001f && breakTimer <= 0f) {
                 shield = 0;
                 breakTimer = breakCooldown;
                 breakSound.at(x, y);

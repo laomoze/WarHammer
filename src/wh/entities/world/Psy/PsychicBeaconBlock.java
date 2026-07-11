@@ -2,14 +2,12 @@ package wh.entities.world.Psy;
 
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Lines;
 import arc.math.Mathf;
 import arc.scene.ui.ImageButton;
 import arc.scene.ui.ScrollPane;
 import arc.scene.ui.layout.Table;
 import arc.struct.Seq;
 import arc.util.Strings;
-import arc.util.Time;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.content.StatusEffects;
@@ -17,7 +15,6 @@ import mindustry.entities.Units;
 import mindustry.game.Team;
 import mindustry.gen.Groups;
 import mindustry.graphics.Drawf;
-import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 import mindustry.logic.Ranged;
 import mindustry.type.StatusEffect;
@@ -41,7 +38,6 @@ public class PsychicBeaconBlock extends PsychicBlock {
     public float boost = 1.18f;
     public float statusDuration = 12f;
     public float warmupSpeed = 0.05f;
-    public boolean squareRange = true;
     public boolean preventOverlap = true;
     public StatusEffect defaultStatus = WHStatusEffects.assault;
     public Seq<BeaconRecipe> recipes = new Seq<>();
@@ -59,8 +55,8 @@ public class PsychicBeaconBlock extends PsychicBlock {
         });
     }
 
-    public void addRecipe(String name, StatusEffect status, float boost, float psychicUse, float duration) {
-        BeaconRecipe recipe = new BeaconRecipe(name, status, boost, psychicUse, duration);
+    public void addRecipe(StatusEffect status, float boost, float psychicUse, float duration) {
+        BeaconRecipe recipe = new BeaconRecipe(status, boost, psychicUse, duration);
         recipes.add(recipe);
         if (recipes.size == 1) {
             defaultStatus = status;
@@ -71,7 +67,7 @@ public class PsychicBeaconBlock extends PsychicBlock {
     }
 
     protected BeaconRecipe currentRecipe(int index) {
-        if (recipes.isEmpty()) return new BeaconRecipe("default", defaultStatus, boost, psychicUse, statusDuration);
+        if (recipes.isEmpty()) return new BeaconRecipe(defaultStatus, boost, psychicUse, statusDuration);
         return recipes.get(Mathf.clamp(index, 0, recipes.size - 1));
     }
 
@@ -116,7 +112,7 @@ public class PsychicBeaconBlock extends PsychicBlock {
         float worldX = x * tilesize + offset;
         float worldY = y * tilesize + offset;
         Team placeTeam = player == null ? Team.derelict : player.team();
-        boolean overlap = preventOverlap && overlapsAt(worldX, worldY, placeTeam, null);
+        boolean overlap = preventOverlap && overlapsAt(worldX, worldY, placeTeam);
         drawRange(worldX, worldY, !overlap);
         drawPlaceText(bundleFormat("bar.wh-psychic-beacon-range", Strings.autoFixed(range, 1)), x, y, valid && !overlap);
         if (overlap) {
@@ -128,26 +124,21 @@ public class PsychicBeaconBlock extends PsychicBlock {
     public boolean canPlaceOn(Tile tile, Team team, int rotation) {
         if (!super.canPlaceOn(tile, team, rotation)) return false;
         if (!preventOverlap) return true;
-        return !overlapsAt(tile.worldx() + offset, tile.worldy() + offset, team, null);
+        return !overlapsAt(tile.worldx() + offset, tile.worldy() + offset, team);
     }
 
     protected void drawRange(float worldX, float worldY, boolean valid) {
         float rangeWorld = range * tilesize;
         Draw.alpha(0.75f);
-        if (squareRange) {
-            Drawf.dashRect(valid ? Pal.heal : Pal.remove, worldX - rangeWorld, worldY - rangeWorld, rangeWorld * 2f, rangeWorld * 2f);
-        } else {
-            Drawf.dashCircle(worldX, worldY, rangeWorld, valid ? Pal.heal : Pal.remove);
-        }
+        Drawf.dashRect(valid ? Pal.heal : Pal.remove, worldX - rangeWorld, worldY - rangeWorld, rangeWorld * 2f, rangeWorld * 2f);
         Draw.reset();
     }
 
-    protected boolean overlapsAt(float worldX, float worldY, Team team, PsychicBeaconBuild self) {
+    protected boolean overlapsAt(float worldX, float worldY, Team team) {
         float rangeWorld = range * tilesize;
         final boolean[] overlap = {false};
         Groups.build.each(b -> {
             if (overlap[0] || b.team != team || !(b.block instanceof PsychicBeaconBlock block) || !b.isAdded()) return;
-            if (self != null && b == self) return;
             float otherRange = block.range * tilesize;
             if (Math.abs(b.x - worldX) < rangeWorld + otherRange && Math.abs(b.y - worldY) < rangeWorld + otherRange) {
                 overlap[0] = true;
@@ -156,15 +147,13 @@ public class PsychicBeaconBlock extends PsychicBlock {
         return overlap[0];
     }
 
-    public class BeaconRecipe {
-        public final String name;
+    public static class BeaconRecipe {
         public final StatusEffect status;
         public final float boost;
         public final float psychicUse;
         public final float duration;
 
-        public BeaconRecipe(String name, StatusEffect status, float boost, float psychicUse, float duration) {
-            this.name = name;
+        public BeaconRecipe(StatusEffect status, float boost, float psychicUse, float duration) {
             this.status = status == null ? StatusEffects.none : status;
             this.boost = boost;
             this.psychicUse = psychicUse;
@@ -249,18 +238,6 @@ public class PsychicBeaconBlock extends PsychicBlock {
         @Override
         public void draw() {
             super.draw();
-            if (warmup <= 0.001f) return;
-            Draw.z(Layer.effect);
-            Draw.color(WHPal.PsyColor, Color.white, 0.1f + warmup * 0.15f);
-            Draw.alpha(0.14f + warmup * 0.2f);
-            Lines.stroke(1f + warmup);
-            if (squareRange) {
-                Lines.square(x, y, range * tilesize * 0.45f, Time.time * 0.8f);
-            } else {
-                Lines.circle(x, y, range * tilesize * 0.45f);
-            }
-            Draw.reset();
-            Drawf.light(x, y, range * tilesize * 0.7f, WHPal.PsyColor, 0.14f + warmup * 0.16f);
         }
 
         @Override
@@ -295,9 +272,6 @@ public class PsychicBeaconBlock extends PsychicBlock {
 
         @Override
         public void read(Reads read, byte revision) {
-            // Legacy beacon saves were incorrectly tagged as version 1 while already writing
-            // the full PsychicBuild payload. Read them with the current parent layout to keep
-            // the stream aligned, otherwise the rest of the map chunk is misparsed.
             super.read(read, revision >= 1 ? (byte) 4 : revision);
 
             if (revision >= 1) {

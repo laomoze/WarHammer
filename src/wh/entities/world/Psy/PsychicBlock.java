@@ -35,9 +35,8 @@ public abstract class PsychicBlock extends Block {
     public float overloadDecay = 0.03f;
     public float overloadBlockScale = 0.35f;
     public float pressurePotentialScale = 0.12f;
-    public float stabilityResidentRelief = 0.5f;
+    public float stabilityDragRelief = 0.5f;
     public float overloadTransferPenalty = 0.8f;
-    public float stabilityTransferBonus = 0.4f;
     public float pressureTransferBonus = 0.5f;
     public float minTransferScale = 0.25f;
     public float maxTransferScale = 1.75f;
@@ -56,6 +55,7 @@ public abstract class PsychicBlock extends Block {
         destructible = true;
         sync = true;
         squareSprite = false;
+        canOverdrive = false;
     }
 
     @Override
@@ -182,7 +182,7 @@ public abstract class PsychicBlock extends Block {
 
         @Override
         public float inputPotential() {
-            return psychicStored();
+            return psychicSpace() > PsychicNetworkNode.epsilon ? 0f : psychicStored();
         }
 
         @Override
@@ -257,9 +257,9 @@ public abstract class PsychicBlock extends Block {
         }
 
         @Override
-        public float resident() {
+        public float drag() {
             float overloadLoad = overload * PsychicBlock.this.overloadBlockScale;
-            float relief = networkStability * PsychicBlock.this.stabilityResidentRelief;
+            float relief = networkStability * PsychicBlock.this.stabilityDragRelief;
             return Math.max(overloadLoad * (1f - relief), 0f);
         }
 
@@ -267,7 +267,6 @@ public abstract class PsychicBlock extends Block {
         public float energyTransferScale() {
             float scale = 1f;
             scale -= overload * PsychicBlock.this.overloadTransferPenalty;
-            scale += networkStability * PsychicBlock.this.stabilityTransferBonus;
             scale += pressureBoost * PsychicBlock.this.pressureTransferBonus;
             return Mathf.clamp(scale, PsychicBlock.this.minTransferScale, PsychicBlock.this.maxTransferScale);
         }

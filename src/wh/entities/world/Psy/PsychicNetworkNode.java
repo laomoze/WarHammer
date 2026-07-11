@@ -39,7 +39,7 @@ public interface PsychicNetworkNode {
         return getEnergyPotential();
     }
 
-    default float resident() {
+    default float drag() {
         return 0f;
     }
 
@@ -63,7 +63,7 @@ public interface PsychicNetworkNode {
         float pressure = getEnergyPressure(next);
         if (pressure <= epsilon) return 0f;
 
-        float usablePressure = pressure - next.resident();
+        float usablePressure = pressure - next.drag();
         if (usablePressure <= epsilon) return 0f;
 
         float safeBudget = Math.max(budget, epsilon);

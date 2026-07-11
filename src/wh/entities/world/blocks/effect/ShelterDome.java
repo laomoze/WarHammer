@@ -42,8 +42,8 @@ import wh.ui.PsychicStatValues;
 import static mindustry.Vars.*;
 
 public class ShelterDome extends PayloadBlock{
-    public float psychicCapacity = 40f;
-    public float psychicPerUnit = 15f;
+    public float psychicCapacity = 50;
+    public float psychicPerUnit = 10f;
     public float maxPayloadSize = 3.9f;
     public float range = 160f;
     public float blockMaxSpeedBoost = 1.5f;

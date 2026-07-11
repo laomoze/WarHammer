@@ -202,6 +202,11 @@ public class HeatBelt extends Block implements Autotiler {
         }
 
         @Override
+        public void drawCached() {
+            super.drawCached();
+        }
+
+        @Override
         public void draw() {
             float rotation = rotdeg();
             int r = this.rotation;

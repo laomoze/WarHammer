@@ -1,12 +1,19 @@
 package wh.pipelinePlanet.karvex;
 
-import arc.math.*;
-import mindustry.content.*;
-import mindustry.game.*;
-import mindustry.world.*;
-import wh.content.*;
-import wh.pipelinePlanet.core.*;
-import wh.pipelinePlanet.data.*;
+import arc.math.Mathf;
+import arc.math.Rand;
+import mindustry.content.Blocks;
+import mindustry.content.Loadouts;
+import mindustry.game.Schematic;
+import mindustry.game.Schematics;
+import mindustry.game.Team;
+import mindustry.game.Waves;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import wh.content.WHBlocksEnvironment;
+import wh.pipelinePlanet.core.GenContext;
+import wh.pipelinePlanet.core.GenPass;
+import wh.pipelinePlanet.data.RoomAnchor;
 
 import static mindustry.Vars.*;
 
@@ -107,7 +114,6 @@ public class KarvexFinalizePass implements GenPass{
         if(ctx.sector.hasEnemyBase()){
             state.rules.attackMode = true;
             state.rules.waves = true;
-            state.rules.showSpawns = true;
             state.rules.spawns = Waves.generate(difficulty, new Rand(ctx.sector.id), true, true, false);
         }else{
             state.rules.attackMode = false;

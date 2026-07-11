@@ -584,7 +584,7 @@ public class RiftSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc{
     }
 
     @Override
-    public boolean isSyncHidden(Player player){
+    public boolean isSyncHidden(Team team) {
         return false;
     }
 

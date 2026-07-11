@@ -15,6 +15,7 @@ import mindustry.type.ItemStack;
 import mindustry.type.LiquidStack;
 import mindustry.ui.Styles;
 import mindustry.world.consumers.Consume;
+import mindustry.world.consumers.ConsumePower;
 import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatUnit;
 import mindustry.world.meta.Stats;
@@ -42,6 +43,19 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
     public PsychicMultiCrafterBlock(String name) {
         super(name);
         sync = true;
+    }
+
+    @Override
+    public void init() {
+        ConsumePower sharedPower = findConsumer(consume -> consume instanceof ConsumePower);
+        if (sharedPower != null) {
+            for (CraftPlan plan : craftPlans) {
+                if (plan.consPower == null) {
+                    plan.consume(sharedPower);
+                }
+            }
+        }
+        super.init();
     }
 
     @Override
@@ -146,7 +160,7 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
     protected void buildPsychicCostLine(Table table, float cost, float iconSize) {
         table.left().defaults().left();
         table.add(new Image(PsychicImage.region())).size(iconSize).scaling(Scaling.fit).padRight(2f);
-        addOutline(table, "[accent]" + Strings.autoFixed(cost, 2) + "[]/[lightgray]次[]").left();
+        addOutline(table, "[accent]" + Strings.autoFixed(cost, 2) + "[]/[lightgray]娆]").left();
     }
 
     protected void buildPsychicOutputLine(Table table, CraftPlan plan, float cost, float iconSize, float psychicWidth, float gap) {
@@ -174,7 +188,7 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
     protected void buildPsychicDetailLine(Table table, CraftPlan plan) {
         table.left().defaults().left().padRight(10f);
         addOutline(table, "[lightgray]" + Core.bundle.get("stat.productiontime") + "[] " + Strings.autoFixed(plan.craftTime / 60f, 2) + " " + StatUnit.seconds.localized()).left();
-        addOutline(table, "[lightgray]" + WHStats.psychicConsumption.localized() + "[] " + Strings.autoFixed(psychicUsePerSecond(plan), 2) + "/秒").left();
+        addOutline(table, "[lightgray]" + WHStats.psychicConsumption.localized() + "[] " + Strings.autoFixed(psychicUsePerSecond(plan), 2) + " " + StatUnit.perSecond.localized()).left();
     }
 
     protected void buildItemOutput(Table table, ItemStack stack, float craftTime) {
@@ -184,14 +198,14 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
         addOutline(table, stack.item.localizedName).left().padRight(6f);
         addOutline(table, "[lightgray]x" + stack.amount + "[]").left().padRight(8f);
         addOutline(table, "[gray]|[]").left().padRight(8f);
-        addOutline(table, "[lightgray]" + Strings.autoFixed(perSecond, 3) + "/秒[]").left();
+        addOutline(table, "[lightgray]" + Strings.autoFixed(perSecond, 3) + " " + StatUnit.perSecond.localized() + "[]").left();
     }
 
     protected void buildLiquidOutput(Table table, LiquidStack stack) {
         table.left().defaults().left();
         table.image(stack.liquid.fullIcon).size(22f).scaling(Scaling.fit).padRight(5f);
         addOutline(table, stack.liquid.localizedName).left().padRight(6f);
-        addOutline(table, "[lightgray]" + Strings.autoFixed(stack.amount, 3) + "/秒[]").left();
+        addOutline(table, "[lightgray]" + Strings.autoFixed(stack.amount, 3) + " " + StatUnit.perSecond.localized() + "[]").left();
     }
 
     protected arc.scene.ui.layout.Cell<?> addOutline(Table table, String text) {
@@ -238,7 +252,7 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
 
         @Override
         public float inputPotential() {
-            return psychicStored();
+            return psychicSpace() > PsychicNetworkNode.epsilon ? 0f : psychicStored();
         }
 
         public float psychicSpace() {
@@ -304,7 +318,7 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
         }
 
         @Override
-        public float resident() {
+        public float drag() {
             return overload * overloadBlockScale;
         }
 

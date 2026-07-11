@@ -1,24 +1,44 @@
 package wh.entities.world.blocks.distribution;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.content.*;
-import mindustry.core.*;
-import mindustry.entities.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.input.*;
-import mindustry.type.*;
-import mindustry.world.*;
-import mindustry.world.blocks.distribution.StackConveyor.*;
-import mindustry.world.meta.*;
+import arc.Core;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Angles;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
+import arc.struct.IntSeq;
+import arc.struct.Queue;
+import arc.struct.Seq;
+import arc.util.Eachable;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.Tmp;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.content.Fx;
+import mindustry.core.Renderer;
+import mindustry.entities.Effect;
+import mindustry.entities.TargetPriority;
+import mindustry.entities.units.BuildPlan;
+import mindustry.gen.Building;
+import mindustry.gen.Teamc;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.input.Placement;
+import mindustry.type.Item;
+import mindustry.type.ItemStack;
+import mindustry.world.Block;
+import mindustry.world.Edges;
+import mindustry.world.Tile;
+import mindustry.world.blocks.distribution.StackConveyor.StackConveyorBuild;
+import mindustry.world.meta.BlockGroup;
+import mindustry.world.meta.Stat;
+import mindustry.world.meta.StatUnit;
 
 import static mindustry.Vars.*;
 
@@ -261,7 +281,6 @@ public class StackBridge extends Block{
             Tile otherLink = linked ? other : tile;
             int rel = (linked ? tile : other).absoluteRelativeTo(otherLink.x, otherLink.y);
 
-            // 先画灰色底线
             Draw.color(Pal.gray);
             Lines.stroke(2.5f);
             Lines.square(ox, oy, 2f, 45f);
@@ -270,7 +289,6 @@ public class StackBridge extends Block{
 
             float color = (linked ? Pal.place : Pal.accent).toFloatBits();
 
-            // 再画高亮前景线
             Draw.color(color);
             Lines.stroke(1f);
             Lines.line(tx + Tmp.v2.x, ty + Tmp.v2.y, ox - Tmp.v2.x, oy - Tmp.v2.y);
@@ -470,7 +488,6 @@ public class StackBridge extends Block{
 
         public boolean transitMode(){
             Tile next = world.tile(link);
-            // 仅中间桥启用“直通队列模式”：有上游输入且下游仍是桥。
             return !incoming.isEmpty() && linkValid(tile, next) && next.build instanceof StackBridgeBuild;
         }
 
@@ -479,7 +496,6 @@ public class StackBridge extends Block{
             float bridgeTime = bridgeSeg * frame;
 
             for(int i = 0; i < bridgeItems.size; i++){
-                // 每个包保持最小间距，形成稳定流水线，避免尾包追头包。
                 float maxProgressLimit = bridgeTime - i * frame;
                 float progress = bridgeItems.get(i).progress;
                 if(progress < maxProgressLimit){
@@ -490,7 +506,6 @@ public class StackBridge extends Block{
 
             ItemStacker first = bridgeItems.first();
             if(first.progress > bridgeTime){
-                // 超出的进度带到下一个桥，连接处不会突然停顿。
                 float carry = first.progress - bridgeTime;
                 int accepted = other.acceptBridge(first.itemStack.item, first.itemStack.amount);
                 if(accepted > 0){
@@ -509,7 +524,6 @@ public class StackBridge extends Block{
         public int acceptBridge(Item item, int count){
             if(count <= 0) return 0;
             if(items.any() && !items.has(item)) return 0;
-            if(!bridgeItems.isEmpty() && bridgeItems.last().itemStack.item != item) return 0;
 
             if(transitMode()){
                 // 中继桥按“在途包数量”限流，避免中间桥堆太多缓存。

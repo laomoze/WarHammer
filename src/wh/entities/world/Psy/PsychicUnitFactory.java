@@ -124,7 +124,7 @@ public class PsychicUnitFactory extends UnitFactory {
 
         @Override
         public float inputPotential() {
-            return psychicStored();
+            return psychicSpace() > PsychicNetworkNode.epsilon ? 0f : psychicStored();
         }
 
         public float psychicSpace() {
@@ -194,7 +194,7 @@ public class PsychicUnitFactory extends UnitFactory {
         }
 
         @Override
-        public float resident() {
+        public float drag() {
             return overload * overloadBlockScale;
         }
 
