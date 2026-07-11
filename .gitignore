@@ -185,3 +185,5 @@ core/assets-raw/sprites/ui/sectors/*.json
 
 # decompiler outputs / local reverse-engineering artifacts
 tools/decompiled/
+tmp_bundle_blocks_only.txt
+tmp_whblock_names.txt
