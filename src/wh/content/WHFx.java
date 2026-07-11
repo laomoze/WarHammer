@@ -244,6 +244,20 @@ public final class WHFx {
         });
     }
 
+    public static Effect squareIn(float lifetime, Color color, int num, float range, float size) {
+        return new Effect(lifetime, (e) -> {
+            color(color);
+            rand.setSeed(e.id);
+            int intensity = WHSettings.detailCount(num, 1);
+            drawHeightCircles(e.id, intensity, e.x, e.y, e.fout(Interp.pow2In) * range * tilesize, e.rotation, 360f,
+                    range * 0.02f, e.fout(), (x, y, height) -> {
+                        float s = Mathf.curve(e.fin(), 0f, 0.1f) * e.fout(Interp.smooth) * (size + rand.range(size / 3.0F));
+                        Fill.square(x, y, s, 45.0F);
+                        Drawf.light(x, y, s * 2.25F, color, 0.7F);
+                    });
+        });
+    }
+
     public static Effect tri(float lifetime, Color color, int num, float range, float size) {
         return new Effect(lifetime, (e) -> {
             color(color);
@@ -296,8 +310,12 @@ public final class WHFx {
             rand.setSeed(e.id);
             int intensity = WHSettings.detailCount(num, 1);
             color(color, to, e.fout() * 0.3F);
-            randLenVectors(e.id, intensity, e.finpow() * range, e.rotation, 360.0F, (x, y) -> {
+           /* randLenVectors(e.id, intensity, e.finpow() * range, e.rotation, 360.0F, (x, y) -> {
                 Fill.circle(e.x + x, e.y + y, e.fout() * size * rand.random(0.5f, 1.5f));
+            });*/
+
+            drawHeightCircles(e.id, intensity, e.x, e.y, e.finpow() * range, e.rotation, 360f, range * 0.02f, e.finpow(), (x, y, height) -> {
+                Fill.circle(/*e.x +*/ x, /*e.y +*/ y, e.fout() * size * rand.random(0.5f, 1.5f));
             });
         });
     }
@@ -309,8 +327,11 @@ public final class WHFx {
             rand.setSeed(e.id);
             float rot = rand.random(rotation * 1.5f);
             color(color, to, e.fout() * 0.3F);
-            randLenVectors(e.id, intensity, e.finpow() * range, e.rotation, 360.0F, (x, y) -> {
+           /* randLenVectors(e.id, intensity, e.finpow() * range, e.rotation, 360.0F, (x, y) -> {
                 Fill.poly(e.x + x, e.y + y, sides, e.fout() * size * 0.85F, (rot + rotation) * Mathf.curve(e.fin(), 0, 0.5f));
+            });*/
+            drawHeightCircles(e.id, intensity, e.x, e.y, e.finpow() * range, e.rotation, 360f, range * 0.02f, e.finpow(), (x, y, height) -> {
+                Fill.poly(x, y, sides, e.fout() * size * 0.85F, (rot + rotation) * Mathf.curve(e.fin(), 0, 0.5f));
             });
         });
     }

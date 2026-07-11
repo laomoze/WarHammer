@@ -61,6 +61,9 @@ public class PsyStorageBlock extends StorageBlock {
         update = true;
         sync = true;
         itemCapacity = 0;
+        hasPower = true;
+        drawCached = false;
+        drawDynamic = true;
     }
 
     @Override
@@ -166,6 +169,11 @@ public class PsyStorageBlock extends StorageBlock {
         public void draw() {
             drawer.draw(this);
             drawCoreLink();
+        }
+
+        @Override
+        public void drawCached() {
+            super.drawCached();
         }
 
         @Override
@@ -314,7 +322,7 @@ public class PsyStorageBlock extends StorageBlock {
         public void drawSelect() {
             super.drawSelect();
             drawLinkArea(x, y);
-            if (remoteCore != null) {
+            if (hasCoreLink()) {
                 Drawf.square(remoteCore.x, remoteCore.y, remoteCore.block.size * tilesize / 2f + 3f, WHPal.PsyColor);
             }
         }
