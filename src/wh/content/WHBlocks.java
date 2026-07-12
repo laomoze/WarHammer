@@ -3680,7 +3680,7 @@ public final class WHBlocks {
         }};
 
         psyContainer = new PsychicContainerBlock("psychic-container") {{
-            requirements(Category.power, with(Items.plastanium, 200, WHItems.culverCrystal, 50, WHItems.cobaltNitride, 40, WHItems.entanglement, 50));
+            requirements(Category.power, with(Items.plastanium, 200, WHItems.manganeseSteel, 100, WHItems.cobaltNitride, 40, WHItems.entanglement, 50));
             size = 3;
             health = 2000;
             psychicCapacity = 1500;
@@ -3703,9 +3703,9 @@ public final class WHBlocks {
 
 
         spiritualSiphon = new PsychicRequiemBlock("spiritual-siphon") {{
-            requirements(Category.power, with(WHItems.ceramite, 150, WHItems.entanglement, 50, WHItems.culverCrystal, 70));
+            requirements(Category.power, with(WHItems.manganeseSteel, 125, WHItems.ceramite, 100, WHItems.entanglement, 75, WHItems.culverCrystal, 70));
             size = 3;
-            health = 1000;
+            health = 1500;
             psychicCapacity = 100;
             passivePsychicLoss = 0.2f;
             deathRange = 30;
@@ -3749,7 +3749,7 @@ public final class WHBlocks {
 
 
         psyBeacon = new PsychicBeaconBlock("psychic-beacon") {{
-            requirements(Category.power, with(Items.carbide, 300, WHItems.entanglement, 150, WHItems.resonantCrystal, 150));
+            requirements(Category.power, with(Items.carbide, 300, WHItems.entanglement, 150, WHItems.molybdenumAlloy, 150, WHItems.resonantCrystal, 200));
             buildVisibility = BuildVisibility.sandboxOnly;
             size = 3;
             health = 2500;
@@ -3877,7 +3877,7 @@ public final class WHBlocks {
         }};
 
         psychicGenerator = new PsychicGeneratorBlock("psychic-generator") {{
-            requirements(Category.power, with(WHItems.cobalt, 50, Items.carbide, 20, WHItems.armorAlloy, 50));
+            requirements(Category.power, with(WHItems.ceramite, 50, WHItems.cobalt, 50, Items.carbide, 50, WHItems.armorAlloy, 50));
 
             size = 3;
             health = 900;
@@ -3926,7 +3926,7 @@ public final class WHBlocks {
 
         subspaceEngine = new PsychicGeneratorBlock("subspace-engine") {
             {
-                requirements(Category.power, with(WHItems.ceramite, 500, WHItems.molybdenumAlloy, 500, WHItems.protocolChip, 200, WHItems.sealedPromethium, 400));
+                requirements(Category.power, with(WHItems.ceramite, 1000, WHItems.molybdenumAlloy, 500, WHItems.culverCrystal, 200, WHItems.protocolChip, 500, WHItems.sealedPromethium, 600));
 
                 size = 5;
                 health = 10000;
@@ -3944,7 +3944,7 @@ public final class WHBlocks {
                 craftTime = 90;
                 psychicPerCraft = 90;
                 psychicCapacity = 500;
-                warmupSpeed = 0.002f;
+                warmupSpeed = 0.0015f;
 
                 consumePower(2000 / 60f);
                 consumeItems(with(WHItems.sealedPromethium, 2));
@@ -4077,19 +4077,17 @@ public final class WHBlocks {
 
                     if (warmup() > 0.9f && Mathf.chanceDelta(0.006f)) {
                         WHFx.squareIn(90, PsyColor, 4, hitSize() / 2, 3).at(ox, oy);
-                        WHFx.trailBezier(90, PsyColor, 3, hitSize() / 2, 1.6f, 10, true).at(ox, oy);
+                        WHFx.trailBezier(90, PsyColor, 3, hitSize(), 1.6f, 15, true).at(ox, oy);
                     }
 
-                    if (warmup() > 0.9f && !createEffect) {
+                    if (warmup() > 0.98f && !createEffect) {
                         WHFx.circleOut(45, PsyColor, hitSize()).at(ox, oy);
                         WHFx.trailHitSpark(45, PsyColor, 5, hitSize(), 1.8f, 15).at(ox, oy);
-                        WHFx.trailBezier(45, PsyColor, 5, hitSize(), 1.6f, 10, false).at(ox, oy);
+                        WHFx.trailBezier(45, PsyColor, 5, hitSize() * 2, 1.6f, 10, false).at(ox, oy);
                         createEffect = true;
                     }
                 }
             }
-
-            ;
         };
 
         psychicConverter = new PsychicMultiCrafterBlock("psychic-converter") {{
@@ -4166,11 +4164,11 @@ public final class WHBlocks {
                     new PsychicCraftPlan() {{
                         craftTime = 240;
                         psychicCost = 25 * craftTime / 60;
-                        outputItems = with(WHItems.vibranium, 2);
+                        outputItems = with(WHItems.vibranium, 3);
 
                     }}
             );
-            consumePower(500 / 60f);
+            consumePower(300.0001f / 60f);
             researchCostMultiplier = 0.2f;
         }};
 
@@ -4240,23 +4238,23 @@ public final class WHBlocks {
                         outputItems = with(WHItems.culverCrystal, 1);
                     }},
                     new PsychicCraftPlan() {{
-                        craftTime = 180;
+                        craftTime = 200;
                         psychicCost = 30 * craftTime / 60;
                         outputItems = with(WHItems.molybdenumAlloy, 1);
                     }},
                     new PsychicCraftPlan() {{
-                        craftTime = 300;
+                        craftTime = 240;
                         psychicCost = 35 * craftTime / 60;
                         outputItems = with(WHItems.refineCeramite, 1);
                     }}
             );
 
-            consumePower(1000 / 60f);
+            consumePower(600 / 60f);
             researchCostMultiplier = 0.2f;
         }};
 
         psychicCollector = new PsychicAttributeBlock("psychic-collector") {{
-            requirements(Category.power, with(WHItems.cobaltNitride, 35, WHItems.resonantCrystal, 20, WHItems.ceramite, 25, Items.metaglass, 40));
+            requirements(Category.power, with(Items.graphite, 90, WHItems.cobaltNitride, 35, WHItems.armorAlloy, 25, Items.metaglass, 40));
             size = 3;
             health = 800;
             hasPower = true;
@@ -4267,9 +4265,9 @@ public final class WHBlocks {
             secondaryScale = 0.5f;
             attributeRadius = 1;
             baseEfficiency = 0f;
-            boostScale = 0.25f;
-            maxBoost = 2f;
-            consumePower(300f / 60f);
+            boostScale = 0.5f;
+            maxBoost = 3f;
+            consumePower(200f / 60f);
             drawer = new DrawMulti(
 
                     new DrawCrucibleSquareFlame() {{
@@ -4288,18 +4286,16 @@ public final class WHBlocks {
         }};
 
         psyVoid = new PsychicVoid("psychic-void") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 50, WHItems.resonantCrystal, 45, Items.phaseFabric, 25, Items.silicon, 90));
             buildVisibility = BuildVisibility.sandboxOnly;
             size = 1;
-            health = 520;
+            health = 114514;
             researchCostMultiplier = 0.45f;
         }};
 
         psySource = new PsychicSource("psychic-resource") {{
-            requirements(Category.power, BuildVisibility.sandboxOnly, with(WHItems.cobaltNitride, 15, Items.silicon, 25, Items.metaglass, 20));
             buildVisibility = BuildVisibility.sandboxOnly;
             size = 1;
-            health = 320;
+            health = 1919810;
             generationRate = 1000;
         }};
 
@@ -4825,18 +4821,18 @@ public final class WHBlocks {
 
             size = 7;
             consumePower(30f);
-            consumeLiquid(WHLiquids.refinePromethium, 30 / 60f);
+            consumeLiquid(WHLiquids.refinePromethium, 15 / 60f);
             createSound = Sounds.unitCreateBig;
 
-            constructTime = 60f * 70f;
+            constructTime = 90f * 70f;
 
-            addUpgrade(WHUnitTypes.M3, WHUnitTypes.M4A, with(WHItems.armorAlloy, 200, WHItems.ceramite, 300, Items.silicon, 800));
+            addUpgrade(WHUnitTypes.M3, WHUnitTypes.M4A, with(WHItems.armorAlloy, 200, WHItems.ceramite, 200, Items.silicon, 800));
 
-            addUpgrade(WHUnitTypes.airA3, WHUnitTypes.airA4, with(WHItems.armorAlloy, 300, WHItems.ceramite, 300, Items.silicon, 800));
-            addUpgrade(WHUnitTypes.airB3, WHUnitTypes.airB4, with(WHItems.armorAlloy, 300, WHItems.ceramite, 150, Items.silicon, 1100));
+            addUpgrade(WHUnitTypes.airA3, WHUnitTypes.airA4, with(WHItems.armorAlloy, 250, WHItems.ceramite, 300, Items.silicon, 800));
+            addUpgrade(WHUnitTypes.airB3, WHUnitTypes.airB4, with(WHItems.armorAlloy, 250, WHItems.ceramite, 150, Items.silicon, 1100));
 
-            addUpgrade(WHUnitTypes.Mecha3, WHUnitTypes.Mecha4, with(WHItems.molybdenumAlloy, 250,
-                    WHItems.ceramite, 400, WHItems.resonantCrystal, 100, Items.silicon, 800));
+            addUpgrade(WHUnitTypes.Mecha3, WHUnitTypes.Mecha4, with(WHItems.molybdenumAlloy, 100,
+                    WHItems.ceramite, 300, WHItems.resonantCrystal, 100, Items.silicon, 800));
 
             researchCostMultiplier = 0.75f;
         }};

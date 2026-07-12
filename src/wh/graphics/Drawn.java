@@ -914,7 +914,7 @@ public final class Drawn{
 
         lastEnd.add(offset.trns(
         rand.random(360f) + Time.time / 2f,
-        Mathf.sin(Time.time + rand.random(200f), 15f / Math.max(build.efficiency, 0.00001f), rand.random(0.2f * tilesize, 0.7f * tilesize))
+                Mathf.sin(Time.time + rand.random(200f), 15f, rand.random(0.2f * tilesize, 0.7f * tilesize))
         ).rotate(0));
 
         lastEnd.add(originX, originY);
@@ -923,7 +923,7 @@ public final class Drawn{
             Draw.alpha(strength);
             Lines.stroke(beamWidth * strength, laserColor);
             Lines.line(originX, originY, lastEnd.x, lastEnd.y);
-            Fill.circle(lastEnd.x, lastEnd.y, 0.7f);
+            Fill.circle(lastEnd.x, lastEnd.y, 0.7f * strength);
             Draw.color();
         }
     }

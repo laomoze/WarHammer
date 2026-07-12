@@ -28,9 +28,9 @@ import wh.ui.PsychicStatValues;
 import wh.ui.UIUtils;
 
 public class PsychicMultiCrafterBlock extends MultiCrafter {
-    protected static final float statsPsychicWidth = 124f;
-    protected static final float configPsychicWidth = 116f;
-    protected static final float recipeTextScale = 1.18f;
+    protected static final float statsPsychicWidth = 150f;
+    protected static final float configPsychicWidth = 140f;
+    protected static final float recipeTextScale = 1f;
 
     public float psychicCapacity = 180f;
     public float passivePsychicLoss = 0f;
@@ -160,7 +160,7 @@ public class PsychicMultiCrafterBlock extends MultiCrafter {
     protected void buildPsychicCostLine(Table table, float cost, float iconSize) {
         table.left().defaults().left();
         table.add(new Image(PsychicImage.region())).size(iconSize).scaling(Scaling.fit).padRight(2f);
-        addOutline(table, "[accent]" + Strings.autoFixed(cost, 2) + "[]/[lightgray]娆]").left();
+        addOutline(table, "[accent]" + Strings.autoFixed(cost, 2) + "[] [lightgray]灵能/次[]").left();
     }
 
     protected void buildPsychicOutputLine(Table table, CraftPlan plan, float cost, float iconSize, float psychicWidth, float gap) {

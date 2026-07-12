@@ -1,12 +1,18 @@
 package wh.entities.world.drawer.factory;
 
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.util.*;
-import mindustry.gen.*;
-import mindustry.world.draw.*;
-import wh.core.*;
+import arc.graphics.Blending;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.Lines;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.math.Rand;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.gen.Building;
+import mindustry.world.draw.DrawBlock;
+import wh.core.WHSettings;
 
 public class DrawArcs extends DrawBlock {
     public Rand rand2 = new Rand();
@@ -14,7 +20,7 @@ public class DrawArcs extends DrawBlock {
     public float flameRad = 5f, circleSpace = 2f, flameRadiusScl = 3f, flameRadiusMag = 0.3f, circleStroke = 1.5f;
     public float alpha = 0.68f;
     public int arcs = 20, arcPoints = 10;
-    public float arcLife = 15f, arcRad = 18f, arcStroke = 1f, arcRange = 1.5f;
+    public float arcLife = 15f, arcRad = 18f, arcStroke = 1f, arcRange = 2;
     public boolean drawCenter = true;
     public Blending blending = Blending.additive;
 

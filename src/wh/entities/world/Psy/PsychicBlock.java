@@ -33,10 +33,10 @@ public abstract class PsychicBlock extends Block {
     public float psychicCapacity = 60f;
     public float passivePsychicLoss = 0f;
     public float overloadDecay = 0.03f;
-    public float overloadBlockScale = 0.35f;
+    public float overloadBlockScale = 0.5f;
     public float pressurePotentialScale = 0.12f;
     public float stabilityDragRelief = 0.5f;
-    public float overloadTransferPenalty = 0.8f;
+    public float overloadTransferPenalty = 0.2f;
     public float pressureTransferBonus = 0.5f;
     public float minTransferScale = 0.25f;
     public float maxTransferScale = 1.75f;

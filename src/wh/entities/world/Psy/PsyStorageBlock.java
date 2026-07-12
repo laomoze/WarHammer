@@ -64,6 +64,7 @@ public class PsyStorageBlock extends StorageBlock {
         hasPower = true;
         drawCached = false;
         drawDynamic = true;
+        canOverdrive = false;
     }
 
     @Override

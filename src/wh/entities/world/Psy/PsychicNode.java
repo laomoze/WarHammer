@@ -61,6 +61,9 @@ public class PsychicNode extends PsychicBlock {
     public float flowMemoryDecay = 0.025f;
     public float downstreamPressureBoost = 0.55f;
 
+    public float overloadFlowGain = 0.05f;
+    public float overloadTransferSpeedBoost = 1.5f;
+
     public float overloadLightningChance = 0.03f;
     public float overloadLightningThreshold = 0.2f;
     public float overloadLightningRange = 8f;
@@ -394,6 +397,7 @@ public class PsychicNode extends PsychicBlock {
 
             lastPull = transferBudget() - pullInputs(transferBudget());
             lastPush = transferBudget() - pushOutput(transferBudget());
+            updateTransferOverload();
             displayFlowRate = Mathf.lerpDelta(displayFlowRate, ratePerSecond(Math.max(lastPull, lastPush)), 0.12f);
             updateBeamVisuals();
             updateOverloadLightning();
@@ -476,7 +480,18 @@ public class PsychicNode extends PsychicBlock {
         }
 
         protected float transferBudget() {
-            return transferRate / 60f * delta();
+            float overloadSpeed = 1f + Mathf.clamp(overload) * overloadTransferSpeedBoost;
+            return transferRate / 60f * delta() * overloadSpeed;
+        }
+
+        protected void updateTransferOverload() {
+            if (transferRate <= PsychicNetworkNode.epsilon) return;
+
+            float currentRate = ratePerSecond(Math.max(lastPull, lastPush));
+            float excess = Mathf.clamp(currentRate / transferRate - 1f);
+            if (excess > PsychicNetworkNode.epsilon) {
+                addPsychicOverload(excess * overloadFlowGain / 60f * delta());
+            }
         }
 
         public float displayFlowRate() {
