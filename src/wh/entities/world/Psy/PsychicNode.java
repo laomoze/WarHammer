@@ -41,11 +41,12 @@ import java.util.Arrays;
 import static mindustry.Vars.tilesize;
 
 public class PsychicNode extends PsychicBlock {
+    public int timerCheck = timers++;
     public int linkRange = 10;
     public float transferRate = 1.2f;
     public float distanceFalloff = 0.65f;
     public float connectSpeed = 0.08f;
-    public float linkReload = 10f;
+    public float linkReload = 60f;
 
     public TextureRegion laser;
     public TextureRegion laserEnd;
@@ -56,12 +57,9 @@ public class PsychicNode extends PsychicBlock {
     public float pulseMag = 0.05f;
     public float laserWidth = 0.4f;
 
-    public float flowMemoryBoost = 0.45f;
-    public float flowMemoryGain = 0.18f;
-    public float flowMemoryDecay = 0.025f;
     public float downstreamPressureBoost = 0.55f;
 
-    public float overloadFlowGain = 0.05f;
+    public float overloadFlowGain = 0.015f;
     public float overloadTransferSpeedBoost = 1.5f;
 
     public float overloadLightningChance = 0.03f;
@@ -155,35 +153,87 @@ public class PsychicNode extends PsychicBlock {
      */
     protected void drawPlacementLinkPreview(int x, int y, int rotation, int direction, boolean output, Color color) {
         int maxLen = linkRange + size / 2;
-        Building dest = null;
         var dir = Geometry.d4[direction];
-        int offset = size / 2;
-
-        for (int j = 1 + offset; j <= linkRange + offset; j++) {
-            Building other = Vars.world.build(x + j * dir.x, y + j * dir.y);
-            if (other != null && other.isInsulated()) break;
-
-            if (linkValidPreview(other, Vars.player.team(), output) && previewLinkMatchesDirection(direction, output, other)) {
-                maxLen = j;
-                dest = other;
-                break;
-            }
-        }
+        Building dest = findPlacementLinkInDirection(x, y, direction, output, Vars.player == null ? null : Vars.player.team());
 
         Tile target = dest == null ? Vars.world.tile(x + dir.x * maxLen, y + dir.y * maxLen) : dest.tile;
-        resolvePlacementSourceEdgePoint(x, y, direction, target, Tmp.v1);
 
         if (dest != null) {
-            resolvePlacementTargetEdgePoint(dest, x, y, Mathf.mod(direction + 2, 4), Tmp.v2);
-        } else {
-            Tmp.v2.set(x * tilesize + dir.x * maxLen * tilesize, y * tilesize + dir.y * maxLen * tilesize);
-        }
+            boolean[] drew = {false};
+            eachPlacementAlignedBeamTilePair(x, y, dest, direction, Mathf.mod(direction + 2, 4), (fromTile, toTile) -> {
+                drew[0] = true;
+                resolveTileEdgePoint(fromTile, direction, Tmp.v1);
+                resolveTileEdgePoint(toTile, Mathf.mod(direction + 2, 4), Tmp.v2);
+                Drawf.dashLine(color, Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y);
+            });
 
-        Drawf.dashLine(color, Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y);
+            if (!drew[0]) {
+                resolvePlacementSourceEdgePoint(x, y, direction, target, Tmp.v1);
+                resolvePlacementTargetEdgePoint(dest, x, y, Mathf.mod(direction + 2, 4), Tmp.v2);
+                Drawf.dashLine(color, Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y);
+            }
+        } else {
+            resolvePlacementSourceEdgePoint(x, y, direction, target, Tmp.v1);
+            Tmp.v2.set(x * tilesize + dir.x * maxLen * tilesize, y * tilesize + dir.y * maxLen * tilesize);
+            Drawf.dashLine(color, Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y);
+        }
 
         if (dest != null) {
             Drawf.square(dest.x, dest.y, dest.block.size * tilesize / 2f + 2.5f, 0f, color);
         }
+    }
+
+    protected Building findPlacementLinkInDirection(int sourceX, int sourceY, int direction, boolean output, mindustry.game.Team team) {
+        if (team == null) return null;
+
+        Point2 dir = Geometry.d4[direction];
+        boolean horizontal = direction == 0 || direction == 2;
+        int sourceFixed = horizontal
+                ? (direction == 0 ? maxPlacementTileOnAxis(sourceX, size) : minPlacementTileOnAxis(sourceX, size))
+                : (direction == 1 ? maxPlacementTileOnAxis(sourceY, size) : minPlacementTileOnAxis(sourceY, size));
+        int axisMin = horizontal ? minPlacementTileOnAxis(sourceY, size) : minPlacementTileOnAxis(sourceX, size);
+        int axisMax = horizontal ? maxPlacementTileOnAxis(sourceY, size) : maxPlacementTileOnAxis(sourceX, size);
+
+        boolean[] blocked = new boolean[Math.max(0, axisMax - axisMin + 1)];
+
+        for (int dist = 1; dist <= linkRange; dist++) {
+            Building best = null;
+            float bestAxisDistance = Float.MAX_VALUE;
+            boolean anyOpenLane = false;
+
+            for (int axis = axisMin; axis <= axisMax; axis++) {
+                int index = axis - axisMin;
+                if (blocked[index]) continue;
+                anyOpenLane = true;
+
+                int tx = horizontal ? sourceFixed + dir.x * dist : axis;
+                int ty = horizontal ? axis : sourceFixed + dir.y * dist;
+
+                Building other = Vars.world.build(tx, ty);
+                if (other == null) continue;
+                if (other.isInsulated()) {
+                    blocked[index] = true;
+                    continue;
+                }
+                if (!linkValidPreview(other, team, output)) continue;
+                if (!previewLinkMatchesDirection(direction, output, other)) {
+                    blocked[index] = true;
+                    continue;
+                }
+
+                float axisDistance = horizontal ? Math.abs(other.y - sourceY) : Math.abs(other.x - sourceX);
+                if (best == null || axisDistance < bestAxisDistance) {
+                    best = other;
+                    bestAxisDistance = axisDistance;
+                }
+
+                blocked[index] = true;
+            }
+
+            if (best != null) return best;
+            if (!anyOpenLane) break;
+        }
+        return null;
     }
 
     /**
@@ -242,6 +292,62 @@ public class PsychicNode extends PsychicBlock {
         }
     }
 
+    protected int minPlacementTileOnAxis(int centerTile, int blockSize) {
+        return centerTile - (blockSize - 1) / 2;
+    }
+
+    protected int maxPlacementTileOnAxis(int centerTile, int blockSize) {
+        return centerTile + blockSize / 2;
+    }
+
+    protected int minBuildTileOnAxis(Building build, boolean xAxis) {
+        return (xAxis ? build.tileX() : build.tileY()) - (build.block.size - 1) / 2;
+    }
+
+    protected int maxBuildTileOnAxis(Building build, boolean xAxis) {
+        return (xAxis ? build.tileX() : build.tileY()) + build.block.size / 2;
+    }
+
+    protected void eachPlacementAlignedBeamTilePair(int sourceX, int sourceY, Building dest, int fromDirection, int toDirection, Cons2<Tile, Tile> consumer) {
+        if (dest == null) return;
+
+        boolean horizontal = fromDirection == 0 || fromDirection == 2;
+        int sourceFixed = horizontal
+                ? (fromDirection == 0 ? maxPlacementTileOnAxis(sourceX, size) : minPlacementTileOnAxis(sourceX, size))
+                : (fromDirection == 1 ? maxPlacementTileOnAxis(sourceY, size) : minPlacementTileOnAxis(sourceY, size));
+        int destFixed = horizontal
+                ? (toDirection == 0 ? maxBuildTileOnAxis(dest, true) : minBuildTileOnAxis(dest, true))
+                : (toDirection == 1 ? maxBuildTileOnAxis(dest, false) : minBuildTileOnAxis(dest, false));
+
+        int sourceMin = horizontal ? minPlacementTileOnAxis(sourceY, size) : minPlacementTileOnAxis(sourceX, size);
+        int sourceMax = horizontal ? maxPlacementTileOnAxis(sourceY, size) : maxPlacementTileOnAxis(sourceX, size);
+        int destMin = horizontal ? minBuildTileOnAxis(dest, false) : minBuildTileOnAxis(dest, true);
+        int destMax = horizontal ? maxBuildTileOnAxis(dest, false) : maxBuildTileOnAxis(dest, true);
+
+        int overlapMin = Math.max(sourceMin, destMin);
+        int overlapMax = Math.min(sourceMax, destMax);
+
+        if (overlapMin <= overlapMax) {
+            for (int axis = overlapMin; axis <= overlapMax; axis++) {
+                Tile sourceTile = horizontal ? Vars.world.tile(sourceFixed, axis) : Vars.world.tile(axis, sourceFixed);
+                Tile destTile = horizontal ? Vars.world.tile(destFixed, axis) : Vars.world.tile(axis, destFixed);
+                if (sourceTile != null && destTile != null) {
+                    consumer.get(sourceTile, destTile);
+                }
+            }
+            return;
+        }
+
+        Tile sourceEdge = Vars.world.tile(sourceX, sourceY);
+        Tile destEdge = sourceEdge == null ? dest.tile : Edges.getFacingEdge(dest.block, dest.tileX(), dest.tileY(), sourceEdge);
+        if (destEdge == null) return;
+
+        Tile placementEdge = Edges.getFacingEdge(this, sourceX, sourceY, destEdge);
+        if (placementEdge != null) {
+            consumer.get(placementEdge, destEdge);
+        }
+    }
+
 
     protected boolean linkValidPreview(Building other, mindustry.game.Team team, boolean output) {
         if (other == null || other.team != team || !other.isAdded() || !(other instanceof PsychicNetworkNode node))
@@ -282,14 +388,13 @@ public class PsychicNode extends PsychicBlock {
     }
 
     public class PsychicNodeBuild extends PsychicBuild {
-        public final Building[] links = new Building[4];
-        public final Tile[] dests = new Tile[4];
-        public final Building[] inputs = new Building[4];
-        public final float[] connection = new float[4];
-        public final float[] beamFlowRate = new float[4];
-        public final float[] beamPotentialDiff = new float[4];
-        public final float[] beamEffectAlpha = new float[4];
-        public final float[] flowMemory = new float[4];
+        public Building[] links = new Building[4];
+        public Tile[] dests = new Tile[4];
+        public Building[] inputs = new Building[4];
+        public float[] connection = new float[4];
+        public float[] beamFlowRate = new float[4];
+        public float[] beamPotentialDiff = new float[4];
+        public float[] beamEffectAlpha = new float[4];
         public int lastTileChanges = -1;
         public float lastPull;
         public float lastPush;
@@ -383,9 +488,8 @@ public class PsychicNode extends PsychicBlock {
         public void updateTile() {
             super.updateTile();
 
-            updateBeamCache();
-            updateFlowMemory();
             updateLinks();
+            updateBeamCache();
             updateConnectionProgress();
 
             if (!enabled) {
@@ -441,7 +545,7 @@ public class PsychicNode extends PsychicBlock {
             int out = outputSide();
             Building target = links[out];
             if (linkValid(this, target)) {
-                drawDashedLink(this, target, Pal.heal);
+                drawDashedLink(this, target, out, Mathf.mod(out + 2, 4), Pal.heal);
                 Drawf.square(target.x, target.y, target.block.size * tilesize / 2f + 2.5f, 0f, Pal.heal);
             }
 
@@ -451,7 +555,7 @@ public class PsychicNode extends PsychicBlock {
                 Building source = inputLink(i);
                 if (!linkValid(this, source)) continue;
 
-                drawDashedLink(source, this, Pal.place);
+                drawDashedLink(source, this, Mathf.mod(i + 2, 4), i, Pal.place);
                 Drawf.square(source.x, source.y, source.block.size * tilesize / 2f + 2.5f, 0f, Pal.place);
             }
 
@@ -474,10 +578,20 @@ public class PsychicNode extends PsychicBlock {
             Arrays.fill(beamFlowRate, 0f);
             Arrays.fill(beamPotentialDiff, 0f);
             Arrays.fill(beamEffectAlpha, 0f);
-            Arrays.fill(flowMemory, 0f);
             displayFlowRate = 0f;
             beamFlowSign = 0;
         }
+
+        @Override
+        public void placed() {
+            super.placed();
+        }
+
+        @Override
+        public void onRemoved() {
+            super.onRemoved();
+        }
+
 
         protected float transferBudget() {
             float overloadSpeed = 1f + Mathf.clamp(overload) * overloadTransferSpeedBoost;
@@ -532,18 +646,13 @@ public class PsychicNode extends PsychicBlock {
             if (!active) beamFlowSign = 0;
         }
 
-        protected void updateFlowMemory() {
-            for (int i = 0; i < 4; i++) {
-                flowMemory[i] = Mathf.approachDelta(flowMemory[i], 0f, flowMemoryDecay);
-            }
-        }
-
         protected void updateLinks() {
-            if (lastTileChanges != Vars.world.tileChanges || timer(0, linkReload)) {
+            if (timer.get(timerCheck, linkReload) || lastTileChanges != Vars.world.tileChanges) {
                 lastTileChanges = Vars.world.tileChanges;
                 refreshLinks();
             }
         }
+
 
         protected void refreshLinks() {
             Arrays.fill(links, null);
@@ -561,17 +670,59 @@ public class PsychicNode extends PsychicBlock {
         }
 
         protected Building findLinkInDirection(int direction, boolean output) {
-            var dir = Geometry.d4[direction];
-            int offset = size / 2;
+            Point2 dir = Geometry.d4[direction];
+            boolean horizontal = direction == 0 || direction == 2;
+            int fixed = horizontal
+                    ? (direction == 0 ? maxTileOnAxis(this, true) : minTileOnAxis(this, true))
+                    : (direction == 1 ? maxTileOnAxis(this, false) : minTileOnAxis(this, false));
+            int axisMin = horizontal ? minTileOnAxis(this, false) : minTileOnAxis(this, true);
+            int axisMax = horizontal ? maxTileOnAxis(this, false) : maxTileOnAxis(this, true);
+            float axisCenter = horizontal ? y : x;
 
-            for (int j = 1 + offset; j <= linkRange + offset; j++) {
-                Building other = Vars.world.build(tile.x + j * dir.x, tile.y + j * dir.y);
-                if (other != null && other.isInsulated()) break;
-                if (!linkValid(this, other)) continue;
-                if (!linkMatchesDirection(direction, output, other)) continue;
-                if (!output && sourceClaimedByBetterInput(other, direction)) continue;
-                PsychicNetworkNode node = (PsychicNetworkNode) other;
-                if (output ? canReceiveLink(node) : canOutputLink(node)) return other;
+            boolean[] blocked = new boolean[Math.max(0, axisMax - axisMin + 1)];
+
+            for (int dist = 1; dist <= linkRange; dist++) {
+                Building best = null;
+                float bestAxisDistance = Float.MAX_VALUE;
+                boolean anyOpenLane = false;
+
+                for (int axis = axisMin; axis <= axisMax; axis++) {
+                    int index = axis - axisMin;
+                    if (blocked[index]) continue;
+                    anyOpenLane = true;
+
+                    int tx = horizontal ? fixed + dir.x * dist : axis;
+                    int ty = horizontal ? axis : fixed + dir.y * dist;
+
+                    Building other = Vars.world.build(tx, ty);
+                    if (other == null) continue;
+                    if (other.isInsulated()) {
+                        blocked[index] = true;
+                        continue;
+                    }
+                    if (!linkValid(this, other)) continue;
+                    if (!linkMatchesDirection(direction, output, other)) {
+                        blocked[index] = true;
+                        continue;
+                    }
+
+                    PsychicNetworkNode node = (PsychicNetworkNode) other;
+                    if (!(output ? canReceiveLink(node) : canOutputLink(node))) {
+                        blocked[index] = true;
+                        continue;
+                    }
+
+                    float axisDistance = horizontal ? Math.abs(other.y - axisCenter) : Math.abs(other.x - axisCenter);
+                    if (best == null || axisDistance < bestAxisDistance) {
+                        best = other;
+                        bestAxisDistance = axisDistance;
+                    }
+
+                    blocked[index] = true;
+                }
+
+                if (best != null) return best;
+                if (!anyOpenLane) break;
             }
             return null;
         }
@@ -580,32 +731,6 @@ public class PsychicNode extends PsychicBlock {
             if (!(other instanceof PsychicNodeBuild node)) return true;
             int sideFacingThis = Mathf.mod(direction + 2, 4);
             return output ? node.canReceiveFromSide(sideFacingThis) : node.canOutputToSide(sideFacingThis);
-        }
-
-        protected boolean sourceClaimedByBetterInput(Building source, int direction) {
-            int myDistance = linkDistance(source);
-            int max = linkRange + size / 2 + Math.max(source.block.size, size);
-
-            for (int i = 0; i < 4; i++) {
-                var dir = Geometry.d4[i];
-
-                for (int j = 1; j <= max; j++) {
-                    Building build = Vars.world.build(source.tileX() + j * dir.x, source.tileY() + j * dir.y);
-                    if (build == null || build == this || build.team != team || !(build instanceof PsychicNodeBuild other) || !other.enabled)
-                        continue;
-
-                    int otherDirection = other.directionTo(source);
-                    if (otherDirection == -1 || !other.isInputSide(otherDirection)) continue;
-                    if (!other.canReachLink(source, otherDirection, false)) continue;
-
-                    int otherDistance = other.linkDistance(source);
-                    if (otherDistance < myDistance || (otherDistance == myDistance && other.id < id)) {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
         }
 
         protected boolean canReachLink(Building target, int direction, boolean output) {
@@ -675,15 +800,13 @@ public class PsychicNode extends PsychicBlock {
 
                 float efficiency = linkEfficiency(i, other);
                 float pressure = node.getEnergyPressure(this);
-                float memoryScale = flowMemoryScale(i);
-                float moved = node.moveEnergyTo(this, budget * memoryScale, efficiency);
+                float moved = node.moveEnergyTo(this, budget, efficiency);
                 if (moved <= PsychicNetworkNode.epsilon) continue;
 
                 lastPull += moved;
-                rememberFlowDirection(i, moved, pressure);
                 rememberInputFlow(i, moved, pressure);
                 afterBeamTransfer(i, other, moved * efficiency, false);
-                budget -= moved / memoryScale;
+                budget -= moved;
             }
             return budget;
         }
@@ -695,15 +818,13 @@ public class PsychicNode extends PsychicBlock {
 
             float efficiency = linkEfficiency(out, other);
             float pressure = getEnergyPressure(node);
-            float memoryScale = flowMemoryScale(out);
-            float moved = moveEnergyTo(node, budget * memoryScale, efficiency);
+            float moved = moveEnergyTo(node, budget, efficiency);
             if (moved <= PsychicNetworkNode.epsilon) return budget;
 
             lastPush += moved;
-            rememberFlowDirection(out, moved, pressure);
             rememberOutputFlow(moved, pressure);
             afterBeamTransfer(out, other, moved * efficiency, true);
-            return budget - moved / memoryScale;
+            return budget - moved;
         }
 
         protected boolean isInputSide(int direction) {
@@ -724,20 +845,6 @@ public class PsychicNode extends PsychicBlock {
 
         protected float linkEfficiency(int direction, Building other) {
             return other instanceof PsychicNodeBuild ? 1f : buildingEfficiency(other);
-        }
-
-        protected float flowMemoryScale(int direction) {
-            return 1f + flowMemory[Mathf.mod(direction, 4)] * flowMemoryBoost;
-        }
-
-        protected void rememberFlowDirection(int direction, float moved, float pressure) {
-            if (moved <= PsychicNetworkNode.epsilon || pressure <= PsychicNetworkNode.epsilon) return;
-
-            float rateScale = Mathf.clamp(ratePerSecond(moved) / Math.max(transferRate, 1f));
-            float pressureScale = Mathf.clamp(pressure / 60f);
-            flowMemory[Mathf.mod(direction, 4)] = Mathf.clamp(
-                    flowMemory[Mathf.mod(direction, 4)] + flowMemoryGain * (0.35f + rateScale * 0.4f + pressureScale * 0.25f)
-            );
         }
 
         protected void rememberInputFlow(int direction, float moved, float pressure) {
@@ -764,7 +871,7 @@ public class PsychicNode extends PsychicBlock {
         protected void updateBeamVisuals() {
             int out = outputSide();
             Building other = links[out];
-            if (!(other instanceof PsychicNetworkNode node) || connection[out] < 0.999f) return;
+            if (!(other instanceof PsychicNetworkNode node) || !linkValid(this, other) || dests[out] == null) return;
 
             float pressure = getEnergyPressure(node);
             if (pressure <= flowParticleMinPotential) return;
@@ -792,7 +899,7 @@ public class PsychicNode extends PsychicBlock {
             drawInputBeams();
             drawInputFlowParticles();
 
-            if (dests[out] != null && links[out] != null && connection[out] > PsychicNetworkNode.epsilon) {
+            if (linkValid(this, links[out]) && dests[out] != null && connection[out] > PsychicNetworkNode.epsilon) {
                 drawLaser(out, (laserWidth + Mathf.absin(pulseScl, pulseMag)) * connection[out]);
                 drawFlowParticles(out);
             }
@@ -928,9 +1035,13 @@ public class PsychicNode extends PsychicBlock {
         protected void drawDashedLink(Building from, Building to, Color color) {
             int dir = directionTo(from, to);
             if (dir == -1) return;
-            eachAlignedBeamTilePair(from, to, dir, Mathf.mod(dir + 2, 4), (fromTile, toTile) -> {
-                resolveTileEdgePoint(fromTile, dir, Tmp.v3);
-                resolveTileEdgePoint(toTile, Mathf.mod(dir + 2, 4), Tmp.v4);
+            drawDashedLink(from, to, dir, Mathf.mod(dir + 2, 4), color);
+        }
+
+        protected void drawDashedLink(Building from, Building to, int fromDirection, int toDirection, Color color) {
+            eachAlignedBeamTilePair(from, to, fromDirection, toDirection, (fromTile, toTile) -> {
+                resolveTileEdgePoint(fromTile, fromDirection, Tmp.v3);
+                resolveTileEdgePoint(toTile, toDirection, Tmp.v4);
                 Drawf.dashLine(color, Tmp.v3.x, Tmp.v3.y, Tmp.v4.x, Tmp.v4.y);
             });
         }

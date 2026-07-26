@@ -38,7 +38,6 @@ public final class WHSettings{
             table.sliderPref(distortionStrengthKey, 100, 0, 100, 5, i -> i + "%");
             table.pref(new WHTitleSetting("@wh.settings.debug-hud"));
             table.checkPref(carrierDebugHudKey, false);
-            table.checkPref(psychicDebugHudKey, false);
             table.checkPref(fullTechCoverageKey, false);
         });
     }
@@ -128,11 +127,16 @@ public final class WHSettings{
     }
 
     public static boolean carrierDebugHud(){
-        return Core.settings.getBool(carrierDebugHudKey, false);
+        return debugHud();
     }
 
     public static boolean psychicDebugHud() {
-        return Core.settings.getBool(psychicDebugHudKey, false);
+        return debugHud();
+    }
+
+    public static boolean debugHud() {
+        return Core.settings.getBool(carrierDebugHudKey, false) ||
+                Core.settings.getBool(psychicDebugHudKey, false);
     }
 
     public static boolean fullTechCoverage() {

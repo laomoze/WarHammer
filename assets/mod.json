@@ -4,7 +4,7 @@
   "author": "[yellow[]]Lao[gold[]]Mo[goldenrod[]]ze",
   "subtitle": "唯战永恒\nWAR NEVER CHANGE",
   "description": " [accent[]]以战锤40k为原型的MOD[[]]，拥有自设模组背景和战锤或许关系不大,设定与qq群链接可以到 [accent[]]模组简介[[]]里面找\n[sky[]]QQ群316481519[[]]\n[unlaunched[]]贡献者:DOC-A-7244(bundles和翻译),Eipusino(java技术指导)[[]]\n [accent[]]The MOD based on Warhammer 40k[[]],Having a custom mod background may not necessarily relate to Warhammer， with its settings and links to the QQ group, can be found in the  [accent[]]mod introduction[[]]\n[sky[]]QQ group 316481519[[]]\nDiscord will consider adding features in its subsequent improvements\n[unlaunched[]]Contributors: DOC-A-7244 (bundles and translation), Eipusino (Java technical guidance)[[]]",
-  "version": "beta.3.2",
+  "version": "beta.3.41",
   "minGameVersion": "159",
   "main": "wh.core.WarHammerMod",
   "dependencies": [],

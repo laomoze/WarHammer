@@ -3750,7 +3750,6 @@ public final class WHBlocks {
 
         psyBeacon = new PsychicBeaconBlock("psychic-beacon") {{
             requirements(Category.power, with(Items.carbide, 300, WHItems.entanglement, 150, WHItems.molybdenumAlloy, 150, WHItems.resonantCrystal, 200));
-            buildVisibility = BuildVisibility.sandboxOnly;
             size = 3;
             health = 2500;
             psychicCapacity = 60;
@@ -3760,6 +3759,9 @@ public final class WHBlocks {
             addRecipe(WHStatusEffects.bless, 1.4f, 30, 1);
             addRecipe(WHStatusEffects.assault, 1.3f, 35, 1);
             addRecipe(WHStatusEffects.energyAmplification, 1.5f, 40, 1);
+
+            hasPower = true;
+            consumePower(1200 / 60f);
             drawer = new DrawMulti(
                     new DrawRegion("-bottom"),
                     new DrawGlowRegion("-rotator") {{
@@ -3872,7 +3874,7 @@ public final class WHBlocks {
                     }
             );
 
-            consumePower(1200 / 60f);
+
             researchCostMultiplier = 0.4f;
         }};
 
@@ -4286,14 +4288,14 @@ public final class WHBlocks {
         }};
 
         psyVoid = new PsychicVoid("psychic-void") {{
-            buildVisibility = BuildVisibility.sandboxOnly;
+            requirements(Category.power, BuildVisibility.sandboxOnly, with());
             size = 1;
             health = 114514;
             researchCostMultiplier = 0.45f;
         }};
 
         psySource = new PsychicSource("psychic-resource") {{
-            buildVisibility = BuildVisibility.sandboxOnly;
+            requirements(Category.power, BuildVisibility.sandboxOnly, with());
             size = 1;
             health = 1919810;
             generationRate = 1000;
@@ -4968,10 +4970,12 @@ public final class WHBlocks {
             plans = Seq.with(
                     new UnitPlan(WHUnitTypes.airA7, 60f * 60f * 7.5f, false, with(WHItems.culverCrystal, 1000, WHItems.armorAlloy, 4000, WHItems.refineCeramite, 3000,
                             WHItems.adamantium, 2000, WHItems.protocolChip, 1200)),
-                    new UnitPlan(WHUnitTypes.airB7, 60f * 60f * 7.5f, false, with(WHItems.entanglement, 1500, WHItems.armorAlloy, 4000, WHItems.refineCeramite, 3000,
-                            WHItems.adamantium, 2000, WHItems.protocolChip, 1200)),
+                    new UnitPlan(WHUnitTypes.airB7, 60f * 60f * 7.5f, false, with(WHItems.entanglement, 1500, WHItems.armorAlloy, 3000, WHItems.refineCeramite, 1500,
+                            WHItems.adamantium, 1200, WHItems.protocolChip, 500)),
                     new UnitPlan(WHUnitTypes.tankAG, 60f * 60f * 7.5f, true, with(WHItems.culverCrystal, 1000, WHItems.armorAlloy, 4000, WHItems.refineCeramite, 3000,
                             WHItems.adamantium, 2000, WHItems.protocolChip, 800)),
+                    new UnitPlan(WHUnitTypes.tankA4, 60f * 60f * 7.5f, false, with(WHItems.molybdenumAlloy, 4000, WHItems.refineCeramite, 4000,
+                            WHItems.sealedPromethium, 1500, WHItems.protocolChip, 2000)),
                     new UnitPlan(WHUnitTypes.Mecha7, 60f * 60f * 7.5f, true, with(WHItems.armorAlloy, 4000, WHItems.refineCeramite, 3000,
                             WHItems.adamantium, 2000, WHItems.protocolChip, 800))
             );

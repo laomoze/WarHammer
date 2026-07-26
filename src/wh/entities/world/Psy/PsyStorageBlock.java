@@ -62,6 +62,8 @@ public class PsyStorageBlock extends StorageBlock {
         sync = true;
         itemCapacity = 0;
         hasPower = true;
+        consumesPower = false;
+        connectedPower = false;
         drawCached = false;
         drawDynamic = true;
         canOverdrive = false;

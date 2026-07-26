@@ -14,6 +14,7 @@ import arc.util.io.Writes;
 import mindustry.entities.TargetPriority;
 import mindustry.entities.units.BuildPlan;
 import mindustry.gen.Building;
+import mindustry.graphics.BuildingCacheLayer;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.world.Tile;
@@ -23,11 +24,11 @@ import wh.util.WHUtils;
 import static mindustry.Vars.renderer;
 import static mindustry.type.Liquid.animationFrames;
 
-public class TubeConduit extends Conduit{
+public class TubeConduit extends Conduit {
     static final float rotatePad = 6, hpad = rotatePad / 2f / 4f;
     static final float[][] rotateOffsets = {{hpad, hpad}, {-hpad, hpad}, {-hpad, -hpad}, {hpad, -hpad}};
 
-    public TubeConduit(String name){
+    public TubeConduit(String name) {
         super(name);
         rotate = true;
         solid = false;
@@ -39,15 +40,19 @@ public class TubeConduit extends Conduit{
         noSideBlend = true;
         priority = TargetPriority.transport;
         botColor = Color.valueOf("393A40ff");
+
+        drawCached = false;
+        drawDynamic = true;
+        buildingCacheLayer = BuildingCacheLayer.normal;
     }
 
     static final byte[][] tileMap = {
-    {},
-    {0, 2}, {1, 3}, {0, 1},
-    {0, 2}, {0, 2}, {1, 2},
-    {0, 1, 2}, {1, 3}, {0, 3},
-    {1, 3}, {0, 1, 3}, {2, 3},
-    {0, 2, 3}, {1, 2, 3}, {0, 1, 2, 3}
+            {},
+            {0, 2}, {1, 3}, {0, 1},
+            {0, 2}, {0, 2}, {1, 2},
+            {0, 1, 2}, {1, 3}, {0, 3},
+            {1, 3}, {0, 1, 3}, {2, 3},
+            {0, 2, 3}, {1, 2, 3}, {0, 1, 2, 3}
     };
 
     public TextureRegion[][] topRegion;
@@ -60,7 +65,7 @@ public class TubeConduit extends Conduit{
     public boolean drawArrow = false;
 
     @Override
-    public void load(){
+    public void load() {
         super.load();
         editorRegion = Core.atlas.find(name + "-full");
         coverRegion = Core.atlas.find(name + "-cover");
@@ -69,36 +74,36 @@ public class TubeConduit extends Conduit{
         capRegion = new TextureRegion[]{topRegion[1][0], topRegion[1][1]};
 
         botRegions = new TextureRegion[5];
-        for(int i = 0; i < 5; i++){
+        for (int i = 0; i < 5; i++) {
             botRegions[i] = Core.atlas.find("conduit-bottom-" + i);
         }
-        for(int i = 0; i < 5; i++){
+        for (int i = 0; i < 5; i++) {
             arrowRegion[i] = Core.atlas.find(name + "-arrow-" + i);
         }
 
         rotateRegions = new TextureRegion[4][2][animationFrames];
 
-        if(renderer != null){
+        if (renderer != null) {
             float pad = rotatePad;
             var frames = renderer.getFluidFrames();
 
-            for(int rot = 0; rot < 4; rot++){
-                for(int fluid = 0; fluid < 2; fluid++){
-                    for(int frame = 0; frame < animationFrames; frame++){
+            for (int rot = 0; rot < 4; rot++) {
+                for (int fluid = 0; fluid < 2; fluid++) {
+                    for (int frame = 0; frame < animationFrames; frame++) {
                         TextureRegion base = frames[fluid][frame];
                         TextureRegion result = new TextureRegion();
                         result.set(base);
 
-                        if(rot == 0){
+                        if (rot == 0) {
                             result.setX(result.getX() + pad);
                             result.setHeight(result.height - pad);
-                        }else if(rot == 1){
+                        } else if (rot == 1) {
                             result.setWidth(result.width - pad);
                             result.setHeight(result.height - pad);
-                        }else if(rot == 2){
+                        } else if (rot == 2) {
                             result.setWidth(result.width - pad);
                             result.setY(result.getY() + pad);
-                        }else{
+                        } else {
                             result.setX(result.getX() + pad);
                             result.setY(result.getY() + pad);
                         }
@@ -112,25 +117,25 @@ public class TubeConduit extends Conduit{
     }
 
     @Override
-    public TextureRegion[] icons(){
+    public TextureRegion[] icons() {
         return new TextureRegion[]{editorRegion};
     }
 
     @Override
-    public void drawPlanRegion(BuildPlan plan, Eachable<BuildPlan> list){
+    public void drawPlanRegion(BuildPlan plan, Eachable<BuildPlan> list) {
         int[] bits = getTiling(plan, list);
 
-        if(bits == null) return;
+        if (bits == null) return;
 
         BuildPlan[] directionals = new BuildPlan[4];
         list.each(other -> {
-            if(other.breaking || other == plan) return;
+            if (other.breaking || other == plan) return;
 
             int i = 0;
-            for(Point2 point : Geometry.d4){
+            for (Point2 point : Geometry.d4) {
                 int x = plan.x + point.x, y = plan.y + point.y;
-                if(x >= other.x - (other.block.size - 1) / 2 && x <= other.x + (other.block.size / 2) && y >= other.y - (other.block.size - 1) / 2 && y <= other.y + (other.block.size / 2)){
-                    if((other.block instanceof Conduit ? (plan.rotation == i || (other.rotation + 2) % 4 == i) : !noSideBlend && ((plan.rotation == i && other.block.hasLiquids) || (plan.rotation != i && other.block.outputsLiquid)))){
+                if (x >= other.x - (other.block.size - 1) / 2 && x <= other.x + (other.block.size / 2) && y >= other.y - (other.block.size - 1) / 2 && y <= other.y + (other.block.size / 2)) {
+                    if ((other.block instanceof Conduit ? (plan.rotation == i || (other.rotation + 2) % 4 == i) : !noSideBlend && ((plan.rotation == i && other.block.hasLiquids) || (plan.rotation != i && other.block.outputsLiquid)))) {
                         directionals[i] = other;
                     }
                 }
@@ -139,8 +144,8 @@ public class TubeConduit extends Conduit{
         });
 
         int mask = 1 << plan.rotation;
-        for(int rel = 0; rel < 4; rel++){
-            if((bits[3] & (1 << rel)) != 0){
+        for (int rel = 0; rel < 4; rel++) {
+            if ((bits[3] & (1 << rel)) != 0) {
                 mask |= 1 << Mathf.mod(plan.rotation - rel, 4);
             }
         }
@@ -151,49 +156,49 @@ public class TubeConduit extends Conduit{
         Draw.alpha(0.5f);
         Draw.rect(botRegions[bits[0]], plan.drawx(), plan.drawy(), plan.rotation * 90);
         Draw.color();
-        if(drawArrow) Draw.rect(arrowRegion[bits[0]], plan.drawx(), plan.drawy(), plan.rotation * 90);
+        if (drawArrow) Draw.rect(arrowRegion[bits[0]], plan.drawx(), plan.drawy(), plan.rotation * 90);
         Draw.scl();
 
-        for(byte i : tileMap[mask]){
-            if(directionals[i] == null || (directionals[i].block instanceof Conduit ? (directionals[i].rotation + 2) % 4 == plan.rotation : ((plan.rotation == i && !directionals[i].block.hasLiquids) || (plan.rotation != i && !directionals[i].block.outputsLiquid)))){
+        for (byte i : tileMap[mask]) {
+            if (directionals[i] == null || (directionals[i].block instanceof Conduit ? (directionals[i].rotation + 2) % 4 == plan.rotation : ((plan.rotation == i && !directionals[i].block.hasLiquids) || (plan.rotation != i && !directionals[i].block.outputsLiquid)))) {
                 int id = i == 0 || i == 3 ? 1 : 0;
                 Draw.rect(capRegion[id], plan.drawx(), plan.drawy(), i == 0 || i == 2 ? 0 : -90);
             }
         }
     }
 
-    @Override
-    protected void initBuilding(){
-        if(buildType == null) buildType = TubeConduitBuild::new;
-    }
 
-    public class TubeConduitBuild extends ConduitBuild{
+    public class TubeConduitBuild extends ConduitBuild {
         public int tiling = 0;
 
         public boolean shouldDrawCover;
 
         @Override
-        public void created(){
+        public void drawCached() {
+        }
+
+        @Override
+        public void created() {
             super.created();
-            if(!drawCover) return;
+            if (!drawCover) return;
             boolean hasCover = false;
-            for(int r = 1; r <= coverLength; r++){
+            for (int r = 1; r <= coverLength; r++) {
                 Tile other = tile.nearby(Geometry.d4(rotation + 2).x * r, Geometry.d4(rotation + 2).y * r);
-                if(other != null && other.build != this && other.build instanceof TubeConduitBuild b && b.rotation == rotation
-                && b.block.name.equals(block.name) && b.shouldDrawCover && !b.backCapped && !b.capped){
+                if (other != null && other.build != this && other.build instanceof TubeConduitBuild b && b.rotation == rotation
+                        && b.block.name.equals(block.name) && b.shouldDrawCover && !b.backCapped && !b.capped) {
                     float dist = Math.max(Math.abs(b.tileX() - tile.x), Math.abs(b.tileY() - tile.y));
-                    if(dist >= coverLength - 0.1f){
+                    if (dist >= coverLength - 0.1f) {
                         shouldDrawCover = true;
                         return;
                     }
                 }
             }
-            for(int r = 1; r <= coverLength; r++){
+            for (int r = 1; r <= coverLength; r++) {
                 Tile backCap = tile.nearby(Geometry.d4(rotation + 2).x * r, Geometry.d4(rotation + 2).y * r);
-                if(!hasCover && (backCap != null && backCap.build != this && backCap.build instanceof TubeConduitBuild a
-                && a.block.name.equals(block.name) && a.rotation == rotation && (a.capped || a.backCapped || a.blendbits == 1 || a.blendbits == 3))){
+                if (!hasCover && (backCap != null && backCap.build != this && backCap.build instanceof TubeConduitBuild a
+                        && a.block.name.equals(block.name) && a.rotation == rotation && (a.capped || a.backCapped || a.blendbits == 1 || a.blendbits == 3))) {
                     float dist = Math.max(Math.abs(a.tileX() - tile.x), Math.abs(a.tileY() - tile.y));
-                    if(dist >= coverLength - 0.1f){
+                    if (dist >= coverLength - 0.1f) {
                         hasCover = true;
                     }
                 }
@@ -201,26 +206,26 @@ public class TubeConduit extends Conduit{
             shouldDrawCover = hasCover;
         }
 
-        public boolean valid(int i){
+        public boolean valid(int i) {
             Building b = nearby(i);
             return b != null && (b instanceof TubeConduitBuild ?
-            (b.front() != null && b.front() == this) : b.block.hasLiquids || b.block.outputsLiquid);
+                    (b.front() != null && b.front() == this) : b.block.hasLiquids || b.block.outputsLiquid);
         }
 
-        public boolean isEnd(int i){
+        public boolean isEnd(int i) {
             Building b = nearby(i);
             return (!valid(i) && (b == null ? null : b.block) != block) || (b instanceof ConduitBuild &&
-            ((b.rotation + 2) % 4 == rotation || (b.front() != this && back() == b)));
+                    ((b.rotation + 2) % 4 == rotation || (b.front() != this && back() == b)));
         }
 
 
         @Override
-        public void draw(){
+        public void draw() {
             int r = this.rotation;
             //draw extra conduits facing this one for tiling purposes
             Draw.z(Layer.blockUnder);
-            for(int i = 0; i < 4; i++){
-                if((blending & (1 << i)) != 0){
+            for (int i = 0; i < 4; i++) {
+                if ((blending & (1 << i)) != 0) {
                     int dir = r - i;
                     drawAt(x + Geometry.d4x(dir) * mindustry.Vars.tilesize * 0.75f, y + Geometry.d4y(dir) * mindustry.Vars.tilesize * 0.75f, 0, i == 0 ? r : dir, i != 0 ? SliceMode.bottom : SliceMode.top, false);
                 }
@@ -238,13 +243,16 @@ public class TubeConduit extends Conduit{
                 Draw.rect(topRegion[0][tiling], x, y, 0);
             }
 
+            Draw.reset();
+
             Draw.scl(oldX, oldY);
 
             Draw.z(Layer.block - 0.1f);
             Draw.scl(xscl, yscl);
             drawAt(x, y, blendbits, r, SliceMode.none, false);
+
             if (drawArrow) {
-                Draw.z(Layer.block);
+                Draw.z(Layer.block + 0.001f);
                 Draw.rect(sliced(arrowRegion[blendbits], SliceMode.none), x, y, rotation * 90f);
             }
             Draw.scl();
@@ -254,15 +262,15 @@ public class TubeConduit extends Conduit{
             Draw.scl(1.01f, 1.01f);
             Draw.z(Layer.block + 0.002f);
 
-            if(drawCover && shouldDrawCover && blendbits != 3 && blendbits != 1){
-                for(byte i : placementId){
+            if (drawCover && shouldDrawCover && blendbits != 3 && blendbits != 1) {
+                for (byte i : placementId) {
                     Draw.rect(coverRegion, x, y, i == 0 || i == 2 ? 0 : -90);
                 }
             }
             Draw.scl();
 
-            for(byte i : placementId){
-                if(isEnd(i)){
+            for (byte i : placementId) {
+                if (isEnd(i)) {
                     int id = i == 0 || i == 3 ? 1 : 0;
                     Draw.rect(capRegion[id], x, y, i == 0 || i == 2 ? 0 : -90);
                 }
@@ -283,7 +291,7 @@ public class TubeConduit extends Conduit{
             int wrapRot = (rotation + offset) % 4;
             TextureRegion liquidr = bits == 1 && padCorners ? rotateRegions[wrapRot][gas][frame] : renderer.fluidFrames[gas][frame];
 
-            if(bits == 1 && padCorners){
+            if (bits == 1 && padCorners) {
                 ox = rotateOffsets[wrapRot][0];
                 oy = rotateOffsets[wrapRot][1];
             }
@@ -294,7 +302,7 @@ public class TubeConduit extends Conduit{
             Drawf.liquid(sliced(liquidr, slice), x + ox, y + oy, smoothLiquid, liquids.current().color.write(Tmp.c1).a(1f));
             Draw.scl(sx, sy);
 
-            Draw.rect(sliced(topRegion[0][tiling], slice), x, y, angle);
+            /* Draw.rect(topRegion[0][tiling], x, y, 0);*/
         }
 
         private int nonSquareLiquidBlendMask() {
@@ -310,7 +318,8 @@ public class TubeConduit extends Conduit{
         }
 
         @Override
-        public void onProximityUpdate(){
+        public void onProximityUpdate() {
+            noSleep();
             int[] bits = buildBlending(tile, rotation, null, true);
             blendbits = bits[0];
             xscl = bits[1];
@@ -320,8 +329,8 @@ public class TubeConduit extends Conduit{
             int mask = 1 << rotation;
 
             // bits[3] uses relative directions; convert each relative bit back to absolute.
-            for(int rel = 0; rel < 4; rel++){
-                if((bits[3] & (1 << rel)) != 0){
+            for (int rel = 0; rel < 4; rel++) {
+                if ((bits[3] & (1 << rel)) != 0) {
                     mask |= 1 << Mathf.mod(rotation - rel, 4);
                 }
             }
@@ -333,13 +342,13 @@ public class TubeConduit extends Conduit{
         }
 
         @Override
-        public void write(Writes write){
+        public void write(Writes write) {
             super.write(write);
             write.bool(shouldDrawCover);
         }
 
         @Override
-        public void read(Reads read, byte revision){
+        public void read(Reads read, byte revision) {
             super.read(read, revision);
             shouldDrawCover = read.bool();
         }

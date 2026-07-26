@@ -14,6 +14,7 @@ import wh.entities.event.Trigger;
 import wh.entities.world.Psy.unused.PsychicFieldState;
 import wh.entities.world.entities.AirRaiderUnitType;
 import wh.entities.world.entities.powerArmorComp.PowerArmourUnit;
+import wh.gen.TankA4.TankA4;
 
 public final class EntityRegister{
     private static final ObjectIntMap<Class<? extends Entityc>> ids = new ObjectIntMap<>();
@@ -48,6 +49,7 @@ public final class EntityRegister{
         register("HoverPayloadUnit", HoverPayloadUnit.class, HoverPayloadUnit::new);
         register("CarrierPayloadUnit", CarrierPayloadUnit.class, CarrierPayloadUnit::new);
         register("TankEn2Unit", TankEn2Unit.class, TankEn2Unit::new);
+        register("TankA7Unit", TankA4.class, TankA4::create);
 
         register("TitanUnit", TitanUnit.class, TitanUnit::create);
         register("PowerArmourUnit", PowerArmourUnit.class, PowerArmourUnit::new);

@@ -8,11 +8,11 @@ import arc.math.Mathf;
 import arc.struct.Seq;
 import arc.util.Eachable;
 import arc.util.Strings;
+import arc.util.Tmp;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.entities.units.BuildPlan;
 import mindustry.gen.Building;
-import mindustry.gen.Groups;
 import mindustry.world.Block;
 import mindustry.world.consumers.*;
 import mindustry.world.draw.DrawBlock;
@@ -26,6 +26,7 @@ import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
 
+import static mindustry.Vars.indexer;
 import static mindustry.Vars.tilesize;
 
 public abstract class PsychicBlock extends Block {
@@ -56,6 +57,7 @@ public abstract class PsychicBlock extends Block {
         sync = true;
         squareSprite = false;
         canOverdrive = false;
+        hasPower = false;
     }
 
     @Override
@@ -294,14 +296,9 @@ public abstract class PsychicBlock extends Block {
 
         protected void eachNearbyPsychicBuild(float rangeBlocks, Cons<PsychicBuild> cons) {
             float range = rangeBlocks * tilesize;
-            float range2 = range * range;
-
-            Groups.build.each(other -> {
-                if (other == this || other.team != team || !other.isAdded()) return;
-                if (!(other instanceof PsychicBlock.PsychicBuild build)) return;
-                if (Mathf.dst2(x, y, other.x, other.y) > range2) return;
-                cons.get(build);
-            });
+            indexer.eachBlock(team, Tmp.r1.setCentered(x, y, range),
+                    other -> other instanceof PsychicBlock.PsychicBuild,
+                    build -> cons.get((PsychicBuild) build));
         }
 
         protected void updatePsychicState() {

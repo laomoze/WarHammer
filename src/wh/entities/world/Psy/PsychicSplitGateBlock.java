@@ -143,13 +143,15 @@ public class PsychicSplitGateBlock extends PsychicNode {
         @Override
         protected void updateConnectionProgress() {
             for (int i = 0; i < 4; i++) {
-                if (!isAnyOutput(i)) continue;
+                boolean active = isAnyOutput(i)
+                        ? linkValid(this, links[i]) && dests[i] != null
+                        : isInputSide(i) && linkValid(this, inputs[i]);
 
-                if (linkValid(this, links[i]) && dests[i] != null) {
-                    connection[i] = Mathf.approachDelta(connection[i], 1f, connectSpeed);
-                } else {
-                    connection[i] = Mathf.approachDelta(connection[i], 0f, connectSpeed * 1.5f);
-                }
+                connection[i] = Mathf.approachDelta(
+                        connection[i],
+                        active ? 1f : 0f,
+                        active ? connectSpeed : connectSpeed * 1.5f
+                );
             }
         }
 
@@ -158,27 +160,55 @@ public class PsychicSplitGateBlock extends PsychicNode {
             int mainDirection = outputSide();
             Building main = links[mainDirection];
             boolean mainValid = main instanceof PsychicNetworkNode node && node.acceptEnergy(this);
+            float originalBudget = budget;
 
-            float sideBudget = budget * (mainValid ? sideFlowRatio() : 1f);
-            float mainBudget = budget - sideBudget;
+            if (mainValid) {
+                float sideShare = sideFlowRatio();
+                float reservedForSides = originalBudget * sideShare;
+                float guaranteedMain = Math.max(originalBudget - reservedForSides, 0f);
 
-            int sideCount = 0;
-            for (int i = 0; i < 4; i++) {
-                if (isSideOutput(i) && links[i] instanceof PsychicNetworkNode) sideCount++;
+                if (guaranteedMain > PsychicNetworkNode.epsilon) {
+                    budget = pushDirection(mainDirection, Math.min(guaranteedMain, budget));
+                }
+
+                float remainingForSides = Math.min(budget, reservedForSides);
+                budget = pushSideOutputs(remainingForSides, budget);
+
+                if (budget > PsychicNetworkNode.epsilon) {
+                    budget = pushDirection(mainDirection, budget);
+                }
+                return budget;
             }
 
-            if (sideCount > 0) {
-                float eachSideBudget = sideBudget / sideCount;
-                for (int i = 0; i < 4 && budget > PsychicNetworkNode.epsilon; i++) {
-                    if (!isSideOutput(i)) continue;
-                    budget = pushDirection(i, Math.min(eachSideBudget, budget));
+            return pushSideOutputs(budget, budget);
+        }
+
+        protected float pushSideOutputs(float sideBudget, float totalBudget) {
+            int sideCount = 0;
+            for (int i = 0; i < 4; i++) {
+                if (isSideOutput(i) && links[i] instanceof PsychicNetworkNode node && node.acceptEnergy(this)) {
+                    sideCount++;
                 }
             }
 
-            if (mainValid && mainBudget > PsychicNetworkNode.epsilon) {
-                budget = pushDirection(mainDirection, Math.min(mainBudget, budget));
+            if (sideCount == 0 || sideBudget <= PsychicNetworkNode.epsilon) return totalBudget;
+
+            float remainingBudget = totalBudget;
+            float remainingSideBudget = Math.min(sideBudget, totalBudget);
+
+            for (int i = 0; i < 4 && remainingBudget > PsychicNetworkNode.epsilon && remainingSideBudget > PsychicNetworkNode.epsilon; i++) {
+                if (!isSideOutput(i)) continue;
+                if (!(links[i] instanceof PsychicNetworkNode node) || !node.acceptEnergy(this)) continue;
+
+                float share = remainingSideBudget / sideCount;
+                float before = remainingBudget;
+                remainingBudget = pushDirection(i, Math.min(share, remainingBudget));
+                float spent = before - remainingBudget;
+                remainingSideBudget = Math.max(remainingSideBudget - spent, 0f);
+                sideCount--;
             }
-            return budget;
+
+            return remainingBudget;
         }
 
         protected float pushDirection(int direction, float budget) {
@@ -187,18 +217,16 @@ public class PsychicSplitGateBlock extends PsychicNode {
 
             float efficiency = linkEfficiency(direction, other);
             float pressure = getEnergyPressure(node);
-            float memoryScale = flowMemoryScale(direction);
-            float moved = moveEnergyTo(node, budget * memoryScale, efficiency);
+            float moved = moveEnergyTo(node, budget, efficiency);
             if (moved <= PsychicNetworkNode.epsilon) return budget;
 
             lastPush += moved;
-            rememberFlowDirection(direction, moved, pressure);
             beamFlowRate[direction] = Math.max(beamFlowRate[direction], ratePerSecond(moved));
             beamPotentialDiff[direction] = Math.max(beamPotentialDiff[direction], pressure);
             beamEffectAlpha[direction] = 1f;
             beamFlowSign = 1;
             afterBeamTransfer(direction, other, moved * efficiency, true);
-            return budget - moved / memoryScale;
+            return budget - moved;
         }
 
         @Override

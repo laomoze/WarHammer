@@ -36,11 +36,7 @@ public class MarkWeapon extends Weapon{
     public BulletType markBullet;
     public ShootPattern markShoot = new ShootPattern();
 
-    private @Nullable Healthc markedUnit = null;
-    public float markReduce = 0f;
     public float markTime = 120;
-    protected float markTimer;
-    protected float effectTimer;
 
     public MarkWeapon(String name){
         super(name);
@@ -55,14 +51,14 @@ public class MarkWeapon extends Weapon{
     @Override
     public void update(Unit unit, WeaponMount m){
         if(!(m instanceof MarkWeaponMount mount)) return;
-        markTimer -= Time.delta;
-        if(markTimer < 0){
-            effectTimer = Mathf.approachDelta(effectTimer, 0, 0.15f);
-        }else effectTimer = Mathf.approachDelta(effectTimer, 1, 0.1f);
+        mount.markTimer -= Time.delta;
+        if (mount.markTimer < 0) {
+            mount.effectTimer = Mathf.approachDelta(mount.effectTimer, 0, 0.15f);
+        } else mount.effectTimer = Mathf.approachDelta(mount.effectTimer, 1, 0.1f);
 
-        if(markedUnit != null && (markedUnit.dead() || markTimer < 0)){
-            markedUnit = null;
-            markTimer = -1;
+        if (mount.markedUnit != null && (mount.markedUnit.dead() || mount.markTimer < 0)) {
+            mount.markedUnit = null;
+            mount.markTimer = -1f;
         }
         //super.update(unit, m);
 
@@ -225,13 +221,15 @@ public class MarkWeapon extends Weapon{
     }
 
     protected Teamc findTarget(Unit unit, float x, float y, float range, boolean air, boolean ground){
-        if(markedUnit != null && markedUnit instanceof Teamc mark){
+        MarkWeaponMount mount = getMarkMount(unit);
+        if (mount != null && mount.markedUnit instanceof Teamc mark) {
             return mark;
         }else return super.findTarget(unit, x, y, range, air, ground);
     }
 
     protected boolean checkTarget(Unit unit, Teamc target, float x, float y, float range){
-        if(markedUnit != null && markedUnit instanceof Teamc mark){
+        MarkWeaponMount mount = getMarkMount(unit);
+        if (mount != null && mount.markedUnit instanceof Teamc mark) {
             return Units.invalidateTarget(mark, unit.team, x, y, range + Math.abs(shootY));
         }else return super.checkTarget(unit, target, x, y, range);
     }
@@ -258,30 +256,21 @@ public class MarkWeapon extends Weapon{
             float
             mountX = unit.x + Angles.trnsx(unit.rotation - 90, x, y),
             mountY = unit.y + Angles.trnsy(unit.rotation - 90, x, y);
-            if(Mathf.chance(markChance) && markTimer < 0){
+            if (Mathf.chance(markChance) && mount.markTimer < 0f) {
                 mount.target = findPlayerTarget(unit, mountX, mountY, bullet.range, bullet.collidesAir, bullet.collidesGround);
                 if(mount.target instanceof Healthc targetUnit){
-                    markTimer = markTime;
-                    markedUnit = targetUnit;
+                    mount.markTimer = markTime;
+                    mount.markedUnit = targetUnit;
                 }
             }
-        }else{
-            if(Mathf.chance(markChance) && markTimer < 0 && mount.target instanceof Healthc targetUnit){
-                markedUnit = targetUnit;
-                markTimer = markTime;
+        } else {
+            if (Mathf.chance(markChance) && mount.markTimer < 0f && mount.target instanceof Healthc targetUnit) {
+                mount.markedUnit = targetUnit;
+                mount.markTimer = markTime;
             }
         }
 
-        if(markTimer > 0 && markedUnit != null && mount.specialShoot.shots > 1){
-            if(mount.specialShoot.shots * markReduce > markTimer){
-                mount.specialShoot = markShoot.copy();
-                mount.specialShoot.shots = (int)(markTimer / markReduce) - 1;
-            }else{
-                mount.specialShoot = markShoot.copy();
-            }
-        }
-
-        if(markTimer > 0 && markedUnit != null){
+        if (mount.markTimer > 0f && mount.markedUnit != null) {
             mount.shootWhich = mount.specialShoot.copy();
             mount.bulletWhich = mount.specialBullet.copy();
         }else{
@@ -322,9 +311,8 @@ public class MarkWeapon extends Weapon{
         if(!(m instanceof MarkWeaponMount mount)) return;
         mount.specialBullet = markBullet.copy();
 
-        if(markTimer > 0 && markedUnit != null){
+        if (mount.markTimer > 0f && mount.markedUnit != null) {
             mount.bulletWhich = mount.specialBullet.copy();
-            markTimer -= markReduce;
         }else{
             mount.bulletWhich = bullet.copy();
         }
@@ -377,8 +365,8 @@ public class MarkWeapon extends Weapon{
     }
 
     public void DrawMark(Unit unit, WeaponMount mount){
-        if(mount.target instanceof Sized sized && unit.controller() instanceof Player){
-            float progress = Mathf.clamp(effectTimer);
+        if (mount instanceof MarkWeaponMount markMount && mount.target instanceof Sized sized && unit.controller() instanceof Player) {
+            float progress = Mathf.clamp(markMount.effectTimer);
             Tmp.v2.set(sized.getX(), sized.getY());
             Draw.color(unit.team.color);
             for(int l = 1; l < 5; ++l){
@@ -402,7 +390,20 @@ public class MarkWeapon extends Weapon{
         t.row();
         UIUtils.ammo(ObjectMap.of(u, markBullet)).display(t);
     }
+
+    protected @Nullable MarkWeaponMount getMarkMount(Unit unit) {
+        for (WeaponMount mount : unit.mounts) {
+            if (mount.weapon == this && mount instanceof MarkWeaponMount markMount) {
+                return markMount;
+            }
+        }
+        return null;
+    }
+
     public static class MarkWeaponMount extends WeaponMount{
+        public @Nullable Healthc markedUnit;
+        public float markTimer = -1f;
+        public float effectTimer;
         public ShootPattern specialShoot;
         public BulletType specialBullet;
         public ShootPattern shootWhich;

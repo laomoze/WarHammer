@@ -100,13 +100,15 @@ public class PsychicRouterBlock extends PsychicNode {
         @Override
         protected void updateConnectionProgress() {
             for (int i = 0; i < 4; i++) {
-                if (!isOutputSide(i)) continue;
+                boolean active = isOutputSide(i)
+                        ? linkValid(this, links[i]) && dests[i] != null
+                        : isInputSide(i) && linkValid(this, inputs[i]);
 
-                if (linkValid(this, links[i]) && dests[i] != null) {
-                    connection[i] = Mathf.approachDelta(connection[i], 1f, connectSpeed);
-                } else {
-                    connection[i] = Mathf.approachDelta(connection[i], 0f, connectSpeed * 1.5f);
-                }
+                connection[i] = Mathf.approachDelta(
+                        connection[i],
+                        active ? 1f : 0f,
+                        active ? connectSpeed : connectSpeed * 1.5f
+                );
             }
         }
 
@@ -131,16 +133,14 @@ public class PsychicRouterBlock extends PsychicNode {
 
                 float efficiency = linkEfficiency(i, other);
                 float pressure = getEnergyPressure(node);
-                float memoryScale = flowMemoryScale(i);
                 float share = budget / active;
-                float moved = moveEnergyTo(node, share * memoryScale, efficiency);
+                float moved = moveEnergyTo(node, share, efficiency);
                 if (moved <= PsychicNetworkNode.epsilon) continue;
 
                 lastPush += moved;
-                rememberFlowDirection(i, moved, pressure);
                 rememberRouterOutputFlow(i, moved, pressure);
                 afterBeamTransfer(i, other, moved * efficiency, true);
-                budget -= moved / memoryScale;
+                budget -= moved;
                 active--;
             }
             return budget;

@@ -816,6 +816,8 @@ public final class KarvexTeachTree {
                                     });
                                     node(WHUnitTypes.airA7, () -> {
                                     });
+                                    node(WHUnitTypes.tankA4, () -> {
+                                    });
                                     node(WHUnitTypes.tankAG, () -> {
                                     });
                                     node(WHUnitTypes.Mecha7, () -> {

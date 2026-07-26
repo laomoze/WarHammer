@@ -152,6 +152,11 @@ public final class WHFx {
         randLenVectors(seed, amount, radius, rotation, spread, (x, y) -> cons.get(x, y, rand.random(0f, heightRange) * heightScale));
     }
 
+    public static void eachHeightVector2(long seed, int amount, float minLength, float length, float heightRange, float heightScale, HeightVectorConsumer cons) {
+        rand.setSeed(seed);
+        randLenVectors(seed, amount, minLength, length, (x, y) -> cons.get(x, y, rand.random(0f, heightRange) * heightScale));
+    }
+
     public static void drawHeightCircles(long seed, int amount, float baseX, float baseY, float radius, float rotation, float spread, float heightRange, float heightScale, HeightVectorConsumer drawer) {
         eachHeightVector(seed, amount, radius, rotation, spread, heightRange, heightScale, (x, y, height) -> {
             Tmp.v1.set(baseX, baseY).add(x, y + height);
@@ -420,6 +425,63 @@ public final class WHFx {
                 trail.update(Tmp.v4.x, Tmp.v4.y, height, Interp.slope.apply(pathProgress) * stroke);
                 trail.draw(color, width * pathProgress);
                 trail.drawCap(color, width * pathProgress);
+            });
+        });
+    }
+
+
+    public static TrailEffect trailLighting(float lifetime, Color color, int num, float range, float lightingLength, float stroke, float length, boolean in) {
+        int intensity = WHSettings.detailCount(num, 1);
+        return new TrailEffect(lifetime, range * 2, color, color, intensity, (int) length, stroke).trailUpdater((e, trail, x, y, width, len, index) -> {
+            long id = e.id + index;
+            float pathProgress = in ? e.fout(Interp.pow3Out) : e.fin(Interp.pow3Out);
+            float pathProgress2 = in ? e.fout(Interp.pow10Out) : e.fin(Interp.pow10Out);
+
+            eachHeightVector2(id, 1, range * 0.7f, range, 60 * (1 - pathProgress), 1f, (vx, vy, height) -> {
+                float tx = x + vx;
+                float ty = y + vy;
+                float dst = Mathf.dst(e.x, e.y, tx, ty);
+
+                Tmp.v1.set(tx, ty).sub(e.x, e.y);
+                if (Tmp.v1.isZero()) return;
+                Tmp.v1.nor();
+
+                float normx = Tmp.v1.x, normy = Tmp.v1.y;
+                int links = Math.max(Mathf.ceil(dst / lightingLength), 1);
+                float spacing = dst / links;
+
+                float[] nx = new float[links + 1];
+                float[] ny = new float[links + 1];
+                nx[0] = e.x;
+                ny[0] = e.y;
+
+                rand.setSeed(id);
+                for (int i = 1; i <= links; i++) {
+                    if (i == links) {
+                        nx[i] = tx;
+                        ny[i] = ty;
+                    } else {
+                        float le = i * spacing;
+                        Tmp.v2.setToRandomDirection(rand).scl(Mathf.clamp(range / 15f, 10f, 20f));
+                        nx[i] = e.x + normx * le + Tmp.v2.x;
+                        ny[i] = e.y + normy * le + Tmp.v2.y;
+                    }
+                }
+
+                float scaled = pathProgress * links;
+                int from = Math.min((int) scaled, links - 1);
+                int to = from + 1;
+                float progress = scaled - from;
+                float currentX = Mathf.lerp(nx[from], nx[to], progress);
+                float currentY = Mathf.lerp(ny[from], ny[to], progress);
+
+                trail.update(currentX, currentY, height, stroke * pathProgress);
+                trail.length = (int) (Mathf.curve(pathProgress2, 0f, 0.15f) * Mathf.curve(pathProgress2, 0f, 0.1f) * length);
+
+                Draw.color(e.color);
+                trail.draw(e.color, stroke * pathProgress2);
+                trail.drawCap(e.color, stroke * pathProgress2);
+
             });
         });
     }

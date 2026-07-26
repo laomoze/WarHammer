@@ -149,9 +149,9 @@ public class PsychicBeaconBlock extends PsychicBlock {
 
     public static class BeaconRecipe {
         public final StatusEffect status;
-        public final float boost;
-        public final float psychicUse;
-        public final float duration;
+        public float boost;
+        public float psychicUse;
+        public float duration;
 
         public BeaconRecipe(StatusEffect status, float boost, float psychicUse, float duration) {
             this.status = status == null ? StatusEffects.none : status;
@@ -211,6 +211,7 @@ public class PsychicBeaconBlock extends PsychicBlock {
             table.top().add(main);
         }
 
+        public int lastTileChanges = -1;
         @Override
         public void updateTile() {
             super.updateTile();
@@ -223,12 +224,14 @@ public class PsychicBeaconBlock extends PsychicBlock {
                 warmup = Mathf.approachDelta(warmup, 1f, warmupSpeed);
 
                 Units.nearby(team, x, y, range * tilesize, unit -> unit.apply(recipe.status, recipe.duration));
+
                 eachNearbyPsychicBuild(range, other -> {
                     if (other != this) {
                         other.addPsychicStability((recipe.boost - 1f) * 0.08f);
                         other.addPsychicPressure((recipe.boost - 1f) * 0.04f);
                     }
                 });
+
             } else {
                 useRate = Mathf.lerpDelta(useRate, 0f, 0.16f);
                 warmup = Mathf.approachDelta(warmup, 0f, warmupSpeed);
@@ -287,7 +290,7 @@ public class PsychicBeaconBlock extends PsychicBlock {
 
         @Override
         public byte version() {
-            return 5;
+            return 6;
         }
     }
 }

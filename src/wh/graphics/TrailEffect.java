@@ -22,8 +22,6 @@ import wh.content.WHFx;
 import wh.core.WHSettings;
 import wh.util.WHUtils;
 
-import java.util.Arrays;
-
 public class TrailEffect extends Effect {
     /**
      * How many trails to create.
@@ -128,14 +126,18 @@ public class TrailEffect extends Effect {
 
         float trailWidth = Mathf.curve(state.fin(), 0f, 0.1f) * this.width;
         float f = state.fout();
-        if (f > 0f) {
+        if (f > 0.025f) {
             data.container.set(state.id, state.color, state.time, state.lifetime, followRotation, followX, followY, data.sourceData);
             for (int i = 0; i < data.trails.length; i++) {
                 CTrail trail = (CTrail) data.trails[i];
                 trailUpdater.update(data.container, trail, followX, followY, trailWidth, length, i);
             }
         } else {
-            Arrays.fill(data.trails, null);
+            for (int i = 0; i < data.trails.length; i++) {
+                CTrail trail = (CTrail) data.trails[i];
+                trail.clear();
+            }
+            /*  Arrays.fill(data.trails, null);*/
         }
     }
 
@@ -366,7 +368,7 @@ public class TrailEffect extends Effect {
 
         @Override
         public void draw(Color color, float width) {
-            if (points.size >= 4) {
+            if (points.size >= 8) {
                 Draw.color(color);
                 float[] items = points.items;
                 float lastAngle = this.lastAngle;
@@ -396,7 +398,7 @@ public class TrailEffect extends Effect {
                     float p2 = Math.max(z2, 0f);
                     WHUtils.getParallaxFrom(Tmp.v1, Core.camera.position, p1 / 32f);
                     WHUtils.getParallaxFrom(Tmp.v2, Core.camera.position, p2 / 32f);
-                    if (Tmp.v1.dst2(Tmp.v2) < 0.001f) continue;
+                    if (Tmp.v1.dst2(Tmp.v2) < 0.025f) continue;
 
                     float z2a = -Angles.angleRad(Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y);
                     float z1a = i == 0 ? z2a : lastAngle;
@@ -450,7 +452,8 @@ public class TrailEffect extends Effect {
             float x0 = items[i0], y0 = items[i0 + 1], z0 = items[i0 + 2], w0 = items[i0 + 3];
             float x1 = items[i1], y1 = items[i1 + 1], z1 = items[i1 + 2], w1 = items[i1 + 3];
 
-            float w = w1 * width / ((float) points.size / 4f) * (i1 / 4f) * 2f;
+            float pointScale = width / Math.max(length, 1f);
+            float w = w1 * pointScale * (i1 / 4f) * 2f;
             if (w1 <= 0.001f) return;
 
             Tmp.v2.set(x0, y0);

@@ -36,6 +36,7 @@ public class PsychicGeneratorBlock extends PsychicBlock {
         drawArrow = false;
         hasPower = true;
         outputsPower = true;
+        connectedPower = true;
         canOverdrive = false;
     }
 
