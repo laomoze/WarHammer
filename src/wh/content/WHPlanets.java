@@ -9,6 +9,7 @@ import arc.struct.Seq;
 import mindustry.graphics.g3d.*;
 import mindustry.type.Planet;
 import mindustry.world.Block;
+import wh.graphics.RingMesh;
 import wh.pipelinePlanet.karvex.KarvexPlanetGenerator;
 
 import static mindustry.content.Planets.sun;
@@ -57,10 +58,21 @@ public final class WHPlanets{
                     pos.rotate(Vec3.Z, Mathf.randomSeed(seed + 6, -20f, 20f));
                     pos.rotate(Vec3.Y, Mathf.randomSeed(seed + 7, -8f, 8f));
 
+                    Mat3D tilt = new Mat3D().rotate(Vec3.X, 25f);
+
                     meshes.add(new MatMesh(
                     new NoiseMesh(this, seed, 1, rockRadius, 2, 0.58f, 0.42f, 18f,
                     beltRock, beltTint, 3, 0.6f, 0.38f, 0.54f),
-                    new Mat3D().setToTranslation(pos.x, pos.y, pos.z)));
+                                    new Mat3D().setToTranslation(pos.x, pos.y, pos.z)),
+                            new MultiMesh(
+                                    new MatMesh(new RingMesh(this, radius * 1.7f, radius * 2.0f, 160,
+                                            hazeYellow.cpy().a(0.1f),
+                                            hazeYellow.cpy().lerp(darkRock, 0.25f).a(0.65f), 0.18f), tilt),
+
+                                    new MatMesh(new RingMesh(this, radius * 2.1f, radius * 2.2f, 160,
+                                            hazeYellow.cpy().lerp(darkRock, 0.25f).a(0.1f),
+                                            hazeYellow.cpy().lerp(darkRock, 0.35f).a(0.3f), 0.18f), tilt)
+                            ));
                 }
 
                 return new MultiMesh(meshes.toArray(GenericMesh.class));

@@ -1,0 +1,6 @@
+*** Begin Patch
+*** Update File: src/wh/graphics/RingMesh.java
+@@
+-public class RingMesh extends PlanetMesh{
++public class RingMesh extends PlanetMesh{
+*** End Patch

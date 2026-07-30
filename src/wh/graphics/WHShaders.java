@@ -9,6 +9,7 @@ import arc.Core;
 import arc.Events;
 import arc.files.Fi;
 import arc.graphics.Blending;
+import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
 import arc.graphics.g2d.Lines;
@@ -16,6 +17,7 @@ import arc.graphics.gl.FrameBuffer;
 import arc.graphics.gl.Shader;
 import arc.math.Interp;
 import arc.math.Mathf;
+import arc.math.geom.Vec3;
 import arc.scene.ui.layout.Scl;
 import arc.struct.FloatSeq;
 import arc.util.Log;
@@ -38,6 +40,7 @@ public class WHShaders{
     public static ConvexLensShader convex;
     public static RectLensShader convexRect;
     public static @Nullable PsychicTideShader psychicTide;
+    public static RingShader ringShader;
 
     private WHShaders(){
     }
@@ -62,6 +65,7 @@ public class WHShaders{
         convex = new ConvexLensShader();
         convexRect = new RectLensShader();
         hexagonalShield = new HexagonalTextureShieldShader();
+        ringShader = new RingShader();
         try {
             psychicTide = new PsychicTideShader();
         } catch (Throwable t) {
@@ -87,6 +91,25 @@ public class WHShaders{
         return WHVars.internalTree.child("shaders/" + name + ".vert");
     }
 
+
+    public static class RingShader extends Shader {
+        public boolean emissive;
+        public Vec3 lightDir = new Vec3();
+        public Vec3 cameraPos = new Vec3();
+        public Color ambientColor = Color.white.cpy();
+
+        public RingShader() {
+            super(WHShaders.mv("ring"), WHShaders.mf("ring"));
+        }
+
+        @Override
+        public void apply() {
+            setUniformf("u_lightdir", lightDir);
+            setUniformf("u_campos", cameraPos);
+            setUniformf("u_ambientColor", ambientColor.r, ambientColor.g, ambientColor.b);
+            setUniformf("u_emissive", emissive ? 1f : 0f);
+        }
+    }
 
     public static class OutlineShader extends LoadShader {
         public OutlineShader() {

@@ -5717,7 +5717,7 @@ public final class WHBlocks {
             shootType = WHBullets.LcarusBullet;
             ammoPerShot = 2;
             maxAmmo = 10;
-            enhance(WHItems.cobalt, WHBullets.LcarusBulletEnhanced,
+            enhance(Items.tungsten, WHBullets.LcarusBulletEnhanced,
                     new ShootPattern() {{
                         shotDelay = 10;
                         shots = 2;

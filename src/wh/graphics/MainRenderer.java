@@ -148,6 +148,7 @@ public class MainRenderer{
 
     public static void init(){
         if(renderer == null) renderer = new MainRenderer();
+
         for(int i = 0; i < 512; i++){
             initFloat[i] = new float[i * 4];
             initStrength[i] = new float[i * 4];
@@ -307,6 +308,7 @@ public class MainRenderer{
 
         holes.add(holePool.obtain().set(x, y, inRadius, outRadius, alpha, scaledStrength));
     }
+
 
     private static class BlackHole{
         float x, y, inRadius, outRadius, alpha, strength;
