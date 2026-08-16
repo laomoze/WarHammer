@@ -2656,7 +2656,7 @@ public final class WHBlocks {
 
         steelBridgeConduit = new LiquidBridge("steel-bridge-conduit") {
             {
-                requirements(Category.liquid, with(WHItems.manganeseSteel, 10, Items.metaglass, 10));
+                requirements(Category.liquid, with(WHItems.manganeseSteel, 8, Items.metaglass, 8));
                 armor = 2;
                 rotate = false;
                 range = 7;
@@ -2870,7 +2870,7 @@ public final class WHBlocks {
 
         basicBridge = new ItemBridge("basic-bridge") {{
             {
-                requirements(Category.distribution, with(WHItems.chromium, 10, Items.silicon, 10));
+                requirements(Category.distribution, with(WHItems.chromium, 12, Items.silicon, 6));
 
                 range = 7;
                 transportTime = 60 / 15f;
@@ -2930,6 +2930,8 @@ public final class WHBlocks {
                 itemCapacity = 40;
                 researchCostMultiplier = 1;
                 placeableLiquid = true;
+
+                drawCached = false;
             }
         };
 
@@ -5766,6 +5768,7 @@ public final class WHBlocks {
                     WHItems.manganeseSteel, WHBullets.SSWordMnSteel,
                     Items.plastanium, WHBullets.SSWordPlastanium,
                     WHItems.combustible, WHBullets.SSWordCombustible,
+                    Items.carbide, WHBullets.SSWordCarbide,
                     WHItems.armorAlloy, WHBullets.SSWordArmorAlloy
             );
         }};
@@ -7546,10 +7549,10 @@ public final class WHBlocks {
                     shots = 4;
                     shotDelay = 12;
                     barrels = new float[]{
-                            -56 / 4f, 80 / 4f, 0,
-                            -17 / 4f, 92 / 4f, 0,
-                            17 / 4f, 92 / 4f, 0,
-                            56 / 4f, 80 / 4f, 0
+                            -21 / 4f, 90 / 4f, 0,
+                            -55 / 4f, 80 / 4f, 0,
+                            21 / 4f, 90 / 4f, 0,
+                            55 / 4f, 80 / 4f, 0
                     };
                 }};
 

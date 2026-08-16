@@ -35,6 +35,7 @@ import wh.entities.event.logic.WHLogicStatements;
 import wh.entities.event.objective.WHObjectiveUI;
 import wh.entities.event.ui.ActionContext;
 import wh.gen.EntityRegister;
+import wh.graphics.CMoonVoidShieldRenderer;
 import wh.graphics.MainRenderer;
 import wh.graphics.WHShaders;
 import wh.maps.filters.WhTechFilter;
@@ -70,6 +71,7 @@ public class WarHammerMod extends Mod {
                 WHSounds.load();
                 Core.app.post(() -> {
                     WHShaders.init();
+                    CMoonVoidShieldRenderer.init();
                     MainRenderer.init();
                     // HUD tree is rebuilt after world load; remount objective panel with a short delay.
                     Time.runTask(10f, WHObjectiveUI::init);

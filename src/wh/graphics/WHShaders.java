@@ -36,6 +36,7 @@ import static mindustry.Vars.tree;
 
 public class WHShaders{
     public static @Nullable HexagonalTextureShieldShader hexagonalShield;
+    public static @Nullable CMoonVoidShieldShader cMoonVoidShield;
     public static OutlineShader powerArea, powerDynamicArea;
     public static ConvexLensShader convex;
     public static RectLensShader convexRect;
@@ -65,6 +66,12 @@ public class WHShaders{
         convex = new ConvexLensShader();
         convexRect = new RectLensShader();
         hexagonalShield = new HexagonalTextureShieldShader();
+        try {
+            cMoonVoidShield = new CMoonVoidShieldShader();
+        } catch (Throwable t) {
+            cMoonVoidShield = null;
+            Log.err("Failed to load c-moon void shield shader.", t);
+        }
         ringShader = new RingShader();
         try {
             psychicTide = new PsychicTideShader();
@@ -165,6 +172,78 @@ public class WHShaders{
             Core.camera.position.y - Core.camera.height / 2);
             setUniformf("u_texsize", Core.camera.width, Core.camera.height);
             setUniformf("u_invsize", 1f / Core.camera.width, 1f / Core.camera.height);
+        }
+    }
+
+    public static class CMoonVoidShieldShader extends LoadShader {
+        public static final int maxShields = 256;
+        public static final int shieldsPerPass = 16;
+        private final float[] shields = new float[maxShields * 4];
+        private final float[] states = new float[maxShields * 4];
+        private final float[] alphas = new float[maxShields * 4];
+        private final float[] colors = new float[maxShields * 4];
+        private int count;
+        private int batchOffset;
+        private int batchCount;
+
+        public CMoonVoidShieldShader() {
+            super("voidShield2", "screenspace");
+        }
+
+        public void clear() {
+            count = 0;
+            batchOffset = 0;
+            batchCount = 0;
+        }
+
+        public boolean add(float x, float y, float longAxis, float minorAxis, float rotation, float state, float stateProgress, float shieldFraction, float alpha, Color color) {
+            if (count >= maxShields) return false;
+
+            int offset = count++ * 4;
+            shields[offset] = x;
+            shields[offset + 1] = y;
+            shields[offset + 2] = longAxis;
+            shields[offset + 3] = minorAxis;
+            states[offset] = state;
+            states[offset + 1] = stateProgress;
+            states[offset + 2] = shieldFraction;
+            states[offset + 3] = rotation * Mathf.degRad;
+            alphas[offset] = alpha;
+            colors[offset] = color.r;
+            colors[offset + 1] = color.g;
+            colors[offset + 2] = color.b;
+            colors[offset + 3] = color.a;
+            return true;
+        }
+
+        public boolean hasShields() {
+            return count > 0;
+        }
+
+        public int batchCount() {
+            return Mathf.ceil(count / (float) shieldsPerPass);
+        }
+
+        public void setBatch(int batch) {
+            batchOffset = batch * shieldsPerPass;
+            batchCount = Math.min(shieldsPerPass, Math.max(0, count - batchOffset));
+        }
+
+        @Override
+        public void apply() {
+            float cameraWidth = Math.max(Core.camera.width, 0.0001f);
+            float cameraHeight = Math.max(Core.camera.height, 0.0001f);
+            setUniformf("u_time", Time.time);
+            setUniformf("u_campos", Core.camera.position.x - cameraWidth / 2f, Core.camera.position.y - cameraHeight / 2f);
+            setUniformf("u_resolution", cameraWidth, cameraHeight);
+            setUniformi("u_voidshield_count", batchCount);
+            setUniformi("u_voidshield_hit_count", 0);
+            int offset = batchOffset * 4;
+            int length = batchCount * 4;
+            setUniform4fv("u_voidshields", shields, offset, length);
+            setUniform4fv("u_voidshield_states", states, offset, length);
+            setUniform4fv("u_voidshield_alpha", alphas, offset, length);
+            setUniform4fv("u_voidshield_colors", colors, offset, length);
         }
     }
 

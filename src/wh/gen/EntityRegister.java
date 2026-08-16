@@ -52,6 +52,7 @@ public final class EntityRegister{
         register("TankA7Unit", TankA4.class, TankA4::create);
 
         register("TitanUnit", TitanUnit.class, TitanUnit::create);
+        register("CMoonUnit", CMoonUnit.class, CMoonUnit::create);
         register("PowerArmourUnit", PowerArmourUnit.class, PowerArmourUnit::new);
 
         register("RevengeUnit", RevengeUnit.class, RevengeUnit::new);

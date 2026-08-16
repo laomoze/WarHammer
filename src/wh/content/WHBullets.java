@@ -111,6 +111,7 @@ public class WHBullets {
 
     public static BulletType SSWordMnSteel;
     public static BulletType SSWordCombustible;
+    public static BulletType SSWordCarbide;
     public static BulletType SSWordArmorAlloy;
     public static BulletType SSWordPlastanium;
 
@@ -1431,16 +1432,16 @@ public class WHBullets {
         }};
 
         LcarusBulletEnhanced = new DelayedPointBulletType() {{
-            reloadMultiplier = 0.75f;
+            reloadMultiplier = 0.8f;
             colors = new Color[]{WHPal.ShootOrangeLight.cpy().a(0.3f), WHPal.ShootOrangeLight.cpy().a(0.7f), WHPal.ShootOrangeLight.cpy()};
-            damage = 100;
+            damage = 120;
             rangeChange = 16f;
             shieldDamageMultiplier = 2;
             splashDamageRadius = 45;
             splashDamage = 120;
             laser = Fx.none;
             width = 20;
-            delayEffectLifeTime = 28f;
+            delayEffectLifeTime = 25f;
             renderingDistortion = true;
             hitColor = WHPal.ShootOrangeLight;
             hitEffect = WHFx.linePolyOut(60, hitColor, splashDamageRadius, 2, 4, 0);
@@ -1460,7 +1461,8 @@ public class WHBullets {
         }};
 
         SSWordMnSteel = new CritMissileBulletType() {{
-            ammoMultiplier = 3;
+            ammoMultiplier = 4;
+
             critChance = 0.1f;
             critMultiplier = 2f;
             speed = 8f;
@@ -1468,10 +1470,10 @@ public class WHBullets {
             splashDamageRadius = 32;
             splashDamage = 40;
             lifetime = 420 / speed;
-            homingDelay = lifetime / 2;
-            homingPower = 0.08f;
+            homingDelay = lifetime * 0.8f;
+            homingPower = 0.1f;
             homingRange = 80;
-            followAimSpeed = 8f;
+            followAimSpeed = 2f;
             weaveRandom = true;
             weaveScale = 12f;
             weaveMag = 0.3f;
@@ -1499,7 +1501,7 @@ public class WHBullets {
                         sparks = 10;
                         sparkRad = 25f;
                         sparkLen = 8f;
-                        sparkStroke = 3f;
+                        sparkStroke = 2f;
                     }},
                     WHFx.hitSpark(30, WHItems.manganeseSteel.color, 8, 40, 1, 5));
             critEffect = WHFx.square(30, WHItems.manganeseSteel.color, 1, 10, 3f);
@@ -1518,10 +1520,10 @@ public class WHBullets {
             speed = 8f;
             damage = 40;
             lifetime = 420 / speed;
-            homingDelay = lifetime / 2;
-            homingPower = 0.08f;
+            homingDelay = lifetime * 0.8f;
+            homingPower = 0.1f;
             homingRange = 80;
-            followAimSpeed = 8f;
+            followAimSpeed = 2f;
             weaveRandom = true;
             weaveScale = 12f;
             weaveMag = 0.3f;
@@ -1569,10 +1571,10 @@ public class WHBullets {
             splashDamageRadius = 42;
             splashDamage = 60;
             lifetime = 55;
-            homingDelay = lifetime / 2;
-            homingPower = 0.08f;
+            homingDelay = lifetime * 0.8f;
+            homingPower = 0.1f;
             homingRange = 80;
-            followAimSpeed = 8f;
+            followAimSpeed = 2f;
             weaveRandom = true;
             weaveScale = 12f;
             weaveMag = 0.3f;
@@ -1608,21 +1610,96 @@ public class WHBullets {
             colors = new Color[]{Items.pyratite.color.cpy().a(0.4f), Items.pyratite.color.cpy().a(0.8f), Items.pyratite.color.cpy().lerp(Color.white, 0.8f)};
         }};
 
-        SSWordArmorAlloy = new CritMissileBulletType() {{
-            ammoMultiplier = 4;
-            reloadMultiplier = 0.8f;
+        SSWordCarbide = new CritMissileBulletType() {{
+            ammoMultiplier = 6;
+            reloadMultiplier = 0.6f;
 
-            critChance = 0.1f;
-            critMultiplier = 2f;
-            speed = 8f;
-            damage = 90;
-            splashDamageRadius = 40;
+            speed = 6f;
+            damage = 70;
+            splashDamageRadius = 50;
             splashDamage = 50;
             lifetime = 55;
-            homingDelay = lifetime / 2;
-            homingPower = 0.08f;
+            homingDelay = lifetime * 0.8f;
+            homingPower = 0.1f;
             homingRange = 80;
-            followAimSpeed = 8f;
+            followAimSpeed = 2f;
+            weaveRandom = true;
+            weaveScale = 12f;
+            weaveMag = 0.3f;
+            trailWidth = 2;
+            trailLength = 5;
+            trailSinScl = 12f;
+            trailSinMag = 0.12f;
+            sprite = name("large-missile");
+            lightningColor = hitColor = trailColor = backColor = Color.valueOf("ab8ec5").cpy();
+            width = 18f;
+            height = 60;
+            hitSize = 10f;
+            keepVelocity = false;
+
+            smokeEffect = Fx.shootSmallFlame;
+            shootEffect = new MultiEffect(Fx.shootBigColor, Fx.colorSparkBig);
+            hitEffect = despawnEffect = new MultiEffect(
+                    new ExplosionEffect() {{
+                        lifetime = 50f;
+                        waveStroke = 5f;
+                        waveColor = sparkColor = hitColor;
+                        waveRad = 45f;
+                        smokeSize = 0f;
+                        smokeSizeBase = 0f;
+                        sparks = 10;
+                        sparkRad = 25f;
+                        sparkLen = 8f;
+                        sparkStroke = 2f;
+                    }},
+                    WHFx.hitSpark(30, hitColor, 8, 40, 1, 5),
+                    WHFx.instHit(hitColor, true, 3, 18));
+            critEffect = WHFx.square(30, hitColor, 1, 10, 3);
+            flameWidth = 3f;
+            flameLength = 16f;
+            lengthOffset = 5;
+            colors = new Color[]{hitColor.cpy().a(0.4f), hitColor.cpy().a(0.8f), hitColor.cpy().lerp(Color.white, 0.8f)};
+
+            fragBullet = new CritBulletType(6, 25, "bullet") {{
+                critMultiplier = 1.3f;
+                critChance = 0.05f;
+
+                width = 11f;
+                height = 14f;
+                shrinkY = 1f;
+                lifetime = 50 / speed;
+                pierceCap = 2;
+                armorMultiplier = blockArmorMultiplier = 0.6f;
+                lightningColor = backColor = trailColor = hitColor = Color.valueOf("ab8ec5").cpy();
+                frontColor = backColor.cpy().lerp(Color.white, 0.5f);
+
+                trailEffect = Fx.disperseTrail;
+                trailInterval = 2f;
+                trailRotation = true;
+                trailWidth = 1.8f;
+                trailLength = 11;
+
+                despawnEffect = Fx.hitBulletColor;
+            }};
+            fragBullets = 3;
+        }};
+
+        SSWordArmorAlloy = new CritMissileBulletType() {{
+            ammoMultiplier = 6;
+            reloadMultiplier = 1.25f;
+
+            critChance = 0.2f;
+
+            speed = 8f;
+            damage = 90;
+            splashDamageRadius = 56;
+            splashDamage = 50;
+            armorMultiplier = blockArmorMultiplier = 0.5f;
+            lifetime = 55;
+            homingDelay = lifetime * 0.8f;
+            homingPower = 0.1f;
+            homingRange = 80;
+            followAimSpeed = 2f;
             weaveRandom = true;
             weaveScale = 12f;
             weaveMag = 0.3f;
@@ -1652,7 +1729,7 @@ public class WHBullets {
                         sparks = 10;
                         sparkRad = 25f;
                         sparkLen = 8f;
-                        sparkStroke = 3f;
+                        sparkStroke = 2f;
                     }},
                     WHFx.hitSpark(30, hitColor, 8, 40, 1, 5),
                     WHFx.instHit(hitColor, true, 3, 18));

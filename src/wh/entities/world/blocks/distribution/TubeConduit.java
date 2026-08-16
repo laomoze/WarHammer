@@ -61,6 +61,7 @@ public class TubeConduit extends Conduit {
     public TextureRegion coverRegion;
     public TextureRegion[] arrowRegion = new TextureRegion[5];
     public float coverLength = 10f;
+    public float connectionScale = 1.08f;
     public boolean drawCover = false;
     public boolean drawArrow = false;
 
@@ -222,7 +223,7 @@ public class TubeConduit extends Conduit {
         @Override
         public void draw() {
             int r = this.rotation;
-            //draw extra conduits facing this one for tiling purposes
+
             Draw.z(Layer.blockUnder);
             for (int i = 0; i < 4; i++) {
                 if ((blending & (1 << i)) != 0) {
@@ -231,34 +232,36 @@ public class TubeConduit extends Conduit {
                 }
             }
 
-            Draw.z(Layer.block);
-
             float oldX = Draw.xscl, oldY = Draw.yscl;
-            Draw.scl(1.017f, 1.017f);
-            if(capped || backCapped){
-                Draw.z(Layer.block - 0.003f);
-                Draw.rect(topRegion[0][tiling], x, y, 0);
-            }else{
-                Draw.z(Layer.block + 0.001f);
-                Draw.rect(topRegion[0][tiling], x, y, 0);
-            }
-
-            Draw.reset();
-
+            Draw.scl(xscl, yscl);
+            Draw.z(Layer.block - 0.1f);
+            drawAt(x, y, blendbits, r, SliceMode.none, false);
             Draw.scl(oldX, oldY);
 
-            Draw.z(Layer.block - 0.1f);
-            Draw.scl(xscl, yscl);
-            drawAt(x, y, blendbits, r, SliceMode.none, false);
+            Draw.z(Layer.block - 0.002f);
+            for (int i = 0; i < 4; i++) {
+                if ((blending & (1 << i)) != 0) {
+                    int dir = r - i;
+                    float connectionX = x + Geometry.d4x(dir) * mindustry.Vars.tilesize * 0.75f;
+                    float connectionY = y + Geometry.d4y(dir) * mindustry.Vars.tilesize * 0.75f;
+                    float oldConnectionScaleX = Draw.xscl, oldConnectionScaleY = Draw.yscl;
+                    Draw.scl(connectionScale, 1f);
+                    Draw.rect(sliced(topRegion[0][1 << Mathf.mod(dir, 4)], i != 0 ? SliceMode.bottom : SliceMode.top),
+                            connectionX, connectionY, 0f);
+                    Draw.scl(oldConnectionScaleX, oldConnectionScaleY);
+                }
+            }
+            Draw.color();
+            Draw.z(capped || backCapped ? Layer.block - 0.003f : Layer.block + 0.001f);
+            Draw.rect(topRegion[0][tiling], x, y, 0);
+            Draw.scl();
 
             if (drawArrow) {
                 Draw.z(Layer.block + 0.001f);
                 Draw.rect(sliced(arrowRegion[blendbits], SliceMode.none), x, y, rotation * 90f);
             }
-            Draw.scl();
 
             byte[] placementId = tileMap[tiling];
-
             Draw.scl(1.01f, 1.01f);
             Draw.z(Layer.block + 0.002f);
 
@@ -275,8 +278,8 @@ public class TubeConduit extends Conduit {
                     Draw.rect(capRegion[id], x, y, i == 0 || i == 2 ? 0 : -90);
                 }
             }
+            Draw.reset();
         }
-
         @Override
         protected void drawAt(float x, float y, int bits, int rotation, SliceMode slice, boolean glowing) {
             float angle = rotation * 90f;

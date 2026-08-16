@@ -179,6 +179,12 @@ public class TubeStackConveyor extends StackConveyor{
 
         @Override
         public void draw(){
+            Draw.z(Layer.block - 0.2f);
+
+            int frame = (int) ((Time.time * speed * 6f * timeScale * efficiency) % 8f);
+            Draw.rect(CoRegions[blendbits][frame], x, y, tilesize * blendsclx, tilesize * blendscly, rotation * 90);
+
+            Draw.color();
             Draw.z(Layer.block + 0.001f);
             Draw.scl(1.017f, 1.017f);
             Draw.rect(topRegion[0][tiling], x, y, 0);
@@ -190,8 +196,8 @@ public class TubeStackConveyor extends StackConveyor{
                 }
             }
             Draw.scl();
-            Draw.z(Layer.block + 0.02f);
 
+            Draw.z(Layer.block + 0.02f);
             if(drawCover && shouldDrawCover && blendbits != 3 && blendbits != 1){
                 for(byte i : placementId){
                     Draw.rect(coverRegion, x, y, i == 0 || i == 2 ? 0 : -90);
@@ -199,43 +205,28 @@ public class TubeStackConveyor extends StackConveyor{
             }
             Draw.scl();
 
-            Draw.z(Layer.block - 0.2f);
-
-            int frame = (int)((Time.time * speed * 6f * timeScale * efficiency) % 8f);
-            Draw.rect(CoRegions[blendbits][frame], x, y, tilesize * blendsclx, tilesize * blendscly, rotation * 90);
-
             Tile from = world.tile(link);
-
             if(link == -1 || from == null || lastItem == null) return;
 
             int fromRot = from.build == null ? rotation : from.build.rotation;
-
-            //offset
             Tmp.v1.set(from.worldx(), from.worldy());
             Tmp.v2.set(x, y);
             Tmp.v1.interpolate(Tmp.v2, 1f - cooldown, Interp.linear);
 
-            //rotation
             float a = (fromRot % 4) * 90;
             float b = (rotation % 4) * 90;
-            if((fromRot % 4) == 3 && (rotation % 4) == 0) a = -1 * 90;
-            if((fromRot % 4) == 0 && (rotation % 4) == 3) a = 4 * 90;
+            if ((fromRot % 4) == 3 && (rotation % 4) == 0) a = -90;
+            if ((fromRot % 4) == 0 && (rotation % 4) == 3) a = 360;
 
-            if(glowRegion.found()){
-                Draw.z(Layer.blockAdditive + 0.01f);
-            }
             Draw.z(Layer.block - 0.01f);
-            //stack
-            Draw.rect(stackRegion, Tmp.v1.x, Tmp.v1.y, Mathf.lerp(a, b, Interp.smooth.apply(1f - Mathf.clamp(cooldown * 2, 0f, 1f))));
+            Draw.rect(stackRegion, Tmp.v1.x, Tmp.v1.y,
+                    Mathf.lerp(a, b, Interp.smooth.apply(1f - Mathf.clamp(cooldown * 2, 0f, 1f))));
 
-            //item
             float size = itemSize * Mathf.lerp(Math.min((float)items.total() / itemCapacity, 1), 1f, 0.4f);
             Drawf.shadow(Tmp.v1.x, Tmp.v1.y, size * 1.2f);
-
             Draw.rect(lastItem.fullIcon, Tmp.v1.x, Tmp.v1.y, size, size, 0);
+            Draw.reset();
         }
-
-
         public boolean valid(int i){
             Building b = nearby(i);
             return b != null && (b instanceof TubeStackConveyorBuild ? (b.front() != null && b.front() == this) : b.block.acceptsItems || b.block.outputsItems());

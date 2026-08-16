@@ -6,6 +6,7 @@ import arc.math.Mathf;
 import arc.math.geom.Mat3D;
 import arc.math.geom.Vec3;
 import arc.struct.Seq;
+import mindustry.game.Team;
 import mindustry.graphics.g3d.*;
 import mindustry.type.Planet;
 import mindustry.world.Block;
@@ -107,7 +108,19 @@ public final class WHPlanets{
             minZoom = 0.2f;
             maxZoom = 2.6f;
             allowWaves = false;
-            allowSectorInvasion = false;
+
+            allowSectorInvasion = true;
+            allowLaunchSchematics = true;
+            enemyCoreSpawnReplace = true;
+            allowLaunchLoadout = true;
+            ruleSetter = r -> {
+                r.waveTeam = Team.crux;
+                r.placeRangeCheck = false;
+                r.hideSpawns = true;
+                r.derelictRepair = true;
+                r.coreDestroyClear = true;
+            };
+            showRtsAIRule = true;
         }};
     }
 

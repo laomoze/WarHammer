@@ -6,6 +6,7 @@ import arc.math.Angles;
 import arc.math.Mathf;
 import arc.math.geom.Position;
 import arc.scene.ui.layout.Table;
+import arc.util.Interval;
 import arc.util.Time;
 import arc.util.Tmp;
 import mindustry.content.Blocks;
@@ -38,6 +39,7 @@ public class LaserPointDefenseWeapon extends PointDefenseWeapon{
     public float damage = 10f;
     public boolean useTeamColor = true;
     public float damageMultiplier = 5;
+    public float damageInterval = 6f;
 
     public boolean removeRange = true;
     public float removeRangeRadius = 18;
@@ -79,6 +81,7 @@ public class LaserPointDefenseWeapon extends PointDefenseWeapon{
     @Override
     public void init(){
         super.init();
+        damageInterval = Math.max(damageInterval, 1f);
     }
 
     @Override
@@ -148,19 +151,30 @@ public class LaserPointDefenseWeapon extends PointDefenseWeapon{
             }
             mount.lastX = target.x;
             mount.lastY = target.y;
-            float bulletDamage = damage * mount.damageMul * unit.damageMultiplier() * state.rules.unitDamage(unit.team);
-            if(target.damage() > bulletDamage){
-                target.damage(target.damage() - bulletDamage);
-            }else{
-                target.remove();
-            }
-            if(removeRange && removeRangeRadius > 0){
-                Groups.bullet.intersect(mount.lastX - removeRangeRadius, mount.lastY - removeRangeRadius, removeRangeRadius * 2, removeRangeRadius * 2, b -> {
-                    if(b.team != unit.team && b.type.hittable){
-                        b.damage(b.damage() - bulletDamage * 0.1f);
-                        if(target.damage() < bulletDamage * 0.1f) b.remove();
+
+            if (mount.damageTick.get(0, damageInterval)) {
+                float bulletDamage = damage * mount.damageMul * unit.damageMultiplier() * state.rules.unitDamage(unit.team) / (60f / damageInterval);
+                float splashDamage = bulletDamage * 0.1f;
+
+                if (bulletDamage > 0f) {
+                    if (target.damage() > bulletDamage) {
+                        target.damage(target.damage() - bulletDamage);
+                    } else {
+                        target.remove();
                     }
-                });
+                }
+
+                if (removeRange && removeRangeRadius > 0f && splashDamage > 0f) {
+                    Groups.bullet.intersect(mount.lastX - removeRangeRadius, mount.lastY - removeRangeRadius, removeRangeRadius * 2f, removeRangeRadius * 2f, b -> {
+                        if (b.team != unit.team && b.type.hittable) {
+                            if (b.damage() > splashDamage) {
+                                b.damage(b.damage() - splashDamage);
+                            } else {
+                                b.remove();
+                            }
+                        }
+                    });
+                }
             }
         }
 
@@ -214,7 +228,8 @@ public class LaserPointDefenseWeapon extends PointDefenseWeapon{
         public float mx, my;
         public float reRotate;
         public float maintain;
-        public float damageMul;
+        public float damageMul = 1f;
+        public Interval damageTick = new Interval(1);
 
         public LaserPointDefenseWeaponMount(Weapon weapon){
             super(weapon);

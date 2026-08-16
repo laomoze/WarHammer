@@ -227,29 +227,34 @@ public final class WHUnitTypes {
             }
         };
 
-        cMoon = new SuperHeavyUnitType("c-moon") {
+        cMoon = new CMoonUnitType("c-moon") {
             {
-                constructor = UnitEntity::create;
+                constructor = CMoonUnit::create;
+                voidShieldDamagePerSecond = 40f;
+                voidShieldFreeDamage = 300f;
+                voidShieldMediumDamage = 600f;
+                voidShieldFreeCost = 0f;
+                voidShieldMediumCost = 0.5f;
+                voidShieldLargeCost = 1f;
+                voidShieldRotationOffset = 0f;
                 outlineRadius = 3;
-                outlineColor = Color.valueOf("36363CFF");
+                outlineColor = WHPal.Outline;
                 speed = 0.5F;
-                accel = 0.036F;
-                drag = 0.032F;
                 fogRadius = 90;
                 lightRadius = 600;
                 lowAltitude = true;
-                healColor = Color.valueOf("FFFBBD80");
+                healColor = WHPal.WHYellow;
                 range = 1000;
                 flying = true;
                 engineSize = 0;
                 hitSize = 180;
-                health = 900000;
+                health = 1.5f * 100f * 1000f;
                 armor = 100;
                 targetFlags = new BlockFlag[]{BlockFlag.turret, null};
                 rotateSpeed = 0.25F;
-                ammoCapacity = 100000;
                 deathExplosionEffect = none;
-                createWreck = false;
+                createScorch = createWreck = false;
+
                 addEngine(-58.0F, -175.0F, 0.0F, 5.0F, true);
                 addEngine(-53.0F, -175.0F, 0.0F, 5.0F, true);
                 addEngine(-8.0F, -151.0F, 0.0F, 5.0F, true);
@@ -7476,8 +7481,8 @@ public final class WHUnitTypes {
                 weapons.add(new Weapon(name("tankA1-weapon1")) {
                     {
                         x = 0;
-                        y = -10 / 4f;
-                        shootY = 122 / 4f;
+                        y = -17 / 4f;
+                        shootY = 113 / 4f;
                         layerOffset = 0.002f;
                         rotate = true;
                         rotateSpeed = 0.8f;
@@ -7520,12 +7525,13 @@ public final class WHUnitTypes {
                         };
                     }
                 });
-                weapons.add(new Weapon(name("tankA1-weapon")) {
+                weapons.add(new Weapon(name("tank1-weapon")) {
                     {
                         reload = 5;
+                        layerOffset = 0.01f;
                         velocityRnd = 0.15f;
-                        x = 64 / 4f;
-                        y = -16 / 4f;
+                        x = 67 / 4f;
+                        y = -7 / 4f;
                         recoil = 2;
                         shootY = 28 / 4f;
                         rotate = true;
@@ -9934,9 +9940,8 @@ public final class WHUnitTypes {
                 weapons.add(new Weapon(name("mecha5-weapon1")) {
                                 {
                                     reload = 20;
-                                    x = 87 / 4f;
-                                    y = 17 / 4f;
-                                    shootY = 80 / 4f;
+                                    x = 85 / 4f;
+                                    shootY = 100 / 4f;
                                     layerOffset = -0.001f;
                                     rotationLimit = 35;
                                     rotateSpeed = 0.8f;
@@ -10022,19 +10027,40 @@ public final class WHUnitTypes {
                             }
                 );
 
-                Weapon mecha5Laser = new Weapon(name("gun-mount")) {
+                Weapon mecha5p = new LaserPointDefenseWeapon(name("gun-mount-2")) {
                     {
-                        shootY = 22 / 4f;
-                        reload = 110;
+                        x = 41 / 4f;
+                        y = -4 / 4f;
+                        mirror = true;
+                        rotate = true;
+                        rotateSpeed = 5;
+                        shootY = 24 / 4f;
+                        damage = 300 / 60f;
+                        laserWidth = 1.5f;
+                        color = WHPal.ShootOrange;
+                        useTeamColor = false;
+
+                        bullet = new BulletType() {{
+                            damage = 300 / 10f;
+                            maxRange = 250;
+                            collidesGround = false;
+                        }};
+                    }
+                };
+
+                Weapon mecha5Laser2 = new Weapon(name("tank1-weapon")) {
+                    {
+                        shootY = 35 / 4f;
+                        reload = 80;
                         rotate = true;
                         rotateSpeed = 1.6f;
                         shootSound = WHSounds.laser4;
                         recoil = 1;
                         bullet = new LightingLaserBulletType() {
                             {
-                                lifetime = 35f;
+                                lifetime = 40f;
                                 damage = 90;
-                                width = 18;
+                                width = 22;
                                 length = 260;
                                 sideAngle = 30;
                                 sideWidth = 2;
@@ -10051,8 +10077,8 @@ public final class WHUnitTypes {
                 };
 
                 weapons.addAll(
-                        copyAndMove(mecha5Laser, 36 / 4f, 28 / 4f),
-                        copyAndMoveAnd(mecha5Laser, 57 / 4f, -21 / 4f, b -> b.reload = 90)
+                        copyAndMove(mecha5p, 41 / 4f, -4 / 4f),
+                        copyAndMove(mecha5Laser2, 69 / 4f, -11 / 4f)
                 );
             }
         };
@@ -13246,7 +13272,7 @@ public final class WHUnitTypes {
                     useTeamColor = false;
 
                     bullet = new BulletType() {{
-                        damage = 4;
+                        damage = 250 / 10f;
                         maxRange = 220;
                         collidesGround = false;
                     }};
@@ -13682,7 +13708,7 @@ public final class WHUnitTypes {
                     useTeamColor = false;
 
                     bullet = new BulletType() {{
-                        damage = 4;
+                        damage = 250 / 10f;
                         maxRange = 220;
                         collidesGround = false;
                     }};
