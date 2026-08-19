@@ -20,6 +20,7 @@ import wh.entities.world.entities.weapon.MarkWeapon.MarkWeaponMount;
 import static mindustry.Vars.headless;
 
 public class MulitShootContinueWeapon extends Weapon{
+    public float shootRotateSpeed = -1f;
     public MulitShootContinueWeapon(String name){
         super(name);
         continuous = true;
@@ -93,7 +94,8 @@ public class MulitShootContinueWeapon extends Weapon{
             axisY = unit.y + Angles.trnsy(unit.rotation - 90, x, y);
 
             mount.targetRotation = Angles.angle(axisX, axisY, mount.aimX, mount.aimY) - unit.rotation;
-            mount.rotation = Angles.moveToward(mount.rotation, mount.targetRotation, rotateSpeed * Time.delta);
+            float effectiveRotateSpeed = mount.shoot && shootRotateSpeed >= 0f ? shootRotateSpeed : rotateSpeed;
+            mount.rotation = Angles.moveToward(mount.rotation, mount.targetRotation, effectiveRotateSpeed * Time.delta);
             if(rotationLimit < 360){
                 float dst = Angles.angleDist(mount.rotation, baseRotation);
                 if(dst > rotationLimit / 2f){
@@ -179,16 +181,14 @@ public class MulitShootContinueWeapon extends Weapon{
             mount.side = !mount.side;
         }
 
-        //shoot if applicable
-        if(mount.shoot && //must be shooting
-        can && //must be able to shoot
-        !(bullet.killShooter && mount.totalShots > 0) && //if the bullet kills the shooter, you should only ever be able to shoot once
-                true && //check ammo
-        (!alternate || wasFlipped == flipSprite) &&
-        mount.warmup >= minWarmup && //must be warmed up
-        unit.vel.len() >= minShootVelocity && //check velocity requirements
-        (mount.reload <= 0.0001f || (alwaysContinuous && mount.bullet == null)) && //reload has to be 0, or it has to be an always-continuous weapon
-        (alwaysShooting || Angles.within(rotate ? mount.rotation : unit.rotation + baseRotation, mount.targetRotation, shootCone)) //has to be within the cone
+        if (mount.shoot &&
+                can &&
+                !(bullet.killShooter && mount.totalShots > 0) &&
+                (!alternate || wasFlipped == flipSprite) &&
+                mount.warmup >= minWarmup &&
+                unit.vel.len() >= minShootVelocity &&
+                (mount.reload <= 0.0001f || (alwaysContinuous && mount.bullet == null)) &&
+                (alwaysShooting || Angles.within(rotate ? mount.rotation : unit.rotation + baseRotation, mount.targetRotation, shootCone)) //has to be within the cone
         ){
             shoot(unit, mount, bulletX, bulletY, shootAngle);
 

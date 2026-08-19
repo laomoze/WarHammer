@@ -6,6 +6,7 @@ uniform mat4 u_projTrans;
 varying vec4 v_color;
 varying vec4 v_mix_color;
 varying vec2 v_texCoords;
+varying vec2 v_worldCoords;
 
 void main(){
    v_color = a_color;
@@ -13,5 +14,6 @@ void main(){
    v_mix_color = a_mix_color;
    v_mix_color.a *= (255.0/254.0);
    v_texCoords = a_texCoord0;
+   v_worldCoords = a_position.xy;
    gl_Position = u_projTrans * a_position;
 }

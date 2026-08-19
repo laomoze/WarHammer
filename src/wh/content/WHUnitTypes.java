@@ -17,6 +17,7 @@ import arc.math.Angles;
 import arc.math.Interp;
 import arc.math.Mathf;
 import arc.math.Rand;
+import arc.math.geom.Geometry;
 import arc.math.geom.Position;
 import arc.math.geom.Rect;
 import arc.math.geom.Vec2;
@@ -59,6 +60,7 @@ import mindustry.world.meta.Env;
 import wh.entities.abilities.*;
 import wh.entities.bullet.*;
 import wh.entities.bullet.laser.*;
+import wh.entities.cutter.UnitCutter;
 import wh.entities.world.drawer.part.AimLaserPart;
 import wh.entities.world.drawer.part.AncientEngine;
 import wh.entities.world.drawer.part.BarrelPart;
@@ -240,26 +242,34 @@ public final class WHUnitTypes {
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
                 speed = 0.5F;
-                fogRadius = 90;
-                lightRadius = 600;
                 lowAltitude = true;
                 healColor = WHPal.WHYellow;
                 range = 1000;
                 flying = true;
                 engineSize = 0;
                 hitSize = 180;
-                health = 1.5f * 100f * 1000f;
+                health = 100f * 10000f;
                 armor = 100;
                 targetFlags = new BlockFlag[]{BlockFlag.turret, null};
                 rotateSpeed = 0.25F;
                 deathExplosionEffect = none;
                 createScorch = createWreck = false;
+                faceTarget = false;
 
                 addEngine(-58.0F, -175.0F, 0.0F, 5.0F, true);
                 addEngine(-53.0F, -175.0F, 0.0F, 5.0F, true);
                 addEngine(-8.0F, -151.0F, 0.0F, 5.0F, true);
                 addEngine(-4.0F, -151.0F, 0.0F, 5.0F, true);
                 addEngine(-1.0F, -151.0F, 0.0F, 5.0F, true);
+
+                engines.add(
+                        new WHUnitEngine(-154 / 4f, -448 / 4f, 0, 40, 3) {{
+                            line = true;
+                        }},
+                        new WHUnitEngine(65 / 4f, -368 / 4f, 10, 30, 2) {{
+                            line = true;
+                        }}
+                );
 
                 abilities.add(new Ability() {
                     {
@@ -273,97 +283,320 @@ public final class WHUnitTypes {
                         WHSounds.jump.at(unit.x, unit.y, 1.0F, 3.0F);
                     }
                 });
-                abilities.add((new AdaptedHealAbility(3000.0F, 180.0F, 220.0F, healColor)).modify((a) -> a.selfHealReloadTime = 300.0F));
-                abilities.add((new ShockWaveAbility(180.0F, 320.0F, 2000.0F, WHPal.WHYellow)).status(StatusEffects.unmoving, 300.0F, StatusEffects.disarmed, 300.0F).modify((a) -> {
+                abilities.add((new AdaptedHealAbility(3000.0F, 180.0F, 220.0F, healColor)).modify(
+                        (a) -> {
+                            a.selfHealReloadTime = 300f;
+                            a.selfHealAmount = 1.2f / 100f / 60f;
+                        }));
+                abilities.add((new ShockWaveAbility(180f, 320f, 2000f, WHPal.WHYellow)).status(
+                        StatusEffects.unmoving, 300f, StatusEffects.disarmed, 120f).modify((a) -> {
                     a.knockback = 400.0F;
                     a.shootEffect = new MultiEffect(WHFx.lineCircleOut(30, a.hitColor, 30, 3), WHFx.hitSpark(55.0F, a.hitColor, 40, a.range + 30.0F, 3.0F, 8.0F), WHFx.smoothColorCircle(60.0F, WHPal.WHYellow.cpy().a(0.3F), a.range));
                 }));
-                weapons.add(new Weapon("wh-c-moon-weapon3") {
+
+                Weapon cmWeapon1 = new MulitShootContinueWeapon(name("c-moon-weapon1")) {
                     {
-                        x = 49.0F;
-                        y = -61.5F;
-                        mirror = true;
-                        layerOffset = 0.15F;
+                        x = 0;
+                        y = 464 / 4f;
+                        mirror = false;
+                        layerOffset = 0.15f;
                         rotate = true;
-                        rotateSpeed = 1.2F;
-                        reload = 300.0F;
-                        shootY = 46.0F;
+                        rotateSpeed = 1.5f;
+                        shootRotateSpeed = 0.3f;
+                        reload = 500f;
+                        shootY = 150 / 4f;
                         inaccuracy = 1.5F;
-                        velocityRnd = 0.075F;
+                        velocityRnd = 0;
                         shootSound = shootRipple;
+
+                        recoilTime = 90f;
+                        recoils = 3;
+
                         shoot = new ShootAlternate() {
                             {
-                                shots = 2;
-                                spread = 25.0F;
-                                shotDelay = 15.0F;
-                            }
-                        };
-                        bullet = new TrailFadeBulletType(20.0F, 1800.0F) {
-                            {
-                                lifetime = 55.0F;
-                                trailLength = 90;
-                                trailWidth = 3.6F;
-                                tracers = 2;
-                                tracerFadeOffset = 20;
-                                keepVelocity = false;
-                                tracerSpacing = 10.0F;
-                                tracerUpdateSpacing *= 1.25F;
-                                removeAfterPierce = false;
-                                hitColor = backColor = lightColor = lightningColor = WHPal.WHYellow;
-                                trailColor = WHPal.WHYellow;
-                                frontColor = WHPal.WHYellow2;
-                                width = 18.0F;
-                                height = 60.0F;
-                                hitSound = explosionReactor;
-                                despawnShake = hitShake = 18.0F;
-                                pierce = pierceArmor = true;
-                                pierceCap = 3;
-                                pierceBuilding = false;
-                                lightning = 3;
-                                lightningLength = 8;
-                                lightningLengthRand = 8;
-                                lightningDamage = 300.0F;
-                                smokeEffect = new WrapEffect(WHFx.hitSparkHuge, hitColor);
-                                shootEffect = WHFx.instShoot(backColor, frontColor);
-                                despawnEffect = WHFx.lightningHitLarge;
-                            }
-
-                            public void createFrags(Bullet b, float x, float y) {
-                                super.createFrags(b, x, y);
-                                WHBullets.nuBlackHole.create(b, x, y, 0.0F);
+                                barrels = 3;
+                                shots = 3;
+                                spread = 46 / 4f;
+                                shotDelay = 10;
                             }
                         };
 
-                        parts.add(new RegionPart("-管l") {
+                        parts.addAll(new RegionPart("-barrel1") {
+                                         {
+                                             outline = true;
+                                             mirror = false;
+                                             moveY = -8.0F;
+                                             under = true;
+                                             recoilIndex = 0;
+                                             progress = PartProgress.recoil;
+                                         }
+                                     },
+                                new RegionPart("-barrel2") {
+                                    {
+                                        outline = true;
+                                        mirror = false;
+                                        moveY = -8.0F;
+                                        under = true;
+                                        recoilIndex = 1;
+                                        progress = PartProgress.recoil;
+                                    }
+                                },
+                                new RegionPart("-barrel3") {
+                                    {
+                                        outline = true;
+                                        mirror = false;
+                                        moveY = -8.0F;
+                                        under = true;
+                                        recoilIndex = 2;
+                                        progress = PartProgress.recoil;
+                                    }
+                                });
+
+                        bullet = new LaserBeamBulletType() {
                             {
-                                outline = true;
-                                mirror = false;
-                                moveY = -8.0F;
-                                under = true;
-                                recoilIndex = 0;
-                                heatProgress = PartProgress.recoil;
-                                progress = PartProgress.recoil;
+                                damage = 1500;
+                                width = 15;
+                                length = 1000f;
+                                moveInterp = Interp.pow10Out;
+                                extensionProportion = 0f;
+                                damageInterval = 6;
+                                damageMult = 1f;
+                                lifetime = 90;
+
+                                pierceCap = -1;
+
+                                triCap = true;
+                                drawPositionLighting = false;
+                                renderingDistortion = false;
+
+                                Color c = lightningColor = hitColor = WHPal.SkyBlue.cpy();
+                                colors = new Color[]{c.a(0.2f), c.a(0.5f), c.a(0.7f), c, Color.white};
+
+                                hitEffect = new MultiEffect(
+                                        WHFx.generalExplosion(10, hitColor, 40, 2, false),
+                                        WHFx.hitCircle(15, hitColor, Color.lightGray, 6, 40, 8),
+                                        WHFx.hitSpark(20, hitColor, 6, 40, 1.5f, 10)
+                                );
                             }
-                        });
-                        parts.add(new RegionPart("-管r") {
-                            {
-                                outline = true;
-                                mirror = false;
-                                moveY = -8.0F;
-                                under = true;
-                                recoilIndex = 1;
-                                heatProgress = PartProgress.recoil;
-                                progress = PartProgress.recoil;
+
+                            @Override
+                            public void init(Bullet b) {
+                                super.init(b);
+                                if (!(b instanceof LaserDataBullet data)) return;
+                                data.startLength = 0f;
+                                data.currentLength = 0f;
+                                data.deltaLength = 0f;
+                                data.length = -1f;
+                                b.fdata = 0f;
                             }
-                        });
+
+                            private float endpointStopLength(Bullet b, float rotation, float maxLength) {
+                                float endX = b.x + Angles.trnsx(rotation, maxLength);
+                                float endY = b.y + Angles.trnsy(rotation, maxLength);
+                                float[] resultHolder = {maxLength};
+
+                                Building absorber = Damage.findAbsorber(b.team, b.x, b.y, endX, endY);
+                                if (absorber != null) {
+                                    resultHolder[0] = Math.min(resultHolder[0], Math.max(0f, b.dst(absorber) - absorber.hitSize() * 0.5f));
+                                }
+
+                                Rect searchRect = Tmp.r2.setPosition(b.x, b.y).setSize(endX - b.x, endY - b.y).normalize();
+                                Units.nearbyEnemies(b.team, searchRect, unit -> {
+                                    if (!unit.checkTarget(collidesAir, collidesGround) || !unit.hittable()) return;
+                                    unit.hitbox(Tmp.r1);
+                                    Vec2 hit = Geometry.raycastRect(b.x, b.y, endX, endY, Tmp.r1);
+                                    if (hit == null) return;
+                                    resultHolder[0] = Math.min(resultHolder[0], Mathf.dst(b.x, b.y, hit.x, hit.y));
+                                });
+
+                                return resultHolder[0];
+                            }
+
+
+                            @Override
+                            public void draw(Bullet b) {
+                                if (!(b instanceof LaserDataBullet data)) return;
+
+                                float realLength = data.currentLength;
+                                float rotation = b.rotation() + data.rotation;
+                                float fadeIn = Mathf.clamp(b.time / fadeTime);
+                                float fadeOut = Mathf.clamp((b.lifetime - b.time) / fadeTime);
+                                float fade = fadeIn * fadeOut;
+                                float pulse = 1f - oscMag + Mathf.absin(Time.time, oscScl, oscMag);
+                                float layerWidth = width;
+                                float endX = b.x + Angles.trnsx(rotation, realLength);
+                                float endY = b.y + Angles.trnsy(rotation, realLength);
+
+
+                                for (int i = 0; i < colors.length; i++) {
+                                    float startWidth = layerWidth * fade * pulse;
+                                    float endWidth = startWidth * 0.5f;
+                                    float startHalf = startWidth * 0.5f;
+                                    float endHalf = endWidth * 0.5f;
+
+                                    Draw.z(Layer.bullet - 0.001f + i * 0.0009f);
+                                    Draw.color(colors[i].cpy().a((float) i / colors.length * 0.5f + 0.5f));
+                                    Fill.quad(
+                                            b.x + Angles.trnsx(rotation + 90f, startHalf), b.y + Angles.trnsy(rotation + 90f, startHalf),
+                                            b.x - Angles.trnsx(rotation + 90f, startHalf), b.y - Angles.trnsy(rotation + 90f, startHalf),
+                                            endX - Angles.trnsx(rotation + 90f, endHalf), endY - Angles.trnsy(rotation + 90f, endHalf),
+                                            endX + Angles.trnsx(rotation + 90f, endHalf), endY + Angles.trnsy(rotation + 90f, endHalf)
+                                    );
+                                    Fill.circle(b.x, b.y, startHalf);
+                                    Fill.circle(endX, endY, endHalf);
+
+                                    layerWidth *= lengthFalloff;
+                                }
+
+                                Tmp.v1.trns(rotation, realLength * 1.1f);
+                                Drawf.light(b.x, b.y, b.x + Tmp.v1.x, b.y + Tmp.v1.y, width * 0.85f * b.fout(), colors[0], 0.6f);
+                                Draw.reset();
+                            }
+
+                            public Effect scEffect = new TrailEffect(60, 1000f, WHPal.SkyBlueF, hitColor, 1, 12, 2)
+                                    .layer(Layer.effect + 1).drawTri(true)
+                                    .trailUpdater((e, trail, x, y, w, len, index) -> {
+                                        if (!(e.data instanceof float[] path)) return;
+
+                                        float endX = path[0];
+                                        float endY = path[1];
+                                        float bend = path[2];
+                                        float progress = e.fin(Interp.smooth);
+                                        float angle = Angles.angle(x, y, endX, endY);
+
+                                        Bezier.set(
+                                                Tmp.v1.set(x, y),
+                                                Tmp.v2.set((x + endX) * 0.5f + Angles.trnsx(angle + 90f, bend),
+                                                        (y + endY) * 0.5f + Angles.trnsy(angle + 90f, bend)),
+                                                Tmp.v3.set(endX, endY)
+                                        );
+                                        Bezier.valueAt(Tmp.v4, progress);
+
+                                        float widthScale = Mathf.lerp(1f, 0.35f, progress) * e.fout();
+                                        trail.length = Math.max(1, (int) (Interp.slope.apply(e.fin()) * len));
+                                        trail.update(Tmp.v4.x, Tmp.v4.y, 0f, w * widthScale);
+                                        trail.draw(hitColor, w * widthScale);
+                                        trail.drawCap(hitColor, w * widthScale);
+                                    }).followParent(true);
+
+                            @Override
+                            public void update(Bullet b) {
+                                if (!(b instanceof LaserDataBullet data)) return;
+                                float rotation = b.rotation() + data.rotation;
+                                // 没有目标时也始终向配置的最大长度延伸，命中单位或建筑后再由终点检测截断。
+                                float targetLength = length;
+                                float stopLength = endpointStopLength(b, rotation, targetLength);
+                                float desiredLength = targetLength * b.fin(moveInterp);
+                                boolean wasStopped = data.length >= 0f && data.length < targetLength;
+                                float nextLength = Math.min(desiredLength, stopLength);
+
+                                if (wasStopped && stopLength > data.currentLength) {
+                                    nextLength = Math.min(data.currentLength + targetLength * moveSpeed * Time.delta, nextLength);
+                                }
+
+                                data.currentLength = nextLength;
+                                data.deltaLength = stopLength;
+                                if (stopLength < targetLength && data.currentLength >= stopLength - 0.001f) {
+                                    data.length = stopLength;
+                                }
+                                b.fdata = data.currentLength;
+
+                                if (b.timer(1, damageInterval)) {
+                                    applyDamage(b);
+                                }
+                                if (shake > 0f) {
+                                    Effect.shake(shake, shake, b);
+                                }
+                                updateBulletInterval(b);
+
+                                if (!(data.timer2.get(1, 10) && b.fin() < 0.5f) || state.isPaused()) return;
+
+                                float startOffset = Mathf.range(width * 0.7f);
+                                float endOffset = startOffset * 0.5f + Mathf.range(width * 0.08f);
+                                float startX = b.x + Angles.trnsx(rotation + 90f, startOffset);
+                                float startY = b.y + Angles.trnsy(rotation + 90f, startOffset);
+                                float endX = b.x + Angles.trnsx(rotation, data.currentLength) + Angles.trnsx(rotation + 90f, endOffset);
+                                float endY = b.y + Angles.trnsy(rotation, data.currentLength) + Angles.trnsy(rotation + 90f, endOffset);
+                                float bend = Mathf.range(width);
+
+                                scEffect.at(startX, startY, rotation, new float[]{endX, endY, bend});
+                            }
+
+                            private boolean hasLargeForceField(Unit unit) {
+                                for (Ability ability : unit.abilities) {
+                                    if (ability instanceof ForceFieldAbility) return true;
+                                    if (ability instanceof EllipseForceFieldAbility) return true;
+                                }
+                                return false;
+                            }
+
+                            @Override
+                            public void hitEntity(Bullet b, Hitboxc entity, float health) {
+                                boolean cutTarget = false;
+
+                                if (entity instanceof Unit unit && (unit.shield() < 1000 * 20 || (hasLargeForceField(unit) && unit.shield < 1000 * 10))) {
+                                    float followupDamage = b.damage * (1f - unit.healthf() / 0.5f) * 5f;
+                                    float expectedHealth = unit.health() - b.damage - followupDamage;
+                                    cutTarget = unit.isFlying() && (
+                                            unit.healthf() < 0.25f ||
+                                                    expectedHealth <= unit.maxHealth * 0.25f ||
+                                                    unit.health() * unit.healthMultiplier < 40000f
+                                    );
+
+                                    if (cutTarget) {
+                                        float cutAngle = b.rotation();
+                                        float cutLength = Math.max(unit.bounds() * 1.1f, 36f);
+                                        float cutX1 = unit.x + Angles.trnsx(cutAngle, cutLength);
+                                        float cutY1 = unit.y + Angles.trnsy(cutAngle, cutLength);
+                                        float cutX2 = unit.x + Angles.trnsx(cutAngle + 180f, cutLength);
+                                        float cutY2 = unit.y + Angles.trnsy(cutAngle + 180f, cutLength);
+
+                                        UnitCutter.cut(
+                                                unit,
+                                                cutX1, cutY1, cutX2, cutY2,
+                                                unit.type.deathExplosionEffect,
+                                                null
+                                        );
+                                    }
+                                }
+
+                                if (cutTarget) {
+                                    Tmp.v3.trns(b.rotation(), b.fdata);
+                                    PositionLightning.createEffect(b, Tmp.v3.add(b), hitColor, 2, Mathf.random(1, 2));
+                                    return;
+                                }
+
+                                super.hitEntity(b, entity, health);
+
+                                if (!(entity instanceof Unit unit)) return;
+
+                                if (unit.shield() < 1000 * 20 || (hasLargeForceField(unit) && unit.shield < 1000 * 10)) {
+                                    unit.damage(b.damage * (1f - unit.healthf() / 0.5f) * 5f);
+                                    Tmp.v3.trns(b.rotation(), b.fdata);
+                                    PositionLightning.createEffect(b, Tmp.v3.add(b), hitColor, 2, Mathf.random(1, 2));
+                                    if (!unit.isFlying() || unit.healthf() < 0.25f || unit.health() * unit.healthMultiplier < 40000f) {
+                                        unit.damagePierce(b.damage * 4f);
+                                    }
+                                }
+                            }
+                        };
                     }
 
                     protected Teamc findTarget(Unit unit, float x, float y, float range, boolean air, boolean ground) {
                         return Units.bestTarget(unit.team, x, y, range, (u) -> u.checkTarget(air, ground), (t) -> {
                             return ground;
-                        }, UnitSorts.strongest);
+                        }, (unit1, x4, y2) -> {
+                            return -unit1.maxHealth - unit1.dst2(x4, y2) / 100f;
+                        });
                     }
-                });
+                };
+
+
+                weapons.addAll(
+                        cmWeapon1,
+                        copyAndMove(cmWeapon1, 0, 79 / 4f)
+                );
+
                 weapons.add(new Weapon("wh-c-moon-weapon1") {
                     {
                         x = 39.0F;
@@ -15367,5 +15600,3 @@ public final class WHUnitTypes {
     }
 
 }
-
-

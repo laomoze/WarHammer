@@ -42,6 +42,7 @@ public class WHShaders{
     public static RectLensShader convexRect;
     public static @Nullable PsychicTideShader psychicTide;
     public static RingShader ringShader;
+    public static @Nullable AlphaCut alphaCut;
 
     private WHShaders(){
     }
@@ -79,6 +80,12 @@ public class WHShaders{
             psychicTide = null;
             Log.err("Failed to load psychic tide shader.", t);
         }
+        try {
+            alphaCut = new AlphaCut();
+        } catch (Throwable t) {
+            alphaCut = null;
+            Log.err("Failed to load alpha cut shader.", t);
+        }
     }
 
 
@@ -115,6 +122,44 @@ public class WHShaders{
             setUniformf("u_campos", cameraPos);
             setUniformf("u_ambientColor", ambientColor.r, ambientColor.g, ambientColor.b);
             setUniformf("u_emissive", emissive ? 1f : 0f);
+        }
+    }
+
+    public static class AlphaCut extends LoadShader {
+        private final Color cutColor = Color.valueOf("ff6a2b");
+        private boolean cutEdge;
+        private float cutX, cutY, cutDirX, cutDirY, cutWidth, cutSide;
+        private float regionU, regionV, regionU2, regionV2;
+
+        public AlphaCut() {
+            super("alphacut", "alphacutV");
+        }
+
+        public void setCutEdge(boolean enabled, float lineX, float lineY, float lineDirX, float lineDirY, float width, float side,
+                               float u, float v, float u2, float v2) {
+            cutEdge = enabled;
+            cutX = lineX;
+            cutY = lineY;
+            cutDirX = lineDirX;
+            cutDirY = lineDirY;
+            cutWidth = width;
+            cutSide = side;
+            regionU = u;
+            regionV = v;
+            regionU2 = u2;
+            regionV2 = v2;
+        }
+
+        @Override
+        public void apply() {
+            setUniformf("u_cutEnabled", cutEdge ? 1f : 0f);
+            setUniformf("u_cutPoint", cutX, cutY);
+            setUniformf("u_cutDirection", cutDirX, cutDirY);
+            setUniformf("u_cutWidth", cutWidth);
+            setUniformf("u_cutSide", cutSide);
+            setUniformf("u_cutRegion", regionU, regionV, regionU2, regionV2);
+            setUniformf("u_cutColor", cutColor.r, cutColor.g, cutColor.b);
+            setUniformf("u_time", Time.time);
         }
     }
 

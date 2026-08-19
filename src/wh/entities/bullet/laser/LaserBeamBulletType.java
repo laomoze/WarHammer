@@ -9,6 +9,7 @@ import arc.math.Interp;
 import arc.math.Mathf;
 import arc.math.Rand;
 import arc.math.geom.Vec2;
+import arc.util.Interval;
 import arc.util.Nullable;
 import arc.util.Time;
 import arc.util.Tmp;
@@ -334,6 +335,7 @@ public class LaserBeamBulletType extends ContinuousBulletType{
         public float debugResultLength;
         public float rotation, rotationStart, rotateAngle;
         public boolean stop;
+        public Interval timer2 = new Interval(8);
 
         @Override
         public void reset(){

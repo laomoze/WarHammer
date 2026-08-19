@@ -130,7 +130,7 @@ public class CMoonUnit extends PayloadUnit {
     };
 
     private final Cons<Unit> ellipseCollisionConsumer = unit -> {
-        if (unit == this || unit.dead || !unit.isAdded() || unit.hitSize() <= 0f) return;
+        if (unit == this || unit.dead || !unit.isAdded() || !unit.isFlying() || unit.hitSize() <= 0f) return;
         float offsetX = unit.x - x;
         float offsetY = unit.y - y;
         if (Mathf.zero(offsetX) && Mathf.zero(offsetY)) offsetY = 1f;

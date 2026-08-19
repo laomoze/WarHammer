@@ -62,6 +62,7 @@ public class WarHammerMod extends Mod {
         Net.registerPacket(GeminiSpecialBulletPacket::new);
         Net.registerPacket(RevengeOrbitCreatePacket::new);
         Net.registerPacket(RevengeOrbitBulletPacket::new);
+        Net.registerPacket(UnitCutPacket::new);
         /* WHClassMap.load();*/
         WHSettings.load();
         setupMultiplayerSettingSync();

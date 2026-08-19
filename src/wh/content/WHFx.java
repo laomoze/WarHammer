@@ -57,7 +57,7 @@ public final class WHFx {
     public static final Vec2 v9 = new Vec2();
     public static final Vec3 v31 = new Vec3();
     public static final int[] oneArr = new int[]{1};
-    private static final Bezier<Vec2> Bezier = new Bezier<>();
+    public static final Bezier<Vec2> Bezier = new Bezier<>();
     //保留
     public static Effect healReceiveCircle;
     public static Effect healSendCircle;
