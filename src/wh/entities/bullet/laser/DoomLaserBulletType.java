@@ -111,10 +111,10 @@ public class DoomLaserBulletType extends ContinuousBulletType{
 
             Rand rand = WHUtils.rand(b.id);
 
-            int particles = 5;
+            int particles = 4;
             for(int a = 0; a < particles; a++){
                 Draw.z(Layer.bullet + 0.01f);
-                float progress = Mathf.absin(12, 1),
+                float progress = Mathf.absin(12, 1) * rand.random(0.5f, 1),
                 angle1 = b.rotation() - 180,
                 size = width / 1.5f * (0.8f - i * 0.2f) * fout2,
                 length = rand.random(triSize * 0.5f, triSize * 2) * (1 - i * 0.2f) * fout2 * progress;
