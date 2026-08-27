@@ -42,6 +42,10 @@ public class PsychicAttributeBlock extends PsychicBlock {
     public void setStats() {
         super.setStats();
         stats.add(Stat.range, attributeRadius, StatUnit.blocks);
+        stats.add(Stat.affinities, attribute, false, boostScale, baseEfficiency <= 0.0001f);
+        if (secondaryAttribute != null && secondaryScale > 0.0001f) {
+            stats.add(Stat.affinities, secondaryAttribute, false, boostScale * secondaryScale, true);
+        }
         PsychicStatValues.add(stats, WHStats.psychicProduction, generationRate * maxEfficiency(), StatUnit.perSecond);
     }
 

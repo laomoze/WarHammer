@@ -10,7 +10,6 @@ import arc.math.Mathf;
 import arc.math.geom.Geometry;
 import arc.math.geom.Point2;
 import arc.struct.IntSeq;
-import arc.struct.IntSet;
 import arc.struct.Seq;
 import arc.util.*;
 import arc.util.io.Reads;
@@ -25,9 +24,8 @@ import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 import mindustry.input.Placement;
 import mindustry.ui.Bar;
-import mindustry.world.Block;
 import mindustry.world.Tile;
-import mindustry.world.blocks.heat.HeatBlock;
+import mindustry.world.blocks.heat.HeatConductor;
 import mindustry.world.blocks.heat.HeatConsumer;
 import mindustry.world.draw.DrawBlock;
 import mindustry.world.draw.DrawDefault;
@@ -36,14 +34,12 @@ import mindustry.world.meta.BlockGroup;
 import static mindustry.Vars.tilesize;
 import static mindustry.Vars.world;
 
-public class HeatDirectionBridge extends Block {
+public class HeatDirectionBridge extends HeatConductor {
     private static BuildPlan otherReq;
 
     public int range = 10;
     public float lost = 0.003f;
-    public float visualMaxHeat = 15f;
     public DrawBlock drawer = new DrawDefault();
-    public boolean splitHeat = false;
     public TextureRegion endRegion, bridgeRegion, arrowRegion, dirRegion;
 
     public boolean fadeIn = true;
@@ -150,7 +146,8 @@ public class HeatDirectionBridge extends Block {
     }
 
     public boolean linkValid(Tile tile, Tile other, boolean checkDouble) {
-        if (other == null || tile == null || tile == other || !positionsValid(tile.x, tile.y, other.x, other.y))
+        if (other == null || tile == null || tile == other || tile.build == null || other.build == null
+                || !positionsValid(tile.x, tile.y, other.x, other.y))
             return false;
 
         if (tile.block() == this) {
@@ -193,7 +190,8 @@ public class HeatDirectionBridge extends Block {
 
     public Tile findLink(int x, int y) {
         Tile tile = world.tile(x, y);
-        if (tile != null && tile.build != null && lastBuild != null && linkValid(lastBuild.tile, tile) && lastBuild.tile != tile && lastBuild.link == -1) {
+        if (tile != null && tile.build != null && lastBuild != null && lastBuild.tile.build == lastBuild
+                && linkValid(lastBuild.tile, tile) && lastBuild.tile != tile && lastBuild.link == -1) {
             if (tile.build.rotation == lastBuild.rotation) {
                 return lastBuild.tile;
             }
@@ -255,17 +253,12 @@ public class HeatDirectionBridge extends Block {
         Placement.calculateNodes(points, this, rotation, (point, other) -> Math.max(Math.abs(point.x - other.x), Math.abs(point.y - other.y)) <= range);
     }
 
-    public class HeatDirectionBridgeBuild extends Building implements HeatBlock, HeatConsumer {
+    public class HeatDirectionBridgeBuild extends HeatConductorBuild implements HeatConsumer {
         public float warmup;
         public float time = -8f, timeSpeed;
         public int link = -1;
         public Seq<Building> owners = new Seq<>();
         public IntSeq incoming = new IntSeq(false, 4);
-
-        public float heat = 0f;
-        public float[] sideHeat = new float[4];
-        public IntSet cameFrom = new IntSet();
-        public long lastHeatUpdate = -1;
 
         @Override
         public void pickedUp() {
@@ -387,6 +380,7 @@ public class HeatDirectionBridge extends Block {
 
         public void updateHeat() {
             if (lastHeatUpdate == Vars.state.updateId) return;
+
             lastHeatUpdate = Vars.state.updateId;
             heat = calculateHeat(sideHeat, cameFrom);
         }
@@ -404,7 +398,7 @@ public class HeatDirectionBridge extends Block {
 
         @Override
         public float heat() {
-            return heat;
+            return (owners.size > 0 && link == -1) ? heat : 0;
         }
 
         @Override

@@ -94,7 +94,6 @@ public class WarHammerMod extends Mod {
 
         // Keep objective panel alive if another UI rebuild removes it.
         Events.run(EventType.Trigger.update, () -> {
-            /*    PsychicField.update();*/
             if(!Vars.headless){
                 ActionContext.cutsceneUI.update();
                 WHObjectiveUI.ensureMounted();

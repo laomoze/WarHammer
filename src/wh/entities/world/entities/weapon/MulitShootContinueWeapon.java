@@ -94,7 +94,7 @@ public class MulitShootContinueWeapon extends Weapon{
             axisY = unit.y + Angles.trnsy(unit.rotation - 90, x, y);
 
             mount.targetRotation = Angles.angle(axisX, axisY, mount.aimX, mount.aimY) - unit.rotation;
-            float effectiveRotateSpeed = mount.shoot && shootRotateSpeed >= 0f ? shootRotateSpeed : rotateSpeed;
+            float effectiveRotateSpeed = continuous && mount.bullet != null && mount.bullets.size > 0 && mount.bullets.any() && shootRotateSpeed >= 0f ? shootRotateSpeed : rotateSpeed;
             mount.rotation = Angles.moveToward(mount.rotation, mount.targetRotation, effectiveRotateSpeed * Time.delta);
             if(rotationLimit < 360){
                 float dst = Angles.angleDist(mount.rotation, baseRotation);
@@ -194,6 +194,43 @@ public class MulitShootContinueWeapon extends Weapon{
 
             mount.reload = reload;
         }
+    }
+
+    @Override
+    protected void shoot(Unit unit, WeaponMount mount, float shootX, float shootY, float rotation) {
+        unit.apply(shootStatus, shootStatusDuration);
+
+        if (shoot.firstShotDelay > 0) {
+            mount.charging = true;
+            shoot.shoot(mount.barrelCounter, (xOffset, yOffset, angle, delay, mover) -> {
+                if (delay > 0f) {
+                    Time.run(delay - shoot.firstShotDelay, () -> {
+                        Vec2 v1 = new Vec2().trns(rotation - 90f, xOffset, yOffset);
+                        float fx = shootX + v1.x;
+                        float fy = shootY + v1.y;
+                        bullet.chargeEffect.at(fx, fy, rotation, unit);
+                        chargeSound.at(fx, fy, Mathf.random(soundPitchMin, soundPitchMax));
+                    });
+                }
+            }, () -> mount.barrelCounter++);
+        }
+
+        shoot.shoot(mount.barrelCounter, (xOffset, yOffset, angle, delay, mover) -> {
+            //this is incremented immediately, as it is used for total bullet creation amount detection
+            mount.totalShots++;
+            int barrel = mount.barrelCounter;
+            if (delay > 0f) {
+                Time.run(delay, () -> {
+                    //hack: make sure the barrel is the same as what it was when the bullet was queued to fire
+                    int prev = mount.barrelCounter;
+                    mount.barrelCounter = barrel;
+                    bullet(unit, mount, xOffset, yOffset, angle, mover);
+                    mount.barrelCounter = prev;
+                });
+            } else {
+                bullet(unit, mount, xOffset, yOffset, angle, mover);
+            }
+        }, () -> mount.barrelCounter++);
     }
 
     @Override

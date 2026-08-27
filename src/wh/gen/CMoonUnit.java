@@ -3,6 +3,7 @@ package wh.gen;
 import arc.Core;
 import arc.func.Cons;
 import arc.graphics.Color;
+import arc.graphics.g2d.Lines;
 import arc.math.Mathf;
 import arc.math.geom.Rect;
 import arc.scene.ui.layout.Table;
@@ -11,14 +12,20 @@ import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.Vars;
 import mindustry.content.Fx;
+import mindustry.entities.Effect;
+import mindustry.game.Team;
 import mindustry.gen.Bullet;
 import mindustry.gen.Groups;
 import mindustry.gen.PayloadUnit;
 import mindustry.gen.Unit;
+import mindustry.graphics.Pal;
 import mindustry.type.UnitType;
 import mindustry.ui.Bar;
 import wh.entities.world.entities.CMoonUnitType;
 import wh.graphics.CMoonVoidShieldRenderer;
+
+import static arc.graphics.g2d.Draw.color;
+import static arc.graphics.g2d.Lines.stroke;
 
 public class CMoonUnit extends PayloadUnit {
     private static final float shieldEpsilon = 0.0001f;
@@ -32,6 +39,10 @@ public class CMoonUnit extends PayloadUnit {
 
     private int nearbySupportCount;
     private CMoonUnitType cMoonType;
+    private transient Team creationTeam;
+    private transient boolean teamLocked;
+    private transient float shieldProtectedHealth;
+    private transient boolean shieldHealthLocked;
 
     public static CMoonUnit create() {
         return new CMoonUnit();
@@ -40,6 +51,7 @@ public class CMoonUnit extends PayloadUnit {
     @Override
     public void setType(UnitType type) {
         super.setType(type);
+        lockCreationTeam();
         cMoonType = type instanceof CMoonUnitType moonType ? moonType : null;
         if (cMoonType != null && !isAdded()) {
             voidShield = cMoonType.voidShieldCapacity;
@@ -47,16 +59,119 @@ public class CMoonUnit extends PayloadUnit {
         }
     }
 
+    Effect absorb = new Effect(20, e -> {
+        if (e.data instanceof Float damage) {
+            if (cMoonType != null) {
+                color(cMoonType.voidShieldColor);
+            } else color(Pal.accent);
+            stroke(4f * e.fout());
+            float size = Mathf.clamp(damage / 50, 2, 5) * e.fin();
+            Lines.ellipse(e.x, e.y, size, size * 0.75f, size * 2f, e.rotation);
+        }
+    });
+
     @Override
     public void add() {
+        lockCreationTeam();
+        enforceCreationTeam();
         super.add();
-        CMoonVoidShieldRenderer.add(this);
+        enforceProtectedHealth();
+        if (!Vars.headless) {
+            CMoonVoidShieldRenderer.add(this);
+        }
+    }
+
+    @Override
+    public float mass() {
+        return 1145141919f;
     }
 
     @Override
     public void remove() {
-        CMoonVoidShieldRenderer.remove(this);
+        if (!Vars.net.client() && !Groups.isClearing && protectedByVoidShield()) return;
+        if (!Vars.headless) {
+            CMoonVoidShieldRenderer.remove(this);
+        }
         super.remove();
+    }
+
+    private boolean protectedByVoidShield() {
+        return cMoonType != null && isAdded() && shieldActive() && !isPlayer();
+    }
+
+    public boolean voidShieldProtects() {
+        return protectedByVoidShield();
+    }
+
+    private void enforceProtectedHealth() {
+        if (Vars.net.client()) return;
+        if (!protectedByVoidShield()) {
+            shieldHealthLocked = false;
+            shieldProtectedHealth = health;
+            return;
+        }
+
+        if (!shieldHealthLocked) {
+            shieldProtectedHealth = health;
+            shieldHealthLocked = true;
+        } else if (health != shieldProtectedHealth) {
+            health = shieldProtectedHealth;
+        }
+    }
+
+    @Override
+    public float health() {
+        enforceProtectedHealth();
+        return health;
+    }
+
+    @Override
+    public void team(Team nextTeam) {
+        if (!teamLocked) {
+            super.team(nextTeam);
+            lockCreationTeam();
+        } else if (!Vars.net.client()) {
+            enforceCreationTeam();
+        }
+    }
+
+    @Override
+    public Team team() {
+        if (!Vars.net.client()) {
+            lockCreationTeam();
+            enforceCreationTeam();
+        }
+        return team;
+    }
+
+    private void lockCreationTeam() {
+        if (!teamLocked && team != null) {
+            creationTeam = team;
+            teamLocked = true;
+        }
+    }
+
+    private void enforceCreationTeam() {
+        if (!Vars.net.client() && teamLocked && team != creationTeam) {
+            team = creationTeam;
+        }
+    }
+
+    @Override
+    public void health(float value) {
+        if (!Vars.net.client() && protectedByVoidShield()) return;
+        super.health(value);
+    }
+
+    @Override
+    public void dead(boolean value) {
+        if (!Vars.net.client() && value && protectedByVoidShield()) return;
+        super.dead(value);
+    }
+
+    @Override
+    public boolean killable() {
+        return (Vars.net.client() || !protectedByVoidShield()) && type.killable(this);
     }
 
     @Override
@@ -117,13 +232,13 @@ public class CMoonUnit extends PayloadUnit {
     }
 
     private final Cons<Bullet> shieldBulletConsumer = bullet -> {
-        if (bullet.team != team && bullet.type.collides && bullet.type.absorbable && inEllipse(bullet.x, bullet.y, this, shieldLongAxis(), shieldMinorAxis())) {
+        if (bullet.team != team() && bullet.type.collides && bullet.type.absorbable && inEllipse(bullet.x, bullet.y, this, shieldLongAxis(), shieldMinorAxis())) {
             absorbBullet(bullet);
         }
     };
 
     private final Cons<Unit> supportUnitConsumer = unit -> {
-        if (unit != this && !unit.dead && unit.team == team && unit.maxHealth >= cMoonType.lastStandHealth
+        if (unit != this && !unit.dead && unit.team() == team() && unit.maxHealth >= cMoonType.lastStandHealth
                 && Mathf.dst2(x, y, unit.x, unit.y) <= cMoonType.lastStandRange * cMoonType.lastStandRange) {
             nearbySupportCount++;
         }
@@ -152,7 +267,7 @@ public class CMoonUnit extends PayloadUnit {
     }
 
     private boolean isAuthority() {
-        return !Vars.net.client() || isLocal();
+        return !Vars.net.client();
     }
 
     private boolean shieldActive() {
@@ -170,7 +285,7 @@ public class CMoonUnit extends PayloadUnit {
         float shieldCost = voidShieldCost(damage);
 
         bullet.absorb();
-        Fx.absorb.at(bullet.x, bullet.y, bullet.rotation(), team.color);
+        absorb.at(bullet.x, bullet.y, bullet.rotation(), bullet.damage);
         voidShieldAlpha = 1f;
 
         if (shieldCost <= 0f) return;
@@ -188,21 +303,23 @@ public class CMoonUnit extends PayloadUnit {
 
     @Override
     public void rawDamage(float amount) {
+        if (Vars.net.client()) return;
         if (cMoonType == null) {
             super.rawDamage(amount);
             return;
         }
 
+        enforceProtectedHealth();
         boolean hadVoidShield = shieldActive();
         boolean hadShield = shield > shieldEpsilon;
         if (Float.isNaN(health)) health = 0f;
-
-        if (hadVoidShield && amount < cMoonType.voidShieldFreeDamage && cMoonType.voidShieldFreeCost <= 0f) {
-            voidShieldAlpha = 1f;
-            return;
-        }
-
         if (hadVoidShield) {
+            amount = voidShieldCost(amount);
+            if (amount <= 0f) {
+                voidShieldAlpha = 1f;
+                return;
+            }
+
             float voidDamage = Math.min(amount, Math.min(voidShield, voidShieldDamageBudget));
             if (voidDamage > 0f) {
                 voidShield -= voidDamage;
@@ -229,7 +346,8 @@ public class CMoonUnit extends PayloadUnit {
         }
 
         if (amount > 0f && type.killable) {
-            health -= amount;
+            if (protectedByVoidShield()) return;
+            health(health - amount);
             if (health <= 0f && !dead) kill();
         }
     }
@@ -243,16 +361,23 @@ public class CMoonUnit extends PayloadUnit {
 
     @Override
     public void kill() {
+        if (Vars.net.client()) return;
+        if (protectedByVoidShield()) return;
         if (!dead && hasLastStandSupport()) {
-            health = Math.max(1f, health);
+            health = Math.max(healthf() * 0.3f * maxHealth, health);
             return;
         }
         super.kill();
     }
 
+
     @Override
     public void update() {
+        enforceCreationTeam();
+        enforceProtectedHealth();
         super.update();
+        enforceCreationTeam();
+        enforceProtectedHealth();
 
         voidShieldAlpha = Mathf.approachDelta(voidShieldAlpha, shieldActive() ? 0.35f : 0f, 0.025f);
         if (!isAuthority()) return;
@@ -304,6 +429,8 @@ public class CMoonUnit extends PayloadUnit {
 
     @Override
     public void write(Writes write) {
+        enforceCreationTeam();
+        enforceProtectedHealth();
         super.write(write);
         write.f(voidShield);
         write.f(voidShieldAlpha);
@@ -314,6 +441,29 @@ public class CMoonUnit extends PayloadUnit {
     @Override
     public void read(Reads read) {
         super.read(read);
+        lockCreationTeam();
+        enforceCreationTeam();
+        voidShield = read.f();
+        voidShieldAlpha = read.f();
+        overloadTimer = read.f();
+        recoveryTimer = read.f();
+        enforceProtectedHealth();
+    }
+
+    @Override
+    public void writeSync(Writes write) {
+        enforceCreationTeam();
+        enforceProtectedHealth();
+        super.writeSync(write);
+        write.f(voidShield);
+        write.f(voidShieldAlpha);
+        write.f(overloadTimer);
+        write.f(recoveryTimer);
+    }
+
+    @Override
+    public void readSync(Reads read) {
+        super.readSync(read);
         voidShield = read.f();
         voidShieldAlpha = read.f();
         overloadTimer = read.f();

@@ -1275,7 +1275,8 @@ public class WHBullets {
                 homingPower = 0.01f;
                 homingRange = 20;
                 splashDamageRadius = 20;
-                splashDamage = 45;
+                splashDamage = 20;
+                armorMultiplier = blockArmorMultiplier = 0.8f;
                 trailChance = 0.1f;
                 critEffect = WHFx.square(20, Items.silicon.color, 1, 10, 3f);
                 shootEffect = Fx.shootBig;
@@ -1351,6 +1352,9 @@ public class WHBullets {
                 makeFire = true;
                 status = StatusEffects.burning;
                 statusDuration = 60;
+                splashDamageRadius = 32;
+                splashDamage = 30;
+                pierceCap = 2;
                 trailChance = 0.1f;
                 critEffect = Fx.smoke;
                 shootEffect = Fx.shootBig;
@@ -1471,9 +1475,9 @@ public class WHBullets {
             splashDamage = 40;
             lifetime = 420 / speed;
             homingDelay = lifetime * 0.8f;
-            homingPower = 0.1f;
+            homingPower = 0.04f;
             homingRange = 80;
-            followAimSpeed = 2f;
+            /*       followAimSpeed = 2f;*/
             weaveRandom = true;
             weaveScale = 12f;
             weaveMag = 0.3f;
@@ -1521,9 +1525,9 @@ public class WHBullets {
             damage = 40;
             lifetime = 420 / speed;
             homingDelay = lifetime * 0.8f;
-            homingPower = 0.1f;
+            homingPower = 0.04f;
             homingRange = 80;
-            followAimSpeed = 2f;
+            /*   followAimSpeed = 2f;*/
             weaveRandom = true;
             weaveScale = 12f;
             weaveMag = 0.3f;
@@ -1572,9 +1576,9 @@ public class WHBullets {
             splashDamage = 60;
             lifetime = 55;
             homingDelay = lifetime * 0.8f;
-            homingPower = 0.1f;
+            homingPower = 0.04f;
             homingRange = 80;
-            followAimSpeed = 2f;
+            /* followAimSpeed = 2f;*/
             weaveRandom = true;
             weaveScale = 12f;
             weaveMag = 0.3f;
@@ -1620,9 +1624,9 @@ public class WHBullets {
             splashDamage = 50;
             lifetime = 55;
             homingDelay = lifetime * 0.8f;
-            homingPower = 0.1f;
+            homingPower = 0.04f;
             homingRange = 80;
-            followAimSpeed = 2f;
+            /*   followAimSpeed = 2f;*/
             weaveRandom = true;
             weaveScale = 12f;
             weaveMag = 0.3f;
@@ -1697,9 +1701,9 @@ public class WHBullets {
             armorMultiplier = blockArmorMultiplier = 0.5f;
             lifetime = 55;
             homingDelay = lifetime * 0.8f;
-            homingPower = 0.1f;
+            homingPower = 0.04f;
             homingRange = 80;
-            followAimSpeed = 2f;
+            followAimSpeed = 0.5f;
             weaveRandom = true;
             weaveScale = 12f;
             weaveMag = 0.3f;
@@ -1887,7 +1891,7 @@ public class WHBullets {
             despawnEffect = Fx.hitBulletColor;
         }};
 
-        BladePlastanium = new CritBulletType(4f, 40, "bullet") {{
+        BladePlastanium = new CritBulletType(4f, 50, "bullet") {{
             reloadMultiplier = 1.5f;
             ammoMultiplier = 3f;
 
@@ -1980,7 +1984,7 @@ public class WHBullets {
             despawnEffect = Fx.hitBulletColor;
         }};
 
-        BladeCeramite = new CritBulletType(4f, 60, "bullet") {{
+        BladeCeramite = new CritBulletType(4f, 80, "bullet") {{
             reloadMultiplier = 1.3f;
             ammoMultiplier = 3f;
 
@@ -1996,7 +2000,7 @@ public class WHBullets {
             frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
             splashDamage = 80;
-            splashDamageRadius = 56;
+            splashDamageRadius = 60;
 
             hitEffect = new MultiEffect(
                     WHFx.generalExplosion(10, hitColor, splashDamageRadius, 5, true),

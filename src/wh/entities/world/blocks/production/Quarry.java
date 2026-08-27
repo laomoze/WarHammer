@@ -664,6 +664,24 @@ public class Quarry extends Block {
         }
 
         @Override
+        public void onRepaired() {
+            super.onRepaired();
+
+            lastChange = -1;
+            tiles.clear();
+            itemsArray.clear();
+            itemList.clear();
+            empty = true;
+
+            progress = 0f;
+            deployProgress = 0f;
+            warmup = 0f;
+            boostWarmup = 0f;
+            deploying = false;
+            drillX = drillY = targetX = targetY = 0f;
+        }
+
+        @Override
         public byte version() {
             return 2;
         }

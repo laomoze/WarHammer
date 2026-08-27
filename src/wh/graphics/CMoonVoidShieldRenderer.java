@@ -2,6 +2,8 @@ package wh.graphics;
 
 import arc.Core;
 import arc.Events;
+import arc.graphics.Blending;
+import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.gl.FrameBuffer;
 import arc.struct.Seq;
@@ -34,8 +36,10 @@ public final class CMoonVoidShieldRenderer {
     }
 
     private static void draw() {
+        if (!Vars.renderer.animateShields) return;
+
         WHShaders.CMoonVoidShieldShader shader = WHShaders.cMoonVoidShield;
-        if (shader == null || !Vars.renderer.animateShields) return;
+        if (shader == null) return;
 
         shader.clear();
         for (int index = 0; index < units.size; index++) {
@@ -47,19 +51,25 @@ public final class CMoonVoidShieldRenderer {
                     moon.shieldFraction(), moon.voidShieldAlpha, moon.voidShieldColor());
         }
 
-        if (shader.hasShields()) {
-            shieldBuffer.resize(Core.graphics.getWidth(), Core.graphics.getHeight());
-            shieldBuffer.begin();
-            shieldBuffer.end();
+        if (!shader.hasShields()) return;
 
-            int batchCount = shader.batchCount();
-            for (int batch = 0; batch < batchCount; batch++) {
-                int batchIndex = batch;
-                Draw.draw(VOID_SHIELD + batch * 0.0001f, () -> {
-                    shader.setBatch(batchIndex);
-                    shieldBuffer.blit(shader);
-                });
-            }
+        shieldBuffer.resize(Core.graphics.getWidth(), Core.graphics.getHeight());
+        int batchCount = shader.batchCount();
+        for (int batch = 0; batch < batchCount; batch++) {
+            int batchIndex = batch;
+            Draw.drawRange(VOID_SHIELD + batch * 0.0001f, 1f,
+                    () -> shieldBuffer.begin(Color.clear),
+                    () -> {
+                        shieldBuffer.end();
+                        Blending previousBlending = Draw.getBlend();
+                        Draw.blend(Blending.normal);
+                        shader.setBatch(batchIndex);
+                        try {
+                            shieldBuffer.blit(shader);
+                        } finally {
+                            Draw.blend(previousBlending);
+                        }
+                    });
         }
     }
 }

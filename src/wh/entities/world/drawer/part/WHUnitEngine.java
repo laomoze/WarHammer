@@ -46,6 +46,7 @@ public class WHUnitEngine extends UnitType.UnitEngine {
         /* Draw.z(type.engineLayer > 0? type.engineLayer : Layer.effect);*/
         float sin = Mathf.absin(Time.time, 2f, 0.1f);
         float rot = unit.rotation - 90;
+        float scale = type.useEngineElevation ? unit.elevation : 1f;
         Color color = type.engineColor == null ? unit.team.color : type.engineColor;
 
         Tmp.v1.trns(rot, x, y);
@@ -61,7 +62,7 @@ public class WHUnitEngine extends UnitType.UnitEngine {
             Drawf.flame(ex, ey,
                     divisions,
                     unit.rotation() - 180,
-                    realLength * lengthradiusPans[i * 4] * (1f - sin),
+                    realLength * lengthradiusPans[i * 4] * (1f - sin) * scale,
                     radius * lengthradiusPans[i * 4 + 1] * (1f + sin),
                     lengthradiusPans[i * 4 + 2]
             );

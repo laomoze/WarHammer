@@ -12,6 +12,7 @@ import mindustry.game.EventType.Trigger;
 import mindustry.gen.Groups;
 import mindustry.gen.Sounds;
 import mindustry.gen.Unit;
+import wh.gen.CMoonUnit;
 import wh.net.packet.UnitCutPacket;
 
 /**
@@ -21,6 +22,7 @@ import wh.net.packet.UnitCutPacket;
  * 当前 draw 调用并重新裁成两半，因此不会使用切割瞬间的静态截图。
  */
 public final class UnitCutter {
+    private static final float cutTransitionTime = 14f;
     private static final Seq<CutRequest> queuedCuts = new Seq<>();
     private static final Seq<CutExecution> activeCuts = new Seq<>();
 
@@ -41,6 +43,7 @@ public final class UnitCutter {
 
     public static void cut(Unit unit, float x1, float y1, float x2, float y2, Effect explosionEffect, Sound sound) {
         if (Vars.net.client()) return;
+        if (unit instanceof CMoonUnit moon && moon.voidShieldProtects()) return;
         if (unit == null || !unit.isAdded() || unit.dead) return;
         if (findActiveCut(unit) != null) return;
         for (CutRequest request : queuedCuts) if (request.unit == unit) return;
@@ -113,8 +116,11 @@ public final class UnitCutter {
         float fallProgress = execution.startElevation <= 0.0001f
                 ? Mathf.clamp(execution.time / 30f)
                 : 1f - Mathf.clamp(unit.elevation / execution.startElevation);
-        float separation = Mathf.clamp(unit.bounds() * 0.035f, 2f, 8f) * (0.8f + fallProgress * 0.5f);
-        float openingAngle = Mathf.clamp(2f + fallProgress * 4f, 2f, 6f);
+        float cutProgress = Mathf.clamp(execution.time / cutTransitionTime);
+        cutProgress = cutProgress * cutProgress * (3f - 2f * cutProgress);
+        float separation = Mathf.clamp(unit.bounds() * 0.035f, 2f, 8f)
+                * (0.8f + fallProgress * 0.5f) * cutProgress;
+        float openingAngle = Mathf.clamp(2f + fallProgress * 4f, 2f, 6f) * cutProgress;
 
         execution.liveCapture.captureAndDraw(unit, unit::draw, x1, y1, x2, y2, separation, openingAngle);
     }

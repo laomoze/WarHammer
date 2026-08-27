@@ -19,8 +19,8 @@ public class CMoonUnitType extends SuperHeavyUnitType {
     public float voidShieldOverloadDuration = 180f;
     public float voidShieldRecoveryDuration = 240f;
     public float lastStandRange = 500;
-    public float lastStandHealth = 100_000f;
-    public int lastStandUnits = 10;
+    public float lastStandHealth = 150_000f;
+    public int lastStandUnits = 5;
     public Color voidShieldColor = WHPal.SkyBlue.cpy().lerp(Pal.techBlue, 0.35f);
 
     public CMoonUnitType(String name) {

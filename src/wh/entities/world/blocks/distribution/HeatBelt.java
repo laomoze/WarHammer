@@ -9,7 +9,6 @@ import arc.graphics.g2d.TextureRegion;
 import arc.math.Interp;
 import arc.math.Mathf;
 import arc.math.geom.Geometry;
-import arc.struct.IntSet;
 import arc.struct.Seq;
 import arc.util.Eachable;
 import arc.util.Nullable;
@@ -31,7 +30,7 @@ import mindustry.world.Tile;
 import mindustry.world.blocks.Autotiler;
 import mindustry.world.blocks.distribution.ChainedBuilding;
 import mindustry.world.blocks.heat.HeatBlock;
-import mindustry.world.blocks.heat.HeatConsumer;
+import mindustry.world.blocks.heat.HeatConductor;
 import mindustry.world.blocks.heat.HeatProducer;
 import mindustry.world.blocks.power.NuclearReactor;
 import mindustry.world.meta.BlockGroup;
@@ -43,7 +42,7 @@ import wh.entities.world.blocks.production.HeatProducerReactor;
 import static mindustry.Vars.*;
 import static mindustry.input.Placement.isSidePlace;
 
-public class HeatBelt extends Block implements Autotiler {
+public class HeatBelt extends HeatConductor implements Autotiler {
     public TextureRegion[] topRegions = new TextureRegion[5];
     public TextureRegion[] botRegions = new TextureRegion[5];
     public TextureRegion[] heatRegions = new TextureRegion[5];
@@ -52,8 +51,6 @@ public class HeatBelt extends Block implements Autotiler {
     public Color heatColor2 = Pal.turretHeat;
     public float heatPulse = 0.5f, heatPulseScl = 10f;
 
-    public float visualMaxHeat = 60f;
-    public boolean splitHeat = false;
     public float warmupRate = 0.8f;
 
     public @Nullable Block bridgeReplacement;
@@ -153,16 +150,11 @@ public class HeatBelt extends Block implements Autotiler {
             PlacementHB.calculateBridges(plans, bridge, false, b -> b instanceof HeatDirectionBridge);
     }
 
-    public class HeatBeltBuilding extends Building implements HeatBlock, HeatConsumer, ChainedBuilding {
+    public class HeatBeltBuilding extends HeatConductorBuild implements ChainedBuilding {
         public int blendbits, xscl = 1, yscl = 1, blending;
         public boolean capped, backCapped = false;
         public @Nullable Building next;
         public @Nullable HeatBeltBuilding nextc;
-        public float heat = 0f;
-        public float[] sideHeat = new float[4];
-        public IntSet cameFrom = new IntSet();
-        public long lastHeatUpdate = -1;
-
         @Override
         public float[] sideHeat() {
             return sideHeat;
