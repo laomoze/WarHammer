@@ -2,7 +2,7 @@
 
 ---
 
-**WAR NEVER CHANGED.**
+**WAR NEVER CHANGED...**
 
 ---
 本人不太会写代码,勿喷
