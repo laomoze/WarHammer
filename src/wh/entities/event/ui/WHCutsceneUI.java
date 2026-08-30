@@ -1,20 +1,27 @@
 package wh.entities.event.ui;
 
-import arc.*;
-import arc.flabel.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.scene.actions.*;
-import arc.scene.event.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.ui.*;
-import wh.content.*;
+import arc.Core;
+import arc.flabel.FLabel;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Fill;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.scene.actions.Actions;
+import arc.scene.event.Touchable;
+import arc.scene.ui.layout.Scl;
+import arc.scene.ui.layout.Table;
+import arc.scene.ui.layout.WidgetGroup;
+import arc.struct.ObjectMap;
+import arc.struct.Seq;
+import arc.util.Time;
+import mindustry.Vars;
+import mindustry.gen.Tex;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
+import mindustry.ui.Styles;
+import wh.content.WHContent;
 
 import static mindustry.Vars.state;
 
@@ -26,6 +33,7 @@ public class WHCutsceneUI{
 
     public WidgetGroup root;
     public WidgetGroup curtain;
+    public WidgetGroup screenFade;
 
     public Table textTable = new Table();
     public Table textArea = new Table();
@@ -36,8 +44,8 @@ public class WHCutsceneUI{
 
     public boolean controlOverride = false;
     public float curtainProgress = 0f;
-    public float targetOverlayAlpha = 0f;
-    public float overlayAlphaShiftSpeed = OVERLAY_SPEED;
+    public float targetScreenFadeAlpha = 0f;
+    public float screenFadeAlphaShiftSpeed = OVERLAY_SPEED;
 
     private boolean built = false;
     private final Seq<WorldMark> worldMarks = new Seq<>();
@@ -52,6 +60,7 @@ public class WHCutsceneUI{
 
         buildRoot();
         buildCurtain();
+        buildScreenFade();
         buildTextTable();
         buildInfoTable();
         attach();
@@ -90,7 +99,21 @@ public class WHCutsceneUI{
                 Fill.quad(0f, height, 0f, height - heightC, width, height - heightC, width, height);
                 Draw.reset();
 
-                // Fullscreen overlay fade.
+            }
+        };
+    }
+
+    private void buildScreenFade() {
+        screenFade = new WidgetGroup() {
+            {
+                color.a = 0f;
+                setFillParent(true);
+                touchable = Touchable.disabled;
+            }
+
+            @Override
+            public void draw() {
+                super.draw();
                 Draw.color(0f, 0f, 0f, color.a);
                 Fill.quad(0f, 0f, 0f, height, width, height, width, 0f);
                 Draw.reset();
@@ -149,6 +172,7 @@ public class WHCutsceneUI{
         Vars.control.input.addLock(() -> controlOverride);
         Core.scene.root.addChildAt(0, root);
         root.addChild(curtain);
+        root.addChild(screenFade);
         root.addChild(textTable);
         root.addChild(infoTable);
     }
@@ -159,7 +183,7 @@ public class WHCutsceneUI{
     public void update(){
         if(Vars.headless) return;
         if(built){
-            curtain.color.a = Mathf.approachDelta(curtain.color.a, targetOverlayAlpha, overlayAlphaShiftSpeed);
+            screenFade.color.a = Mathf.approachDelta(screenFade.color.a, targetScreenFadeAlpha, screenFadeAlphaShiftSpeed);
         }
         if(!state.isPaused()) updateWorldMarks();
     }
@@ -167,14 +191,37 @@ public class WHCutsceneUI{
     /**
      * Cutscene UI bridge layer for signal/info/curtain effects.
  */
+    public void resetMain() {
+        if (Vars.headless || !built) return;
+
+        float oldCurtainProgress = curtainProgress;
+        float oldTargetScreenFadeAlpha = targetScreenFadeAlpha;
+        float oldScreenFadeAlphaShiftSpeed = screenFadeAlphaShiftSpeed;
+        float oldScreenFadeAlpha = screenFade.color.a;
+        reset();
+        curtainProgress = oldCurtainProgress;
+        targetScreenFadeAlpha = oldTargetScreenFadeAlpha;
+        screenFadeAlphaShiftSpeed = oldScreenFadeAlphaShiftSpeed;
+        screenFade.color.a = oldScreenFadeAlpha;
+    }
+
+    public void resetScreen() {
+        if (Vars.headless || !built) return;
+
+        curtainProgress = 0f;
+        targetScreenFadeAlpha = 0f;
+        screenFadeAlphaShiftSpeed = OVERLAY_SPEED;
+        screenFade.color.a = targetScreenFadeAlpha;
+    }
+
     public void reset(){
         if(Vars.headless || !built) return;
 
         controlOverride = false;
         curtainProgress = 0f;
-        targetOverlayAlpha = 0f;
-        overlayAlphaShiftSpeed = OVERLAY_SPEED;
-        curtain.color.a = targetOverlayAlpha;
+        targetScreenFadeAlpha = 0f;
+        screenFadeAlphaShiftSpeed = OVERLAY_SPEED;
+        screenFade.color.a = targetScreenFadeAlpha;
 
         infoLabel = new FLabel("");
         infoTable.clear();

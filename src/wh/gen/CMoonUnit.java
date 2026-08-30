@@ -114,8 +114,10 @@ public class CMoonUnit extends PayloadUnit {
         if (!shieldHealthLocked) {
             shieldProtectedHealth = health;
             shieldHealthLocked = true;
-        } else if (health != shieldProtectedHealth) {
+        } else if (health < shieldProtectedHealth) {
             health = shieldProtectedHealth;
+        } else if (health > shieldProtectedHealth) {
+            shieldProtectedHealth = health;
         }
     }
 
@@ -159,8 +161,18 @@ public class CMoonUnit extends PayloadUnit {
 
     @Override
     public void health(float value) {
-        if (!Vars.net.client() && protectedByVoidShield()) return;
+        if (!Vars.net.client() && protectedByVoidShield() && value < health) return;
         super.health(value);
+    }
+
+    @Override
+    public void heal() {
+        super.heal();
+    }
+
+    @Override
+    public void heal(float amount) {
+        super.heal(amount);
     }
 
     @Override
@@ -285,7 +297,7 @@ public class CMoonUnit extends PayloadUnit {
         float shieldCost = voidShieldCost(damage);
 
         bullet.absorb();
-        absorb.at(bullet.x, bullet.y, bullet.rotation(), bullet.damage);
+        absorb.at(bullet.x, bullet.y, bullet.rotation(), Mathf.clamp(bullet.damage, 5, 1000));
         voidShieldAlpha = 1f;
 
         if (shieldCost <= 0f) return;

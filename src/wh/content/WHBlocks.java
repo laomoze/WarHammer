@@ -69,7 +69,7 @@ import wh.core.WarHammerMod;
 import wh.entities.bullet.laser.ChainLightingBulletType;
 import wh.entities.bullet.laser.LaserBeamBulletType;
 import wh.entities.bullet.laser.LightingContinuousFlameBulletType;
-import wh.entities.bullet.laser.LightingContinuousLaserBullet;
+import wh.entities.bullet.laser.RicochetLaserBulletType;
 import wh.entities.world.Psy.*;
 import wh.entities.world.Psy.sandbox.PsychicSource;
 import wh.entities.world.Psy.sandbox.PsychicVoid;
@@ -8130,10 +8130,8 @@ public final class WHBlocks {
                 buildVisibility = BuildVisibility.sandboxOnly;
                 range = 165f;
 
-                shoot.firstShotDelay = 40f;
-
                 recoil = 2f;
-                reload = 80f;
+                reload = 180;
                 shake = 2f;
                 shootEffect = Fx.lancerLaserShoot;
                 smokeEffect = Fx.none;
@@ -8148,24 +8146,15 @@ public final class WHBlocks {
 
                 consumePower(6f);
 
-                shootType = new LightingContinuousLaserBullet() {{
-                    colors = new Color[]{Pal.lancerLaser.cpy().a(0.4f), Pal.lancerLaser, Color.white};
-                    //TODO merge
-                    chargeEffect = trailCharge(60, Pal.lancerLaser, 20, 2, 90, 3).layer(Layer.effect);
-                    buildingDamageMultiplier = 0.25f;
-                    hitEffect = Fx.hitLancer;
-                    hitSize = 4;
-                    lifetime = 200;
-                    damage = 1145;
-                    drawSize = 400f;
-                    hitColor = Pal.lancerLaser;
-                    collidesAir = false;
-                    length = 173f;
-                    ammoMultiplier = 1f;
-                    pierceCap = 4;
+                shootType = new RicochetLaserBulletType() {{
+                    speed = 20;
+                    damage = 400;
+                    pierceCap = 3;
+                    lifetime = 20;
                 }};
             }
         };
+
         sbSound = new WHItemTurret("test-sound-turret") {
             private final BulletType copperBullet = testSoundBullet();
             private final BulletType leadBullet = testSoundBullet();

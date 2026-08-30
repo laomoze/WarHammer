@@ -1,29 +1,36 @@
 package wh.entities.event.logic;
 
-import arc.flabel.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.actions.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.entities.bullet.*;
-import mindustry.game.*;
-import mindustry.gen.*;
+import arc.flabel.FLabel;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.math.geom.Vec2;
+import arc.scene.actions.Actions;
+import arc.scene.ui.layout.Table;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.Vars;
+import mindustry.entities.bullet.BulletType;
+import mindustry.game.Team;
+import mindustry.gen.Building;
+import mindustry.gen.Call;
+import mindustry.gen.Sounds;
 import mindustry.logic.*;
-import mindustry.world.*;
-import mindustry.world.meta.*;
-import wh.content.*;
-import wh.entities.event.mapmarker.*;
-import wh.entities.event.objective.*;
-import wh.entities.event.ui.*;
-import wh.net.*;
-import wh.util.*;
-import wh.util.struct.*;
+import mindustry.world.Tile;
+import mindustry.world.meta.BlockFlag;
+import wh.content.WHBullets;
+import wh.entities.event.logic.actionLogic.BusLogicInstruction;
+import wh.entities.event.mapmarker.RaidIndicator;
+import wh.entities.event.objective.RaidEventObjective;
+import wh.entities.event.ui.ActionContext;
+import wh.net.WHCall;
+import wh.util.WeightedRandom;
+import wh.util.struct.WeightedOption;
 
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicReference;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.state;
+import static mindustry.Vars.tilesize;
 
 /**
  * WH parser (prefixed to avoid mod conflicts):
@@ -120,7 +127,7 @@ public class DefaultRaids extends LStatement{
         );
     }
 
-    public static class DefaultRaidInstruction implements LExecutor.LInstruction{
+    public static class DefaultRaidInstruction extends BusLogicInstruction {
         public LVar flag;
         public LVar timer;
         public LVar alertTime;
@@ -153,21 +160,36 @@ public class DefaultRaids extends LStatement{
         }
 
         @Override
-        public void run(LExecutor exec){
+        protected boolean canStart() {
             if(state == null || state.rules == null){
-                return;
+                return false;
             }
 
             String flagKey = key(flag);
             boolean gated = !flagKey.isEmpty() && !flagKey.equalsIgnoreCase("null");
             if(!gated && oneShotFinished){
-                return;
+                return false;
             }
             if(gated && !state.rules.objectiveFlags.contains(flagKey)){
-                exec.counter.numval--;
-                exec.yield = true;
-                return;
+                return false;
             }
+
+            return true;
+        }
+
+        @Override
+        protected boolean canUpdate() {
+            if (state == null || state.rules == null) return false;
+
+            String flagKey = key(flag);
+            boolean gated = !flagKey.isEmpty() && !flagKey.equalsIgnoreCase("null");
+            return !gated || state.rules.objectiveFlags.contains(flagKey);
+        }
+
+        @Override
+        protected boolean updateAction() {
+            String flagKey = key(flag);
+            boolean gated = !flagKey.isEmpty() && !flagKey.equalsIgnoreCase("null");
 
             float alert = Math.max(0f, alertTime.numf());
             float raid = Math.max(0.001f, raidTime.numf());
@@ -175,11 +197,9 @@ public class DefaultRaids extends LStatement{
 
             if(curTime >= total){
                 reset(flagKey, gated);
-                return;
+                return true;
             }
 
-            exec.counter.numval--;
-            exec.yield = true;
             curTime += Time.delta / 60f;
 
             if(!iconShown){
@@ -199,6 +219,8 @@ public class DefaultRaids extends LStatement{
                     createBullet();
                 }
             }
+
+            return false;
         }
 
         private void showAlert(float alertSeconds){

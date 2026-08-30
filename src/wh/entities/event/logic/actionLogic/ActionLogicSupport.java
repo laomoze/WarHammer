@@ -1,5 +1,6 @@
 package wh.entities.event.logic.actionLogic;
 
+import arc.Core;
 import arc.audio.Sound;
 import arc.graphics.Color;
 import arc.graphics.g2d.TextureRegion;
@@ -9,6 +10,7 @@ import arc.util.Time;
 import mindustry.Vars;
 import mindustry.content.StatusEffects;
 import mindustry.content.UnitTypes;
+import mindustry.core.UI;
 import mindustry.core.World;
 import mindustry.ctype.UnlockableContent;
 import mindustry.entities.bullet.BulletType;
@@ -77,7 +79,20 @@ public final class ActionLogicSupport{
     /** 支持脚本中的 `[n]` 转换为换行符。 */
     public static String parseText(String raw){
         if(raw == null) return "";
-        return raw.replace("[n]", "\n");
+
+        String text = raw.trim();
+        if (text.length() >= 2 && text.charAt(0) == '"' && text.charAt(text.length() - 1) == '"') {
+            text = text.substring(1, text.length() - 1).replace("\\n", "\n");
+        }
+
+        text = UI.formatIcons(text.replace("[n]", "\n"));
+        if (text.startsWith("@")) {
+            String key = text.substring(1);
+            if (Core.bundle.has(key)) {
+                text = Core.bundle.get(key);
+            }
+        }
+        return text;
     }
 
     /**
@@ -418,17 +433,17 @@ public final class ActionLogicSupport{
         if(Vars.headless) return;
         ensureCutsceneUI();
 
-        float prev = ActionContext.cutsceneUI.targetOverlayAlpha;
+        float prev = ActionContext.cutsceneUI.targetScreenFadeAlpha;
         float peak = Math.max(prev, Mathf.clamp(alpha));
-        ActionContext.cutsceneUI.targetOverlayAlpha = peak;
+        ActionContext.cutsceneUI.targetScreenFadeAlpha = peak;
 
         int token = ++overlayPulseToken;
         Time.run(Math.max(1f, holdTicks), () -> {
             if(Vars.headless) return;
             if(token != overlayPulseToken) return;
             // 仅在没有更高优先级遮罩接管时才恢复。
-            if(ActionContext.cutsceneUI.targetOverlayAlpha <= peak + 0.001f){
-                ActionContext.cutsceneUI.targetOverlayAlpha = prev;
+            if (ActionContext.cutsceneUI.targetScreenFadeAlpha <= peak + 0.001f) {
+                ActionContext.cutsceneUI.targetScreenFadeAlpha = prev;
             }
         });
     }

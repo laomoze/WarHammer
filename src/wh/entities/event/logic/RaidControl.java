@@ -1,18 +1,22 @@
 package wh.entities.event.logic;
 
-import arc.math.*;
-import arc.scene.ui.layout.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.entities.bullet.*;
-import mindustry.game.*;
-import mindustry.gen.*;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.scene.ui.layout.Table;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.Vars;
+import mindustry.entities.bullet.BulletType;
+import mindustry.game.Team;
+import mindustry.gen.Call;
 import mindustry.logic.*;
-import wh.content.*;
-import wh.entities.event.objective.*;
-import wh.net.*;
+import wh.content.WHBullets;
+import wh.entities.event.logic.actionLogic.BusLogicInstruction;
+import wh.entities.event.objective.RaidEventObjective;
+import wh.net.WHCall;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.state;
+import static mindustry.Vars.tilesize;
 
 /**
  * WH parser (prefixed to avoid mod conflicts):
@@ -137,7 +141,7 @@ public class RaidControl extends LStatement{
         .append(inaccuracy);
     }
 
-    public static class RaidControlInstruction implements LExecutor.LInstruction{
+    public static class RaidControlInstruction extends BusLogicInstruction {
         public LVar flag;
         public LVar timer;
         public LVar alertTime;
@@ -174,29 +178,42 @@ public class RaidControl extends LStatement{
         }
 
         @Override
-        public void run(LExecutor exec){
+        protected boolean canStart() {
             if(state == null || state.rules == null){
-                return;
+                return false;
             }
 
             String flagKey = key(flag);
             boolean gated = !flagKey.isEmpty() && !flagKey.equalsIgnoreCase("null");
             if(gated && !state.rules.objectiveFlags.contains(flagKey)){
-                exec.counter.numval--;
-                exec.yield = true;
-                return;
+                return false;
             }
+
+            return true;
+        }
+
+        @Override
+        protected boolean canUpdate() {
+            if (state == null || state.rules == null) return false;
+
+            String flagKey = key(flag);
+            boolean gated = !flagKey.isEmpty() && !flagKey.equalsIgnoreCase("null");
+            return !gated || state.rules.objectiveFlags.contains(flagKey);
+        }
+
+        @Override
+        protected boolean updateAction() {
+            String flagKey = key(flag);
+            boolean gated = !flagKey.isEmpty() && !flagKey.equalsIgnoreCase("null");
 
             float alert = Math.max(0f, alertTime.numf());
             float raid = Math.max(0.001f, raidTime.numf());
             float total = alert + raid;
             if(curTime >= total){
                 reset(flagKey, gated);
-                return;
+                return true;
             }
 
-            exec.counter.numval--;
-            exec.yield = true;
             curTime += Time.delta / 60f;
 
             if(!alertShown){
@@ -213,6 +230,8 @@ public class RaidControl extends LStatement{
                     createBullet();
                 }
             }
+
+            return false;
         }
 
         private void reset(String flagKey, boolean gated){

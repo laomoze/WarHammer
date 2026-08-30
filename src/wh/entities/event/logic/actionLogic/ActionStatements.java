@@ -40,6 +40,7 @@ import wh.entities.event.ui.ActionContext;
 import wh.graphics.Drawn;
 import wh.math.WHInterp;
 import wh.ui.UIUtils;
+import wh.util.WHUtils;
 
 import static mindustry.Vars.tilesize;
 import static wh.entities.event.logic.WHLogicStatements.registerStatement;
@@ -49,6 +50,7 @@ import static wh.entities.event.logic.WHLogicStatements.registerStatement;
  * 所有语句复用 ActionInstruction 生命周期。
  */
 public final class ActionStatements{
+    // Statement fields and write() output stay compatible; ActionInstruction runs them through ActionBus.
     private ActionStatements(){
     }
 
@@ -532,7 +534,6 @@ public final class ActionStatements{
                 fadeOutSec = tokNum(tokens, 4, fadeOutSec);
                 out = tok(tokens, 5, out);
             }else{
-                // 兼容旧格式：run out
                 out = tok(tokens, 2, out);
             }
         }
@@ -549,6 +550,7 @@ public final class ActionStatements{
 
         @Override
         public LExecutor.LInstruction build(LAssembler builder){
+
             final LVar vr = builder.var(run);
             final LVar vIn = builder.var(fadeInSec);
             final LVar vHold = builder.var(holdSec);
@@ -559,6 +561,11 @@ public final class ActionStatements{
                 private float holdTicks = 0f;
                 private float outTicks = 0f;
                 private float totalTicks = 0f;
+
+                @Override
+                protected boolean useScreenBus() {
+                    return true;
+                }
 
                 @Override
                 protected boolean begin(LExecutor exec){
@@ -615,6 +622,7 @@ public final class ActionStatements{
                 protected void cancel(LExecutor exec){
                     end(exec);
                 }
+
             };
         }
 
@@ -625,123 +633,87 @@ public final class ActionStatements{
     }
 
     /** 全屏幕布：淡入 -> 停留 -> 淡出。 */
-    public static class CurtainFadeInStatement extends BaseActionStatement{
-        public String fadeInSec = "1";
-        public String holdSec = "1";
-        public String fadeOutSec = "1";
+    /**
+     * Fullscreen black overlay fades from opaque to transparent.
+     */
+    public static class ScreenFadeOutStatement extends BaseActionStatement {
+        public String durationSec = \u00221\u0022;
 
-        public CurtainFadeInStatement(){
+        public ScreenFadeOutStatement(){
         }
 
-        public CurtainFadeInStatement(String[] tokens){
+        public ScreenFadeOutStatement(String[] tokens){
             run = tok(tokens, 1, run);
-            if(tokens != null && tokens.length >= 6){
-                fadeInSec = tok(tokens, 2, fadeInSec);
-                holdSec = tok(tokens, 3, holdSec);
-                fadeOutSec = tok(tokens, 4, fadeOutSec);
-                out = tok(tokens, 5, out);
-            }
+            durationSec = tokNum(tokens, 2, durationSec);
+            out = tok(tokens, 3, out);
         }
 
         @Override
-        public void build(Table table){
-            fieldLabeled(table, "run ", run, v -> run = v, 72f);
-            fieldLabeled(table, " fadeIn ", fadeInSec, v -> fadeInSec = v, 72f);
-            fieldLabeled(table, " hold ", holdSec, v -> holdSec = v, 72f);
-            table.row();
-            fieldLabeled(table, " fadeOut ", fadeOutSec, v -> fadeOutSec = v, 72f);
-            fieldLabeled(table, " result ", out, v -> out = v, 120f);
+        public void build(Table table) {
+            fieldLabeled(table, \u0022run \u0022, run, v -> run = v, 72f);
+            fieldLabeled(table, \u0022 duration \u0022, durationSec, v -> durationSec = v, 72f);
+            fieldLabeled(table, \u0022 result \u0022, out, v -> out = v, 120f);
         }
 
         @Override
         public LExecutor.LInstruction build(LAssembler builder){
             final LVar vr = builder.var(run);
-            final LVar vIn = builder.var(fadeInSec);
-            final LVar vHold = builder.var(holdSec);
-            final LVar vOut = builder.var(fadeOutSec);
+            final LVar vd = builder.var(durationSec);
             final LVar vo = builder.var(out);
-            return new ActionInstruction(vr, vo){
-                private float inTicks = 0f;
-                private float holdTicks = 0f;
-                private float outTicks = 0f;
-                private float totalTicks = 0f;
+            return new ActionInstruction(vr, vo) {
+                private float durationTicks;
 
                 @Override
-                protected boolean begin(LExecutor exec){
-                    float inSec = Math.max(0f, ActionLogicSupport.parseFloat(vIn, 1f, exec));
-                    float hold = Math.max(0f, ActionLogicSupport.parseFloat(vHold, 1f, exec));
-                    float outSec = Math.max(0f, ActionLogicSupport.parseFloat(vOut, 1f, exec));
+                protected boolean useScreenBus() {
+                    return true;
+                }
 
-                    inTicks = inSec * Time.toSeconds;
-                    holdTicks = hold * Time.toSeconds;
-                    outTicks = outSec * Time.toSeconds;
-                    totalTicks = inTicks + holdTicks + outTicks;
-
+                @Override
+                protected boolean begin(LExecutor exec) {
+                    float duration = Math.max(0f, ActionLogicSupport.parseFloat(vd, 1f, exec));
+                    durationTicks = duration * Time.toSeconds;
                     if(!Vars.headless){
                         ActionLogicSupport.ensureCutsceneUI();
-                        ActionContext.cutsceneUI.targetOverlayAlpha = 0f;
-                        ActionContext.cutsceneUI.curtain.color.a = 0f;
+                        ActionContext.cutsceneUI.targetScreenFadeAlpha = 1f;
+                        ActionContext.cutsceneUI.screenFade.color.a = 1f;
                     }
-                    if(totalTicks <= 0f){
-                        return true;
-                    }
-                    // 单条语句流程：淡入 -> 停留 -> 淡出。
-                    startTimed(totalTicks);
+                    startTimed(durationTicks);
                     return true;
                 }
 
                 @Override
                 protected void update(LExecutor exec, float progress){
                     if(Vars.headless) return;
-
-                    float elapsed = progress * totalTicks;
-                    float alpha = 0f;
-
-                    if(inTicks > 0f && elapsed < inTicks){
-                        alpha = Mathf.clamp(elapsed / inTicks);
-                    }else if(elapsed < inTicks + holdTicks){
-                        alpha = 1f;
-                    }else if(outTicks > 0f){
-                        float pOut = (elapsed - inTicks - holdTicks) / outTicks;
-                        alpha = Mathf.clamp(1f - pOut);
-                    }
-
-                    ActionContext.cutsceneUI.targetOverlayAlpha = alpha;
-                    ActionContext.cutsceneUI.curtain.color.a = alpha;
+                    float alpha = 1f - progress;
+                    ActionContext.cutsceneUI.targetScreenFadeAlpha = alpha;
+                    ActionContext.cutsceneUI.screenFade.color.a = alpha;
                 }
 
                 @Override
                 protected void end(LExecutor exec){
                     if(Vars.headless) return;
-                    ActionContext.cutsceneUI.targetOverlayAlpha = 0f;
-                    ActionContext.cutsceneUI.curtain.color.a = 0f;
+                    ActionContext.cutsceneUI.targetScreenFadeAlpha = 0f;
+                    ActionContext.cutsceneUI.screenFade.color.a = 0f;
                 }
 
                 @Override
                 protected void cancel(LExecutor exec){
                     end(exec);
                 }
-
-                @Override
-                protected boolean enableGlobalFade(){
-                    return true;
-                }
             };
         }
 
         @Override
-        public void write(StringBuilder builder){
-            writeCommon(builder, "wh-curtain-fade", fadeInSec, holdSec, fadeOutSec);
+        public void write(StringBuilder builder) {
+            writeCommon(builder, \u0022wh-screen-fade-out\u0022, durationSec);
         }
     }
-
     /** 设置信息面板文本。 */
     public static class InfoTextStatement extends BaseActionStatement{
         public String text = "helloWorld";
         public String fadeInSec = "0.25";
         public String holdSec = "0.5";
         public String fadeOutSec = "0.25";
-        public String overlayAlpha = "0";
         public String color = "ffffff";
         public String fontScale = "1";
 
@@ -750,22 +722,14 @@ public final class ActionStatements{
 
         public InfoTextStatement(String[] tokens){
             run = tok(tokens, 1, run);
-            if(tokens != null && tokens.length >= 10){
+            if (tokens != null && tokens.length >= 9){
                 text = tok(tokens, 2, text);
                 fadeInSec = tokNum(tokens, 3, fadeInSec);
                 holdSec = tokNum(tokens, 4, holdSec);
                 fadeOutSec = tokNum(tokens, 5, fadeOutSec);
-                overlayAlpha = tokNum(tokens, 6, overlayAlpha);
-                color = tok(tokens, 7, color);
-                fontScale = tokNum(tokens, 8, fontScale);
-                out = tok(tokens, 9, out);
-            }else if(tokens != null && tokens.length >= 8){
-                text = tok(tokens, 2, text);
-                fadeInSec = tokNum(tokens, 3, fadeInSec);
-                holdSec = tokNum(tokens, 4, holdSec);
-                fadeOutSec = tokNum(tokens, 5, fadeOutSec);
-                overlayAlpha = tokNum(tokens, 6, overlayAlpha);
-                out = tok(tokens, 7, out);
+                color = tok(tokens, 6, color);
+                fontScale = tokNum(tokens, 7, fontScale);
+                out = tok(tokens, 8, out);
             }else{
                 text = tok(tokens, 2, text);
                 out = tok(tokens, 3, out);
@@ -781,7 +745,6 @@ public final class ActionStatements{
             fieldLabeled(table, " hold ", holdSec, v -> holdSec = v, 72f);
             fieldLabeled(table, " fadeOut ", fadeOutSec, v -> fadeOutSec = v, 72f);
             table.row();
-            fieldLabeled(table, " overlay ", overlayAlpha, v -> overlayAlpha = v, 72f);
             fieldLabeled(table, " color ", color, v -> color = v, 96f);
             fieldLabeled(table, " size ", fontScale, v -> fontScale = v, 72f);
             table.row();
@@ -796,7 +759,6 @@ public final class ActionStatements{
             final LVar vIn = builder.var(fadeInSec);
             final LVar vHold = builder.var(holdSec);
             final LVar vOut = builder.var(fadeOutSec);
-            final LVar vOverlay = builder.var(overlayAlpha);
             final LVar vColor = builder.var(color);
             final LVar vScale = builder.var(fontScale);
             final LVar vo = builder.var(out);
@@ -812,7 +774,6 @@ public final class ActionStatements{
                     float hold = Math.max(0f, ActionLogicSupport.parseFloat(vHold, 0.5f, exec));
                     float outSec = Math.max(0f, ActionLogicSupport.parseFloat(vOut, 0.25f, exec));
                     float totalSec = inSec + hold + outSec;
-                    float overlay = Mathf.clamp(ActionLogicSupport.parseFloat(vOverlay, 0f, exec));
                     Color fontColor = ActionLogicSupport.parseColor(ActionLogicSupport.valueText(vColor), Color.white);
                     float scale = Mathf.clamp(ActionLogicSupport.parseFloat(vScale, 1f, exec), 0.25f, 4f);
 
@@ -835,9 +796,6 @@ public final class ActionStatements{
                     )
                     );
 
-                    if(overlay > 0.001f && totalSec > 0f){
-                        ActionLogicSupport.pulseOverlay(overlay, totalSec * Time.toSeconds);
-                    }
                     if(totalSec <= 0f){
                         return true;
                     }
@@ -862,8 +820,8 @@ public final class ActionStatements{
         }
 
         @Override
-        public void write(StringBuilder builder){
-            writeCommon(builder, "wh-info-text", text, fadeInSec, holdSec, fadeOutSec, overlayAlpha, color, fontScale);
+        public void write(StringBuilder builder) {
+            writeCommon(builder, "wh-info-text", text, fadeInSec, holdSec, fadeOutSec, color, fontScale);
         }
     }
 
@@ -1064,8 +1022,12 @@ public final class ActionStatements{
 
                     Runnable spawnOne = () -> {
                         Spawner spawner = new Spawner();
-                        Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread) * tilesize);
-                        spawner.init(unitType, teamVal, new Vec2(worldX + Tmp.v1.x, worldY + Tmp.v1.y), angleVal, delay, false);
+                        Vec2 spawnPosition = new Vec2();
+                        if (!WHUtils.snapToSpawnPosition(unitType, worldX, worldY, spread * tilesize, spawnPosition)) {
+                            Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread) * tilesize);
+                            spawnPosition.set(worldX + Tmp.v1.x, worldY + Tmp.v1.y);
+                        }
+                        spawner.init(unitType, teamVal, spawnPosition, angleVal, delay, false);
                         spawner.setShieldToApply(shieldVal);
                         spawner.setStatus(statusVal, statusDurVal);
                         if (vUnitOut != null) {
@@ -1459,11 +1421,16 @@ public final class ActionStatements{
                     }
                     float delay = autoDelaySecFromHitSize(maxHitSize) * Time.toSeconds;
                     float spread = autoSpreadFromHitSize(maxHitSize);
+                    UnitType terrainType = typeArray.length == 0 ? null : typeArray[0];
+                    Vec2 dropPosition = new Vec2(worldX, worldY);
+                    if (!WHUtils.snapToSpawnPosition(terrainType, worldX, worldY, spread * tilesize, dropPosition)) {
+                        Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread * tilesize));
+                        dropPosition.add(Tmp.v1);
+                    }
 
                     Runnable spawnOne = () -> {
                         AirborneSpawner spawner = new AirborneSpawner();
-                        Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread * tilesize));
-                        spawner.init(teamVal, new Vec2(worldX + Tmp.v1.x, worldY + Tmp.v1.y), 0f, delay, typeArray);
+                        spawner.init(teamVal, dropPosition, 0f, delay, typeArray);
                         spawner.setShieldToApply(shieldVal);
                         spawner.setStatus(statusVal, statusDurVal);
                         if (vUnitOut != null) {
@@ -1724,7 +1691,13 @@ public final class ActionStatements{
             final LVar vHold = builder.var(holdSec);
             final LVar vOut = builder.var(fadeOutSec);
             final LVar vo = builder.var(out);
-            return new ActionInstruction(vr, vo){
+            return new ActionInstruction(vr, vo) {
+
+                @Override
+                protected boolean useScreenBus() {
+                    return true;
+                }
+
                 @Override
                 protected boolean begin(LExecutor exec){
 
@@ -1783,7 +1756,6 @@ public final class ActionStatements{
         public String fadeInSec = "0.5";
         public String holdSec = "0.5";
         public String fadeOutSec = "0.5";
-        public String overlayAlpha = "0";
         public String color = "white";
         public String fontScale = "1";
 
@@ -1792,22 +1764,14 @@ public final class ActionStatements{
 
         public SignalTextStatement(String[] tokens){
             run = tok(tokens, 1, run);
-            if(tokens != null && tokens.length >= 10){
+            if (tokens != null && tokens.length >= 9){
                 text = tok(tokens, 2, text);
                 fadeInSec = tokNum(tokens, 3, fadeInSec);
                 holdSec = tokNum(tokens, 4, holdSec);
                 fadeOutSec = tokNum(tokens, 5, fadeOutSec);
-                overlayAlpha = tokNum(tokens, 6, overlayAlpha);
-                color = tok(tokens, 7, color);
-                fontScale = tokNum(tokens, 8, fontScale);
-                out = tok(tokens, 9, out);
-            }else if(tokens != null && tokens.length >= 8){
-                text = tok(tokens, 2, text);
-                fadeInSec = tokNum(tokens, 3, fadeInSec);
-                holdSec = tokNum(tokens, 4, holdSec);
-                fadeOutSec = tokNum(tokens, 5, fadeOutSec);
-                overlayAlpha = tokNum(tokens, 6, overlayAlpha);
-                out = tok(tokens, 7, out);
+                color = tok(tokens, 6, color);
+                fontScale = tokNum(tokens, 7, fontScale);
+                out = tok(tokens, 8, out);
             }else{
                 text = tok(tokens, 2, text);
                 out = tok(tokens, 3, out);
@@ -1823,7 +1787,6 @@ public final class ActionStatements{
             fieldLabeled(table, " hold ", holdSec, v -> holdSec = v, 72f);
             fieldLabeled(table, " fadeOut ", fadeOutSec, v -> fadeOutSec = v, 72f);
             table.row();
-            fieldLabeled(table, " overlay ", overlayAlpha, v -> overlayAlpha = v, 72f);
             fieldLabeled(table, " color ", color, v -> color = v, 96f);
             fieldLabeled(table, " size ", fontScale, v -> fontScale = v, 72f);
             table.row();
@@ -1840,11 +1803,15 @@ public final class ActionStatements{
             final LVar vIn = builder.var(fadeInSec);
             final LVar vHold = builder.var(holdSec);
             final LVar vOut = builder.var(fadeOutSec);
-            final LVar vOverlay = builder.var(overlayAlpha);
             final LVar vColor = builder.var(color);
             final LVar vScale = builder.var(fontScale);
             final LVar vo = builder.var(out);
-            return new ActionInstruction(vr, vo){
+            return new ActionInstruction(vr, vo) {
+
+               /* @Override
+                protected boolean useScreenBus(){
+                    return true;
+                }*/
 
                 @Override
                 protected boolean begin(LExecutor exec){
@@ -1857,7 +1824,6 @@ public final class ActionStatements{
                     float hold = Math.max(0f, ActionLogicSupport.parseFloat(vHold, 0.5f, exec));
                     float outSec = Math.max(0f, ActionLogicSupport.parseFloat(vOut, 0.5f, exec));
                     float totalSec = inSec + hold + outSec;
-                    float overlay = Mathf.clamp(ActionLogicSupport.parseFloat(vOverlay, 0f, exec));
                     Color fontColor = ActionLogicSupport.parseColor(ActionLogicSupport.valueText(vColor), Color.white);
                     float scale = Mathf.clamp(ActionLogicSupport.parseFloat(vScale, 1f, exec), 0.25f, 4f);
 
@@ -1882,9 +1848,6 @@ public final class ActionStatements{
                     )
                     );
 
-                    if(overlay > 0.001f && totalSec > 0f){
-                        ActionLogicSupport.pulseOverlay(overlay, totalSec * Time.toSeconds);
-                    }
                     if(totalSec <= 0f){
                         return true;
                     }
@@ -1906,16 +1869,12 @@ public final class ActionStatements{
                     end(exec);
                 }
 
-                @Override
-                protected boolean enableGlobalFade(){
-                    return true;
-                }
             };
         }
 
         @Override
-        public void write(StringBuilder builder){
-            writeCommon(builder, "wh-signal-text", text, fadeInSec, holdSec, fadeOutSec, overlayAlpha, color, fontScale);
+        public void write(StringBuilder builder) {
+            writeCommon(builder, "wh-signal-text", text, fadeInSec, holdSec, fadeOutSec, color, fontScale);
         }
     }
 
@@ -2171,12 +2130,12 @@ public final class ActionStatements{
         }
     }
 
-    public static void load(){
+    public static void load() {
+        registerStatement(\u0022wh-screen-fade-out\u0022, ActionStatements.ScreenFadeOutStatement::new, ActionStatements.ScreenFadeOutStatement::new);
         registerStatement("wh-camera-control", ActionStatements.CameraControlStatement::new, ActionStatements.CameraControlStatement::new);
         registerStatement("wh-camera-reset", ActionStatements.CameraResetStatement::new, ActionStatements.CameraResetStatement::new);
         registerStatement("wh-camera-zoom", ActionStatements.CameraZoomStatement::new, ActionStatements.CameraZoomStatement::new);
         registerStatement("wh-curtain", ActionStatements.CurtainDrawStatement::new, ActionStatements.CurtainDrawStatement::new);
-        /*   registerStatement("wh-curtain-fade", ActionStatements.CurtainFadeInStatement::new, ActionStatements.CurtainFadeInStatement::new);*/
         registerStatement("wh-info-text", ActionStatements.InfoTextStatement::new, ActionStatements.InfoTextStatement::new);
         registerStatement("wh-input-lock", ActionStatements.InputLockStatement::new, ActionStatements.InputLockStatement::new);
         registerStatement("wh-input-unlock", ActionStatements.InputUnlockStatement::new, ActionStatements.InputUnlockStatement::new);

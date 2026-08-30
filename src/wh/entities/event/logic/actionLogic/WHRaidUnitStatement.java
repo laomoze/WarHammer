@@ -1,30 +1,41 @@
 package wh.entities.event.logic.actionLogic;
 
-import arc.func.*;
-import arc.math.*;
-import arc.math.geom.*;
+import arc.func.Cons;
+import arc.func.Cons2;
+import arc.func.Func;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
 import arc.scene.ui.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.ctype.*;
-import mindustry.entities.*;
-import mindustry.game.*;
-import mindustry.gen.*;
+import arc.scene.ui.layout.Table;
+import arc.struct.ObjectIntMap;
+import arc.struct.Seq;
+import arc.util.Interval;
+import arc.util.Log;
+import arc.util.Strings;
+import arc.util.Time;
+import mindustry.Vars;
+import mindustry.content.StatusEffects;
+import mindustry.ctype.UnlockableContent;
+import mindustry.entities.Units;
+import mindustry.game.Team;
+import mindustry.gen.Building;
+import mindustry.gen.Groups;
 import mindustry.logic.*;
-import mindustry.type.*;
-import mindustry.ui.*;
-import mindustry.ui.dialogs.*;
-import mindustry.world.*;
-import mindustry.world.blocks.storage.*;
-import wh.content.*;
-import wh.entities.*;
-import wh.entities.event.*;
-import wh.entities.event.logic.*;
-import wh.entities.event.objective.*;
-import wh.ui.*;
+import mindustry.type.Item;
+import mindustry.type.StatusEffect;
+import mindustry.type.UnitType;
+import mindustry.ui.Styles;
+import mindustry.ui.dialogs.BaseDialog;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import mindustry.world.blocks.storage.CoreBlock;
+import wh.content.WHUnitTypes;
+import wh.entities.Spawner;
+import wh.entities.event.PortableAutoEventTrigger;
+import wh.entities.event.logic.WHLogicStatements;
+import wh.entities.event.objective.TriggerObjective;
+import wh.ui.UIUtils;
 
 public class WHRaidUnitStatement extends LStatement{
     public String team = "@crux";
@@ -596,7 +607,7 @@ public class WHRaidUnitStatement extends LStatement{
         );
     }
 
-    public static class WHRaidUnitInstruction implements LExecutor.LInstruction{
+    public static class WHRaidUnitInstruction extends BusLogicInstruction {
         public LVar team;
         public LVar unit;
         public LVar count;
@@ -672,31 +683,35 @@ public class WHRaidUnitStatement extends LStatement{
 
         @Override
         /* 执行主流程：条件检查 -> 缓存准备 -> 预警 -> 刷怪 -> 触发计时目标。 */
-        public void run(LExecutor exec){
-            if(shouldSkipRun()) return;
-            if(isAlreadyTriggered(exec)) return;
+        protected boolean canStart(LExecutor exec) {
+            if (shouldSkipRun()) return false;
+            return !isAlreadyTriggered(exec);
+        }
+
+        @Override
+        protected boolean updateAction() {
+            if (shouldSkipRun()) return true;
 
             ConditionSnapshot snapshot = inspectConditions();
             if(!snapshot.ok){
                 resetRoundState();
-                holdForRetry(exec);
-                return;
+                return false;
             }
 
-            if(executed) return;
+            if (executed) return true;
 
             prepareCycleIfNeeded();
             showWarnHud();
 
             if(!spawnBatch()){
-                holdForRetry(exec);
-                return;
+                return false;
             }
 
             triggerTimerObjectiveIfNeeded();
             executed = true;
             cyclePrepared = false;
-            markTriggered(exec);
+            markTriggered(executor());
+            return true;
         }
 
         /** 判断当前帧是否应跳过执行（无效状态或客户端非编辑模式）。 */
@@ -709,12 +724,6 @@ public class WHRaidUnitStatement extends LStatement{
             boolean editorMode = Vars.state.isEditor();
             boolean multiplayerClient = Vars.net.client();
             return multiplayerClient && !editorMode;
-        }
-
-        /** 回退指令计数并让处理器 yield，一帧后重试。 */
-        private void holdForRetry(LExecutor exec){
-            exec.counter.numval--;
-            exec.yield = true;
         }
 
         /** 条件不满足时重置本轮执行状态。 */

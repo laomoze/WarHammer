@@ -74,6 +74,7 @@ public class WarHammerMod extends Mod {
                     WHShaders.init();
                     CMoonVoidShieldRenderer.init();
                     MainRenderer.init();
+                    /*  PlanetSectorNumberOverlay.init();*/
                     // HUD tree is rebuilt after world load; remount objective panel with a short delay.
                     Time.runTask(10f, WHObjectiveUI::init);
                 });
@@ -94,8 +95,8 @@ public class WarHammerMod extends Mod {
 
         // Keep objective panel alive if another UI rebuild removes it.
         Events.run(EventType.Trigger.update, () -> {
+            ActionContext.cutscene.update();
             if(!Vars.headless){
-                ActionContext.cutsceneUI.update();
                 WHObjectiveUI.ensureMounted();
                 pollModDetailInjection();
             }
@@ -312,6 +313,7 @@ public class WarHammerMod extends Mod {
         WHPlanets.load();
         KarvexTeachTree.load();
         WHOverride.load();
+        WHMaps.load();
         applyTauntTargetPriority();
     }
 

@@ -1,35 +1,45 @@
 package wh.entities.event.logic;
 
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.scene.style.*;
-import arc.scene.ui.*;
-import arc.scene.ui.layout.*;
-import arc.struct.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.ctype.*;
-import mindustry.game.*;
-import mindustry.gen.*;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.math.geom.Vec2;
+import arc.scene.style.Drawable;
+import arc.scene.style.TextureRegionDrawable;
+import arc.scene.ui.Label;
+import arc.scene.ui.ScrollPane;
+import arc.scene.ui.TextButton;
+import arc.scene.ui.TextField;
+import arc.scene.ui.layout.Table;
+import arc.struct.Seq;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.Vars;
+import mindustry.content.UnitTypes;
+import mindustry.ctype.ContentType;
+import mindustry.game.Team;
+import mindustry.gen.Building;
+import mindustry.gen.Icon;
 import mindustry.logic.*;
-import mindustry.type.*;
-import mindustry.ui.*;
-import mindustry.ui.dialogs.*;
-import mindustry.world.*;
-import mindustry.world.meta.*;
-import wh.entities.*;
-import wh.entities.event.logic.actionLogic.*;
-import wh.entities.event.objective.*;
-import wh.net.*;
-import wh.ui.*;
-import wh.util.*;
-import wh.util.struct.*;
+import mindustry.type.UnitType;
+import mindustry.ui.Styles;
+import mindustry.ui.dialogs.BaseDialog;
+import mindustry.world.Tile;
+import mindustry.world.meta.BlockFlag;
+import wh.entities.AirborneSpawner;
+import wh.entities.event.logic.actionLogic.ActionLogicSupport;
+import wh.entities.event.logic.actionLogic.BusLogicInstruction;
+import wh.entities.event.objective.RaidEventObjective;
+import wh.net.WHCall;
+import wh.ui.UIUtils;
+import wh.util.WeightedRandom;
+import wh.util.struct.WeightedOption;
 
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicReference;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.state;
+import static mindustry.Vars.tilesize;
 
 /**
  * 默认空降袭击逻辑：
@@ -432,7 +442,7 @@ public class DefaultAirborneRaid extends LStatement{
         );
     }
 
-    public static class DefaultAirborneRaidInstruction implements LExecutor.LInstruction{
+    public static class DefaultAirborneRaidInstruction extends BusLogicInstruction {
         public LVar flag;
         public LVar timer;
         public LVar alertTime;
@@ -462,18 +472,33 @@ public class DefaultAirborneRaid extends LStatement{
         }
 
         @Override
-        public void run(LExecutor exec){
+        protected boolean canStart() {
             if(state == null || state.rules == null){
-                return;
+                return false;
             }
 
             String flagKey = key(flag);
             boolean gated = !flagKey.isEmpty() && !flagKey.equalsIgnoreCase("null");
             if(gated && !state.rules.objectiveFlags.contains(flagKey)){
-                exec.counter.numval--;
-                exec.yield = true;
-                return;
+                return false;
             }
+
+            return true;
+        }
+
+        @Override
+        protected boolean canUpdate() {
+            if (state == null || state.rules == null) return false;
+
+            String flagKey = key(flag);
+            boolean gated = !flagKey.isEmpty() && !flagKey.equalsIgnoreCase("null");
+            return !gated || state.rules.objectiveFlags.contains(flagKey);
+        }
+
+        @Override
+        protected boolean updateAction() {
+            String flagKey = key(flag);
+            boolean gated = !flagKey.isEmpty() && !flagKey.equalsIgnoreCase("null");
 
             float alert = Math.max(0f, alertTime.numf());
             float raid = Math.max(0.001f, raidTime.numf());
@@ -481,11 +506,9 @@ public class DefaultAirborneRaid extends LStatement{
 
             if(curTime >= total){
                 reset(flagKey, gated);
-                return;
+                return true;
             }
 
-            exec.counter.numval--;
-            exec.yield = true;
             curTime += Time.delta / 60f;
 
             if(!iconShown){
@@ -513,6 +536,8 @@ public class DefaultAirborneRaid extends LStatement{
                     createAirborneSpawner(raidCounter - delta + i);
                 }
             }
+
+            return false;
         }
 
         private void showAlert(float alertSeconds){
