@@ -5,17 +5,17 @@ import arc.files.Fi;
 import arc.util.Log;
 import mindustry.Vars;
 
-public final class WHSounds{
+public final class WHSounds {
     public static Sound
-    alert2 = new Sound(),
-    launch = new Sound(),
-    hugeBlast = new Sound(),
-    jump = new Sound(),
-    blast = new Sound(),
-    energyShoot = new Sound(),
+            alert2 = new Sound(),
+            launch = new Sound(),
+            hugeBlast = new Sound(),
+            jump = new Sound(),
+            blast = new Sound(),
+            energyShoot = new Sound(),
     /*  LaserGatling = new Sound(),*/
     machineGunShoot = new Sound(),
-    sniperShoot = new Sound(),
+            sniperShoot = new Sound(),
             laser2 = new Sound(),
             laser3 = new Sound(),
             laser4 = new Sound(),
@@ -29,14 +29,15 @@ public final class WHSounds{
             kineticBlaster01 = new Sound(),
             pulseLaserFire01 = new Sound(),
             voltaicCannonFire01 = new Sound(),
-            rifleLaser = new Sound();
+            rifleLaser = new Sound(),
+            boomLaser = new Sound();
     /*  shootGunDouble = new Sound();*/
 
-    private WHSounds(){
+    private WHSounds() {
     }
 
-    public static void load(){
-        try{
+    public static void load() {
+        try {
             alert2 = new Sound(ogg("alert2"));
             launch = new Sound(ogg("launch"));
             hugeBlast = new Sound(ogg("hugeBlast"));
@@ -60,21 +61,22 @@ public final class WHSounds{
             pulseLaserFire01 = new Sound(ogg("pulse_laser_fire_01"));
             voltaicCannonFire01 = new Sound(ogg("voltaic_cannon_fire_01"));
             rifleLaser = new Sound(wav("rifle-laser"));
+            boomLaser = new Sound(ogg("boom_lazer"));
             /*    shootGunDouble = new Sound(ogg("shoot-gun-double"));*/
-        }catch(Exception e){
+        } catch (Exception e) {
             Log.err("Failed to load Sound.", e);
         }
     }
 
-    static Fi ogg(String name){
+    static Fi ogg(String name) {
         return Vars.tree.get("sounds/" + name + ".ogg");
     }
 
-    static Fi wav(String name){
+    static Fi wav(String name) {
         return Vars.tree.get("sounds/" + name + ".wav");
     }
 
-    static Fi mp3(String name){
+    static Fi mp3(String name) {
         return Vars.tree.get("sounds/" + name + ".mp3");
     }
 }

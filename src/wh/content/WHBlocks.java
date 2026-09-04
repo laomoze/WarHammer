@@ -66,10 +66,7 @@ import mindustry.world.draw.*;
 import mindustry.world.meta.*;
 import wh.core.WHSettings;
 import wh.core.WarHammerMod;
-import wh.entities.bullet.laser.ChainLightingBulletType;
-import wh.entities.bullet.laser.LaserBeamBulletType;
-import wh.entities.bullet.laser.LightingContinuousFlameBulletType;
-import wh.entities.bullet.laser.RicochetLaserBulletType;
+import wh.entities.bullet.laser.*;
 import wh.entities.world.Psy.*;
 import wh.entities.world.Psy.sandbox.PsychicSource;
 import wh.entities.world.Psy.sandbox.PsychicVoid;
@@ -228,9 +225,9 @@ public final class WHBlocks {
     //22
     Crush, AutoGun,
     //33
-    Lcarus, SSWord, Blaze, Blade, Torrent, Shard,
+    Lcarus, SSWord, Laser, Blaze, Blade, Torrent, Shard,
     //44
-    Prevent, Vortex, HeavyHammer, Flash, Ionize, Viper, Pyros, Deflection,
+    Prevent, Vortex, HeavyHammer, Flash, Ionize, Thunder, Viper, Pyros, Deflection,
     //55
     RoaringFlame, Collapse, Colossus, CycloneMissleLauncher, Crumble, Sacrament,
     //66
@@ -5545,9 +5542,79 @@ public final class WHBlocks {
             );
         }};
 
+        Laser = new LaserTurret("Laser") {
+            {
+                requirements(Category.turret, with(Items.silicon, 150, Items.plastanium, 50, Items.carbide, 50, WHItems.manganeseSteel, 80, WHItems.cobaltNitride, 50));
+
+                size = 3;
+                outlineColor = WHPal.Outline;
+                reload = 180;
+                rotateSpeed = 4;
+
+                liquidCapacity = 60;
+                range = 350;
+                shootCone = 3;
+                shootSound = WHSounds.boomLaser;
+
+                heatColor = Heat;
+
+                shootY = 19f / 4f;
+                drawer = new DrawTurret(WarHammerMod.name("turret-"));
+                coolantMultiplier = 1.5f;
+                coolant = consumeCoolant(20 / 60f);
+                consumePower(500 / 60f);
+                shootDuration = 120;
+                shootType = new PointLaserBeamBulletType(120) {{
+                    length = 280;
+                    colors = new Color[]{
+                            Color.valueOf("FF6947FF").a(0.55f),
+                            Color.valueOf("FF8B37FF").a(0.7f),
+                            Color.valueOf("FEB938FF").a(0.8f),
+                            Color.valueOf("F6FF66FF"),
+                            Color.white
+                    };
+                    splashDamage = 100;
+                    splashDamageRadius = 36;
+                    damageInterval = 6;
+                    fadeTime = 24f;
+                    extensionSpeed = 1.5f;
+                    beamEffect = WHFx.square(30, Pal.lightOrange, 3, 15, 5);
+                    hitEffect = WHFx.hitSpark(30, Pal.lightOrange, 4, splashDamageRadius, 1, 7f);
+                }};
+
+
+            }
+
+            @Override
+            public void init() {
+                WHItemTurret.intTurret(this);
+                super.init();
+                buildType = LaserBuild::new;
+            }
+
+            public class LaserBuild extends LaserTurretBuild {
+                @Override
+                public void updateTile() {
+                    super.updateTile();
+
+                    for (BulletEntry entry : bullets) {
+                        if (entry.bullet instanceof PointLaserBeamBulletType.PointLaserBeamBullet beam) {
+                            beam.damageScale = timeScale;
+                            beam.damage = beam.baseDamage * beam.damageScale;
+                        }
+                    }
+                }
+
+                @Override
+                protected void turnToTarget(float targetRot) {
+                    rotation = Angles.moveToward(rotation, targetRot, efficiency * rotateSpeed * delta() * (bullets.any() && wasShooting ? 0.2f : 1f));
+                }
+            }
+        };
+
         Blaze = new ContinuousTurret("Blaze") {
             {
-                requirements(Category.turret, with(WHItems.uranium, 100, Items.carbide, 50, WHItems.manganeseSteel, 50, Items.plastanium, 50));
+                requirements(Category.turret, with(WHItems.cobaltNitride, 60, Items.carbide, 50, WHItems.manganeseSteel, 50, Items.plastanium, 100));
 
                 health = 1200;
                 size = 3;
@@ -5562,7 +5629,7 @@ public final class WHBlocks {
                 loopSound = Sounds.beamLustre;
 
                 shootWarmupSpeed = 0.1f;
-                shootCone = 360f;
+                shootCone = 10;
 
                 aimChangeSpeed = 5;
                 rotateSpeed = 5;
@@ -5671,6 +5738,7 @@ public final class WHBlocks {
                     entry.bullet.fdata = charge;
                 }
 
+
                 @Override
                 public void read(Reads read, byte revision) {
                     super.read(read, revision);
@@ -5715,7 +5783,7 @@ public final class WHBlocks {
             }};
             coolantMultiplier = 2;
             coolant = consumeCoolant(20 / 60f);
-            consumePower(600 / 60f);
+            consumePower(500 / 60f);
             shootType = WHBullets.LcarusBullet;
             ammoPerShot = 2;
             maxAmmo = 10;
@@ -5772,6 +5840,7 @@ public final class WHBlocks {
                     WHItems.armorAlloy, WHBullets.SSWordArmorAlloy
             );
         }};
+
 
         Blade = new WHItemTurret("Blade") {{
             requirements(Category.turret, with(Items.carbide, 80, WHItems.uranium, 80, WHItems.cobaltNitride, 50));
@@ -8146,11 +8215,12 @@ public final class WHBlocks {
 
                 consumePower(6f);
 
-                shootType = new RicochetLaserBulletType() {{
-                    speed = 20;
-                    damage = 400;
-                    pierceCap = 3;
-                    lifetime = 20;
+                shootType = new LightningBeamBulletType() {{
+                    lightColor = lightningColor = hitColor = SkyBlue;
+                    length = 500;
+                    damageInterval = 6;
+                    damage = 1500 / damageInterval;
+                    lifetime = 120;
                 }};
             }
         };

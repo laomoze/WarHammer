@@ -2260,14 +2260,14 @@ public final class WHFx {
             Fill.circle(e.x + Tmp.v1.x, e.y + Tmp.v1.y, 8f * rand.random(0.6f, 1f) * e.fout(0.2f));
         }).layer(Layer.groundUnit + 1f);
 
-        groundEffect = new Effect(200, e -> {
-            z(Layer.block);
-            color(e.color, e.fout());
+        groundEffect = new Effect(300, e -> {
+            z(Layer.blockUnder);
+            color(Pal.lighterOrange, e.color, e.fout());
             rand.setSeed(e.id);
             float range = rand.random(0.2f, 1f);
             randLenVectors(e.id, (int) (3f * rand.random(1f)),
                     20, (x, y) -> {
-                        Fill.circle(e.x + x, e.y + y, 20 * range * Mathf.curve(e.fin(), 0, 0.15f) * e.fout(Interp.pow3Out));
+                        Fill.circle(e.x + x, e.y + y, 20 * range * Mathf.curve(e.fin(), 0, 0.15f) * e.fout(Interp.pow5Out));
                     });
         });
 
