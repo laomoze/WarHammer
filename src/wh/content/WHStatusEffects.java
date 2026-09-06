@@ -373,6 +373,8 @@ public final class WHStatusEffects{
                 speedMultiplier = 0.7f;
                 dragMultiplier = 1.25f;
                 effectChance = 0.09f;
+                intervalDamageTime = 60f;
+                intervalDamage = 60;
                 effect = new Effect(90, e -> {
                     if (!(e.data instanceof Unit u)) return;
                     rand.setSeed(e.id);

@@ -23,6 +23,12 @@ public class WHItemTurret extends ItemTurret{
     }
 
     public static void intTurret(Turret turret){
+        turret.fogRadiusMultiplier = 0.35f;
+
+        turret.outlineColor = WHPal.Outline;
+        turret.outlineRadius = 3;
+        turret.squareSprite = false;
+
         turret.armor = 3 * turret.size;
         turret.researchCostMultiplier = Mathf.clamp(1.4f - 0.04f * turret.size * turret.size, 0.2f, 1.5f);
         turret.depositCooldown = turret.size * 0.5f + 1;

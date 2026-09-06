@@ -5,24 +5,34 @@
 
 package wh.graphics;
 
-import arc.func.*;
-import arc.graphics.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.core.*;
-import mindustry.entities.*;
-import mindustry.entities.bullet.*;
-import mindustry.game.*;
-import mindustry.gen.*;
-import wh.content.*;
-import wh.core.*;
-import wh.entities.bullet.*;
-import wh.util.struct.*;
+import arc.func.Cons;
+import arc.graphics.Color;
+import arc.math.Mathf;
+import arc.math.Rand;
+import arc.math.geom.Geometry;
+import arc.math.geom.Position;
+import arc.math.geom.Rect;
+import arc.math.geom.Vec2;
+import arc.struct.FloatSeq;
+import arc.struct.Seq;
+import mindustry.Vars;
+import mindustry.content.Fx;
+import mindustry.content.StatusEffects;
+import mindustry.core.World;
+import mindustry.entities.Units;
+import mindustry.entities.bullet.BulletType;
+import mindustry.game.Team;
+import mindustry.gen.Building;
+import mindustry.gen.Bullet;
+import mindustry.gen.Entityc;
+import mindustry.gen.Healthc;
+import wh.content.WHFx;
+import wh.core.WHSettings;
+import wh.entities.bullet.EffectBulletType;
+import wh.util.struct.Vec2Seq;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.headless;
+import static mindustry.Vars.world;
 
 public final class PositionLightning{
     public static final BulletType hitter = new EffectBulletType(5.0F){
@@ -201,7 +211,7 @@ public final class PositionLightning{
         WHFx.posLightning.at((vets.firstTmp().x + vets.peekTmp().x) / 2f, (vets.firstTmp().y + vets.peekTmp().y) / 2f, width, color, vets);
     }
 
-    // 根据数组偏移量来计算中间的点数量并且偏移
+    // 根据随机偏移量，对直线上的中间点进行垂直方向偏移
     private static Vec2Seq computeVectors(FloatSeq randomVec, Position from, Position to) {
         int param = randomVec.size;
         float angle = from.angleTo(to);

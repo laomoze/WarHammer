@@ -439,8 +439,8 @@ public final class KarvexTeachTree {
                     node(WHBlocks.manganeseSteelFurnace, () -> {
                         node(WHBlocks.arcKiln, () -> {
                             node(WHBlocks.plastaniumCompressor, () -> {
-                                node(WHBlocks.carbideCrucible, () -> {
-                                    node(WHBlocks.cobaltNitrideChamber, () -> {
+                                node(WHBlocks.cobaltNitrideChamber, () -> {
+                                    node(WHBlocks.carbideCrucible, () -> {
                                         node(WHBlocks.entanglementSynthesizer, () -> {
                                             node(WHBlocks.crystalEngraver, () -> {
                                             });

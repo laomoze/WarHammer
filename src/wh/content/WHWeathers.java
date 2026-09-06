@@ -20,7 +20,7 @@ public final class WHWeathers {
             radiationSandstorm,
             acidRain;
 
-    private static final float buildingEfficiencyMultiplier = 0.8f;
+    private static final float buildingEfficiencyMultiplier = 0.9f;
 
     private WHWeathers() {
     }
@@ -53,7 +53,7 @@ public final class WHWeathers {
                 baseSpeed = 5.6f;
                 attrs.set(Attribute.light, -0.2f);
                 attrs.set(Attribute.water, -0.15f);
-                status = WHStatusEffects.rust;
+                status = WHStatusEffects.powerReduce1;
                 statusAir = true;
                 statusGround = true;
                 opacityMultiplier = 0.4f;
@@ -84,6 +84,8 @@ public final class WHWeathers {
             }
 
             {
+
+                liquid = WHLiquids.swageWater;
                 color = Color.valueOf("8fbf7dff");
                 yspeed = 6.8f;
                 xspeed = 1.6f;
@@ -99,6 +101,11 @@ public final class WHWeathers {
                 sound = Sounds.rain;
                 soundVol = 0.35f;
                 duration = 4f * Time.toMinutes;
+            }
+
+            @Override
+            public void drawUnder(WeatherState state) {
+                super.drawUnder(state);
             }
         };
     }

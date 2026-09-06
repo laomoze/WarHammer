@@ -9,6 +9,7 @@ public class WHMaps {
         abandonedWarehouse = new SectorPreset("1-1", WHPlanets.karvex, 15) {{
             alwaysUnlocked = true;
             difficulty = 1;
+            captureWave = 16;
         }};
 
         rustedRiverbed = new SectorPreset("1-2", WHPlanets.karvex, 175) {{

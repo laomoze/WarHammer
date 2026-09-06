@@ -19,9 +19,8 @@ public final class WHItems{
     oreSand, manganese, chromium, cobalt, uranium, molybdenum, vibranium;
 
     public static Item
-    manganeseSteel, combustible,
-    armorAlloy, entanglement,
-    ceramite, cobaltNitride,
+            manganeseSteel, combustible, cobaltNitride,
+            armorAlloy, entanglement, ceramite,
     resonantCrystal, culverCrystal,
     molybdenumAlloy, refineCeramite, protocolChip, sealedPromethium, adamantium;
 

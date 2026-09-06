@@ -3,21 +3,24 @@ package wh.entities.world.blocks.defense.turrets;
 import arc.Core;
 import arc.math.Angles;
 import arc.math.Mathf;
+import arc.struct.ObjectMap;
 import arc.struct.Seq;
 import arc.util.Nullable;
+import arc.util.Time;
 import mindustry.entities.bullet.BulletType;
 import mindustry.entities.bullet.ContinuousBulletType;
-import mindustry.gen.Building;
 import mindustry.gen.Bullet;
 import mindustry.graphics.Pal;
 import mindustry.type.Liquid;
 import mindustry.ui.Bar;
 import mindustry.world.blocks.defense.turrets.PowerTurret;
 import mindustry.world.consumers.ConsumeCoolant;
-import mindustry.world.consumers.ConsumeLiquid;
 import mindustry.world.meta.Stat;
 import mindustry.world.meta.StatValues;
 import wh.content.WHLiquids;
+import wh.entities.bullet.laser.LaserBeamBulletType;
+import wh.entities.bullet.laser.LightningBeamBulletType;
+import wh.entities.bullet.laser.PointLaserBeamBulletType;
 
 import static mindustry.Vars.tilesize;
 
@@ -30,16 +33,6 @@ public class LaserBeamTurret extends PowerTurret{
         super(name);
         coolantMultiplier=2;
 
-        consume(new ConsumeLiquid(cost, costMount){
-            @Override
-            public void update(Building build){
-                if(build instanceof LaserBeamTurretBuild c){
-                    if(c.wasShooting){
-                        super.update(build);
-                    }
-                }
-            }
-        });
     }
 
     @Override
@@ -74,12 +67,13 @@ public class LaserBeamTurret extends PowerTurret{
 
     public class LaserBeamTurretBuild extends PowerTurretBuild{
         public Seq<BulletEntry> bullets = new Seq<>();
+        private final ObjectMap<Bullet, Float> fadeLifetimes = new ObjectMap<>();
 
         public float lifeProgress() {
-            if (shootDuration <= 0.0001f || bullets.isEmpty()) return 0f;
+            if (bullets.isEmpty()) return 0f;
             BulletEntry entry = bullets.find(e -> e != null && e.bullet != null && e.bullet.type != null);
             if (entry == null) return 0f;
-            return Mathf.clamp(1f - entry.life / shootDuration, 0f, 1f);
+            return Mathf.clamp(entry.bullet.time / Math.max(entry.bullet.lifetime, 0.0001f), 0f, 1f);
         }
 
         @Override
@@ -97,33 +91,61 @@ public class LaserBeamTurret extends PowerTurret{
             entry.bullet.rotation(angle);
             entry.bullet.owner = this;
 
-            // match vanilla LaserTurret: beam lifetime scales with timescale, inversely with efficiency
-            entry.life -= delta() / Math.max(efficiency, 0.00001f);
-
-            if(entry.bullet.type instanceof ContinuousBulletType){
-                entry.bullet.lifetime = shootDuration;
-                //drive beam growth/fade by turret-managed elapsed time and keep bullet alive manually
-                float elapsed = Mathf.clamp(shootDuration - entry.life, 0f, Math.max(0f, entry.bullet.lifetime - 0.001f));
-                entry.bullet.time = elapsed;
-                entry.bullet.keepAlive = true;
-            }else {
-                entry.bullet.lifetime = (entry.bullet.type.lifetime * entry.bullet.type.optimalLifeFract);
+            float bulletTimeScale = Math.max(timeScale, 0f);
+            Float fadeLifetime = fadeLifetimes.get(entry.bullet);
+            if (fadeLifetime != null) {
+                entry.bullet.lifetime = fadeLifetime;
+            } else {
+                float targetLifetime = shootDuration / Math.max(bulletTimeScale, 0.0001f);
+                if (entry.bullet.time >= targetLifetime) {
+                    float fadeDuration = Math.max(bulletFadeTime(entry.bullet), Time.delta);
+                    fadeLifetime = entry.bullet.time + fadeDuration;
+                    fadeLifetimes.put(entry.bullet, fadeLifetime);
+                    entry.bullet.lifetime = fadeLifetime;
+                } else {
+                    float fadeDuration = bulletFadeTime(entry.bullet);
+                    entry.bullet.lifetime = targetLifetime + fadeDuration;
+                }
             }
+
+            if (entry.bullet instanceof PointLaserBeamBulletType.PointLaserBeamBullet beam) {
+                beam.damageScale = bulletTimeScale;
+                beam.damage = beam.baseDamage * beam.damageScale;
+            } else if (entry.bullet instanceof LightningBeamBulletType.LightningBeamBullet beam) {
+                beam.damageScale = bulletTimeScale;
+                beam.damage = beam.baseDamage * beam.damageScale;
+            } else if (entry.bullet.type instanceof ContinuousBulletType continuous) {
+                float damageScale = continuous.timescaleDamage ? 1f : bulletTimeScale;
+                entry.bullet.damage = entry.bullet.type.damage * damageScale * entry.bullet.damageMultiplier();
+            } else {
+                entry.bullet.damage = entry.bullet.type.damage * bulletTimeScale * entry.bullet.damageMultiplier();
+            }
+        }
+
+        private float bulletFadeTime(Bullet bullet) {
+            if (bullet.type instanceof PointLaserBeamBulletType beam) return Math.max(0f, beam.fadeTime);
+            if (bullet.type instanceof LightningBeamBulletType beam) return Math.max(0f, beam.fadeTime);
+            if (bullet.type instanceof LaserBeamBulletType beam) return Math.max(0f, beam.fadeTime);
+            return 0f;
         }
 
         @Override
         public void updateTile(){
             super.updateTile();
 
-            bullets.removeAll(b -> b == null || b.bullet == null || !b.bullet.isAdded() || b.bullet.type == null || b.life <= 0f || b.bullet.owner != this);
+            bullets.removeAll(b -> {
+                boolean remove = b == null || b.bullet == null || !b.bullet.isAdded() || b.bullet.type == null || b.bullet.owner != this;
+                if (remove && b != null && b.bullet != null) fadeLifetimes.remove(b.bullet);
+                return remove;
+            });
 
             if(bullets.any()){
                 for(var entry : bullets){
                     updateBullet(entry);
                 }
+                curRecoil = 1;
                 wasShooting = true;
                 heat = 1f;
-                curRecoil = 1f;
             } else if (reloadCounter > 0) {
 
                 if(coolant != null){
@@ -173,12 +195,21 @@ public class LaserBeamTurret extends PowerTurret{
 
         @Override
         protected void turnToTarget(float targetRot){
-            rotation = Angles.moveToward(rotation, targetRot, efficiency * rotateSpeed * delta() * (bullets.any() ? firingMoveFract : 1f));
+            rotation = Angles.moveToward(rotation, targetRot, efficiency * rotateSpeed * delta() *
+                    (bullets.any() ? firingRotationSpeedMultiplier() : 1f));
+        }
+
+        protected float firingRotationSpeedMultiplier() {
+            return firingMoveFract;
         }
 
         @Override
         protected void handleBullet(@Nullable Bullet bullet, float offsetX, float offsetY, float angleOffset){
             if(bullet != null){
+                float bulletTimeScale = Math.max(timeScale, 0.0001f);
+                bullet.lifetime = shootDuration / bulletTimeScale + bulletFadeTime(bullet);
+                bullet.time = 0f;
+                fadeLifetimes.remove(bullet);
                 bullets.add(new BulletEntry(bullet, offsetX, offsetY, angleOffset, shootDuration));
             }
         }

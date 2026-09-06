@@ -1827,7 +1827,7 @@ public final class WHFx {
             Fill.square(e.x, e.y, e.rotation);
         });
 
-        chainLightningFade = new Effect(220f, 500f, e -> {
+        chainLightningFade = new Effect(240f, 500f, e -> {
             if (!WHSettings.effectEnabled()) return;
             if (!(e.data instanceof Position)) return;
             Position p = e.data();
@@ -1884,7 +1884,7 @@ public final class WHFx {
 
 
         /* {@link EffectContainer} as Target.*/
-        chainLightningFadeReversed = new Effect(220f, 500f, e -> {
+        chainLightningFadeReversed = new Effect(240f, 500f, e -> {
             if (!WHSettings.effectEnabled()) return;
             if (!(e.data instanceof Position)) return;
             Position p = e.data();

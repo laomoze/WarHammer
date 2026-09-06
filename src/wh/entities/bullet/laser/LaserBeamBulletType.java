@@ -152,7 +152,7 @@ public class LaserBeamBulletType extends ContinuousBulletType{
         for(Color color : colors){
             Tmp.v1.trns(rot, realLength);
             float
-            fadeOut = Mathf.clamp(b.time > b.lifetime - fadeTime ? 1f - (b.time - (lifetime - fadeTime)) / fadeTime : 1f),
+                    fadeOut = Mathf.clamp(b.time > b.lifetime - fadeTime ? 1f - (b.time - (b.lifetime - fadeTime)) / fadeTime : 1f),
             fadeIn = Mathf.clamp(b.time < fadeTime ? b.time / fadeTime : 1f);
             float fade = fadeIn * fadeOut;
             float sin = 1f - oscMag + Mathf.absin(Time.time, oscScl, oscMag);

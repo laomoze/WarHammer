@@ -3,15 +3,14 @@ package wh.entities.bullet.laser;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
-import arc.graphics.g2d.Lines;
 import arc.math.Angles;
 import arc.math.Interp;
 import arc.math.Mathf;
-import arc.math.Rand;
 import arc.math.geom.Intersector;
 import arc.math.geom.Rect;
 import arc.math.geom.Vec2;
 import arc.struct.Seq;
+import arc.util.Interval;
 import arc.util.Nullable;
 import arc.util.Time;
 import arc.util.Tmp;
@@ -19,10 +18,10 @@ import arc.util.pooling.Pools;
 import mindustry.content.Fx;
 import mindustry.content.StatusEffects;
 import mindustry.entities.Damage;
-import mindustry.entities.Effect;
 import mindustry.entities.Mover;
 import mindustry.entities.Units;
 import mindustry.entities.bullet.BasicBulletType;
+import mindustry.entities.bullet.BulletType;
 import mindustry.entities.bullet.ContinuousLaserBulletType;
 import mindustry.game.Team;
 import mindustry.gen.*;
@@ -30,17 +29,19 @@ import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 import wh.content.WHFx;
-import wh.core.WHSettings;
+import wh.graphics.BeamLightning;
 import wh.graphics.Drawn;
 import wh.graphics.PositionLightning;
 import wh.graphics.WHPal;
 import wh.util.WHUtils;
+import wh.util.struct.Vec2Seq;
 
 import static wh.graphics.Drawn.rand;
 
-public class LightningBeamBulletType extends ContinuousLaserBulletType {
+public class LightningBeamBulletType extends ContinuousLaserBulletType
+        implements BeamLightningDamageBulletType.Source {
     private static final int MAX_LINKED_BULLETS = 50;
-    private static final float END_JITTER = 14f;
+    private static final float END_JITTER = 20f;
     private static final float SIDE_ANGLE = 90f;
     private static final Rect beamRect = new Rect();
     private static final Rect searchRect = new Rect();
@@ -48,38 +49,10 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
     public Color[] colors = {WHPal.SkyBlueF.cpy(), WHPal.SkyBlueF.cpy().a(0.5f), WHPal.SkyBlueF.cpy().a(0.3f), Pal.coalBlack};
 
     public float growTime = 30;
-    public float flashFadeInTime = 20f;
+    public float lightningLifetime = 70f;
+    public float fadePoints = 8f;
+    public float lightningDamage = 100f;
     public int segments = 14;
-
-    private static final Effect lightningEffect = new Effect(60, 1200f, e -> {
-        if (!(e.data instanceof LightningFlash flash)) return;
-        if (!WHSettings.effectEnabled()) return;
-
-        LightningBeamBulletType type = flash.type;
-        float fadeStart = Math.max(type.growTime, type.flashFadeInTime);
-        e.lifetime = fadeStart + type.fadeTime;
-
-        float progress = Interp.pow2Out.apply(Mathf.clamp(e.time / type.growTime));
-        float fadeIn = type.flashFadeInTime <= 0.001f ? 1f :
-                Interp.pow2Out.apply(Mathf.clamp(e.time / type.flashFadeInTime));
-        float thin = type.fadeTime <= 0.001f ? 1f :
-                1f - Interp.smooth.apply(Mathf.clamp((e.time - fadeStart) / type.fadeTime));
-        if (progress <= 0.001f || fadeIn <= 0.001f || thin <= 0.001f) return;
-
-        Draw.z(Layer.bullet);
-        type.drawFlash(flash.points, progress, fadeIn,
-                type.lightningWidth * 2.7f * thin, type.lightningColor, Tmp.v3);
-        type.drawFlash(flash.points, progress, fadeIn,
-                type.lightningWidth * thin, type.lightningColor, Tmp.v3);
-        type.drawFlash(flash.points, progress, fadeIn,
-                type.lightningWidth * 0.42f * thin, Color.white, Tmp.v3);
-
-        if (type.drawPositionLighting) {
-            Drawf.light(flash.points[0], flash.points[1], Tmp.v3.x, Tmp.v3.y,
-                    type.lightningWidth * 1.25f * thin, type.lightningColor, 0.25f);
-        }
-        Draw.reset();
-    });
 
     public float beamShockRadius = 20;
     public float sideDamage = 100;
@@ -93,17 +66,27 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
     public int extraLinkAmounts = 2;
     public float linkInterval = 30f;
 
-    public float oscScl = 4f, oscMag = 0.15f;
+    public float oscScl = 1.75f, oscMag = 0.15f;
 
-    public float flashInterval = 20f;
+    public float flashInterval = 14f;
 
     public float randomDeviation = 18f;
     public float lightningWidth = 1.5f;
-    public boolean drawPositionLighting = true;
-
     private BeamLightningLinkerBulletType linkBulletType;
+    private BeamLightningDamageBulletType lightningDamageBulletType;
+
+    @Override
+    public BulletType bulletType() {
+        return this;
+    }
+
+    @Override
+    public boolean largeHit() {
+        return largeHit;
+    }
 
     public LightningBeamBulletType() {
+        lifetime = 30;
         speed = 0f;
         collides = false;
         collidesAir = collidesGround = true;
@@ -121,6 +104,7 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
         statusDuration = 30f;
 
         width = 13;
+        fadeTime = 16f;
     }
 
     public LightningBeamBulletType(float damage) {
@@ -138,7 +122,8 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
         linkAmounts = Math.max(0, linkAmounts);
         linkInterval = Math.max(1f, linkInterval);
         growTime = Math.max(0.01f, growTime);
-        flashFadeInTime = Math.max(0f, flashFadeInTime);
+        lightningLifetime = Math.max(0f, lightningLifetime);
+        fadePoints = Math.max(0.001f, fadePoints);
         segments = Math.max(1, segments);
         randomDeviation = Math.max(0f, randomDeviation);
         lightningWidth = Math.max(0.1f, lightningWidth);
@@ -166,10 +151,18 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
         if (!b.isAdded()) return;
         setBeamEnd(b, beam.beamLength);
 
-        if (b.timer(0, flashInterval)) emitLightning(b, beam);
+        if (b.timer(0, flashInterval) && b.fin() < 0.8f) emitLightning(b, beam);
         if (b.timer(3, sideDamageInterval)) damageAroundBeam(b);
         if (b.timer(4, damageInterval)) createHitChains(b);
         if (b.timer(5, 1f)) checkFriendlyBullets(b, beam);
+
+        Vec2 v = new Vec2().set(b);
+        if (Mathf.chanceDelta(0.06f) && b.fin() < 0.9f) {
+            for (int j = 0; j < 2; ++j) {
+                rand.setSeed(b.id);
+                Drawn.randFadeLightningEffect(v.x, v.y, rand.random(80, 100), Mathf.random(7, 10), hitColor, Mathf.chance(0.5));
+            }
+        }
     }
 
     @Override
@@ -181,8 +174,8 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
     public void draw(Bullet b) {
         if (!(b instanceof LightningBeamBullet beam) || beam.beamLength <= 0.1f) return;
 
-        float fade = Mathf.curve(b.fin(Interp.pow2Out), 0f, 0.2f)
-                * Mathf.curve(b.fout(Interp.smooth), 0f, 0.1f);
+        float fade = Mathf.curve(b.fin(Interp.smooth), 0f, 0.05f)
+                * Mathf.curve(b.fout(Interp.pow3Out), 0f, 0.1f);
         float rotation = b.rotation();
         float endX = b.x + Angles.trnsx(rotation, beam.beamLength);
         float endY = b.y + Angles.trnsy(rotation, beam.beamLength);
@@ -211,7 +204,7 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
             for (int sign : Mathf.signs) {
                 Draw.color(startColor);
                 Drawf.tri(b.x, b.y, startHalf * 1.5f,
-                        startHalf * 4f, rotation + SIDE_ANGLE * sign);
+                        startHalf * 8f, rotation + SIDE_ANGLE * sign);
             }
 
             layerWidth *= 0.7f;
@@ -236,17 +229,27 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
     private void emitLightning(Bullet b, LightningBeamBullet beam) {
         if (beam.beamLength <= 0.01f) return;
 
-        rand.setSeed(b.id);
+        long seed = b.id + (long) beam.emission++ * 7919L;
+        rand.setSeed(seed);
         float endAngle = rand.random(360f);
         float endDistance = rand.random(END_JITTER);
         float endX = beamEndX(b);
         float endY = beamEndY(b);
         Tmp.v1.set(endX + Angles.trnsx(endAngle, endDistance),
                 endY + Angles.trnsy(endAngle, endDistance));
-        LightningFlash flash = new LightningFlash(this, b.x, b.y,
-                Tmp.v1.x, Tmp.v1.y, b.id + (long) beam.emission++ * 7919L);
-        lightningEffect.at(b.x, b.y, b.rotation(), lightningColor, flash);
-        createPathSparks(flash.points, b.id + (long) beam.emission++ * 7919L);
+        float damageAmount = lightningDamage < 0f ? b.damage : lightningDamage * b.damageMultiplier() * beamDamageScale(b);
+        if (damageAmount > 0f) {
+            if (lightningDamageBulletType == null) {
+                lightningDamageBulletType = new BeamLightningDamageBulletType(this);
+            }
+            Vec2Seq points = BeamLightning.createPath(
+                    b.x, b.y, Tmp.v1.x, Tmp.v1.y, seed, segments, randomDeviation
+            );
+            lightningDamageBulletType.createBeam(
+                    b, points, lightningColor, damageAmount,
+                    growTime, 12f, lightningLifetime, lightningWidth, fadePoints
+            );
+        }
         if (hitEffect != null && hitEffect != Fx.none) {
             hitEffect.at(Tmp.v1.x, Tmp.v1.y, b.rotation(), hitColor);
         }
@@ -256,7 +259,7 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
         if (beamShockRadius <= 0.01f) return;
 
         setBeamRect(beamRect, b, linkRange + 8f);
-        float amount = sideDamage < 0f ? b.damage * sideDamageMultiplier : sideDamage * b.damageMultiplier();
+        float amount = sideDamage < 0f ? b.damage * sideDamageMultiplier : sideDamage * b.damageMultiplier() * beamDamageScale(b);
         if (amount <= 0f) return;
 
         Seq<Unit> hitUnits = new Seq<>();
@@ -280,19 +283,6 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
         }
     }
 
-    private void createPathSparks(float[] points, long seed) {
-        if (!WHSettings.effectEnabled()) return;
-
-        Rand random = new Rand(seed);
-        float width = lightningWidth;
-        for (int i = 0; i < points.length; i += 2) {
-            if (random.chance(0.0855f) && i != points.length - 1) {
-                WHFx.lightningSpark.at(points[i], points[i + 1],
-                        random.random(2f + width, 4f + width), lightningColor);
-            }
-        }
-    }
-
     private void createHitChains(Bullet b) {
         if (linkAmounts <= 0) return;
 
@@ -306,7 +296,7 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
             Unit unit = hitUnits.get(i);
             setBeamPoint(b, unit.x, unit.y);
             createLink(b, Tmp.v1.x, Tmp.v1.y, unit,
-                    Math.max(0f, linkDamage * b.damageMultiplier()));
+                    Math.max(0f, linkDamage * b.damageMultiplier() * beamDamageScale(b)));
         }
     }
 
@@ -325,7 +315,7 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
     private void createChain(Bullet source, float x, float y) {
         if (extraLinkAmounts <= 0) return;
 
-        float amount = Mathf.clamp((source.damage() + source.type.splashDamage) / 20 * Math.min(1, source.damageMultiplier()), 35, 150);
+        float amount = Mathf.clamp((source.damage() + source.type.splashDamage * beamDamageScale(source)) / 20 * Math.min(1, source.damageMultiplier()), 35, 150);
         Seq<Unit> targets = new Seq<>();
         Units.nearbyEnemies(source.team, x, y, linkRange, unit -> {
             if (!unit.dead && unit.hittable()
@@ -347,6 +337,10 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
                 && unit.checkTarget(collidesAir, collidesGround)
                 && Intersector.distanceSegmentPoint(beam.x, beam.y, endX, endY, unit.x, unit.y)
                 <= beamShockRadius + unit.hitSize / 2f;
+    }
+
+    private float beamDamageScale(Bullet bullet) {
+        return bullet instanceof LightningBeamBullet beam ? beam.damageScale : 1f;
     }
 
     private void setBeamRect(Rect rect, Bullet beam, float margin) {
@@ -412,66 +406,6 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
         return linker != null;
     }
 
-    private void drawFlash(float[] points, float progress, float alpha, float stroke,
-                           Color color, Vec2 end) {
-        if (alpha <= 0.001f || stroke <= 0.001f) return;
-
-        //[x1,y1,x2,y2...]
-        int segmentCount = points.length / 2 - 1;
-        float shown = Mathf.clamp(progress) * segmentCount;
-        int complete = Math.min((int) shown, segmentCount);
-        float partial = shown - complete;
-        float fadePoints = 3f;
-
-
-        for (int i = 0; i < complete; i++) {
-            int point = i * 2;
-
-            float tail = Mathf.clamp((shown - (i + 1f)) / fadePoints);
-            float currentStroke = stroke * Mathf.lerp(0.2f, 1f, tail);
-
-            Draw.color(color);
-            Lines.stroke(currentStroke);
-            /*  Draw.color(color, alpha * Mathf.lerp(0.2f, 1f, tail));*/
-            Lines.line(points[point], points[point + 1],
-                    points[point + 2], points[point + 3], false);
-
-            Fill.circle(points[point], points[point + 1], currentStroke / 2);
-        }
-
-
-        int current = complete * 2;
-        if (complete < segmentCount && partial > 0.001f) {
-            float endX = Mathf.lerp(points[current], points[current + 2], partial);
-            float endY = Mathf.lerp(points[current + 1], points[current + 3], partial);
-            float tail = Mathf.clamp((shown - (complete + 1f)) / fadePoints);
-            float currentStroke = stroke * Mathf.lerp(0.2f, 1f, tail);
-
-            Draw.color(color);
-            Lines.stroke(currentStroke);
-            Lines.line(points[current], points[current + 1], endX, endY, false);
-            Fill.circle(endX, endY, currentStroke * 0.5f);
-            end.set(endX, endY);
-        } else {
-            end.set(points[current], points[current + 1]);
-        }
-    }
-
-    private float[] createLightningPath(float startX, float startY,
-                                        float endX, float endY, long seed) {
-        float[] points = new float[(segments + 1) * 2];
-        float angle = Angles.angle(startX, startY, endX, endY) - 90f;
-        Rand random = new Rand(seed);
-
-        for (int i = 0; i <= segments; i++) {
-            float progress = i / (float) segments;
-            float offset = i == 0 || i == segments ? 0f : random.range(randomDeviation);
-            points[i * 2] = Mathf.lerp(startX, endX, progress) + Angles.trnsx(angle, offset);
-            points[i * 2 + 1] = Mathf.lerp(startY, endY, progress) + Angles.trnsy(angle, offset);
-        }
-        return points;
-    }
-
     private void applyStatus(Unit unit, Bullet source) {
         if (source.type.status != null && source.type.status != StatusEffects.none
                 && source.type.statusDuration > 0f) {
@@ -528,17 +462,6 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
         }
     }
 
-    private static class LightningFlash {
-        final LightningBeamBulletType type;
-        final float[] points;
-
-        LightningFlash(LightningBeamBulletType type, float startX, float startY,
-                       float endX, float endY, long seed) {
-            this.type = type;
-            points = type.createLightningPath(startX, startY, endX, endY, seed);
-        }
-    }
-
     @Override
     public @Nullable Bullet create(@Nullable Entityc owner, @Nullable Entityc shooter, Team team,
                                    float x, float y, float angle, float damage, float velocityScl,
@@ -555,6 +478,7 @@ public class LightningBeamBulletType extends ContinuousLaserBulletType {
         public float damageScale = 1f;
         public int emission;
         public final Seq<Bullet> linkedBullets = new Seq<>();
+        public Interval timer2 = new Interval(5);
 
         @Override
         public void reset() {

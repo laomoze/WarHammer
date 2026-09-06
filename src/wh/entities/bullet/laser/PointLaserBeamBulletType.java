@@ -31,10 +31,10 @@ public class PointLaserBeamBulletType extends PointLaserBulletType {
     public Color[] colors = {Pal.lancerLaser.cpy().a(0.35f), Pal.lancerLaser.cpy().a(0.7f), Color.white};
     public float length = 99999;
     public float extensionSpeed = 12f;
-    public float width = 15f;
+    public float width = 11f;
     public float lengthFalloff = 0.8f;
     public float oscScl = 2f, oscMag = 0.15f;
-    public float fadeTime = 10f;
+    public float fadeTime = 15f;
     public float sideAngle = 90f;
     public boolean drawPositionLighting = false;
 
@@ -122,13 +122,13 @@ public class PointLaserBeamBulletType extends PointLaserBulletType {
 
         b.damage = data.baseDamage * data.damageScale;
 
-        if (b.keepAlive && b.timer.get(0, damageInterval)) {
+        if (b.timer.get(3, damageInterval)) {
             Damage.collidePoint(b, b.team, hitEffect, endX, endY);
             createSplashDamage(b, endX, endY);
         }
 
         Floor floor = Vars.world.floorWorld(endX, endY);
-        if (b.keepAlive && b.timer.get(1, beamEffectInterval)) {
+        if (b.timer.get(4, beamEffectInterval)) {
             if (floor != null)
                 beamEffect.at(endX, endY, b.rotation(), floor.mapColor.cpy().lerp(Color.black, 0.35f));
         }
@@ -173,7 +173,7 @@ public class PointLaserBeamBulletType extends PointLaserBulletType {
             );
 
             Draw.color(startColor);
-            Fill.circle(data.startX, data.startY, startWidth * 1.2f);
+            Fill.circle(data.startX, data.startY, startWidth * 1.1f);
             Draw.color(endColor);
             Fill.circle(endX, endY, endWidth * 1.2f);
 

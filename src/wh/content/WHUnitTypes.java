@@ -6214,7 +6214,9 @@ public final class WHUnitTypes {
                 hitSize = 16.05f;
                 engineSize = 7f;
                 payloadCapacity = (2 * 2) * tilePayload;
-                buildSpeed = 3.5f;
+
+                buildSpeed = 3f;
+                buildBeamOffset = mineBeamOffset = 35 / 4f;
                 isEnemy = false;
 
                 outlineRadius = 3;
@@ -6341,7 +6343,7 @@ public final class WHUnitTypes {
                 range = 130f;
                 health = 800;
                 armor = 3f;
-                buildSpeed = 1.2f;
+                buildSpeed = 0.9f;
                 buildBeamOffset = mineBeamOffset = 18 / 4f;
                 engineOffset = 6.5f;
                 trailLength = 10;

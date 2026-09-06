@@ -58,10 +58,7 @@ import mindustry.world.blocks.production.*;
 import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.blocks.storage.StorageBlock;
 import mindustry.world.blocks.units.RepairTurret;
-import mindustry.world.consumers.ConsumeCoolant;
-import mindustry.world.consumers.ConsumeItemFlammable;
-import mindustry.world.consumers.ConsumeItemRadioactive;
-import mindustry.world.consumers.ConsumeLiquidBase;
+import mindustry.world.consumers.*;
 import mindustry.world.draw.*;
 import mindustry.world.meta.*;
 import wh.core.WHSettings;
@@ -227,7 +224,7 @@ public final class WHBlocks {
     //33
     Lcarus, SSWord, Laser, Blaze, Blade, Torrent, Shard,
     //44
-    Prevent, Vortex, HeavyHammer, Flash, Ionize, Thunder, Viper, Pyros, Deflection,
+    Prevent, Vortex, HeavyHammer, Flash, Ionize, Viper, Thunder, Pyros, Deflection,
     //55
     RoaringFlame, Collapse, Colossus, CycloneMissleLauncher, Crumble, Sacrament,
     //66
@@ -4787,8 +4784,8 @@ public final class WHBlocks {
             consumeLiquid(Liquids.hydrogen, 15f / 60f);
 
             addUpgrade(WHUnitTypes.M1, WHUnitTypes.M2, with(WHItems.manganeseSteel, 60, WHItems.cobalt, 50, Items.silicon, 70));
-            addUpgrade(WHUnitTypes.airA1, WHUnitTypes.airA2, with(WHItems.manganeseSteel, 70, Items.graphite, 80, Items.silicon, 40));
-            addUpgrade(WHUnitTypes.airB1, WHUnitTypes.airB2, with(WHItems.manganeseSteel, 70, WHItems.uranium, 50, Items.silicon, 70));
+            addUpgrade(WHUnitTypes.airA1, WHUnitTypes.airA2, with(WHItems.manganeseSteel, 70, Items.tungsten, 80, Items.silicon, 40));
+            addUpgrade(WHUnitTypes.airB1, WHUnitTypes.airB2, with(WHItems.manganeseSteel, 70, Items.plastanium, 50, Items.silicon, 70));
 
             constructTime = 60f * 20f;
             researchCostMultiplier = 0.75f;
@@ -5495,7 +5492,7 @@ public final class WHBlocks {
 
         AutoGun = new WHItemTurret("Auto-gun") {{
 
-            requirements(Category.turret, with(WHItems.cobalt, 50, Items.graphite, 50, Items.silicon, 50, WHItems.manganeseSteel, 50));
+            requirements(Category.turret, with(Items.graphite, 50, Items.silicon, 50, WHItems.manganeseSteel, 50));
             size = 2;
             health = 700;
             range = 240;
@@ -5542,7 +5539,7 @@ public final class WHBlocks {
             );
         }};
 
-        Laser = new LaserTurret("Laser") {
+        Laser = new LaserBeamTurret("Laser") {
             {
                 requirements(Category.turret, with(Items.silicon, 150, Items.plastanium, 50, Items.carbide, 50, WHItems.manganeseSteel, 80, WHItems.cobaltNitride, 50));
 
@@ -5564,6 +5561,7 @@ public final class WHBlocks {
                 coolant = consumeCoolant(20 / 60f);
                 consumePower(500 / 60f);
                 shootDuration = 120;
+                firingMoveFract = 0.2f;
                 shootType = new PointLaserBeamBulletType(120) {{
                     length = 280;
                     colors = new Color[]{
@@ -5582,33 +5580,9 @@ public final class WHBlocks {
                     hitEffect = WHFx.hitSpark(30, Pal.lightOrange, 4, splashDamageRadius, 1, 7f);
                 }};
 
+                cost = WHLiquids.refinePromethium;
+                costMount = 90 / 60f;
 
-            }
-
-            @Override
-            public void init() {
-                WHItemTurret.intTurret(this);
-                super.init();
-                buildType = LaserBuild::new;
-            }
-
-            public class LaserBuild extends LaserTurretBuild {
-                @Override
-                public void updateTile() {
-                    super.updateTile();
-
-                    for (BulletEntry entry : bullets) {
-                        if (entry.bullet instanceof PointLaserBeamBulletType.PointLaserBeamBullet beam) {
-                            beam.damageScale = timeScale;
-                            beam.damage = beam.baseDamage * beam.damageScale;
-                        }
-                    }
-                }
-
-                @Override
-                protected void turnToTarget(float targetRot) {
-                    rotation = Angles.moveToward(rotation, targetRot, efficiency * rotateSpeed * delta() * (bullets.any() && wasShooting ? 0.2f : 1f));
-                }
             }
         };
 
@@ -6365,7 +6339,7 @@ public final class WHBlocks {
         Ionize = new WHItemTurret("Ionize") {{
 
             requirements(Category.turret, with(WHItems.cobalt, 300, WHItems.armorAlloy, 100,
-                    WHItems.ceramite, 100, WHItems.resonantCrystal, 50));
+                    WHItems.ceramite, 100, WHItems.entanglement, 50));
 
             size = 4;
             outlineRadius = 3;
@@ -6399,8 +6373,8 @@ public final class WHBlocks {
 
         Viper = new EnhancedPowerTurret("Viper") {
             {
-                requirements(Category.turret, with(WHItems.manganeseSteel, 200, Items.plastanium, 150, WHItems.cobaltNitride, 100,
-                        WHItems.ceramite, 100, WHItems.resonantCrystal, 50));
+                requirements(Category.turret, with(WHItems.manganeseSteel, 200, Items.plastanium, 150, WHItems.armorAlloy, 100,
+                        WHItems.ceramite, 100, WHItems.entanglement, 50));
 
                 size = 4;
                 reload = 180;
@@ -6450,6 +6424,82 @@ public final class WHBlocks {
                 shootType = WHBullets.ViperBullet;
                 enhancerItem = WHItems.resonantCrystal;
                 enhancedBullet = WHBullets.ViperBulletEnhance;
+            }
+        };
+
+        Thunder = new LaserBeamTurret("Thunder") {
+            {
+                requirements(Category.turret, with(WHItems.armorAlloy, 100, Items.plastanium, 300, WHItems.cobaltNitride, 100,
+                        WHItems.ceramite, 250, WHItems.entanglement, 150));
+
+                size = 4;
+                reload = 360;
+                rotateSpeed = 1.8f;
+
+                recoil = 3;
+                recoilTime = 180f;
+                cooldownTime = 200;
+
+                liquidCapacity = 60;
+                float r = range = 450;
+                shootCone = 3;
+
+                shootSound = Sounds.shootMeltdown;
+                loopSound = Sounds.beamMeltdown;
+                unitSort = UnitSorts.mostShield;
+
+                heatColor = Heat;
+
+                shootY = 19f / 4f;
+                coolantMultiplier = 1.5f;
+                coolant = consumeCoolant(45 / 60f);
+                consumePower(4000 / 60f);
+                shootDuration = 240;
+
+                firingMoveFract = 0.2f;
+
+                drawer = new DrawTurret(WarHammerMod.name("turret-")) {{
+                    parts.add(
+                            new RegionPart("-barrel-l") {{
+                                under = true;
+                                x = y = 0f;
+                                mirror = false;
+                                moveX = -5f / 4f;
+                                moveY = -11f / 4f;
+                                heatColor = WHPal.SkyBlueF;
+                                heatProgress = PartProgress.recoil;
+                                progress = PartProgress.recoil;
+                            }},
+                            new RegionPart("-barrel-r") {{
+                                under = true;
+                                mirror = false;
+                                x = y = 0f;
+                                moveX = 5f / 4f;
+                                moveY = -11f / 4f;
+                                heatColor = WHPal.SkyBlueF;
+                                heatProgress = PartProgress.recoil;
+                                progress = PartProgress.recoil;
+                            }}, new RegionPart("-under") {{
+                                mirror = false;
+                                layerOffset = -0.01f;
+                                outline = false;
+                            }});
+                }};
+
+                shootType = new LightningBeamBulletType() {{
+                    damageInterval = 6;
+                    lightningDamage = damage = 150;
+                    sideDamage = 200;
+                    sideDamageInterval = 15;
+
+                    armorMultiplier = 0.75f;
+
+                    lightColor = lightningColor = hitColor = SkyBlue;
+                    length = r;
+                    hitEffect = WHFx.square(30, SkyBlue, 2, 30, 5);
+                }};
+
+
             }
         };
 
@@ -7321,6 +7371,17 @@ public final class WHBlocks {
                             liquid -> liquid.coolant && liquid != cost && (this.allowLiquid && !liquid.gas || this.allowGas && liquid.gas)
                                     && liquid.temperature <= maxTemp && liquid.flammability < maxFlammability && liquid.heatCapacity >= Liquids.cryofluid.heatCapacity;
                 }});
+
+                consume(new ConsumeLiquid(cost, costMount) {
+                    @Override
+                    public void update(Building build) {
+                        if (build instanceof LaserBeamTurretBuild c) {
+                            if (c.wasShooting) {
+                                super.update(build);
+                            }
+                        }
+                    }
+                });
 
 
                 float d = shootDuration = 200;

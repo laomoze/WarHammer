@@ -119,7 +119,7 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
         if (WHWeathers.acidRain != null && !rules.weather.contains(e -> e.weather == WHWeathers.acidRain)) {
             WeatherEntry acid = new WeatherEntry(
                     WHWeathers.acidRain,
-                    2f * Time.toMinutes, 4f * Time.toMinutes,
+                    8f * Time.toMinutes, 16f * Time.toMinutes,
                     2f * Time.toMinutes, 4f * Time.toMinutes
             );
             acid.intensity = 1f;
@@ -129,8 +129,8 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
         if (WHWeathers.radiationSandstorm != null && !rules.weather.contains(e -> e.weather == WHWeathers.radiationSandstorm)) {
             WeatherEntry radiation = new WeatherEntry(
                     WHWeathers.radiationSandstorm,
-                    4f * Time.toMinutes, 8f * Time.toMinutes,
-                    2f * Time.toMinutes, 4f * Time.toMinutes
+                    8f * Time.toMinutes, 12f * Time.toMinutes,
+                    3f * Time.toMinutes, 6f * Time.toMinutes
             );
             radiation.intensity = 0.95f;
             rules.weather.add(radiation);

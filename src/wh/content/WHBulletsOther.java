@@ -248,6 +248,12 @@ public class WHBulletsOther {
                 b.damage /= damageMultiplier;
                 b.data = hitCount + 1;
             }
+
+            @Override
+            public void init(Bullet b) {
+                super.init(b);
+                createBeamLightning(b, b.damage / 2, 2);
+            }
         };
 
         ViperBulletMain2 = new LightingLaserBulletType() {
@@ -314,7 +320,8 @@ public class WHBulletsOther {
                         });
                     }
                 }
-                addRectPathDistortion(b, b.rotation());
+                float sourceDamage = b.damage / 2;
+                createBeamLightning(b, sourceDamage, 4);
             }
 
             @Override
