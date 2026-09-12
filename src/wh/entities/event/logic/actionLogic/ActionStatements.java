@@ -1024,8 +1024,7 @@ public final class ActionStatements{
                         Spawner spawner = new Spawner();
                         Vec2 spawnPosition = new Vec2();
                         if (!WHUtils.snapToSpawnPosition(unitType, worldX, worldY, spread * tilesize, spawnPosition)) {
-                            Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread) * tilesize);
-                            spawnPosition.set(worldX + Tmp.v1.x, worldY + Tmp.v1.y);
+                            return;
                         }
                         spawner.init(unitType, teamVal, spawnPosition, angleVal, delay, false);
                         spawner.setShieldToApply(shieldVal);
@@ -1422,10 +1421,9 @@ public final class ActionStatements{
                     float delay = autoDelaySecFromHitSize(maxHitSize) * Time.toSeconds;
                     float spread = autoSpreadFromHitSize(maxHitSize);
                     UnitType terrainType = typeArray.length == 0 ? null : typeArray[0];
-                    Vec2 dropPosition = new Vec2(worldX, worldY);
+                    Vec2 dropPosition = new Vec2();
                     if (!WHUtils.snapToSpawnPosition(terrainType, worldX, worldY, spread * tilesize, dropPosition)) {
-                        Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread * tilesize));
-                        dropPosition.add(Tmp.v1);
+                        return true;
                     }
 
                     Runnable spawnOne = () -> {

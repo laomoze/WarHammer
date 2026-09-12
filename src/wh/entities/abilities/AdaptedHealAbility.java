@@ -44,9 +44,9 @@ public class AdaptedHealAbility extends RepairFieldAbility{
     // 小于 0 表示关闭自愈等待机制。
     public float selfHealReloadTime = -1;
 
-    // 用上一帧血量判断是否处于“最近没再挨打”的状态。
     protected float lastHealth = 0;
     protected float selfHealReload = 0;
+    protected boolean wasHealed;
 
     public void update(Unit unit) {
         // 这里的 data 用作修复场自身的冷却进度。

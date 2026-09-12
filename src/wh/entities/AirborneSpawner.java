@@ -427,7 +427,8 @@ public class AirborneSpawner extends WHBaseEntity implements Syncc, Timedc, Rotc
 
             Vec2 spawn = new Vec2();
             Vec2 spawnPos = thrusterSpawnPosition(i, spawnSeq.size, spawn);
-            WHUtils.snapToSpawnPosition(unitType, spawnPos.x, spawnPos.y, Math.max(tilesize * 3f, unitType.hitSize), spawnPos);
+            if (!WHUtils.snapToSpawnPosition(unitType, spawnPos.x, spawnPos.y, Math.max(tilesize * 3f, unitType.hitSize), spawnPos))
+                continue;
             Unit spawned = spawnUnit(unitType, spawnPos.x, spawnPos.y, rotation());
 
             spawnedUnits.add(spawned);

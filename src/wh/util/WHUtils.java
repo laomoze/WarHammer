@@ -830,7 +830,7 @@ public final class WHUtils {
     }
 
     /**
-     * Moves a spawn point to the nearest tile accepted by the unit type.
+     * Moves a spawn point to a random tile accepted by the unit type.
      */
     public static boolean snapToSpawnPosition(UnitType type, float x, float y, float range, Vec2 out) {
         if (type == null || out == null || world == null) return false;
@@ -838,18 +838,8 @@ public final class WHUtils {
         Seq<Tile> validTiles = ableToSpawn(type, x, y, Math.max(0f, range));
         if (validTiles.isEmpty()) return false;
 
-        Tile nearest = null;
-        float nearestDst2 = Float.MAX_VALUE;
-        for (Tile tile : validTiles) {
-            float dst2 = Mathf.dst2(x, y, tile.worldx(), tile.worldy());
-            if (dst2 < nearestDst2) {
-                nearest = tile;
-                nearestDst2 = dst2;
-            }
-        }
-
-        if (nearest == null) return false;
-        out.set(nearest.worldx(), nearest.worldy());
+        Tile selected = validTiles.get(Mathf.random(validTiles.size - 1));
+        out.set(selected.worldx(), selected.worldy());
         return true;
     }
 

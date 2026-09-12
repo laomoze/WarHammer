@@ -1,10 +1,11 @@
 package wh.entities.event.objective;
 
-import arc.util.*;
-import mindustry.game.*;
-import wh.entities.event.mapmarker.*;
+import arc.util.Time;
+import mindustry.game.MapObjectives;
+import mindustry.logic.LMarkerControl;
+import wh.entities.event.mapmarker.RaidIndicator;
 
-import java.util.*;
+import java.util.Objects;
 
 import static mindustry.Vars.state;
 
@@ -112,8 +113,8 @@ public class RaidEventObjective extends MapObjectives.MapObjective{
             existing = new RaidIndicator(key);
         }
         existing.timerName = key;
-        existing.minimap = true;
-        existing.world = true;
+        existing.control(LMarkerControl.minimap, 1, 0, 0);
+        existing.control(LMarkerControl.world, 1, 0, 0);
 
         // Keep only the raid indicator to avoid duplicate icons.
         markers = new MapObjectives.ObjectiveMarker[]{existing};

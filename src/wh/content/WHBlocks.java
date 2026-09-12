@@ -157,7 +157,7 @@ public final class WHBlocks {
 
     //distribution
     public static Block
-            basicDust, steelDust,
+            basicDust, steelDust, armorDust,
             armorInvertedSorter, armorSorter, armorJunction,
             basicOverflowGate, basicUnderflowGate,
             armorOverflowGate, armorUnderflowGate,
@@ -2795,6 +2795,24 @@ public final class WHBlocks {
             researchCostMultiplier = 1;
         }};
 
+        armorDust = new ArmoredCoverConveyor("armor-dust") {{
+
+            requirements(Category.distribution, with(WHItems.armorAlloy, 1, WHItems.cobalt, 2, Items.plastanium, 1));
+
+            health = 700;
+            armor = 8;
+            underBullets = true;
+            hasShadow = true;
+            placeableLiquid = true;
+            size = 1;
+
+            speed = 32f / 138f;//why?
+            displayedSpeed = 30;
+            hasItems = true;
+            itemCapacity = 2;
+            researchCostMultiplier = 1;
+        }};
+
         armorJunction = new Junction("armor-junction") {{
             requirements(Category.distribution, with(Items.graphite, 5, WHItems.manganese, 4));
             speed = 45;
@@ -3888,11 +3906,11 @@ public final class WHBlocks {
             positiveTimeScale = 1.2f;
             range = 7;
 
-            craftTime = 60;
-            psychicPerCraft = 20f;
+            craftTime = 180;
+            psychicPerCraft = 60f;
 
-            consumePower(180 / 60f);
-            consumeItems(with(WHItems.combustible, 1, WHItems.entanglement, 1));
+            consumePower(240 / 60f);
+            consumeItems(with(WHItems.entanglement, 1));
 
             drawer = new DrawMulti(
                     new DrawArcs() {{
@@ -3939,14 +3957,14 @@ public final class WHBlocks {
                 positiveTimeScale = 1.5f;
                 range = 9;
 
-                craftTime = 90;
-                psychicPerCraft = 90;
-                psychicCapacity = 500;
-                warmupSpeed = 0.0015f;
+                craftTime = 120;
+                psychicPerCraft = 240;
+                psychicCapacity = 1000;
+                warmupSpeed = 0.0016f;
 
                 consumePower(2000 / 60f);
                 consumeItems(with(WHItems.sealedPromethium, 2));
-                consumeLiquids(LiquidStack.with(Liquids.cryofluid, 60 / 60f));
+                consumeLiquids(LiquidStack.with(WHLiquids.refinePromethium, 60 / 60f));
 
                 PartProgress pg = PartProgress.warmup;
                 PartProgress pg0 = pg.compress(0f, 0.2f);
@@ -4260,11 +4278,11 @@ public final class WHBlocks {
             generationRate = 5;
             attribute = Attribute.heat;
             secondaryAttribute = Attribute.steam;
-            secondaryScale = 0.5f;
+            secondaryScale = 1;
             attributeRadius = 1;
             baseEfficiency = 0f;
-            boostScale = 0.5f;
-            maxBoost = 3f;
+            boostScale = 1;
+            maxBoost = 2f;
             consumePower(200f / 60f);
             drawer = new DrawMulti(
 
@@ -4422,12 +4440,12 @@ public final class WHBlocks {
 
         remoteVault = new PsyStorageBlock("remote-vault") {
             {
-                requirements(Category.effect, with(WHItems.manganeseSteel, 500, WHItems.molybdenumAlloy, 200, WHItems.ceramite, 500, WHItems.entanglement, 200));
+                requirements(Category.effect, with(WHItems.manganeseSteel, 500, WHItems.armorAlloy, 200, WHItems.ceramite, 200, WHItems.entanglement, 100));
                 size = 3;
-                health = 3600;
+                health = 4000;
                 armor = 8;
                 psychicCapacity = 100;
-                psychicUse = 15;
+                psychicUse = 10;
                 linkRange = 30;
 
                 priority = TargetPriority.core;
@@ -5208,6 +5226,8 @@ public final class WHBlocks {
             health = 1200;
             armor = 6;
 
+            absorbLasers = true;
+
             researchCostMultiplier = 0.25f;
         }};
 
@@ -5216,6 +5236,8 @@ public final class WHBlocks {
             health = 1200 * 4 + 400;
             size = 2;
             armor = 6;
+
+            absorbLasers = true;
 
             researchCostMultiplier = 0.3f;
         }};
@@ -5236,7 +5258,7 @@ public final class WHBlocks {
             health = 3000 * 4 + 2000;
             size = 2;
             armor = 20;
-            frequency = 20;
+            frequency = 15;
             immunityAccount = 3;
             chanceDeflect = 30;
 
@@ -5576,6 +5598,7 @@ public final class WHBlocks {
                     damageInterval = 6;
                     fadeTime = 24f;
                     extensionSpeed = 1.5f;
+                    buildingDamageMultiplier = 0.3f;
                     beamEffect = WHFx.square(30, Pal.lightOrange, 3, 15, 5);
                     hitEffect = WHFx.hitSpark(30, Pal.lightOrange, 4, splashDamageRadius, 1, 7f);
                 }};
@@ -5588,9 +5611,8 @@ public final class WHBlocks {
 
         Blaze = new ContinuousTurret("Blaze") {
             {
-                requirements(Category.turret, with(WHItems.cobaltNitride, 60, Items.carbide, 50, WHItems.manganeseSteel, 50, Items.plastanium, 100));
+                requirements(Category.turret, with(WHItems.cobaltNitride, 60, Items.carbide, 80, WHItems.manganeseSteel, 50, Items.plastanium, 100));
 
-                health = 1200;
                 size = 3;
                 float r = range = 216;
                 outlineColor = WHPal.Outline;
@@ -5613,7 +5635,7 @@ public final class WHBlocks {
 
                 shootType = new PointLaserBulletType() {
                     {
-                        damage = 110;
+                        damage = 150;
                         damageInterval = 6;
                         buildingDamageMultiplier = 0.1f;
                         armorMultiplier = 2;
@@ -5701,7 +5723,7 @@ public final class WHBlocks {
 
             public class BlazeBuild extends ContinuousTurretBuild {
                 public float charge = 0;
-                public final float warmupTime = 220;
+                public final float warmupTime = 180;
 
                 @Override
                 protected void updateBullet(BulletEntry entry) {
@@ -5761,7 +5783,7 @@ public final class WHBlocks {
             shootType = WHBullets.LcarusBullet;
             ammoPerShot = 2;
             maxAmmo = 10;
-            enhance(Items.tungsten, WHBullets.LcarusBulletEnhanced,
+            enhance(WHItems.cobaltNitride, WHBullets.LcarusBulletEnhanced,
                     new ShootPattern() {{
                         shotDelay = 10;
                         shots = 2;
@@ -6025,7 +6047,7 @@ public final class WHBlocks {
 
         Prevent = new WHItemTurret("Prevent") {{
             requirements(Category.turret, with(
-                    WHItems.uranium, 200, WHItems.manganeseSteel, 300, WHItems.armorAlloy, 150, WHItems.cobaltNitride, 20));
+                    WHItems.uranium, 150, WHItems.manganeseSteel, 150, WHItems.armorAlloy, 150, WHItems.cobaltNitride, 50));
 
             size = 4;
             reload = 12;
@@ -6058,8 +6080,8 @@ public final class WHBlocks {
                 }
             }});
 
-            coolantMultiplier = 2f;
-            coolant = consumeCoolant(40 / 60f);
+            coolantMultiplier = 2.5f;
+            coolant = consumeCoolant(30 / 60f);
 
             ammo(
                     WHItems.chromium, WHBullets.PreventChromium,
@@ -6167,7 +6189,8 @@ public final class WHBlocks {
         };
 
         HeavyHammer = new WHItemTurret("Heavy-hammer") {{
-            requirements(Category.turret, with(WHItems.manganeseSteel, 100, WHItems.uranium, 200, Items.plastanium, 300, WHItems.armorAlloy, 150));
+            requirements(Category.turret, with(WHItems.ceramite, 100, WHItems.uranium, 200,
+                    Items.plastanium, 300, WHItems.armorAlloy, 150));
 
             size = 4;
             reload = 340;

@@ -1,20 +1,28 @@
 package wh.gen;
 
-import arc.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import arc.util.pooling.*;
-import mindustry.core.*;
-import mindustry.entities.*;
-import mindustry.game.*;
+import arc.Core;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Mathf;
+import arc.math.geom.Geometry;
+import arc.math.geom.Point2;
+import arc.math.geom.Position;
+import arc.util.Time;
+import arc.util.pooling.Pools;
+import mindustry.core.World;
+import mindustry.entities.Damage;
+import mindustry.entities.Effect;
+import mindustry.entities.Fires;
+import mindustry.entities.Puddles;
+import mindustry.game.Team;
 import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.world.*;
-import mindustry.world.meta.*;
-import wh.content.*;
-import wh.graphics.*;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.world.Tile;
+import mindustry.world.meta.Attribute;
+import wh.content.WHBullets;
+import wh.content.WHStatusEffects;
+import wh.graphics.WHPal;
 
 import static mindustry.Vars.*;
 
@@ -190,7 +198,6 @@ public class PlasmaFire extends Fire{
             Groups.all.remove(this);
             Groups.sync.remove(this);
             Groups.draw.remove(this);
-            Groups.fire.remove(this);
             removeEffect();
 
             if (net.client()) {

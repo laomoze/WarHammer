@@ -2014,7 +2014,7 @@ public class WHBullets {
             despawnEffect = Fx.hitBulletColor;
         }};
 
-        PreventChromium = new CritBulletType(7, 100) {{
+        PreventChromium = new CritBulletType(7, 80) {{
             critChance = 0.15f;
             critMultiplier = 1.4f;
             buildingDamageMultiplier = 0.3f;
@@ -2041,7 +2041,7 @@ public class WHBullets {
             );
         }};
 
-        PreventTungsten = new CritBulletType(8, 150) {{
+        PreventTungsten = new CritBulletType(8, 120) {{
             ammoMultiplier = 3;
             reloadMultiplier = 1.25f;
             armorMultiplier = 0.8f;
@@ -2071,7 +2071,7 @@ public class WHBullets {
             hitEffect = despawnEffect = Fx.hitBulletColor;
         }};
 
-        PreventUranium = new CritBulletType(8, 170) {
+        PreventUranium = new CritBulletType(8, 155) {
             {
                 ammoMultiplier = 4;
                 armorMultiplier = 0.8f;
@@ -2106,8 +2106,8 @@ public class WHBullets {
                 fragRandomSpread = 0f;
                 fragBullets = 1;
                 fragBullet = new ShrapnelBulletType() {{
-                    damage = 40;
-                    length = 50;
+                    damage = 70;
+                    length = 55;
                     width = 12;
                     toColor = c;
                     pierceCap = 3;
@@ -2279,13 +2279,13 @@ public class WHBullets {
             flameWidth = 2f;
             despawnEffect = Fx.none;
             knockback = 3f;
-            speed = 5f;
+            speed = 4f;
             height = 28f;
             width = 15f;
 
             damage = 300f;
-            splashDamageRadius = 50;
-            splashDamage = 500;
+            splashDamageRadius = 48;
+            splashDamage = 450;
             collidesTiles = false;
             collides = false;
             collidesAir = false;
@@ -2309,7 +2309,7 @@ public class WHBullets {
             smokeEffect = Fx.shootSmokeTitan;
 
             status = WHStatusEffects.radiation;
-            statusDuration = 90;
+            statusDuration = 200;
 
             trailLength = 32;
             trailWidth = 3.35f;
@@ -2326,8 +2326,8 @@ public class WHBullets {
             buildingDamageMultiplier = 0.5f;
             fragLifeMin = 1.5f;
             fragBullets = 3;
-            fragBullet = new CritBulletType(1, 90, "shell") {{
-                armorMultiplier = 1.2f;
+            fragBullet = new CritBulletType(1, 100, "shell") {{
+                armorMultiplier = 1.5f;
                 collidesAir = false;
 
                 despawnShake = 3f;
@@ -2336,7 +2336,7 @@ public class WHBullets {
                 lifetime = 50f;
                 knockback = 0.5f;
                 shrinkY = 0.3f;
-                splashDamageRadius = 24;
+                splashDamageRadius = 30;
                 splashDamage = 50f;
                 scaledSplashDamage = true;
                 backColor = WHItems.uranium.color.cpy();
@@ -2366,11 +2366,11 @@ public class WHBullets {
             flameWidth = 2f;
             despawnEffect = Fx.none;
             knockback = 3f;
-            speed = 4f;
+            speed = 5f;
             height = 28f;
             width = 15f;
 
-            damage = 200;
+            damage = 300;
             splashDamageRadius = 70;
             splashDamage = 300;
             collidesTiles = false;
@@ -2411,11 +2411,10 @@ public class WHBullets {
             fragLifeMin = 1.5f;
 
             fragBullets = 6;
-            fragBullet = new CritBulletType(1.5f, 100, "shell") {{
+            fragBullet = new CritBulletType(1.5f, 50, "shell") {{
                 armorMultiplier = 2;
                 splashDamageRadius = 40;
-                splashDamage = 50f;
-                scaledSplashDamage = true;
+                splashDamage = 80f;
 
                 collidesAir = false;
                 collidesTiles = false;

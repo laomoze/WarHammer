@@ -294,6 +294,8 @@ public final class KarvexTeachTree {
                 node(WHBlocks.lowResistanceBridge, () -> {
                 });
                 node(WHBlocks.steelDust, () -> {
+                    node(WHBlocks.armorDust, () -> {
+                    });
                     node(WHBlocks.trackDriverPoint, () -> {
                         node(WHBlocks.trackDriver, () -> {
                         });
@@ -688,10 +690,13 @@ public final class KarvexTeachTree {
                     });
                 });
                 node(WHBlocks.Lcarus, () -> {
-
+                    node(WHBlocks.Laser, () -> {
                     node(WHBlocks.Viper, () -> {
                         node(WHBlocks.Pyros, () -> {
                         });
+                        node(WHBlocks.Thunder, () -> {
+                        });
+                    });
                     });
                     node(WHBlocks.Ionize, () -> {
                         node(WHBlocks.Sacrament, () -> node(WHBlocks.Annihilate, () -> {

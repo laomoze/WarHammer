@@ -1,17 +1,11 @@
 package wh.entities.world.blocks.defense.turrets;
 
-import arc.Core;
 import arc.math.Mathf;
-import arc.util.Nullable;
-import mindustry.gen.Iconc;
 import mindustry.world.blocks.defense.turrets.ItemTurret;
 import mindustry.world.blocks.defense.turrets.Turret;
-import mindustry.world.meta.Stat;
 import wh.graphics.WHPal;
-import wh.ui.UIUtils;
 
 public class WHItemTurret extends ItemTurret{
-    public @Nullable String special;
 
     public WHItemTurret(String name){
         super(name);
@@ -50,25 +44,5 @@ public class WHItemTurret extends ItemTurret{
     @Override
     public void setStats(){
         super.setStats();
-        String specialText = special;
-        String specialKey = "block." + name + ".special";
-        String bundleSpecial = Core.bundle.has(specialKey) ? Core.bundle.get(specialKey) : null;
-        if(bundleSpecial != null && !bundleSpecial.isEmpty() && !isMissingBundleText(bundleSpecial)){
-            specialText = bundleSpecial;
-        }
-        final String finalSpecialText = specialText;
-        if(finalSpecialText != null && !finalSpecialText.isEmpty() && !finalSpecialText.equals("_") && !isMissingBundleText(finalSpecialText)){
-            stats.add(Stat.abilities, t -> {
-                t.row();
-                t.add("[gray]" + (unlocked() ? finalSpecialText : Iconc.lock + " " + Core.bundle.get("unlock.incampaign")))
-                .pad(6).padTop(4).width(400f).wrap().fillX();
-            });
-        }
-        stats.remove(Stat.ammo);
-        stats.add(Stat.ammo, UIUtils.ammo(ammoTypes));
-    }
-
-    private static boolean isMissingBundleText(String text){
-        return text.startsWith("???") && text.endsWith("???");
     }
 }

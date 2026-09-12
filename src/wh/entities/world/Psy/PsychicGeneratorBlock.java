@@ -43,6 +43,8 @@ public class PsychicGeneratorBlock extends PsychicBlock {
     @Override
     public void setStats() {
         super.setStats();
+        stats.remove(Stat.productionTime);
+        stats.add(Stat.productionTime, craftTime / 60f, StatUnit.seconds);
         PsychicStatValues.add(stats, WHStats.psychicProduction, productionPerSecond(), StatUnit.perSecond);
         stats.add(Stat.basePowerGeneration, powerPerSecond * 60f, StatUnit.powerSecond);
         stats.add(Stat.range, range, StatUnit.blocks);

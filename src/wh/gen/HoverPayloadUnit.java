@@ -1,6 +1,7 @@
 package wh.gen;
 
 import arc.Events;
+import arc.audio.Sound;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.math.Angles;
@@ -219,6 +220,15 @@ public class HoverPayloadUnit extends ElevationMoveUnit implements Payloadc, Wat
             Vars.netClient.clearRemovedEntity(unit.id);
         }
         Events.fire(new PickupEvent(this, unit));
+    }
+
+    @Override
+    public void playPayloadDropSound(Payload payload) {
+        Sound dropSound =
+                payload.size() <= 12f ? Sounds.payloadDrop1 :
+                        payload.size() <= 20f ? Sounds.payloadDrop2 :
+                                Sounds.payloadDrop3;
+        dropSound.at(self(), Mathf.random(0.9f, 1.1f));
     }
 
     public boolean onLiquid(){
