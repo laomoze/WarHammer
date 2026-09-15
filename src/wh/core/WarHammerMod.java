@@ -38,7 +38,7 @@ import wh.gen.EntityRegister;
 import wh.graphics.CMoonVoidShieldRenderer;
 import wh.graphics.MainRenderer;
 import wh.graphics.WHShaders;
-import wh.maps.filters.WhTechFilter;
+import wh.maps.filters.RuinGenerateFilter;
 import wh.net.packet.*;
 
 import java.util.Arrays;
@@ -263,12 +263,12 @@ public class WarHammerMod extends Mod {
         if (Vars.headless) return;
 
         try {
-            JsonIO.classTag("whTech", WhTechFilter.class);
+            JsonIO.classTag(Strings.camelize("RuinGenerate"), RuinGenerateFilter.class);
 
             for (Prov<GenerateFilter> provider : Maps.allFilterTypes) {
                 if (provider == null) continue;
                 try {
-                    if (provider.get() instanceof WhTechFilter) {
+                    if (provider.get() instanceof RuinGenerateFilter) {
                         return;
                     }
                 } catch (Throwable ignored) {
@@ -276,7 +276,7 @@ public class WarHammerMod extends Mod {
             }
 
             Prov<GenerateFilter>[] appended = Arrays.copyOf(Maps.allFilterTypes, Maps.allFilterTypes.length + 1);
-            appended[appended.length - 1] = WhTechFilter::new;
+            appended[appended.length - 1] = RuinGenerateFilter::new;
             Maps.allFilterTypes = appended;
         } catch (Throwable t) {
             Log.err(t);
