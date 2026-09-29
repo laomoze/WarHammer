@@ -229,7 +229,7 @@ public final class WHStatusEffects{
         rock = new StatusEffect("rock"){
             {
                 color = WHItems.molybdenumAlloy.color.cpy().lerp(Color.white, 0.3f);
-                speedMultiplier = 0.8f;
+                speedMultiplier = 0.75f;
                 reloadMultiplier = 0.95f;
                 dragMultiplier = 1.2f;
                 buildSpeedMultiplier = 0.9f;

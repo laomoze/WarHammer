@@ -108,7 +108,7 @@ public class WHFilterOptions {
                 new RuinStepsDialog(filter, changed).show();
             }).pad(4).margin(12f);
 
-            table.add("@nh.filter.option.steps");
+            table.add("@wh.filter.option.steps");
         }
     }
 }

@@ -100,5 +100,7 @@ public class WHOverride {
         quasarWeapon1.y = 0 / 4f;
 
         Items.graphite.hardness = 2;
+       /* ((LaserTurret)Blocks.meltdown).shootDuration=240;
+        ((LaserTurret)Blocks.meltdown).coolantMultiplier=4;*/
     }
 }

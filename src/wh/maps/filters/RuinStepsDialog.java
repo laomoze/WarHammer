@@ -23,7 +23,7 @@ public class RuinStepsDialog extends BaseDialog {
     private Table list;
 
     public RuinStepsDialog(RuinGenerateFilter filter, Runnable changed) {
-        super("@nh.filter.steps.title");
+        super("@wh.filter.steps.title");
         this.filter = filter;
         this.changed = changed;
 
@@ -58,7 +58,7 @@ public class RuinStepsDialog extends BaseDialog {
         list.defaults().pad(4);
 
         if (editing.isEmpty()) {
-            list.add("@nh.filter.steps.empty").wrap().width(280f).row();
+            list.add("@wh.filter.steps.empty").wrap().width(280f).row();
             return;
         }
 
@@ -78,11 +78,11 @@ public class RuinStepsDialog extends BaseDialog {
             }
         }).width(55f).padRight(6);
 
-        table.add("@nh.filter.step.radius").padRight(8);
+        table.add("@wh.filter.step.radius").padRight(8);
 
-        Label modeLabel = new Label(Core.bundle.get("nh.filter.step.mode." + step.stepMode.name()));
+        Label modeLabel = new Label(Core.bundle.get("wh.filter.step.mode." + step.stepMode.name()));
         modeLabel.setStyle(Styles.outlineLabel);
-        table.button(b -> b.add(modeLabel).update(i -> modeLabel.setText(Core.bundle.get("nh.filter.step.mode." + step.stepMode.name()))), Styles.flatBordert, () -> {
+        table.button(b -> b.add(modeLabel).update(i -> modeLabel.setText(Core.bundle.get("wh.filter.step.mode." + step.stepMode.name()))), Styles.flatBordert, () -> {
             step.stepMode = step.stepMode.next();
             changed.run();
         }).width(96f).padRight(8);
@@ -167,4 +167,3 @@ public class RuinStepsDialog extends BaseDialog {
         return block == Blocks.air ? Icon.none.getRegion() : block.uiIcon;
     }
 }
-

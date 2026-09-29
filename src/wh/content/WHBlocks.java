@@ -1017,8 +1017,8 @@ public final class WHBlocks {
                 liquidCapacity = 300;
                 size = 3;
                 consumePower(90 / 60f);
-                consumeItems(with(WHItems.oreSand, 2, Items.graphite, 2));
-                consumeLiquid(WHLiquids.swageWater, 80 / 60f);
+                consumeItems(with(Items.graphite, 2));
+                consumeLiquid(WHLiquids.swageWater, 90 / 60f);
                 outputLiquid = new LiquidStack(Liquids.water, 60 / 60f);
                 drawer = new DrawMulti(new DrawRegion("-bottom"),
                         new DrawLiquidTile(WHLiquids.swageWater),
@@ -2978,12 +2978,12 @@ public final class WHBlocks {
 
         steelUnloader = new UnloaderF("steel-unloader") {{
 
-            requirements(Category.distribution, with(Items.carbide, 15, WHItems.manganeseSteel, 20));
+            requirements(Category.distribution, with(Items.carbide, 10, WHItems.manganeseSteel, 20));
             size = 1;
             update = true;
             hasItems = true;
-            health = 300;
-            speed = 1.5f;
+            health = 450;
+            speed = 60f / 40f;
             researchCostMultiplier = 1;
         }};
 

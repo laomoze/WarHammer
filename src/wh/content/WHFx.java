@@ -304,8 +304,8 @@ public final class WHFx {
             color(color, colorTo, e.fout());
             stroke(e.fout() * stroke * rand.random(0.5f, 1.25f));
             drawHeightSpark(e.id + 114, intensity, e.x, e.y, e.finpow() * range, e.rotation, angle, range * 0.05f, e.finpow(), (sx, sy) -> {
-                float ang = Angles.angle(e.x, e.y, sx, sy);
-                lineAngle(sx, sy, ang, (e.fout(Interp.pow3Out) * length * 0.85F + length * 0.15F) * rand.random(0.5f, 1.5f));
+                float ang = Angles.angle(e.x, e.y, sx, sy) + 180f;
+                lineAngle(sx, sy, ang, (e.fout(Interp.pow3Out) * Mathf.curve(e.fin(pow2Out), 0, 0.3f) * length * 0.85F + length * 0.15F) * rand.random(0.5f, 1.5f));
             });
         });
     }
