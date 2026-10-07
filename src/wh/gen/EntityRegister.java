@@ -13,6 +13,7 @@ import wh.entities.bullet.ApproachBullet.AB;
 import wh.entities.event.Trigger;
 import wh.entities.world.Psy.unused.PsychicFieldState;
 import wh.entities.world.entities.AirRaiderUnitType;
+import wh.entities.world.entities.powerArmorComp.MultiModePowerArmourUnit;
 import wh.entities.world.entities.powerArmorComp.PowerArmourUnit;
 import wh.gen.TankA4.TankA4;
 
@@ -43,6 +44,7 @@ public final class EntityRegister{
     }
 
     public static void load(){
+        register(MultiModePowerArmourUnit.class.getSimpleName(), MultiModePowerArmourUnit.class, MultiModePowerArmourUnit::new);
         register("PlaFire", PlasmaFire.class, PlasmaFire::new);
         register("AirRaiderUnit", AirRaiderUnitType.class, AirRaiderUnitType::new);
 

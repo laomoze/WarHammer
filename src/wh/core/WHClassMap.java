@@ -5,17 +5,22 @@
 
 package wh.core;
 
-import mindustry.mod.*;
-import wh.content.*;
+import mindustry.mod.ClassMap;
+import wh.content.WHFx;
 import wh.entities.abilities.*;
 import wh.entities.bullet.*;
-import wh.entities.bullet.laser.*;
-import wh.entities.world.blocks.defense.*;
-import wh.entities.world.blocks.defense.turrets.*;
-import wh.entities.world.blocks.storage.*;
-import wh.entities.world.drawer.part.*;
-import wh.entities.world.entities.*;
-import wh.util.*;
+import wh.entities.bullet.laser.ChainLightingBulletType;
+import wh.entities.bullet.laser.LightningLinkerBulletType;
+import wh.entities.bullet.laser.PositionLightningBulletType;
+import wh.entities.world.blocks.defense.AirRaider;
+import wh.entities.world.blocks.defense.BombLauncher;
+import wh.entities.world.blocks.defense.turrets.SpeedupTurret;
+import wh.entities.world.blocks.storage.FrontlineCoreBlock;
+import wh.entities.world.blocks.storage.UnloaderF;
+import wh.entities.world.drawer.part.AncientEngine;
+import wh.entities.world.drawer.part.DrawArrowSequence;
+import wh.entities.world.entities.SuperHeavyUnitType;
+import wh.util.WorldDef;
 
 final class WHClassMap {
 
@@ -27,7 +32,6 @@ final class WHClassMap {
         ClassMap.classes.put("BulletKillHealAbility", BulletKillHealAbility.class);
         ClassMap.classes.put("BerserkOnAllyDeathAbility", BerserkOnAllyDeathAbility.class);
         ClassMap.classes.put("CloseCombatAbility", CloseCombatAbility.class);
-        ClassMap.classes.put("EscortShieldAbility", EscortShieldAbility.class);
         ClassMap.classes.put("FortifiedArmorAbility", FortifiedArmorAbility.class);
         ClassMap.classes.put("LastStandAbility", LastStandAbility.class);
         ClassMap.classes.put("MendFieldAbility", MendFieldAbility.class);

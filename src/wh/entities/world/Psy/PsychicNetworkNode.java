@@ -96,7 +96,6 @@ public interface PsychicNetworkNode {
     default float moveEnergyTo(PsychicNetworkNode next, float budget, float efficiency) {
         if (next == null || efficiency <= epsilon) return 0f;
 
-        float pressure = getEnergyPressure(next);
         float moved = getEnergyMoveRate(next, budget, efficiency);
         if (moved <= epsilon) return 0f;
 
@@ -112,12 +111,6 @@ public interface PsychicNetworkNode {
             energyMoved(next, actualMoved, false);
             next.energyMoved(this, delivered, true);
 
-            float safeBudget = Math.max(budget, epsilon);
-            float pressureScale = Math.min(Math.max(pressure / 60f, 0f), 2f);
-            float overflowMoved = Math.max(actualMoved - safeBudget, 0f);
-            float overflowScale = overflowMoved / safeBudget;
-            onEnergyOverload(actualMoved * pressureScale * 0.0025f + overflowScale * 0.035f);
-            next.onEnergyOverload(delivered * pressureScale * 0.0035f + overflowScale * 0.05f);
         }
 
         return actualMoved;

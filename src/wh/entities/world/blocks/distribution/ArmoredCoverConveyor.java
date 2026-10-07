@@ -13,6 +13,7 @@ public class ArmoredCoverConveyor extends CoverdConveyor {
     public ArmoredCoverConveyor(String name) {
         super(name);
         noSideBlend = true;
+        buildType = ArmoredConveyorBuild::new;
     }
 
     @Override
@@ -26,13 +27,15 @@ public class ArmoredCoverConveyor extends CoverdConveyor {
         return Point2.equals(tile.x + Geometry.d4(rotation).x, tile.y + Geometry.d4(rotation).y, otherx, othery)
                 || ((!otherblock.rotatedOutput(otherx, othery, tile) && Edges.getFacingEdge(otherblock, otherx, othery, tile) != null &&
                 Edges.getFacingEdge(otherblock, otherx, othery, tile).relativeTo(tile) == rotation) ||
-                (otherblock instanceof CoverdConveyor && otherblock.rotatedOutput(otherx, othery, tile) && Point2.equals(otherx + Geometry.d4(otherrot).x, othery + Geometry.d4(otherrot).y, tile.x, tile.y)));
+                (otherblock instanceof CoverdConveyor && otherblock.rotatedOutput(otherx, othery, tile)
+                        && Point2.equals(otherx + Geometry.d4(otherrot).x, othery + Geometry.d4(otherrot).y, tile.x, tile.y)));
     }
 
     public class ArmoredConveyorBuild extends CoConveyorBuild {
         @Override
         public boolean acceptItem(Building source, Item item) {
-            return super.acceptItem(source, item) && (source.block instanceof CoverdConveyor || Edges.getFacingEdge(source.tile, tile).relativeTo(tile) == rotation);
+            return super.acceptItem(source, item) &&
+                    (source.block instanceof CoverdConveyor || Edges.getFacingEdge(source.tile, tile).relativeTo(tile) == rotation);
         }
     }
 }

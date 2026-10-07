@@ -35,7 +35,8 @@ public final class WHStatusEffects{
             assault, bless, energyAmplification, weaponCharge, protection,
     tear, armorFracture, rock,
             scare, mark,
-    distort, forcesOfChaos, melta, palsy, plasma, plasmaFireBurn;
+            distort, forcesOfChaos, melta, palsy,
+            plasma, plasmaFireBurn;
     private WHStatusEffects(){
     }
     public static void load(){

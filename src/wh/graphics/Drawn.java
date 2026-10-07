@@ -168,7 +168,7 @@ public final class Drawn{
             float sin = Mathf.sinDeg(a);
             float cos2 = Mathf.cosDeg(a + space);
             float sin2 = Mathf.sinDeg(a + space);
-            Draw.alpha(Mathf.curve(i / (sides * p), start, end) * aScl);
+            Draw.alpha(fadePercent(i / (sides * p), start, end) * aScl);
             Fill.tri(x + rad * cos, y + rad * sin, x + rad * cos2, y + rad * sin2, centerX, centerY);
         }
 
@@ -179,8 +179,12 @@ public final class Drawn{
         float sin2 = Mathf.sinDeg(a + space);
         float f = sides * p - i;
         v1.trns(a, 0, len * (f - 1));
-        Draw.alpha(aScl);
+        Draw.alpha(fadePercent(i / (sides * p), start, end) * aScl);
         Fill.tri(x + rad * cos, y + rad * sin, x + rad * cos2 + v1.x, y + rad * sin2 + v1.y, centerX, centerY);
+    }
+
+    private static float fadePercent(float progress, float start, float end) {
+        return start <= end ? Mathf.curve(progress, start, end) : 1f - Mathf.curve(progress, end, start);
     }
 
     public static void shockWave(float x, float y, float rad, float width, float percent, Color color){

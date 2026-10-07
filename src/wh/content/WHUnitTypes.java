@@ -65,10 +65,7 @@ import wh.entities.cutter.UnitCutter;
 import wh.entities.world.drawer.part.*;
 import wh.entities.world.entities.*;
 import wh.entities.world.entities.AirRaiderUnitType.ARWeapon;
-import wh.entities.world.entities.powerArmorComp.DrawBladePart;
-import wh.entities.world.entities.powerArmorComp.PowerArmourUnitType;
-import wh.entities.world.entities.powerArmorComp.PowerArmourWeaponData;
-import wh.entities.world.entities.powerArmorComp.UnitRegionPart;
+import wh.entities.world.entities.powerArmorComp.*;
 import wh.entities.world.entities.weapon.*;
 import wh.gen.*;
 import wh.gen.AirRaiderAI.Mode;
@@ -117,7 +114,7 @@ public final class WHUnitTypes {
     //陆军
     public static UnitType
             M6, M5,
-            M4A, M4B, M4C, M4D,
+            M4A, M4B, M4C, M4D, MPsy, M4Test,
             M3, M2, M1,
     //特种
     MEn1, airD1, airD2;
@@ -3139,6 +3136,7 @@ public final class WHUnitTypes {
                 outlineRadius = 3;
                 outlineColor = WHPal.Outline;
                 singleTarget = true;
+
                 engines.addAll(
                         new UnitEngine(0, -68f / 4f, 6, 0)
                 );
@@ -5286,7 +5284,6 @@ public final class WHUnitTypes {
         };
 
         airB7 = new CarrierUnitType("airB7") {{
-            researchCostMultiplier = 0.5f;
             fighterType = airB7Fighter2;
             clearRunways().runway(118 / 4f, 300 / 4f, 4, true)
                     .runway(118 / 4f, 300 / 4f, 4, true)
@@ -5555,7 +5552,6 @@ public final class WHUnitTypes {
 
         airB6 = new WHUnitType("airB6") {
             {
-                researchCostMultiplier = 0.7f;
                 constructor = UnitTypes.mega.constructor;
                 payloadCapacity = (6 * 6) * tilePayload;
 
@@ -5932,7 +5928,6 @@ public final class WHUnitTypes {
 
         airB5 = new WHUnitType("airB5") {
             {
-                researchCostMultiplier = 0.6f;
                 constructor = UnitTypes.poly.constructor;
 
                 flying = true;
@@ -5963,12 +5958,12 @@ public final class WHUnitTypes {
 
 
                 abilities.addAll(
-                        new ContinueEnergyFieldAbility(90, 130, 180, 200, 10, 5) {{
+                        new ContinueEnergyFieldAbility(100, 150, 150, 224, 10, 5) {{
                             y = 70 / 2f / 4f;
                             effectRadius = 10;
                             sectors = 6;
                             status = WHStatusEffects.radiation;
-                            maxTargets = 2;
+                            maxTargets = 4;
                             unitPierceCap = 5;
                             buildPierceCap = 2;
                             healPercent = 0.5f;
@@ -5978,11 +5973,11 @@ public final class WHUnitTypes {
                         new ShockAbility() {{
                             range = 200;
                             reload = 60 * 3;
-                            bulletDamage = 250;
+                            bulletDamage = 400;
                             falloffCount = 8;
                             waveColor = WHPal.thurmixRed;
                         }},
-                        new AdaptedHealAbility(100, 60f * 8, 150) {{
+                        new AdaptedHealAbility(1000, 60f * 8, 150) {{
                             selfHealReloadTime = 180;
                             selfHealAmount = 0.01f;
                             healEffect = WHFx.linePolyOut(60, WHPal.thurmixRed, 12, 3, 4, 0);
@@ -5995,11 +5990,6 @@ public final class WHUnitTypes {
                             triLength = 28;
                             triWidth = 12f;
                             color = WHPal.thurmixRed;
-                        }},
-                        new EscortShieldAbility() {{
-                            range = 200;
-                            redirectPercent = 0.15f;
-                            selfDamageReduction = 0.1f;
                         }}
                 );
 
@@ -6166,7 +6156,6 @@ public final class WHUnitTypes {
 
         airB4 = new WHUnitType("airB4") {
             {
-                researchCostMultiplier = 0.7f;
                 constructor = UnitTypes.mega.constructor;
                 payloadCapacity = (3 * 3) * tilePayload;
 
@@ -6357,7 +6346,6 @@ public final class WHUnitTypes {
 
         airB3 = new WHUnitType("airB3") {
             {
-                researchCostMultiplier = 0.8f;
                 constructor = UnitTypes.mega.constructor;
                 defaultCommand = UnitCommand.repairCommand;
 
@@ -6492,7 +6480,6 @@ public final class WHUnitTypes {
 
         airB2 = new WHUnitType("airB2") {
             {
-                researchCostMultiplier = 0.9f;
                 constructor = UnitTypes.poly.constructor;
                 defaultCommand = UnitCommand.rebuildCommand;
 
@@ -7282,8 +7269,6 @@ public final class WHUnitTypes {
                         }
                     });
 
-            researchCostMultiplier = 0.5f;
-
             immunities.addAll(WHStatusEffects.palsy, WHStatusEffects.powerReduce2);
 
             abilities.add(
@@ -7734,8 +7719,6 @@ public final class WHUnitTypes {
                 treadRects = new Rect[]{new Rect(19 - lx, 34 - treadPullOffset / 2f - ly, 79, 360)};
                 /*   treadRects = new Rect[]{new Rect(19 - lx, 20 - treadPullOffset / 2f - ly, 69, 380)};*/
 
-                researchCostMultiplier = 0.5f;
-
                 immunities.addAll(WHStatusEffects.palsy, WHStatusEffects.powerReduce2, unmoving);
 
                 abilities.add(
@@ -8008,8 +7991,6 @@ public final class WHUnitTypes {
                 treadPullOffset = 8;
                 treadRects = new Rect[]{new Rect(30 - lx, 24 + treadPullOffset - ly, 51, 264)};
 
-                researchCostMultiplier = 0.6f;
-
                 weapons.add(new Weapon(name("tankA2-weapon1")) {
                     {
                         layerOffset = 0.011f;
@@ -8257,8 +8238,6 @@ public final class WHUnitTypes {
                 treadFrames = 16;
                 treadRects = new Rect[]{new Rect(9 - lx, 29 - treadPullOffset - ly, 45, 208)};
 
-                researchCostMultiplier = 0.6f;
-
                 abilities.add(
                         new ShieldRegenFieldAbility(100, 500, 60f * 3, 90));
 
@@ -8362,8 +8341,6 @@ public final class WHUnitTypes {
                 treadFrames = 20;
 
                 treadRects = new Rect[]{new Rect(31 - lx, 20 - ly, 69, 320)};
-
-                researchCostMultiplier = 0.5f;
 
                 immunities.addAll(StatusEffects.melting, StatusEffects.burning, slow, unmoving, WHStatusEffects.rust);
 
@@ -8511,8 +8488,6 @@ public final class WHUnitTypes {
                 treadFrames = 16;
                 treadPullOffset = 8;
                 treadRects = new Rect[]{new Rect(8 - lx, 43 - ly - treadPullOffset, 53, 272)};
-
-                researchCostMultiplier = 0.7f;
 
                 targetAir = false;
 
@@ -8747,8 +8722,6 @@ public final class WHUnitTypes {
                 treadFrames = 16;
                 treadRects = new Rect[]{new Rect(17 - lx, 7 - ly, 45, 208)};
 
-                researchCostMultiplier = 0.8f;
-
                 abilities.addAll(new AccelerateReload(2, 180));
 
                 BasicBulletType onp = new ArtilleryBulletType(0, 150, "circle-bullet") {
@@ -8953,8 +8926,6 @@ public final class WHUnitTypes {
                 treadPullOffset = 20;
                 treadRects = new Rect[]{new Rect(19 - lx, 34 - treadPullOffset / 2f - ly, 79, 360)};
                 /*   treadRects = new Rect[]{new Rect(19 - lx, 20 - treadPullOffset / 2f - ly, 69, 380)};*/
-
-                researchCostMultiplier = 0.5f;
 
                 immunities.addAll(WHStatusEffects.palsy, WHStatusEffects.powerReduce2, WHStatusEffects.scare,
                         WHStatusEffects.rock, unmoving);
@@ -9560,8 +9531,6 @@ public final class WHUnitTypes {
                 treadFrames = 16;
                 treadRects = new Rect[]{new Rect(11 - lx, 6 + 4 - ly, 51, 232)};
 
-                researchCostMultiplier = 0.7f;
-
                 abilities.addAll(new AccelerateReload(300, 60, 5, 150));
 
                 weapons.addAll(
@@ -9770,8 +9739,6 @@ public final class WHUnitTypes {
                 /*   treadPullOffset = 8;*/
                 treadFrames = 16;
                 treadRects = new Rect[]{new Rect(16 - lx, 8 /*- treadPullOffset*/ - ly, 52, 224)};
-
-                researchCostMultiplier = 0.6f;
                 targetAir = false;
 
                 weapons.add(new Weapon(name("tankD1-weapon2")) {
@@ -9948,8 +9915,6 @@ public final class WHUnitTypes {
                 /*   treadPullOffset = 8;*/
                 treadFrames = 16;
                 treadRects = new Rect[]{new Rect(16 - lx, 8 /*- treadPullOffset*/ - ly, 52, 224)};
-
-                researchCostMultiplier = 0.6f;
                 range = 300;
 
                 weapons.add(new Weapon(name("tankD2-weapon1")) {
@@ -10734,16 +10699,16 @@ public final class WHUnitTypes {
                                     shootSound = shootRipple;
                                     inaccuracy = 3;
                                     recoil = 6;
-                                    bullet = new CritBulletType(12, 200, "missile-large") {
+                                    bullet = new CritBulletType(12, 250, "missile-large") {
                                         {
                                             lifetime = 340 / speed;
 
                                             splashDamageRadius = 48;
-                                            splashDamage = 100;
+                                            splashDamage = damage / 2;
                                             lightning = 3;
                                             lightningDamage = 40;
                                             lightningLength = 6;
-                                            lightningLengthRand = 5;
+                                            lightningLengthRand = 10;
                                             frontColor = lightningColor = WHPal.ShootOrangeLight;
 
                                             width = 14;
@@ -10784,7 +10749,7 @@ public final class WHUnitTypes {
                                             fragLifeMin = 0f;
                                             fragRandomSpread = 30f;
 
-                                            fragBullet = new BasicBulletType(6, 60) {{
+                                            fragBullet = new CritBulletType(6, 60) {{
                                                 width = 10f;
                                                 height = width * 2.5f;
                                                 pierce = true;
@@ -11899,7 +11864,7 @@ public final class WHUnitTypes {
                                                     shots = 6;
                                                     shotDelay = 3f;
                                                 }});
-                                bullet = new CritMissileBulletType(6, 90, name("large-missile")) {
+                                bullet = new CritMissileBulletType(6, 120, name("large-missile")) {
                                     {
                                         pierceArmor = true;
                                         width = 10;
@@ -12109,9 +12074,9 @@ public final class WHUnitTypes {
                                     }}
                             );
 
-                            bullet = new CritBulletType(12, 120, name("pierce")) {{
+                            bullet = new CritBulletType(12, 180, name("pierce")) {{
 
-                                splashDamage = damage;
+                                splashDamage = damage * 0.65f;
                                 splashDamageRadius = 32;
                                 width = 12;
                                 height = width * 2;
@@ -12328,12 +12293,12 @@ public final class WHUnitTypes {
                             continuous = true;
 
                             bullet = new LaserBeamBulletType() {{
-                                damage = 80;
+                                damage = 100;
                                 armorMultiplier = 0.5f;
                                 width = 12;
                                 length = 50;
                                 moveInterp = Interp.pow3Out;
-                                extensionProportion = 190 / length;
+                                extensionProportion = 220 / length;
                                 damageInterval = 6;
                                 damageMult = 4.5f;
                                 lifetime = 120;
@@ -12542,7 +12507,7 @@ public final class WHUnitTypes {
                                     frontColor = WHPal.SkyBlueF;
                                     lightColor = backColor = trailColor = hitColor = lightningColor = WHPal.SkyBlue;
                                     lightning = 3;
-                                    lightningDamage = 30;
+                                    lightningDamage = 50;
                                     lightningLength = 10;
                                     lightningLengthRand = 10;
 
@@ -12596,7 +12561,7 @@ public final class WHUnitTypes {
             }
         };
 
-        M4D = new PowerArmourUnitType("m4D") {
+        M4D = new MultiModePowerArmourUnitType("m4D") {
             {
                 speed = 2.5f;
                 hitSize = 22f;
@@ -12607,6 +12572,10 @@ public final class WHUnitTypes {
                 mechStepParticles = true;
                 stepShake = 0.15f;
                 singleTarget = true;
+                range = maxRange = 65;
+
+                MultiModePowerArmourUnitType.ComboStep firstStep = addStep();
+                MultiModePowerArmourUnitType.ComboStep secondStep = addStep();
 
                 abilities.add(
                         new EllipseForceFieldAbility(75 / 4f, 50 / 4f, 500 / 60f, 10000, 40 * 60f, 0.8f, 15) {{
@@ -12619,200 +12588,1226 @@ public final class WHUnitTypes {
                 outlineRadius = 3;
                 mechLegColor = outlineColor = WHPal.Outline;
 
-                weapons.add(
-                        new Weapon("") {{
-                            y = 1f;
-                            x = 10f;
-                            reload = 45;
+                UnitRegionPart rHand = new UnitRegionPart("hand") {{
+                    x = 5 / 4f;
+                    y = 41 / 4f;
+                    inheritParentDirection = true;
+                    inheritParentMotion = false;
 
-                            recoil = 5f;
-                            shake = 2f;
+                    sinAngle = 5;
+                    bodyScl = 9;
+                    swingFront = true;
+                }};
 
-                            mirror = false;
-                            PowerArmourWeaponData.of(this).melee = true;
-                            recoilTime = 45;
-                            shootStatusDuration = shoot.firstShotDelay = 20;
-                            PowerArmourWeaponData.of(this).actionTime = 20f;
-                            PowerArmourWeaponData.of(this).actionInInterp = Interp.pow2In;
-                            PowerArmourWeaponData.of(this).actionOutInterp = Interp.pow2Out;
+                UnitRegionPart lHand = new UnitRegionPart("hand") {{
+                    x = 5 / 4f;
+                    y = 41 / 4f;
+                    inheritParentDirection = true;
+                    inheritParentMotion = false;
 
-                            shootWarmupSpeed = 0.12f;
-                            minWarmup = 0.95f;
+                    rotation = 0;
+                    sinAngle = 5;
+                    bodyScl = 9;
+                    swingFront = true;
+                    symmetry = true;
+                }};
+                commonParts.addAll(
 
-                            shootSound = Sounds.shootFlame;
-                            shootStatus = slow;
+                        new DrawBladePart() {{
+                            x = 55 / 4f;
+                            y = -10 / 4f;
 
-                            PowerArmourWeaponData.of(this).unitParts.addAll(
+                            rotation = 10;
 
-                                    new UnitRegionPart("weapon2") {
-                                        {
-                                            x = 55 / 4f;
-                                            y = -10 / 4f;
+                            rad = 150 / 4f;
+                            fanRotationPartIndex = 1;
+                            fanRotationOffset = 180f - 10f;
+                            fanAlpha = 0.3f;
+                            color = WHPal.SkyBlueF;
+                        }},
 
-                                            actionRot = -120;
-                                            actionX = 20 / 4f;
-                                            actionY = -20 / 4f;
-                                            actionGrowY = -0.1f;
-                                            actionGrowX = -0.3f;
+                        new UnitRegionPart("weapon2") {
+                            {
+                                x = -47 / 4f;
+                                y = 5 / 4f;
 
-                                            moveX = 10 / 4f;
-                                            moveY = 26 / 4f;
-                                            moveRot = 40;
+                                rotation = 180;
+                                sinAngle = 1;
+                                bodyScl = 9;
+                                swingFront = true;
 
-                                            rotation = 10;
-                                            sinAngle = 10;
-                                            bodyScl = 9;
-                                            swingFront = true;
+                                heatColor = WHPal.SkyBlueF;
+                                heatProgress = UnitPartProgress.one.add(-0.5f).blend(UnitPartProgress.actionTime, 0.5f);
 
-                                            heatColor = WHPal.SkyBlueF;
-                                            heatProgress = UnitPartProgress.one.add(-0.5f).blend(UnitPartProgress.actionTime, 0.5f);
-                                        }
-                                    },
+                            }
+                        },
 
-                                    new DrawBladePart() {{
-                                        x = 55 / 4f;
-                                        y = -10 / 4f;
+                        new UnitRegionPart("forearm") {{
+                            x = 51 / 4f;
+                            y = -15 / 4f;
 
-                                        actionRot = -120;
-                                        actionX = 10 / 4f;
-                                        actionY = -20 / 4f;
+                            rotation = 10;
+                            sinAngle = 5;
+                            bodyScl = 9;
+                            swingFront = true;
+                            children.addAll(rHand);
+                        }},
 
-                                        moveX = 20 / 4f;
-                                        moveY = 26 / 4f;
-                                        moveRot = 40;
+                        //leftHand
+                        new UnitRegionPart("forearm") {{
+                            x = -51 / 4f;
+                            y = -15 / 4f;
 
-                                        rotation = 10;
+                            rotation = 10;
+                            sinAngle = 5;
+                            bodyScl = 9;
+                            swingFront = true;
+                            symmetry = true;
+                            children.addAll(lHand);
+                        }},
 
-                                        trailWidth = 4;
-                                        rad = 150 / 4f;
-                                        color = WHPal.SkyBlueF;
-                                    }},
+                        //left
+                        new UnitRegionPart("shoulder") {{
+                            x = y = 0;
+                            layerOffset = 0.01f;
+                            sinAngle = 8;
+                            bodyScl = 5;
+                            symmetry = true;
+                            swingScl = 0.01f;
+                        }},
+                        //right
+                        new UnitRegionPart("shoulder") {{
+                            x = y = 0;
+                            layerOffset = 0.01f;
+                            sinAngle = 8;
+                            bodyScl = 5;
+                            swingScl = 0.01f;
+                        }},
 
-                                    new UnitRegionPart("hand") {{
-                                        x = 55 / 4f;
-                                        y = -10 / 4f;
+                        new UnitRegionPart("body") {{
+                            x = y = 0;
+                            sinAngle = 6;
+                            bodyScl = 5;
+                            swingFront = false;
+                        }},
 
-                                        actionRot = -120;
-                                        actionX = 10 / 4f;
-                                        actionY = -20 / 4f;
-                                        actionGrowY = -0.1f;
-                                        actionGrowX = -0.3f;
-
-                                        moveX = 20 / 4f;
-                                        moveY = 26 / 4f;
-                                        moveRot = 40;
-
-                                        rotation = 30;
-                                        sinAngle = 5;
-                                        bodyScl = 9;
-                                        swingFront = true;
-                                    }},
-                                    new UnitRegionPart("forearm") {{
-                                        x = 55 / 4f;
-                                        y = -40 / 4f;
-
-                                        actionRot = -70;
-                                        actionX = -30 / 4f;
-                                        actionY = 0;
-
-                                        moveX = 0;
-                                        moveY = 5 / 4f;
-                                        moveRot = -10;
-
-                                        rotation = 10;
-                                        sinAngle = 5;
-                                        bodyScl = 9;
-                                        swingFront = true;
-                                    }},
-                                    //rightHand
-                                    new UnitRegionPart("hand") {{
-                                        x = -55 / 4f;
-                                        y = -10 / 4f;
-
-                                        actionRot = -90;
-                                        actionX = 60 / 4f;
-                                        actionY = 60 / 4f;
-
-                                        moveX = -5 / 4f;
-                                        moveY = -5 / 4f;
-                                        moveRot = 20;
-
-                                        rotation = 30;
-                                        sinAngle = 5;
-                                        bodyScl = 9;
-                                        swingFront = true;
-                                        symmetry = true;
-                                    }},
-
-                                    new UnitRegionPart("body") {{
-                                        x = y = 0;
-                                        actionRot = -60;
-                                        moveRot = 25;
-                                        sinAngle = 6;
-                                        bodyScl = 5;
-                                        swingFront = false;
-                                    }},
-                                    //left
-                                    new UnitRegionPart("shoulder") {{
-                                        x = y = 0;
-                                        actionX = 8 / 4f;
-                                        actionY = 10 / 4f;
-                                        actionRot = -30;
-                                        moveRot = 10;
-                                        sinAngle = 8;
-                                        bodyScl = 5;
-                                        symmetry = true;
-                                        swingScl = 0.01f;
-                                    }},
-                                    //right
-                                    new UnitRegionPart("shoulder") {{
-                                        x = y = 0;
-                                        actionX = 5 / 4f;
-                                        actionY = -11 / 4f;
-                                        actionRot = -20;
-                                        moveRot = 5;
-                                        sinAngle = 8;
-                                        bodyScl = 5;
-                                        swingScl = 0.01f;
-                                    }},
-
-                                    new UnitRegionPart("head") {{
-                                        x = y = 0;
-                                        actionRot = 5;
-                                        layerOffset = 1;
-                                        sinAngle = 2;
-                                        bodyScl = 5;
-                                        outline = false;
-                                        swingFront = false;
-                                    }}
-                            );
-
-                            bullet = new CritBulletType(4, 1300) {
-                                {
-                                    height = width = 0;
-                                    critChance = 0.2f;
-                                    splashDamage = damage / 2;
-                                    pierce = true;
-                                    splashDamageRadius = 24;
-                                    absorbable = hittable = collidesAir = false;
-                                    lifetime = 15;
-                                    lightningColor = hitColor = WHPal.SkyBlue;
-                                    despawnSound = Sounds.explosionCleroi;
-                                    smokeEffect = shootEffect = none;
-                                    hitEffect = new MultiEffect(
-                                            WHFx.generalExplosion(10, hitColor, splashDamageRadius, 5, false),
-                                            WHFx.shuttle(30, WHPal.SkyBlue, hitColor, true, 30, 30));
-                                }
-
-                                @Override
-                                public void despawned(Bullet b) {
-                                    b.fdata = 1f;
-                                    despawnSound.at(b, 1f + Mathf.range(hitSoundPitchRange));
-                                    Effect.shake(despawnShake, despawnShake, b);
-                                }
-                            };
+                        new UnitRegionPart("head") {{
+                            x = y = 0;
+                            layerOffset = 1;
+                            sinAngle = 2;
+                            bodyScl = 5;
+                            outline = false;
+                            swingFront = false;
                         }}
                 );
+
+                drawTime = 50;
+                sheatheTime = 50;
+                cycleRecoveryTime = readyAnimationTime = 25;
+                attackStartTimeout = 10;
+                readyPose.parts(0, 10, 25, 5);
+
+                drawKeyframe(0.3f, newPose()
+                        .merge(readyPose)
+                        .parts(0, 8 / 4f, 0, 1)
+                        .parts(-91 / 4f, 15, 190, 2)
+                        .part(rHand, 0f, 1f, 10)
+                        .part(lHand, 0, 0, 0)
+                        .parts(0, 10, 25, 5)
+                        .parts(0, 0, 20, 6)
+                );
+
+                drawKeyframe(0.7f, newPose()
+                        .merge(readyPose)
+                        .parts(91 / 4f, 25 / 4f, -140, 1)
+                        .parts(0, 10, 90, 2)
+                        .part(rHand, 0f, 1f, -20)
+                        .part(lHand, 0, 0, -20)
+                        .parts(0, 0, 0, 5)
+                        .parts(0, 0, 0, 6)
+                );
+
+                drawEndPose(newPose()
+                        .merge(readyPose)
+                        .parts(96 / 4f, 30 / 4, -180, 1)
+                        .parts(0, 0, 0, 2)
+                        .parts(0, 0, 0, 3)
+                        .part(lHand, 0f, 0, 10)
+                        .part(rHand, 0f, 0, 0)
+                        .parts(0, 0, 0, 5));
+
+
+                CritBulletType lightSlash = new CritBulletType(4f, 500) {
+                    {
+                        height = width = 0;
+                        critChance = 0.2f;
+                        splashDamage = damage / 2;
+                        pierce = true;
+                        splashDamageRadius = 24;
+                        absorbable = hittable = collidesAir = false;
+                        lifetime = 15;
+                        lightningColor = hitColor = WHPal.ShootOrange;
+                        despawnSound = Sounds.explosionCleroi;
+                        smokeEffect = shootEffect = none;
+                        hitEffect = new MultiEffect(
+                                WHFx.generalExplosion(10, hitColor, splashDamageRadius, 5, false),
+                                WHFx.shuttle(30, hitColor, hitColor, true, 30, 30));
+                    }
+
+                    @Override
+                    public void despawned(Bullet b) {
+                        b.fdata = 1f;
+                        if (despawnHit) {
+                            hit(b, b.x, b.y, false);
+                        } else {
+                            createUnits(b, b.x, b.y);
+                        }
+                        despawnSound.at(b, 1f + Mathf.range(hitSoundPitchRange));
+
+                        Effect.shake(despawnShake, despawnShake, b);
+
+                    }
+                };
+                CritBulletType heavySlash = new CritBulletType(3f, 1000) {
+                    {
+                        height = width = 0;
+                        critChance = 0.2f;
+                        splashDamage = damage / 2;
+                        pierce = true;
+                        splashDamageRadius = 50;
+                        absorbable = hittable = collidesAir = false;
+                        lifetime = 15;
+                        lightningColor = hitColor = WHPal.SkyBlue;
+                        despawnSound = Sounds.explosionCleroi;
+                        smokeEffect = shootEffect = none;
+                        hitEffect = new MultiEffect(
+                                WHFx.generalExplosion(10, hitColor, splashDamageRadius, 5, false),
+                                WHFx.shuttle(30, WHPal.SkyBlue, hitColor, true, 30, 30),
+                                WHFx.shuttle(30, WHPal.SkyBlue, hitColor, true, 30, 120)
+                        );
+                    }
+
+                    @Override
+                    public void despawned(Bullet b) {
+                        b.fdata = 1f;
+                        if (despawnHit) {
+                            hit(b, b.x, b.y, false);
+                        } else {
+                            createUnits(b, b.x, b.y);
+                        }
+                        despawnSound.at(b, 1f + Mathf.range(hitSoundPitchRange));
+
+                        Effect.shake(despawnShake, despawnShake, b);
+
+                    }
+                };
+
+                /* old M4D implementation moved to MPsy attack5/attack6
+                BulletType attack5 = new BulletType(){{
+                    range = 70f;
+                    speed = 0f;
+                    lifetime = 1f;
+                    damage = 180f;
+                    collides = false;
+                    hittable = false;
+                    drawSize = 0f;
+                }
+
+                    @Override
+                    public void init(Bullet b){
+                        super.init(b);
+                        MainRenderer.addShockCircle(b.x, b.y, range, 20f, 0.7f);
+                    }
+
+                    @Override
+                    public void update(Bullet b){
+                        Groups.bullet.intersect(b.x - range, b.y - range, range * 2f, range * 2f, other -> {
+                            if(other != b && other.team != b.team && other.type.hittable
+                            && other.dst(b.x, b.y) <= range + other.hitSize() / 2f){
+                                float amount = damage * b.damageMultiplier();
+                                if(other.damage() <= amount) other.remove();
+                                else other.damage(other.damage() - amount);
+                            }
+                        });
+                        b.remove();
+                    }
+                };
+
+                weapons.add(new Weapon(name("m4D-intercept")){{
+                    reload = 75f;
+                    x = 0f;
+                    y = 116f / 4f;
+                    autoTarget = true;
+                    controllable = false;
+                    rotate = false;
+                    shootCone = 360f;
+                    targetInterval = targetSwitchInterval = 4f;
+                    bullet = interceptPulse;
+                }
+
+                    @Override
+                    protected Teamc findTarget(Unit unit, float x, float y, float range, boolean air, boolean ground){
+                        final Bullet[] result = {null};
+                        Groups.bullet.intersect(x - range, y - range, range * 2f, range * 2f, other -> {
+                            if(other.team != unit.team && other.type.hittable && other.isAdded()
+                            && other.dst(x, y) <= range && (result[0] == null || other.dst(x, y) < result[0].dst(x, y))){
+                                result[0] = other;
+                            }
+                        });
+                        return result[0];
+                    }
+
+                    @Override
+                    protected boolean checkTarget(Unit unit, Teamc target, float x, float y, float range){
+                        return target instanceof Bullet bullet && bullet.isAdded() && bullet.team != unit.team
+                                && bullet.dst(x, y) <= range;
+                    }
+
+                    @Override
+                    protected void shoot(Unit unit, WeaponMount mount, float shootX, float shootY, float rotation){
+                        MainRenderer.addShockCircle(shootX, shootY, 18f, 18f, 0.45f);
+                        super.shoot(unit, mount, shootX, shootY, rotation);
+                    }
+                }})
+
+                BulletType executionPulse = new BulletType(){{
+                    speed = 0f;
+                    lifetime = 1f;
+                    collides = false;
+                    hittable = false;
+                    absorbable = false;
+                    drawSize = 0f;
+                }
+
+                    @Override
+                    public void init(Bullet b){
+                        super.init(b);
+                        MainRenderer.addShockCircle(b.x, b.y, 28f, 24f, 0.9f);
+                        Units.nearbyEnemies(b.team, b.x, b.y, 18f, target -> {
+                            if(!target.hittable()) return;
+                            if(target.hitSize <= 24f) target.kill();
+                            else target.damagePierce(1000f);
+                        });
+                        b.remove();
+                    }
+                };
+
+                weapons.add(new Weapon(name("m4D-execution")){{
+                    reload = 120f;
+                    range = 260f;
+                    x = 0f;
+                    y = 116f / 4f;
+                    autoTarget = true;
+                    controllable = false;
+                    rotate = false;
+                    shootCone = 360f;
+                    targetInterval = targetSwitchInterval = 4f;
+                    bullet = executionPulse;
+                }
+
+                    @Override
+                    protected Teamc findTarget(Unit unit, float x, float y, float range, boolean air, boolean ground){
+                        return Units.bestTarget(unit.team, x, y, range,
+                                target -> target.hittable() && target.checkTarget(air, ground),
+                                target -> ground,
+                                (target, tx, ty) -> -target.maxHealth - target.dst2(tx, ty) / 100f);
+                    }
+
+                    @Override
+                    protected boolean checkTarget(Unit unit, Teamc target, float x, float y, float range){
+                        return target instanceof Unit enemy && enemy.isAdded() && enemy.team != unit.team
+                                && enemy.hittable() && enemy.dst(x, y) <= range;
+                    }
+
+                    @Override
+                    protected void shoot(Unit unit, WeaponMount mount, float shootX, float shootY, float rotation){
+                        if(!(mount.target instanceof Unit target) || !target.isAdded()) return;
+                        MainRenderer.addShockCircle(shootX, shootY, 16f, 18f, 0.5f);
+                        executionPulse.create(unit, unit.team, target.x, target.y, rotation);
+                    }
+                }})
+
+                */
+                firstStep.addAttack(new MultiModeWeapon() {{
+                            x = 10f;
+                            y = 1f;
+                            reload = 15;
+                            recoil = 5f;
+                            shake = 2f;
+                            mirror = false;
+                            recoilTime = 45f;
+                            shootSound = shootFlame;
+                            shootStatus = slow;
+                            shootStatusDuration = 12f;
+                            bullet = lightSlash;
+                        }})
+                        .actionTime(22)
+                        .actionInterp(Interp.pow2Out)
+                        .relative()
+                        .keyframe(0.5f, newPose()
+                                .parts(3, -10, 10, 1)
+                                .parts(0, -5, -45, 2)
+                                .parts(2, 4, -20, 3)
+                                .parts(0, 0, -70, 4)
+                                .parts(0, 0, -70, 5)
+                                .parts(0, 0, -70, 6)
+                        )
+                        .endPose(newPose()
+                                .parts(5, 5, 100, 0)
+                                .parts(-6, 12, 100, 1)
+                                .parts(-1, 5, 70, 2)
+                                .parts(7, -9, 90, 3)
+                                .parts(0, -2, 90, 4)
+                                .parts(0, 2, 80, 5)
+                                .parts(0, 0, 50, 6)
+                                .parts(0, 0, 5, 7)
+                                .part(lHand, 0f, 0, 0)
+                                .part(rHand, 0f, 0, 0)
+                        );
+
+
+                /*  0 = DrawBladePart
+                1 = weapon2
+                2 = right forearm
+                3 = left forearm
+                4 = left shoulder
+                5 = right shoulder
+                6 = body
+                7 = head
+                8 = rHand child
+                9 = lHand child
+                */
+                secondStep.addAttack(new MultiModePowerArmourUnitType.MultiModeWeapon() {{
+                            x = 10f;
+                            y = 1f;
+                            reload = 13;
+                            recoil = 6f;
+                            shake = 3f;
+                            mirror = false;
+                            recoilTime = 55f;
+                            shootSound = Sounds.shootTank;
+                            shootStatus = shocked;
+                            shootStatusDuration = 30f;
+                            bullet = heavySlash;
+                        }})
+                        .actionTime(15)
+                        .actionInterp(Interp.pow4Out)
+                        .relative()
+                        .endPose(newPose()
+                                .parts(0, -15, -150, 0)
+                                .parts(10, -30, -125, 1)
+                                .parts(-13, -10, -180, 2)
+                                .parts(1, -1, -120, 3)
+                                .parts(-0.5f, 5, -120, 4)
+                                .parts(0.2f, -5, -120, 5)
+                                .parts(0, 0, -50, 6)
+                                .parts(0, 0, -10, 7)
+
+                        );
+            }
+        };
+
+        MPsy = new MultiModePowerArmourUnitType("m-psy") {
+            {
+                speed = 1.5f;
+                hitSize = 22f;
+                rotateSpeed = 4f;
+                health = 10000;
+                armor = 15;
+                mechFrontSway = 0.08f;
+                mechStepParticles = true;
+                stepShake = 0.15f;
+                singleTarget = true;
+                maxRange = range = 350;
+
+                MultiModePowerArmourUnitType.ComboStep firstStep = addStep();
+                MultiModePowerArmourUnitType.ComboStep secondStep = addStep();
+
+                abilities.add(
+                        new BulletDeflectAbility(),
+                        new EllipseForceFieldAbility(125 / 4f, 65 / 4f, 500 / 60f, 10000, 40 * 60f, 0.8f, 15) {{
+                            percentRegen = true;
+                            percentRegenAmount = 0.06f;
+                        }},
+                        new ShieldRegenFieldAbility(1000, health, 60f * 2, 30),
+                        new LastStandAbility());
+
+                outlineRadius = 3;
+                mechLegColor = outlineColor = WHPal.Outline;
+
+                MultiModeDrawPart modePart = new MultiModeDrawPart() {{
+                    x = 0f;
+                    y = 95 / 4f;
+                    mode(0, 0, (params, progress, alpha) -> {
+                        float motionRotation = params.rotation - 90f;
+
+                        float drawX = params.x + Angles.trnsx(motionRotation, params.motionX, params.motionY);
+                        float drawY = params.y + Angles.trnsy(motionRotation, params.motionX, params.motionY);
+                        Draw.color(WHPal.PsyColor, alpha);
+                        Draw.z(Layer.effect);
+                        Lines.stroke(progress * 2f);
+
+                        if (Mathf.chanceDelta(0.05f * progress) && !state.isPaused()) {
+                            for (int j : Mathf.signs) {
+                                Drawn.randFadeLightningEffect(drawX, drawY, 60, 12, WHPal.PsyColor, j > 0);
+                            }
+                        }
+                        for (float i : Mathf.signs) {
+                            Tmp.v1.trns(i == 1 ? 0 : 180, 7);
+                            Drawn.tri(drawX + Tmp.v1.x, drawY + Tmp.v1.y, 3, 3, i == 1 ? 180 : 0);
+                            Drawn.tri(drawX + Tmp.v1.x, drawY + Tmp.v1.y, 3, 22, i == 1 ? 0 : 180);
+                        }
+
+                        Lines.square(drawX, drawY, 12, Time.time / 2 % 360);
+                        Draw.reset();
+                    });
+                    mode(0, 1, (params, progress, alpha) -> {
+                        float motionRotation = params.rotation - 90f;
+
+                        float drawX = params.x + Angles.trnsx(motionRotation, params.motionX, params.motionY);
+                        float drawY = params.y + Angles.trnsy(motionRotation, params.motionX, params.motionY);
+                        Draw.color(WHPal.SkyBlue, alpha);
+                        Draw.z(Layer.effect);
+                        Lines.stroke(progress * 2f);
+
+                        if (Mathf.chanceDelta(0.2f * progress) && !state.isPaused()) {
+                            WHFx.trailCharge(60, WHPal.SkyBlue, 12, 2, 50, 1).at(drawX, drawY);
+                        }
+                        for (float i : Mathf.signs) {
+                            Tmp.v1.trns(i == 1 ? 0 : 180, 7);
+                            Drawn.tri(drawX + Tmp.v1.x, drawY + Tmp.v1.y, 3, 3, i == 1 ? 180 : 0);
+                            Drawn.tri(drawX + Tmp.v1.x, drawY + Tmp.v1.y, 3, 22, i == 1 ? 0 : 180);
+                        }
+
+                        Fill.circle(drawX, drawY, 4);
+                        Draw.reset();
+                    });
+
+                    mode(0, 2, (params, progress, alpha) -> {
+                        float motionRotation = params.rotation - 90f;
+
+                        float drawX = params.x + Angles.trnsx(motionRotation, params.motionX, params.motionY);
+                        float drawY = params.y + Angles.trnsy(motionRotation, params.motionX, params.motionY);
+                        Draw.color(WHPal.SkyBlue, alpha);
+                        Draw.z(Layer.effect);
+                        Lines.stroke(progress * 2f);
+
+                        if (Mathf.chanceDelta(0.2f * progress) && !state.isPaused()) {
+                            WHFx.trailCharge(60, WHPal.SkyBlue, 12, 2, 50, 1).at(drawX, drawY);
+                        }
+                        for (float i : Mathf.signs) {
+                            Tmp.v1.trns(i == 1 ? 0 : 180, 7);
+                            Drawn.tri(drawX + Tmp.v1.x, drawY + Tmp.v1.y, 3, 3, i == 1 ? 180 : 0);
+                            Drawn.tri(drawX + Tmp.v1.x, drawY + Tmp.v1.y, 3, 22, i == 1 ? 0 : 180);
+                        }
+
+                        Lines.poly(drawX, drawY, 3, 12, 60 + Time.time / 2 % 360);
+                        WHUtils.tri(drawX, drawY, 4, 8, 60);
+                        Draw.reset();
+                    });
+                    mode(0, 4, (params, progress, alpha) -> {
+                        float motionRotation = params.rotation - 90f;
+
+                        float drawX = params.x + Angles.trnsx(motionRotation, params.motionX, params.motionY);
+                        float drawY = params.y + Angles.trnsy(motionRotation, params.motionX, params.motionY);
+                        Draw.color(WHPal.SkyBlue, alpha);
+                        Draw.z(Layer.effect);
+                        Lines.stroke(progress * 2f);
+
+                        for (float i : Mathf.signs) {
+                            Tmp.v1.trns(i == 1 ? 0 : 180, 7);
+                            Drawn.tri(drawX + Tmp.v1.x, drawY + Tmp.v1.y, 3, 3, i == 1 ? 180 : 0);
+                            Drawn.tri(drawX + Tmp.v1.x, drawY + Tmp.v1.y, 3, 22, i == 1 ? 0 : 180);
+                        }
+
+                        Lines.poly(drawX, drawY, 4, 12, 45);
+                        WHUtils.tri(drawX, drawY, 4, 8, 60);
+                        Draw.reset();
+                    });
+                    mode(0, 5, (params, progress, alpha) -> {
+                        float motionRotation = params.rotation - 90f;
+
+                        float drawX = params.x + Angles.trnsx(motionRotation, params.motionX, params.motionY);
+                        float drawY = params.y + Angles.trnsy(motionRotation, params.motionX, params.motionY);
+                        Draw.color(Pal.accent, alpha);
+                        Draw.z(Layer.effect);
+                        Lines.stroke(progress * 2f);
+
+                        for (float i : Mathf.signs) {
+                            Tmp.v1.trns(i == 1 ? 0 : 180, 7);
+                            Drawn.tri(drawX + Tmp.v1.x, drawY + Tmp.v1.y, 3, 3, i == 1 ? 180 : 0);
+                            Drawn.tri(drawX + Tmp.v1.x, drawY + Tmp.v1.y, 3, 22, i == 1 ? 0 : 180);
+                        }
+
+                        Lines.poly(drawX, drawY, 4, 12, 45);
+                        WHUtils.tri(drawX, drawY, 4, 8, 60);
+                        Draw.reset();
+                    });
+                }};
+
+                commonParts.addAll(
+
+                        new UnitRegionPart("weapon") {
+                            {
+                                x = 74 / 4f;
+                                y = 10 / 4f;
+
+                                rotation = 0;
+                                sinAngle = 1;
+                                bodyScl = 9;
+                                swingFront = true;
+                                children.add(modePart);
+                            }
+                        },
+
+                        //left
+                        new UnitRegionPart("shoulder") {{
+                            x = y = 0;
+                            layerOffset = 0.01f;
+                            sinAngle = 8;
+                            bodyScl = 5;
+                            symmetry = true;
+                            swingScl = 0.01f;
+                        }},
+                        //right
+                        new UnitRegionPart("shoulder") {{
+                            x = y = 0;
+                            layerOffset = 0.01f;
+                            sinAngle = 8;
+                            bodyScl = 5;
+                            swingScl = 0.01f;
+                        }},
+
+                        new UnitRegionPart("body") {{
+                            x = y = 0;
+                            sinAngle = 6;
+                            bodyScl = 5;
+                            swingFront = false;
+                        }},
+
+                        new UnitRegionPart("head") {{
+                            x = y = 0;
+                            layerOffset = 1;
+                            sinAngle = 2;
+                            bodyScl = 5;
+                            outline = false;
+                            swingFront = false;
+                        }}
+                );
+
+                drawTime = 50;
+                sheatheTime = 50;
+                cycleRecoveryTime = readyAnimationTime = 25;
+                attackStartTimeout = 10;
+                sheathedPose.parts(0, 0, 0, 0, 1, 2, 3, 4);
+                readyPose.parts(0, 0, 0, 0, 1, 2, 3, 4);
+                BulletType attack1 = new ChainLightingBulletType(250) {
+                    {
+                        maxHit = 4;
+                        length = maxRange = 300;
+                        rangeOverride = 300f;
+                        hitColor = lightColor = lightningColor = WHPal.PsyColor;
+                        shootEffect = WHFx.square(30, hitColor, 2, 20, 3);
+                        hitEffect = WHFx.lightningHitSmall;
+                    }
+                };
+
+                BulletType attack2 = new CritBulletType(8, 300, "circle-bullet") {
+                    {
+                        buildingDamageMultiplier = 2f;
+                        makePlaFire = true;
+                        plaFireChance = 0.08f;
+                        lifetime = 300 / speed;
+
+                        splashDamageRadius = 40;
+                        splashDamage = 120;
+                        frontColor = WHPal.SkyBlueF;
+                        hitColor = trailColor = backColor = WHPal.SkyBlue;
+                        shrinkX = shrinkY = 0;
+                        trailLength = 7;
+                        height = width = 7;
+                        trailWidth = width / 2.2f;
+                        status = WHStatusEffects.plasmaFireBurn;
+                        statusDuration = 15;
+
+                        trailEffect = WHFx.hitPoly(20, hitColor, backColor, 2, 20, 5, 6, 60f);
+                        trailChance = 0.18f;
+
+                        despawnEffect = hitEffect = new MultiEffect(
+                                WHFx.hitPoly(30, hitColor, backColor, 5, 60, 6, 6, 60f),
+                                WHFx.hitSpark(45, WHPal.SkyBlue, 10, 60, 1, 6),
+                                WHFx.generalExplosion(15f, hitColor, 25, 4, false),
+                                WHFx.lineCircleOut(15, WHPal.SkyBlue, 50, 2)
+                        );
+                        shootEffect = new MultiEffect(
+                                WHFx.lineCircleOut(16, WHPal.SkyBlue, 30, 2),
+                                WHFx.hitPoly(10, hitColor, backColor, 3, 20, 6, 6, 60f),
+                                shootBigColor);
+                        smokeEffect = shootBigSmoke;
+                    }
+                };
+
+                BulletType attack3 = new CritBulletType(4, 200, "circle-bullet") {
+                    {
+                        buildingDamageMultiplier = 2f;
+                        makePlaFire = true;
+                        pierceCap = 5;
+                        blockArmorMultiplier = armorMultiplier = 2;
+                        plaFireChance = 0.08f;
+                        lifetime = 300 / speed;
+
+                        frontColor = WHPal.SkyBlueF;
+                        hitColor = trailColor = backColor = WHPal.SkyBlue;
+                        shrinkX = shrinkY = 0;
+                        trailLength = 7;
+                        height = width = 4;
+                        trailWidth = width / 2.2f;
+                        trailLength = 2;
+                        status = WHStatusEffects.plasmaFireBurn;
+                        statusDuration = 15;
+
+                        trailEffect = WHFx.hitPoly(20, hitColor, backColor, 1, 20, 4, 6, 60f);
+                        trailChance = 0.5f;
+
+                        intervalBullets = 2;
+                        bulletInterval = 20;
+                        intervalDelay = 60;
+                        intervalBullet = WHBullets.PlasmaFireBall;
+
+                        despawnEffect = hitEffect = new MultiEffect(
+                                WHFx.hitPoly(10, hitColor, backColor, 3, 50, 6, 6, 60f)
+                        );
+                        shootEffect = new MultiEffect(
+                                WHFx.hitPoly(10, hitColor, backColor, 3, 20, 6, 6, 60f),
+                                shootBigColor);
+                        smokeEffect = WHFx.hitPoly(10, hitColor, backColor, 3, 20, 6, 6, 60f);
+                    }
+                };
+
+                BulletType attack4 = new MultiTrailBulletType(5, 450, name("pierce")) {
+                    {
+                        buildingDamageMultiplier = 2f;
+                        lifetime = 10 * 60f;
+
+                        splashDamageRadius = 40;
+                        splashDamage = damage * 0.65f;
+
+                        frontColor = WHPal.SkyBlueF;
+                        hitColor = trailColor = backColor = WHPal.SkyBlue;
+                        shrinkX = shrinkY = 0;
+                        trailLength = 10;
+                        width = 6;
+                        height = width * 4;
+                        trailWidth = width / 2.2f;
+                        status = WHStatusEffects.plasmaFireBurn;
+                        statusDuration = 15;
+
+                        circleShooter = true;
+                        circleShooterRadius = 30;
+                        circleShooterRadiusSmooth = 20;
+                        circleShooterRotateSpeed = 4;
+
+                        homingPower = 0.1f;
+                        homingRange = 300;
+                        homingDelay = 10;
+
+                        trailEffect = WHFx.square(30, hitColor, 2, 20, 4);
+                        trailChance = 0.18f;
+
+                        despawnEffect = hitEffect = new MultiEffect(
+                                WHFx.square(20, hitColor, 2, splashDamageRadius, 4),
+                                WHFx.trailHitSpark(45, WHPal.SkyBlue, 8, 60, 1.5f, 6),
+                                WHFx.generalExplosion(15f, hitColor, 25, 4, false)
+                        );
+                        shootEffect = new MultiEffect(WHFx.square(20, hitColor, 2, 20, 4), shootBigColor);
+                        smokeEffect = shootBigSmoke;
+                    }
+
+                    @Override
+                    public void updateWeaving(Bullet b) {
+                    }
+
+                    @Override
+                    public void init(Bullet b) {
+                        super.init(b);
+                        b.fdata = 0;
+                    }
+
+                    @Override
+                    public void updateHoming(Bullet b) {
+                        if (homingPower <= 0.0001f || b.time < homingDelay) {
+
+                            Unit target = Units.closestEnemy(b.team, b.x, b.y, homingRange,
+                                    unit -> unit != null && unit.checkTarget(collidesAir, collidesGround) &&
+                                            !b.hasCollided(unit.id));
+                            if (target != null) {
+                                b.fdata = 1f;
+                                b.aimX = target.x();
+                                b.aimY = target.y();
+                            } else {
+                                b.fdata = 0;
+                            }
+                        }
+
+                        if (b.fdata > 0.5f) {
+                            b.vel.setAngle(Angles.moveToward(
+                                    b.rotation(), b.angleTo(b.aimX, b.aimY), homingPower * Time.delta * 50f));
+                        } else if (b.fdata < 0.5f && b.owner instanceof Healthc h && h.isValid()) {
+                            Tmp.v1.set(h).sub(b);
+                            float radiusError = Tmp.v1.len() - circleShooterRadius;
+                            float tangentStrength = Mathf.clamp(1f - Math.abs(radiusError) / circleShooterRadiusSmooth);
+                            Tmp.v1.rotate(90f * tangentStrength);
+                            b.vel.add(Tmp.v1.limit(speed * circleShooterRotateSpeed * Time.delta)).limit(speed);
+                        }
+                    }
+                };
+
+                BulletType attack5 = new BulletType() {
+                    {
+                        splashDamageRadius = 100;
+                        rangeOverride = 100;
+                        speed = 0f;
+                        lifetime = 1f;
+                        damage = 400;
+                        collides = false;
+                        hittable = false;
+                        drawSize = 0f;
+                        hitColor = Pal.accent;
+                        despawnEffect = new MultiEffect(
+                                WHFx.generalExplosion(30, hitColor, splashDamageRadius, 10, true),
+                                new Effect(35f, e -> {
+                                    color(hitColor, hitColor, e.fin());
+
+                                    rand.setSeed(e.id);
+                                    randLenVectors(e.id, 60, e.fin(Interp.pow5Out) * splashDamageRadius * 0.7f, e.fin() * splashDamageRadius * 0.3f, (x, y) -> {
+                                        Fill.circle(e.x + x, e.y + y, 0.2f + e.fout() * 2.5f * Mathf.curve(e.fin(), 0, 0.2f));
+                                    });
+                                }));
+                    }
+
+
+                    @Override
+                    public void init(Bullet b) {
+                        super.init(b);
+                        MainRenderer.addShockCircle(b.x, b.y, range, 20f, 0.2f);
+                    }
+
+                    @Override
+                    public void update(Bullet b) {
+                        Groups.bullet.intersect(b.x - range, b.y - range, range * 2f, range * 2f, other -> {
+                            if (other != b && other.team != b.team
+                                    && other.dst(b.x, b.y) <= range + other.hitSize() / 2f) {
+                                float amount = damage * b.damageMultiplier();
+                                if (other.damage() <= amount) other.remove();
+                                else other.damage(other.damage() - amount);
+                            }
+                        });
+
+                        Units.nearby(b.team, b.x, b.y, splashDamageRadius / 2, target -> {
+                            if (!target.hittable() && target.team != b.team) return;
+                            target.shield(target.shield + 1000);
+                            target.heal(target.maxHealth() * 0.04f);
+                        });
+
+                        b.remove();
+                    }
+                };
+
+                BulletType attack6 = new DOTBulletType() {
+                    {
+                        lifetime = 120f;
+                        range = 300f;
+                        DOTDamage = damage = 100;
+                        damageInterval = 20;
+                        hitColor = WHPal.PsyColor;
+                        splashDamageRadius = DOTRadius = 32;
+                        radIncrease = 0.1f;
+                        despawnEffect = new MultiEffect(
+                                WHFx.arcBurst3D(50, hitColor, 2, splashDamageRadius, 1.5f, 120, 10),
+                                WHFx.multipRings(70, hitColor, splashDamageRadius, 3)
+                        );
+                    }
+
+                    Effect e1 = new Effect(30, e -> {
+                        color(hitColor);
+                        stroke(2f * e.fout());
+                        float height = 100;
+                        Tmp.v1.trns(90, height * e.fout());
+                        circle(e.x, e.y + Tmp.v1.y, splashDamageRadius);
+                    });
+
+                    @Override
+                    public void init(Bullet b) {
+                        super.init(b);
+                        MainRenderer.addShockCircle(b.x, b.y, splashDamageRadius, lifetime * 1.5f, 1.2f);
+                    }
+
+                    @Override
+                    public void update(Bullet b) {
+                        super.update(b);
+                        if (b.fin() > 0.1f && b.timer(2, 20)) {
+                            e1.create(b.x, b.y, 0, hitColor, null);
+                        }
+                    }
+
+                    @Override
+                    public void drawBullet(Bullet b) {
+                    }
+
+                    @Override
+                    public void draw(Bullet b) {
+                        super.draw(b);
+                        Draw.color(hitColor);
+                        Lines.stroke(2 * b.fout());
+                        Lines.circle(b.x, b.y, splashDamageRadius * Mathf.curve(b.fin(), 0, 0.15f) * WHFx.fout(b.fin(), 0.9f));
+                    }
+
+                    @Override
+                    public void despawned(Bullet b) {
+                        super.despawned(b);
+                        Units.nearbyEnemies(b.team, b.x, b.y, splashDamageRadius * 2, target -> {
+                            if (!target.hittable()) return;
+                            target.vel.setZero();
+                            target.apply(WHStatusEffects.powerReduce2, 60);
+                            target.apply(WHStatusEffects.scare, 30);
+                        });
+
+                        Units.nearbyEnemies(b.team, b.x, b.y, splashDamageRadius, target -> {
+                            if (!target.hittable()) return;
+                            if (target.health() < 4000) target.kill();
+                            else target.damagePierce(2000);
+                        });
+                    }
+                };
+
+                firstStep.addAttack(new MultiModeWeapon("attack1") {{
+                            x = 44 / 4f;
+                            y = 127f / 4;
+                            reload = 60;
+                            recoil = 5f;
+                            shake = 2f;
+                            mirror = false;
+                            shoot.shots = 8;
+                            shoot.shotDelay = 5;
+                            shoot.firstShotDelay = 20;
+                            recoilTime = 45f;
+                            bullet = attack1;
+                        }})
+                        .weight(0.35f)
+                        .actionTime(140)
+                        .actionInterp(Interp.smooth)
+                        .relative()
+                        .keyframe(0.1f, newPose()
+                                .parts(-4, 8, 15, 0)
+                                .parts(-1, -2, 5, 1)
+                                .parts(0.5f, 2, 5, 2)
+                                .parts(0, 0, 10, 3))
+                        .keyframe(0.9f, newPose()
+                                .parts(-4, 8, 15, 0)
+                                .parts(-1, -2, 5, 1)
+                                .parts(0.5f, 2, 5, 2)
+                                .parts(0, 0, 10, 3))
+                        .endPose(newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, 0, 0, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3)
+                        );
+
+                firstStep.addAttack(new MultiModeWeapon("attack2") {{
+                            x = 44 / 4f;
+                            y = 127f / 4;
+                            reload = 60;
+                            recoil = 5f;
+                            shake = 2f;
+                            mirror = false;
+                            shoot = new ShootSpread() {{
+                                spread = 4;
+                                shots = 5;
+                            }};
+                            recoilTime = 45f;
+                            bullet = attack2;
+                        }})
+                        .shootProgress(0.75f)
+                        .weight(0.5f)
+                        .actionTime(50)
+                        .actionInterp(Interp.pow2Out)
+                        .relative()
+                        .keyframe(0.3f, newPose()
+                                .parts(-2, -4, -15, 0)
+                                .parts(0, -3, -15, 1)
+                                .parts(0.5f, 2, -15, 2)
+                                .parts(0, 0, -15, 3))
+                        .keyframe(0.75f, newPose()
+                                .parts(-2, 10, 30, 0)
+                                .parts(-1, 2, 5, 1)
+                                .parts(0.5f, 2, 5, 2)
+                                .parts(0, 0, 10, 3))
+                        .endPose(newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, 0, 0, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3)
+                        );
+
+                firstStep.addAttack(new MultiModeWeapon("attack2.5") {{
+                            x = 44 / 4f;
+                            y = 127f / 4;
+                            reload = 60;
+                            recoil = 5f;
+                            shake = 2f;
+                            mirror = false;
+                            inaccuracy = 4;
+                            shoot = new ShootSpread() {{
+                                spread = 2;
+                                shots = 7;
+                                shotDelay = 4;
+                            }};
+                            recoilTime = 45f;
+                            bullet = attack2;
+                        }})
+                        .shootProgress(0.65f)
+                        .weight(0.2f)
+                        .actionTime(50)
+                        .actionInterp(Interp.pow2Out)
+                        .relative()
+                        .keyframe(0.3f, newPose()
+                                .parts(-2, -4, -15, 0)
+                                .parts(0, -3, -15, 1)
+                                .parts(0.5f, 2, -15, 2)
+                                .parts(0, 0, -15, 3))
+                        .keyframe(0.65f, newPose()
+                                .parts(-2, 10, 30, 0)
+                                .parts(-1, 2, 5, 1)
+                                .parts(0.5f, 2, 5, 2)
+                                .parts(0, 0, 10, 3))
+                        .endPose(newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, 0, 0, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3)
+                        );
+
+                   /*0 = weapon1
+                1 = left shoulder
+                2 = right shoulder
+                3 = body
+                4 = head*/
+
+
+                firstStep.addAttack(new MultiModeWeapon("attack3") {{
+                            x = -42 / 4f;
+                            y = 29 / 4f;
+                            reload = 60;
+                            recoil = 5f;
+                            shake = 2f;
+                            mirror = false;
+                            shoot = new ShootPattern() {{
+                                shots = 12;
+                                shotDelay = 3;
+                            }};
+                            recoilTime = 45f;
+                            bullet = attack3;
+                        }})
+                        .shootProgress(0.75f)
+                        .weight(1)
+                        .actionTime(50)
+                        .actionInterp(Interp.pow2Out)
+                        .relative()
+                        .keyframe(0.3f, newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, -3, 15, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3))
+                        .keyframe(0.75f, newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, 6, -20, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, -15, 3))
+                        .endPose(newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, 0, 0, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3)
+                        );
+
+                firstStep.addAttack(new MultiModeWeapon("attack4") {{
+                            x = 0 / 4f;
+                            y = 116f / 4f;
+                            reload = 60;
+                            recoil = 5f;
+                            shake = 2f;
+                            mirror = false;
+                            shoot = new ShootSpread() {{
+                                spread = 120;
+                                shots = 3;
+                            }};
+                            recoilTime = 45f;
+                            bullet = attack4;
+                        }})
+                        .shootProgress(0.75f)
+                        .weight(0.2f)
+                        .actionTime(45)
+                        .actionInterp(Interp.pow2Out)
+                        .relative()
+                        .keyframe(0.5f, newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, 0, 0, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3))
+                        .keyframe(0.75f, newPose()
+                                .parts(0, -21 / 4f, 0, 0)
+                                .parts(0, 0, 0, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3))
+                        .endPose(newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, 0, 0, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3)
+                        );
+
+                firstStep.addAttack(new MultiModeWeapon("attack5") {
+                            {
+                                requireTarget = true;
+                                x = 0f;
+                                y = 20 / 4f;
+                                reload = 75f;
+                                range = 150f;
+                                shootCone = 360f;
+                                bullet = attack5;
+                            }
+
+                            @Override
+                            protected Teamc findTarget(Unit unit, float x, float y, float range, boolean air, boolean ground) {
+                                return Groups.bullet.intersect(x - range, y - range, range * 2f, range * 2f)
+                                        .min(b -> b.team != unit.team, b -> b.dst2(x, y));
+                            }
+
+                            @Override
+                            protected boolean checkTarget(Unit unit, Teamc target, float x, float y, float range) {
+                                return !(target instanceof Bullet bullet
+                                        && bullet.team != unit.team
+                                        && bullet.dst(x, y) <= range);
+                            }
+
+                            @Override
+                            protected void shoot(Unit unit, WeaponMount mount, float shootX, float shootY, float rotation) {
+                                MainRenderer.addShockCircle(shootX, shootY, 18f, 18f, 0.45f);
+                                super.shoot(unit, mount, shootX, shootY, rotation);
+                            }
+                        }).shootProgress(0.75f)
+                        .weight(0.5f)
+                        .actionTime(30)
+                        .actionInterp(Interp.pow2Out)
+                        .relative()
+                        .keyframe(0.5f, newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, 0, 0, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3))
+                        .keyframe(0.75f, newPose()
+                                .parts(0, -21 / 4f, 0, 0)
+                                .parts(0, 0, 0, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3))
+                        .endPose(newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, 0, 0, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3)
+                        );
+
+                firstStep.addAttack(new MultiModeWeapon("attack6") {
+                            {
+                                requireTarget = true;
+                                x = -42 / 4f;
+                                y = 29 / 4f;
+                                reload = 50f;
+                                range = 300f;
+                                rotate = false;
+                                shootCone = 360f;
+                                bullet = attack6;
+                            }
+
+                            @Override
+                            protected void shoot(Unit unit, WeaponMount mount, float shootX, float shootY, float rotation) {
+                                if (!(mount.target instanceof Unit target) || !target.isAdded()) return;
+                                if (unit instanceof MultiModePowerArmourUnit multiUnit && attackIndex >= 0) {
+                                    multiUnit.onModeShot(attackIndex);
+                                }
+                                MainRenderer.addShockCircle(shootX, shootY, 16f, 120, 0.3f);
+                                attack6.create(unit, unit.team, target.x, target.y, rotation);
+                                mount.reload = reload;
+                            }
+                        }).shootProgress(0.75f)
+                        .weight(0.15f)
+                        .actionTime(50)
+                        .actionInterp(Interp.pow2Out)
+                        .relative()
+                        .keyframe(0.3f, newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, -3, 15, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3))
+                        .keyframe(0.75f, newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, 6, -20, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, -15, 3))
+                        .endPose(newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, 0, 0, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3)
+                        );
+
+                 /*  0 = weapon1
+                1 = left shoulder
+                2 = right shoulder
+                3 = body
+                4 = head
+                */
+
+                firstStep.addAttack(new MultiModeWeapon("attack7") {{
+                            x = 0 / 4f;
+                            y = 116f / 4f;
+                            reload = 60;
+                            recoil = 5f;
+                            shake = 2f;
+                            mirror = false;
+                            shoot = new ShootSpread() {{
+                                spread = 2;
+                                shots = 20;
+                            }};
+                            recoilTime = 45f;
+                            BulletType attack7 = attack3.copy();
+                            attack7.lifetime = attack3.lifetime * 0.6f;
+                            attack7.pierceCap = 5;
+                            bullet = attack7;
+                        }})
+                        .shootProgress(0.75f)
+                        .weight(0.2f)
+                        .actionTime(30)
+                        .actionInterp(Interp.pow2Out)
+                        .relative()
+                        .keyframe(0.4f, newPose()
+                                .parts(-2, -1, 120, 0)
+                                .parts(0, -5, 40, 1)
+                                .parts(0, 3, 40, 2)
+                                .parts(0, 0, 20, 3))
+                        .keyframe(0.8f, newPose()
+                                .parts(0, -1, -200, 0)
+                                .parts(2, 2, -60, 1)
+                                .parts(0, 0, -60, 2)
+                                .parts(0, 0, -45, 3))
+                        .endPose(newPose()
+                                .parts(0, 0, 0, 0)
+                                .parts(0, 0, 0, 1)
+                                .parts(0, 0, 0, 2)
+                                .parts(0, 0, 0, 3)
+                        );
+
             }
         };
 
@@ -13796,7 +14791,6 @@ public final class WHUnitTypes {
         airS6 = new UnitType("air-s6") {
             {
                 constructor = UnitTypes.eclipse.constructor;
-                researchCostMultiplier = 3;
                 health = 68000;
                 armor = 33;
                 speed = 0.75f;
@@ -13835,9 +14829,9 @@ public final class WHUnitTypes {
                     trailLength = 5;
                     trailWidth = 2.5f;
                     lightningLength = 10;
-                    lightning = 2;
+                    lightning = 1;
                     lightningLengthRand = 8;
-                    lightningDamage = 30;
+                    lightningDamage = 20;
                     homingPower = 0.08f;
                     homingDelay = 20;
                     homingRange = 64;
@@ -13847,17 +14841,16 @@ public final class WHUnitTypes {
                     incendSpread = 12;
                     status = StatusEffects.melting;
                     statusDuration = 30;
-                    hitEffect =
-                            new MultiEffect(
-                                    WHFx.hitSpark(30, hitColor, 5, splashDamageRadius, 1, 5),
-                                    new Effect(35f, e -> {
-                                        color(Pal.lightFlame, Pal.darkFlame, e.fin());
+                    hitEffect = new MultiEffect(
+                            WHFx.hitSpark(30, hitColor, 5, splashDamageRadius, 1, 5),
+                            new Effect(35f, e -> {
+                                color(Pal.lightFlame, Pal.darkFlame, e.fin());
 
-                                        rand.setSeed(e.id);
-                                        randLenVectors(e.id, 15, e.fin(Interp.pow5Out) * splashDamageRadius * 0.7f, e.fin() * splashDamageRadius * 0.3f, (x, y) -> {
-                                            Fill.circle(e.x + x, e.y + y, 0.2f + e.fout() * 2.5f * Mathf.curve(e.fin(), 0, 0.2f));
-                                        });
-                                    }));
+                                rand.setSeed(e.id);
+                                randLenVectors(e.id, 15, e.fin(Interp.pow5Out) * splashDamageRadius * 0.7f, e.fin() * splashDamageRadius * 0.3f, (x, y) -> {
+                                    Fill.circle(e.x + x, e.y + y, 0.2f + e.fout() * 2.5f * Mathf.curve(e.fin(), 0, 0.2f));
+                                });
+                            }));
                 }};
 
                 Weapon missileWeapon = new Weapon(name("air-s6-missile-weapon")) {{
@@ -13939,7 +14932,7 @@ public final class WHUnitTypes {
                         spread = 8 / 4f;
                     }};
 
-                    bullet = new CritBulletType(9f, 150) {
+                    bullet = new CritBulletType(9f, 100) {
                         {
                             critChance = 0.1f;
                             critMultiplier = 2f;
@@ -14080,7 +15073,7 @@ public final class WHUnitTypes {
                             bullet = new RailBulletType() {
                                 {
                                     shootEffect = Fx.railShoot;
-                                    length = 420;
+                                    length = 370;
                                     pointEffectSpace = 60f;
                                     hitEffect = pierceEffect =
                                             new Effect(25f, 200f, e -> {
@@ -14105,7 +15098,7 @@ public final class WHUnitTypes {
 
                                     endEffect = WHFx.generalExplosion(20, Pal.bulletYellowBack, 40, 5, false);
                                     smokeEffect = Fx.shootBig2;
-                                    damage = 500;
+                                    damage = 450;
                                     pierceDamageFactor = 0.25f;
                                 }
 
@@ -14130,7 +15123,6 @@ public final class WHUnitTypes {
         airSGreen6 = new UnitType("air-g-s6") {
             {
                 constructor = UnitTypes.oct.constructor;
-                researchCostMultiplier = 3;
                 health = 60000;
                 armor = 20;
                 speed = 0.45f;
@@ -14332,7 +15324,6 @@ public final class WHUnitTypes {
         mechaS6 = new UnitType("mech-s6") {
             {
                 constructor = MechUnit::create;
-                researchCostMultiplier = 3;
                 hitSize = 48;
                 canDrown = false;
                 armor = 26;
@@ -14348,7 +15339,7 @@ public final class WHUnitTypes {
                 weapons.add(
                         new ShotBulletWeapon(name("mech-s6-weapon1")) {
                             {
-                                reload = 40;
+                                reload = 55;
                                 shake = 3;
                                 recoil = 8;
                                 x = 139 / 4f;
@@ -14650,7 +15641,6 @@ public final class WHUnitTypes {
         mechaSGreen6 = new UnitType("mech-g-s6") {
             {
                 constructor = LegsUnit::create;
-                researchCostMultiplier = 3;
                 speed = 0.45f;
                 rotateSpeed = 0.8f;
                 hitSize = 50f;
@@ -14859,7 +15849,6 @@ public final class WHUnitTypes {
             {
                 groundLayer = Layer.legUnit;
                 constructor = LegsUnit::create;
-                researchCostMultiplier = 3;
                 drag = 0.1f;
                 speed = 0.42f;
                 hitSize = 35.5f;
@@ -15127,7 +16116,6 @@ public final class WHUnitTypes {
 
             {
                 constructor = UnitTypes.omura.constructor;
-                researchCostMultiplier = 3;
                 faceTarget = false;
                 speed = 0.52f;
                 rotateSpeed = 0.75f;
@@ -15420,7 +16408,6 @@ public final class WHUnitTypes {
                 pickupUnits = true;
                 hovering = true;
                 constructor = HoverPayloadUnit::new;
-                researchCostMultiplier = 3;
                 speed = 1.03f;
                 rotateSpeed = 0.86f;
                 immunities.addAll(StatusEffects.slow, StatusEffects.unmoving, StatusEffects.electrified);
@@ -16202,6 +17189,195 @@ public final class WHUnitTypes {
                     }
                 });
 
+            }
+        };
+
+        M4Test = new MultiModePowerArmourUnitType("m4Test") {
+            {
+                constructor = MultiModePowerArmourUnit::new;
+                speed = 2.5f;
+                hitSize = 22f;
+                rotateSpeed = 4f;
+                health = 16000;
+                armor = 28f;
+                mechFrontSway = 0.08f;
+                mechStepParticles = true;
+                stepShake = 0.15f;
+                singleTarget = true;
+                outlineRadius = 3;
+                mechLegColor = outlineColor = WHPal.Outline;
+
+                abilities.add(
+                        new EllipseForceFieldAbility(75 / 4f, 50 / 4f, 500 / 60f, 10000, 40 * 60f, 0.8f, 15) {{
+                            percentRegen = true;
+                            percentRegenAmount = 0.06f;
+                        }},
+                        new ShieldRegenFieldAbility(400, 4000, 60f, 60f),
+                        new LastStandAbility());
+
+                commonParts.addAll(
+                        new UnitRegionPart("base") {{
+                            x = y = 0f;
+                            layerOffset = -0.02f;
+                        }},
+                        new UnitRegionPart("leg") {{
+                            x = 0f;
+                            y = -1f;
+                            symmetry = true;
+                            swingFront = true;
+                            sinAngle = 8f;
+                            bodyScl = 9f;
+                        }},
+                        new UnitRegionPart("body") {{
+                            x = y = 0f;
+                            moveRot = 25f;
+                            sinAngle = 6f;
+                            bodyScl = 5f;
+                            swingFront = false;
+                        }},
+                        new UnitRegionPart("shoulder") {{
+                            x = y = 0f;
+                            symmetry = true;
+                            moveRot = 10f;
+                            sinAngle = 8f;
+                            bodyScl = 5f;
+                            swingScl = 0.01f;
+                        }},
+                        new UnitRegionPart("head") {{
+                            x = y = 0f;
+                            layerOffset = 1f;
+                            sinAngle = 2f;
+                            bodyScl = 5f;
+                            outline = false;
+                            swingFront = false;
+                        }}
+                );
+
+                commonParts.addAll(
+                        new UnitRegionPart("forearm") {{
+                            x = 55 / 4f;
+                            y = -10 / 4f;
+                            rotation = 15f;
+                            sinAngle = 8f;
+                            bodyScl = 9f;
+                            swingFront = true;
+                        }},
+                        new UnitRegionPart("hand") {{
+                            x = 55 / 4f;
+                            y = -10 / 4f;
+                            rotation = 15f;
+                            sinAngle = 8f;
+                            bodyScl = 9f;
+                            swingFront = true;
+                        }},
+                        new UnitRegionPart("weapon2") {{
+                            x = 55 / 4f;
+                            y = -10 / 4f;
+                            rotation = 10f;
+                            sinAngle = 10f;
+                            bodyScl = 9f;
+                            swingFront = true;
+                        }},
+                        new DrawBladePart() {{
+                            x = 55 / 4f;
+                            y = -10 / 4f;
+                            rotation = 10f;
+                            rad = 150 / 4f;
+                            color = WHPal.SkyBlueF;
+                        }}
+                );
+
+                drawTime = sheatheTime = 18f;
+
+                sheathedPose.parts(0f, 0f, 0f, 5, 6).parts(-28f, -10f, 80f, 7, 8);
+
+                drawKeyframe(0.4f, newPose()
+                        .parts(-28f, -10f, 75f, 5, 6)
+                        .parts(-28f, -10f, 80f, 7, 8));
+
+                readyPose.parts(0f, 0f, -60f, 5, 6, 7, 8);
+
+                CritBulletType lightSlash = new CritBulletType(4f, 1000f) {{
+                    height = width = 0;
+                    critChance = 0.2f;
+                    splashDamage = damage / 2;
+                    pierce = true;
+                    splashDamageRadius = 24;
+                    absorbable = hittable = collidesAir = false;
+                    lifetime = 15;
+                    lightningColor = hitColor = WHPal.ShootOrange;
+                    despawnSound = Sounds.explosionCleroi;
+                    smokeEffect = shootEffect = none;
+                    hitEffect = new MultiEffect(
+                            WHFx.generalExplosion(10, hitColor, splashDamageRadius, 5, false),
+                            WHFx.shuttle(30, hitColor, hitColor, true, 30, 30));
+                }};
+                CritBulletType heavySlash = new CritBulletType(3f, 1800f) {{
+                    height = width = 0;
+                    critChance = 0.2f;
+                    splashDamage = damage / 2;
+                    pierce = true;
+                    splashDamageRadius = 50;
+                    absorbable = hittable = collidesAir = false;
+                    lifetime = 15;
+                    lightningColor = hitColor = WHPal.SkyBlue;
+                    despawnSound = Sounds.explosionCleroi;
+                    smokeEffect = shootEffect = none;
+                    hitEffect = new MultiEffect(
+                            WHFx.generalExplosion(10, hitColor, splashDamageRadius, 5, false),
+                            WHFx.shuttle(30, WHPal.SkyBlue, hitColor, true, 30, 30));
+                }};
+
+                MultiModePowerArmourUnitType.ComboStep firstStep = addStep();
+                MultiModePowerArmourUnitType.ComboStep secondStep = addStep();
+
+                firstStep.addAttack(new MultiModePowerArmourUnitType.MultiModeWeapon() {{
+                            x = 10f;
+                            y = 1f;
+                            reload = 45f;
+                            recoil = 5f;
+                            shake = 2f;
+                            mirror = false;
+                            recoilTime = 45f;
+                            shootSound = Sounds.shootFlame;
+                            shootStatus = slow;
+                            shootStatusDuration = 12f;
+                            bullet = lightSlash;
+                        }})
+                        .actionTime(20f)
+                        .actionInterp(Interp.linear)
+                        .relative()
+                        .keyframe(0.5f, newPose().parts(0f, 7f, 120, 5, 6, 7, 8))
+                        .endPose(newPose().parts(0f, 0, 0, 5, 6, 7, 8));
+
+                secondStep.addAttack(new MultiModePowerArmourUnitType.MultiModeWeapon() {{
+                            x = 10f;
+                            y = 1f;
+                            reload = 70f;
+                            recoil = 6f;
+                            shake = 3f;
+                            mirror = false;
+                            recoilTime = 55f;
+                            shootSound = Sounds.shootTank;
+                            shootStatus = shocked;
+                            shootStatusDuration = 30f;
+                            bullet = heavySlash;
+                        }})
+                        .actionTime(60)
+                        .actionInterp(Interp.linear)
+                        .relative()
+                        .keyframe(0.4f, newPose()
+                                .parts(0f, -20f, -30f, 5, 6, 7, 8)
+                                .parts(0f, 0f, -40f, 1, 2, 3, 4)
+                        )
+                        .keyframe(0.75f, newPose()
+                                .parts(-10f, 30f, 60, 5, 6, 7, 8)
+                                .parts(0f, 0f, 10f, 1, 2, 3, 4)
+                        )
+                        .endPose(newPose()
+                                .parts(0f, 0f, 0f, 5, 6, 7, 8)
+                                .parts(0f, 0f, 0f, 1, 2, 3, 4)
+                        );
             }
         };
 

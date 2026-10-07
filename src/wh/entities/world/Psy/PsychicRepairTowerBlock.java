@@ -241,9 +241,15 @@ public class PsychicRepairTowerBlock extends Block {
         @Override
         public void read(Reads read, byte revision) {
             super.read(read, revision);
-            psychic.read(read);
-            warmup = read.f();
-            totalProgress = read.f();
+            if (revision >= 1) {
+                psychic.read(read);
+                warmup = read.f();
+                totalProgress = read.f();
+            } else {
+                psychic.clear();
+                warmup = 0f;
+                totalProgress = 0f;
+            }
         }
     }
 }

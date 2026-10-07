@@ -2,6 +2,7 @@ package wh.entities.world.Psy;
 
 import arc.math.Mathf;
 import arc.util.Strings;
+import arc.util.Tmp;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.Vars;
@@ -112,8 +113,6 @@ public class PsychicGeneratorBlock extends PsychicBlock {
                 negativePulse = read.bool();
             } else {
                 progress = 0f;
-                // Revision 4 did not persist warmup. Keep legacy generators alive
-                // long enough for their own power consumption to recover after loading.
                 warmup = powerPerSecond > 0.0001f ? 1f : 0f;
                 productionRate = 0f;
                 fluctuationTimer = 0f;
@@ -127,7 +126,9 @@ public class PsychicGeneratorBlock extends PsychicBlock {
         public void updateTile() {
             super.updateTile();
 
-            boolean canCraft = enabled && canConsume() && psychicSpace() + 0.0001f >= psychicPerCraft && craftTime > 0.0001f;
+            boolean canCraft = enabled && canConsume() && psychicPerCraft > 0.0001f
+                    && psychicSpace() + 0.0001f >= psychicPerCraft && craftTime > 0.0001f;
+
             if (canCraft) {
                 progress += edelta();
                 warmup = Mathf.approachDelta(warmup, 1f, warmupSpeed);
@@ -136,11 +137,12 @@ public class PsychicGeneratorBlock extends PsychicBlock {
                 warmup = Mathf.approachDelta(warmup, 0f, warmupSpeed);
             }
 
-            while (progress >= craftTime && enabled && canConsume() && psychicSpace() + 0.0001f >= psychicPerCraft) {
+            if (progress >= craftTime && craftTime > 0.0001f && psychicPerCraft > 0.0001f
+                    && enabled && canConsume() && psychicSpace() + 0.0001f >= psychicPerCraft) {
                 consume();
                 float produced = addPsychic(psychicPerCraft);
                 producedThisFrame += produced;
-                progress -= craftTime;
+                progress = 0;
             }
 
             if (canCraft && fluctuationTimer >= fluctuationInterval) {
@@ -205,7 +207,10 @@ public class PsychicGeneratorBlock extends PsychicBlock {
         @Override
         public void drawSelect() {
             super.drawSelect();
-            Drawf.dashRect(WHPal.PsyColor, x - range * tilesize, y - range * tilesize, range * 2f * tilesize, range * 2f * tilesize);
+            float realRange = range * tilesize;
+            Vars.indexer.eachBlock(this, realRange, other -> other.block.canOverdrive,
+                    other -> Drawf.selected(other, Tmp.c1.set(WHPal.PsyColor).a(Mathf.absin(4f, 1f))));
+            Drawf.dashCircle(x, y, realRange, WHPal.PsyColor);
             drawSelectText(
                     bundleFormat("bar.wh-psychic-storage",
                             Strings.autoFixed(psychicStored(), 2),

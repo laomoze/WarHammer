@@ -407,11 +407,13 @@ public class Quarry extends Block {
         }
 
         public void dumpOutputs() {
-            if (!empty && timer(timerDump, dumpTime / timeScale)) {
+            if (!timer(timerDump, dumpTime / timeScale)) return;
+
                 for (Item output : itemList) {
-                    dump(output);
+                    if (items.has(output) && dump(output)) {
+                        break;
+                    }
                 }
-            }
         }
 
         private void produceOre(Item tileItem, float dx, float dy) {

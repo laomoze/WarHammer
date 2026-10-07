@@ -4,9 +4,8 @@ import arc.graphics.Color;
 import arc.math.Mathf;
 import arc.math.geom.Vec3;
 import arc.struct.ObjectMap;
-import arc.struct.Seq;
 import arc.util.noise.Simplex;
-import mindustry.type.Sector;
+import mindustry.content.Blocks;
 import mindustry.world.Block;
 import wh.content.WHBlocksEnvironment;
 
@@ -31,7 +30,6 @@ public class KarvexSurfaceProfile{
         put(WHBlocksEnvironment.darkMineralSandstone, WHBlocksEnvironment.darkMineralSandBoulder);
         put(WHBlocksEnvironment.scorchedEarth, WHBlocksEnvironment.scorchedEarthBoulder);
         put(WHBlocksEnvironment.scorchedStone, WHBlocksEnvironment.scorchedEarthBoulder);
-        put(WHBlocksEnvironment.quartzSand, WHBlocksEnvironment.quartzCrystalCluster);
         put(WHBlocksEnvironment.darkRock, WHBlocksEnvironment.darkRockBoulder);
         put(WHBlocksEnvironment.darkHotRock, WHBlocksEnvironment.darkRockBoulder);
         put(WHBlocksEnvironment.darkMagmaRock, WHBlocksEnvironment.darkRockBoulder);
@@ -61,16 +59,16 @@ public class KarvexSurfaceProfile{
         position.z * scl) * heightScl, 2.3f) + waterOffset) / (1f + waterOffset);
     }
 
-    public Block selectSurfaceBlock(int seed, Vec3 position, Seq<Sector> sectors){
-        return selectSurfaceBlock(seed, position, sectors, true);
+    public Block selectSurfaceBlock(int seed, Vec3 position) {
+        return selectSurfaceBlock(seed, position, true);
     }
 
-    public void sampleSurfaceColor(int seed, Vec3 position, Seq<Sector> sectors, Color out){
-        Block block = selectSurfaceBlock(seed, position, sectors, true);
+    public void sampleSurfaceColor(int seed, Vec3 position, Color out) {
+        Block block = selectSurfaceBlock(seed, position, true);
         out.set(block.mapColor).a(1f - block.albedo);
     }
 
-    public Block selectSurfaceBlock(int seed, Vec3 position, Seq<Sector> sectors, boolean allowLiquidEnrichment){
+    public Block selectSurfaceBlock(int seed, Vec3 position, boolean allowLiquidEnrichment) {
         float height = sampleRawHeight(seed, position);
         float px = position.x * scl;
         float py = position.y * scl;
@@ -122,11 +120,13 @@ public class KarvexSurfaceProfile{
 
         float heat = Simplex.noise3d(seed + 101, 3, 0.58f, 1f / 6f, px, py + 301f, pz) + (temp - 0.70f) * 0.5f;
 
-        if(heat > 1.06f){
+        if (heat > 1.08f) {
+            return Blocks.slag;
+        } else if (heat > 1.00f) {
             return WHBlocksEnvironment.darkMagmaRock;
-        }else if(heat > 0.98f){
+        } else if (heat > 0.93f) {
             return WHBlocksEnvironment.darkHotRock;
-        }else if(heat > 0.90f){
+        } else if (heat > 0.86f) {
             return WHBlocksEnvironment.scorchedEarth;
         }
         return floor;
@@ -141,6 +141,12 @@ public class KarvexSurfaceProfile{
         float field = n1 + n2 + n3;
 
         if(floor == WHBlocksEnvironment.mineralSand){
+            if (field > 1.18f && temp > 0.46f && height > seaLevel + 0.03f)
+                return WHBlocksEnvironment.oilMineralSandWater;
+            if (field > 1.06f && temp > 0.42f && height > seaLevel + 0.02f) return WHBlocksEnvironment.oilMineralSand;
+            if (field < -1.16f && temp > 0.56f) return WHBlocksEnvironment.promethiumSand;
+            if (field < -1.04f && temp > 0.48f) return WHBlocksEnvironment.rustSand;
+            if (field > 1.00f && temp < 0.38f && height > seaLevel + 0.02f) return WHBlocksEnvironment.apatiteCoarse;
             if(field > 0.62f) return WHBlocksEnvironment.mineralSandFloor;
             if (field > 0.46f) return WHBlocksEnvironment.darkMineralFloor;
             if (field < -0.70f) return WHBlocksEnvironment.darkMineralSandstone;
@@ -150,13 +156,53 @@ public class KarvexSurfaceProfile{
         }
 
         if(WHBlocksEnvironment.isMineralCoreFloor(floor)){
+            float metalField = Simplex.noise3d(seed + 401, 3, 0.60f, 1f / 12f, px + 37f, py - 91f, pz)
+                    + Simplex.noise3d(seed + 409, 2, 0.62f, 1f / 25f, px - 113f, py + 47f, pz) * 0.24f;
+            float cobaltField = Simplex.noise3d(seed + 421, 3, 0.58f, 1f / 15f, px - 71f, py + 149f, pz)
+                    + Simplex.noise3d(seed + 431, 2, 0.60f, 1f / 29f, px + 53f, py - 37f, pz) * 0.22f;
+
+            if (cobaltField > 0.78f && temp > 0.46f) return WHBlocksEnvironment.cobaltFloor;
+            if (metalField > 0.58f && temp > 0.30f) return WHBlocksEnvironment.manganeseFloor;
+            if (metalField < -0.58f && temp < 0.78f) return WHBlocksEnvironment.chromiteFloor;
+
+            if (field > 1.10f && temp > 0.48f) return WHBlocksEnvironment.oilMineralSand;
+            if (field < -1.10f && temp > 0.56f) return WHBlocksEnvironment.promethiumSand;
             if(field > 0.90f) return WHBlocksEnvironment.mineralSand;
             if(field > 0.64f) return WHBlocksEnvironment.mineralSandFloor;
             if(field > 1.03f && temp < 0.40f && height > seaLevel + 0.04f) return WHBlocksEnvironment.quartzSand;
-            if(field < -0.50f) return WHBlocksEnvironment.gravel;
             if (field < -0.68f) return WHBlocksEnvironment.quartzSand;
-            if(field < -0.94f && temp < 0.50f && height > seaLevel + 0.01f) return WHBlocksEnvironment.oreSalt;
+            if (field < -0.50f) return WHBlocksEnvironment.gravel;
             if(field < -0.84f && temp < 0.55f) return WHBlocksEnvironment.cementFloor;
+            return floor;
+        }
+
+        if (floor == WHBlocksEnvironment.oilMineralSand) {
+            if (field > 0.94f && temp > 0.52f) return WHBlocksEnvironment.oilMineralSandWater;
+            if (field < -0.78f) return WHBlocksEnvironment.mineralSand;
+            return floor;
+        }
+
+        if (floor == WHBlocksEnvironment.promethiumSand) {
+            if (field > 0.92f && temp > 0.62f) return WHBlocksEnvironment.promethium;
+            if (field < -0.72f) return WHBlocksEnvironment.radiationSand;
+            return floor;
+        }
+
+        if (floor == WHBlocksEnvironment.rustSand) {
+            if (field > 1.02f) return WHBlocksEnvironment.rustSandWater;
+            if (field < -0.78f) return WHBlocksEnvironment.mineralSand;
+            return floor;
+        }
+
+        if (floor == WHBlocksEnvironment.quartzSand) {
+            if (field > 0.86f && temp < 0.42f) return WHBlocksEnvironment.apatiteCoarse;
+            if (field < -0.78f) return WHBlocksEnvironment.mineralSand;
+            return floor;
+        }
+
+        if (floor == WHBlocksEnvironment.apatiteCoarse) {
+            if (field < -0.82f) return WHBlocksEnvironment.quartzSand;
+            if (field > 1.02f && temp > 0.48f) return WHBlocksEnvironment.oilMineralSand;
             return floor;
         }
 
@@ -165,20 +211,51 @@ public class KarvexSurfaceProfile{
             if (field > 0.62f) return WHBlocksEnvironment.darkMineralFloor;
             if(field > 0.52f) return WHBlocksEnvironment.mineralSand;
             if(field < -0.60f && temp < 0.62f) return WHBlocksEnvironment.trachyte;
-            if(field < -0.74f && temp < 0.58f) return WHBlocksEnvironment.oreSalt;
             return floor;
         }
 
         if(floor == WHBlocksEnvironment.darkRock){
-            if(field > 0.82f) return WHBlocksEnvironment.oreShale;
-            if(field < -0.90f && temp < 0.52f) return WHBlocksEnvironment.oreSalt;
+            if (field > 1.10f && temp > 0.50f) return WHBlocksEnvironment.oreShale2;
+            if (field > 1.02f && temp > 0.46f) return WHBlocksEnvironment.oreShale1;
+            if (field > 0.96f && temp > 0.42f) return WHBlocksEnvironment.oreShale;
+            if (field < -1.00f && temp > 0.60f) return WHBlocksEnvironment.darkDacite;
+            if (field < -0.88f) return WHBlocksEnvironment.darkRockCraters;
             if(field < -0.68f && temp < 0.62f) return WHBlocksEnvironment.trachyte;
             return floor;
         }
 
+        if (floor == WHBlocksEnvironment.darkRockCraters) {
+            if (field > 0.82f) return WHBlocksEnvironment.darkRock;
+            if (field < -0.82f) return WHBlocksEnvironment.darkDacite;
+            return floor;
+        }
+
+        if (floor == WHBlocksEnvironment.darkDacite) {
+            if (field > 0.78f) return WHBlocksEnvironment.darkRock;
+            if (field < -0.84f) return WHBlocksEnvironment.trachyte;
+            return floor;
+        }
+
         if(floor == WHBlocksEnvironment.trachyte){
-            if(field > 0.80f) return WHBlocksEnvironment.darkRock;
-            if(field < -0.82f && temp < 0.56f) return WHBlocksEnvironment.oreSalt;
+            if (field > 1.08f && temp > 0.48f) return WHBlocksEnvironment.oreShale1;
+            if (field > 0.86f) return WHBlocksEnvironment.darkRock;
+            return floor;
+        }
+
+        if (floor == WHBlocksEnvironment.scorchedEarth) {
+            if (field > 0.86f) return WHBlocksEnvironment.scorchedEarthFloor;
+            if (field < -0.82f) return WHBlocksEnvironment.scorchedStone;
+            return floor;
+        }
+
+        if (floor == WHBlocksEnvironment.scorchedEarthFloor) {
+            if (field > 0.78f) return WHBlocksEnvironment.scorchedStone;
+            if (field < -0.72f) return WHBlocksEnvironment.trachyte;
+            return floor;
+        }
+
+        if (floor == WHBlocksEnvironment.scorchedStone) {
+            if (field < -0.76f) return WHBlocksEnvironment.darkHotRock;
             return floor;
         }
 
@@ -203,7 +280,6 @@ public class KarvexSurfaceProfile{
 
         return floor;
     }
-
     private Block applyCoastalRadiation(int seed, float px, float py, float pz, float height, Block floor){
         if(floor == null || !floor.asFloor().hasSurface() || floor.asFloor().isLiquid) return floor;
         if(height > seaLevel + 0.09f) return floor;
@@ -219,51 +295,37 @@ public class KarvexSurfaceProfile{
     private Block[][] createSurfaceLut(){
         Block rwd = WHBlocksEnvironment.radiationWaterDeep;
         Block rw = WHBlocksEnvironment.radiationWater;
+        Block ewd = WHBlocksEnvironment.effluentDeep;
+        Block ew = WHBlocksEnvironment.effluent;
         Block rsw = WHBlocksEnvironment.radiationSandWater;
         Block rs = WHBlocksEnvironment.radiationSand;
         Block rrf = WHBlocksEnvironment.radiationRockFloor;
         Block rrc = WHBlocksEnvironment.radiationCraters;
 
-        Block ap = WHBlocksEnvironment.apatiteCoarse;
-        Block ce = WHBlocksEnvironment.cementFloor;
-        Block gv = WHBlocksEnvironment.gravel;
-
-        Block mf = WHBlocksEnvironment.darkMineralFloor;
         Block ms = WHBlocksEnvironment.mineralSand;
+        Block msf = WHBlocksEnvironment.mineralSandFloor;
+        Block dmf = WHBlocksEnvironment.darkMineralFloor;
         Block mss = WHBlocksEnvironment.darkMineralSandstone;
-
-        Block os = WHBlocksEnvironment.oreSalt;
         Block tr = WHBlocksEnvironment.trachyte;
         Block dr = WHBlocksEnvironment.darkRock;
-        Block sh = WHBlocksEnvironment.oreShale;
-
-        Block mnf = WHBlocksEnvironment.manganeseFloor;
-        Block mns = WHBlocksEnvironment.manganeseStone;
-        Block chf = WHBlocksEnvironment.chromiteFloor;
-        Block chd = WHBlocksEnvironment.chromiteFloorDark;
-        Block chs = WHBlocksEnvironment.chromiteStone;
-        Block cof = WHBlocksEnvironment.cobaltFloor;
-        Block cos = WHBlocksEnvironment.cobaltStone;
-
-        Block se = WHBlocksEnvironment.scorchedEarth;
-        Block ss = WHBlocksEnvironment.scorchedStone;
         Block hr = WHBlocksEnvironment.darkHotRock;
         Block mr = WHBlocksEnvironment.darkMagmaRock;
+        Block slag = Blocks.slag;
 
         return new Block[][]{
-        {rwd, rw, rsw, rs, rs, mf, mf, mf, ce, ap, gv, mss, tr},
-        {rwd, rw, rsw, rs, rs, mf, mf, mf, ap, ce, gv, mss, tr},
-        {rwd, rw, rsw, rs, rs, mf, mf, mf, mf, ms, os, tr, dr},
-        {rw, rw, rsw, rs, rs, mf, mf, mf, ms, os, tr, dr, dr},
-        {rw, rsw, rs, rs, mf, mf, mf, ms, os, ms, tr, dr, mnf},
-        {rsw, rs, rs, rs, mf, mf, mf, ms, mss, tr, dr, mnf, chf},
-        {rsw, rs, rs, mf, mf, mf, ms, mss, tr, dr, mnf, mns, chd},
-        {rs, rs, mf, mf, mf, mf, ms, mss, tr, dr, mnf, chf, chd},
-        {rs, mf, mf, mf, mf, ms, mss, tr, dr, sh, chf, chd, cof},
-        {mf, mf, mf, mf, ms, os, tr, dr, sh, chf, chd, cof, cos},
-        {mf, mf, mf, ms, mss, tr, dr, sh, chd, chf, chs, cof, se},
-        {mf, mf, ms, mss, tr, dr, sh, chd, chf, chs, cof, cos, ss},
-        {mf, ms, mss, tr, dr, sh, chf, chd, chs, cof, cos, rrf, hr}
+                {rwd, rw, rsw, rs, rs, ms, ms, ms, msf, dmf, tr, mss, tr},
+                {ewd, ew, rsw, rs, ms, ms, ms, dmf, tr, tr, mss, tr, tr},
+                {rsw, rs, rs, ms, ms, ms, msf, dmf, tr, tr, mss, tr, tr},
+                {rs, rs, ms, ms, ms, msf, dmf, tr, tr, tr, mss, tr, tr},
+                {rs, ms, ms, ms, dmf, msf, msf, tr, tr, mss, tr, tr, rrf},
+                {rs, ms, ms, ms, msf, dmf, tr, tr, tr, mss, tr, rrf, rrf},
+                {ms, ms, ms, ms, msf, msf, tr, tr, tr, tr, rrf, rrf, rrc},
+                {ms, ms, ms, msf, msf, tr, tr, tr, tr, rrf, rrf, rrc, rrc},
+                {ms, ms, msf, msf, tr, tr, tr, tr, mss, rrf, rrf, rrc, rrc},
+                {ms, msf, msf, tr, tr, tr, tr, mss, mss, rrf, rrc, rrc, hr},
+                {msf, msf, tr, tr, tr, tr, mss, mss, rrf, rrc, rrc, hr, mr},
+                {msf, tr, tr, tr, mss, mss, mss, rrf, rrf, rrc, hr, mr, slag},
+                {tr, tr, tr, mss, mss, mss, rrf, rrf, rrc, hr, mr, slag, slag}
         };
     }
 }

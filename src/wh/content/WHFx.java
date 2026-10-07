@@ -86,6 +86,7 @@ public final class WHFx {
     public static Effect attackWarningRange;
     public static Effect attackWarningPos;
 
+    public static Effect PlasmaFireSmoke;
     public static Effect PlasmaFireBurn;
     public static Effect shareDamage;
     public static Effect tentacleCoronaHeat;
@@ -487,7 +488,6 @@ public final class WHFx {
     }
 
 
-
     public static Effect smoothColorRect(float lifetime, Color out, float rad) {
         return new Effect(lifetime, rad * 2, e -> {
             blend(Blending.additive);
@@ -628,6 +628,33 @@ public final class WHFx {
             float scale = 0.4f;
             for (int i = 0; i < 4; i++) {
                 Drawf.tri(e.x, e.y, scale * size / 15f, scale * size * e.fout(), i * 90 + ang);
+            }
+
+            Drawf.light(e.x, e.y, size * 1.1f, color, e.fout());
+        });
+    }
+
+    public static Effect instRotation2(float lifetime, Color color, float size, float xScl, float yScl, float rotateAngle, boolean rotate) {
+        return new Effect(lifetime, size * 1.6f, e -> {
+            rand.setSeed(e.id);
+            float ang = rotate ? rand.random(0, 180f) * e.fin(Interp.smooth) + rotateAngle : rotateAngle;
+            Draw.color(color);
+            for (int i = 0; i < 4; i++) {
+                if (i == 1 || i == 3) {
+                    Drawf.tri(e.x, e.y, size / 15f, size * e.fout() * xScl, i * 90 + ang);
+                } else {
+                    Drawf.tri(e.x, e.y, size / 15f, size * e.fout() * yScl, i * 90 + ang);
+                }
+            }
+
+            Draw.color();
+            float scale = 0.4f;
+            for (int i = 0; i < 4; i++) {
+                if (i == 1 || i == 3) {
+                    Drawf.tri(e.x, e.y, scale * size / 15f, scale * size * e.fout() * xScl, i * 90 + ang);
+                } else {
+                    Drawf.tri(e.x, e.y, scale * size / 15f, scale * size * e.fout() * yScl, i * 90 + ang);
+                }
             }
 
             Drawf.light(e.x, e.y, size * 1.1f, color, e.fout());
@@ -1097,7 +1124,6 @@ public final class WHFx {
                 int intensity = WHSettings.detailCount(5, 1);
                 randLenVectors(e.id, intensity, range + e.fin() * 18f, (x, y) -> {
                     color(color);
-                    stroke(stroke);
                     Fill.circle(e.x + x, e.y + y, size / 2 * 0.75f * e.fout(Interp.pow2Out) * Mathf.curve(e.fin(), 0, 0.1f));
                     poly(e.x + x, e.y + y, 6, size * e.fout(Interp.pow2Out) * Mathf.curve(e.fin(), 0, 0.1f), 60);
                     Drawf.light(e.x + x, e.y + y, size, color, 0.5f);
@@ -1373,7 +1399,7 @@ public final class WHFx {
             float random = rand.random(0f, 0.5f);
             float offset = ((float) index / amount) * 360f;
             float speed = rand.random(0.8f, 1.5f);
-            float angle = e.time * 4f * speed + offset + random * 90f;
+            float angle = e.time * 4f * speed + offset + rand.random(360f);
             float radius = range * e.fout(Interp.pow2In) + random * range;
             trail.length = (int) (fee * len);
             eachHeightVector(e.id + index * 31L, 1, radius, angle, 0f, rand.random(10f, 30f) * e.fout(), 1f, (vx, vy, height) -> {
@@ -1811,8 +1837,15 @@ public final class WHFx {
             Fill.circle(last.x, last.y, getStroke() / 2);
         })).layer(Layer.effect - 0.001f);
 
+        PlasmaFireSmoke = (new Effect(25, (e) -> {
+            color(Color.gray);
+            randLenVectors(e.id, 2, 2.0F + e.fin() * 7.0F, (x, y) -> {
+                Fill.poly(e.x + x, e.y + y, 6, 0.2F + e.fout() * 4f, 45);
+            });
+        }));
 
-        PlasmaFireBurn = (new Effect(25.0F, (e) -> {
+
+        PlasmaFireBurn = (new Effect(25, (e) -> {
             color(WHPal.SkyBlue, Color.gray, e.fin() * 0.75F);
             randLenVectors(e.id, 2, 2.0F + e.fin() * 7.0F, (x, y) -> {
                 Fill.poly(e.x + x, e.y + y, 6, 0.2F + e.fout() * 4f, 45);

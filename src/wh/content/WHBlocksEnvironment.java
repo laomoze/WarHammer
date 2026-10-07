@@ -1,6 +1,7 @@
 package wh.content;
 
 import arc.graphics.Color;
+import mindustry.content.Blocks;
 import mindustry.content.Items;
 import mindustry.content.StatusEffects;
 import mindustry.graphics.CacheLayer;
@@ -768,7 +769,7 @@ public class WHBlocksEnvironment {
         ((WHShallowLiquid) mineralSandEffluentWater).set(effluent, mineralSand);
         ((WHShallowLiquid) mineralSandRadiationWater).set(radiationWater, mineralSand);
         ((WHShallowLiquid) radiationSandWater).set(radiationWater, radiationSand);
-        ((WHShallowLiquid) oilMineralSandWater).set(effluent, oilMineralSand);
+        ((WHShallowLiquid) oilMineralSandWater).set(Blocks.tar, oilMineralSand);
         ((WHShallowLiquid) rustSandWater).set(effluent, rustSand);
 
     }

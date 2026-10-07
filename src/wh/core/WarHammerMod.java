@@ -43,6 +43,8 @@ import wh.net.packet.*;
 
 import java.util.Arrays;
 
+import static wh.content.WHBlocks.applyCalculatedResearchCostMultipliers;
+
 public class WarHammerMod extends Mod {
     public static String ModName = "wh";
     private static final String qqGroupId = "316481519";
@@ -315,6 +317,7 @@ public class WarHammerMod extends Mod {
         WHOverride.load();
         WHMaps.load();
         applyTauntTargetPriority();
+        applyCalculatedResearchCostMultipliers();
     }
 
     private static final float markSortBias = 11451.4f;

@@ -214,13 +214,6 @@ public class PsychicUnitFactory extends UnitFactory {
         }
 
         @Override
-        public void energyMoved(PsychicNetworkNode other, float amount, boolean incoming) {
-            if (incoming && amount > PsychicNetworkNode.epsilon) {
-                overload += amount / Math.max(psychicCapacity, 1f) * 0.08f;
-            }
-        }
-
-        @Override
         public void onEnergyOverload(float amount) {
             overload = Math.max(overload + amount, 0f);
         }

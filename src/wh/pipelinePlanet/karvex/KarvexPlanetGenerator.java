@@ -5,7 +5,6 @@ import arc.files.Fi;
 import arc.graphics.Color;
 import arc.math.Mathf;
 import arc.math.geom.Vec3;
-import arc.struct.Seq;
 import arc.util.Nullable;
 import arc.util.Time;
 import arc.util.noise.Ridged;
@@ -38,7 +37,6 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
     private static final String LEGACY_DEFAULT_LOADOUT_BASE64 = "bXNjaAF4nGNgYWABorzE3FQGtmLd5PyiVAau5Py8ktS8Et/EAgam6loG7pTU4uSizIKSzPw8BgYGtpzEpNScYgbW6PcLl8cyMnCWZ+hCdTIwMIIQkAAAE/MWnA==";
 
     protected final KarvexSurfaceProfile surfaceProfile = new KarvexSurfaceProfile();
-    protected final Seq<Sector> emptySectors = new Seq<>();
 
     public KarvexPlanetGenerator(){
         configureGenerationDefaults();
@@ -77,9 +75,10 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
         .add(new KarvexHydrologyPass())
         .add(new GameplayFixPass())
         .add(new KarvexVentPass())
-        .add(new KarvexMapValidationPass())
+                .add(new KarvexMapValidationPass())
                 .add(new TechGridPass())
-        .add(decoration)
+                .add(new KarvexOrePass())
+                .add(decoration)
         .add(new KarvexFinalizePass(defaultLoadout));
     }
 
@@ -206,12 +205,12 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
 
     @Override
     public void getColor(Vec3 position, Color out){
-        surfaceProfile.sampleSurfaceColor(seed, position, renderSectors(), out);
+        surfaceProfile.sampleSurfaceColor(seed, position, out);
     }
 
     @Override
     public void getEmissiveColor(Vec3 position, Color out){
-        Block block = surfaceProfile.selectSurfaceBlock(seed, position, renderSectors(), true);
+        Block block = surfaceProfile.selectSurfaceBlock(seed, position, true);
         float pulse = 0.78f + Simplex.noise3d(seed + 77, 1, 1f, 8.2f, position.x, position.y + 41f, position.z) * 0.22f;
 
         out.set(0f, 0f, 0f, 0f);
@@ -221,6 +220,8 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
             out.set(0.94f, 0.63f, 0.30f, 1f).mul(0.24f * pulse);
         }else if(isPollutedLiquid(block)){
             out.set(0.30f, 0.58f, 0.82f, 1f).mul(0.19f * pulse);
+        } else if (block == Blocks.tar || block == WHBlocksEnvironment.oilMineralSandWater) {
+            out.set(0.32f, 0.27f, 0.16f, 1f).mul(0.12f * pulse);
         }else if(block == Blocks.slag){
             out.set(0.95f, 0.44f, 0.16f, 1f).mul(0.16f * pulse);
         }
@@ -228,7 +229,7 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
 
     @Override
     protected void genTile(Vec3 position, TileGen tile){
-        tile.floor = surfaceProfile.selectSurfaceBlock(seed, position, renderSectors(), false);
+        tile.floor = surfaceProfile.selectSurfaceBlock(seed, position, false);
         tile.overlay = Blocks.air;
 
         Block wall = resolveWall(tile.floor);
@@ -273,10 +274,6 @@ public class KarvexPlanetGenerator extends PipelinePlanetGenerator{
         return Blocks.air;
     }
 
-    protected Seq<Sector> renderSectors(){
-        if(sector != null && sector.planet != null) return sector.planet.sectors;
-        return emptySectors;
-    }
 
     @Override
     public int getSectorSize(Sector sector){

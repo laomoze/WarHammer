@@ -240,7 +240,7 @@ public abstract class PsychicBlock extends Block {
 
         @Override
         public boolean outputEnergy() {
-            return PsychicBlock.this.outputsPsychicLinks && enabled && psychicStored() > PsychicNetworkNode.epsilon;
+            return PsychicBlock.this.outputsPsychicLinks && psychicStored() > PsychicNetworkNode.epsilon;
         }
 
         @Override
@@ -284,12 +284,6 @@ public abstract class PsychicBlock extends Block {
         }
 
         @Override
-        public void energyMoved(PsychicNetworkNode other, float amount, boolean incoming) {
-            if (amount <= PsychicNetworkNode.epsilon || psychicCapacity() <= PsychicNetworkNode.epsilon) return;
-            addPsychicOverload(amount / psychicCapacity() * (incoming ? 0.08f : 0.05f));
-        }
-
-        @Override
         public void onEnergyOverload(float amount) {
             addPsychicOverload(amount);
         }
@@ -318,7 +312,10 @@ public abstract class PsychicBlock extends Block {
                 damage(severity * exposureScale * PsychicBlock.this.overloadHealthLoss / 60f * delta());
             }
 
-            overload = Mathf.approachDelta(overload, 0f, PsychicBlock.this.overloadDecay);
+            if (shouldDecayPsychicOverload()) {
+                overload = Mathf.approachDelta(overload, 0f, PsychicBlock.this.overloadDecay);
+            }
+
             networkStability = Mathf.approachDelta(networkStability, 0f, 0.02f);
             pressureBoost = Mathf.approachDelta(pressureBoost, 0f, 0.035f);
             psychic.clamp(psychicCapacity());
@@ -346,6 +343,10 @@ public abstract class PsychicBlock extends Block {
         protected float consumeProgressFraction() {
             if (!PsychicBlock.this.hasItemOrLiquidRecipe()) return 0f;
             return Mathf.clamp(consumeProgress / Math.max(PsychicBlock.this.consumeCraftTime, 0.0001f));
+        }
+
+        protected boolean shouldDecayPsychicOverload() {
+            return true;
         }
 
         protected boolean shouldTakeOverloadDamage() {
@@ -426,7 +427,7 @@ public abstract class PsychicBlock extends Block {
                 psychic.read(read);
             }
 
-            overload = revision >= 2 ? Math.max(read.f(), 0f) : 0f;
+            overload = revision >= 2 ? Mathf.clamp(Math.max(read.f(), 0f)) : 0f;
 
             if (revision == 3) {
                 read.f();

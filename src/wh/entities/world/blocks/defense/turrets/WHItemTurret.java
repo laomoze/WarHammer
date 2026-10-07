@@ -14,6 +14,7 @@ public class WHItemTurret extends ItemTurret{
         outlineColor = WHPal.Outline;
         outlineRadius = 3;
         squareSprite = false;
+        depositCooldown = 1.5f;
     }
 
     public static void intTurret(Turret turret){

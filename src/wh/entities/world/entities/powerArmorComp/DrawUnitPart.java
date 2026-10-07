@@ -1,9 +1,12 @@
 package wh.entities.world.entities.powerArmorComp;
 
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.struct.*;
-import arc.util.*;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.struct.Seq;
+import arc.util.Time;
+import mindustry.gen.MechUnit;
+import mindustry.type.UnitType;
 
 public abstract class DrawUnitPart{
     public static final UnitPartParams params = new UnitPartParams();
@@ -14,6 +17,7 @@ public abstract class DrawUnitPart{
     public int weaponIndex = 0;
     /** Which recoil counter to use. < 0 to use base recoil. */
     public int recoilIndex = -1;
+    public int comboIndex = -1;
 
     public boolean turretShading;
 
@@ -27,14 +31,20 @@ public abstract class DrawUnitPart{
 
     /** Parameters for drawing a part in draw(). */
     public static class UnitPartParams{
-        public PowerArmourUnit unit;
-        public PowerArmourUnitType type;
+        public MechUnit unit;
+        public UnitType type;
         public float warmup, reload, smoothReload, heat, recoil, life, charge, actionTime;
-        public float smoothHeat;
+        public float smoothHeat, bodyMove;
         public float x, y, rotation;
+        public int modeIndex = -1;
+        /**
+         * 用于计算部件附着点的方向，与部件自身绘制方向分离。
+         */
+        public float positionRotation;
+        public float motionX, motionY, motionRotation;
         public int sideOverride = -1, sideMultiplier = 1;
 
-        public UnitPartParams set(PowerArmourUnit unit, PowerArmourUnitType type, float warmup, float reload, float smoothReload, float smoothHeat,
+        public UnitPartParams set(MechUnit unit, UnitType type, float bodyMove, float warmup, float reload, float smoothReload, float smoothHeat,
                                   float heat, float recoil, float charge, float actionTime, float x, float y, float rotation){
 
             this.unit = unit;
@@ -46,19 +56,25 @@ public abstract class DrawUnitPart{
             this.recoil = recoil;
             this.smoothReload = smoothReload;
             this.smoothHeat = smoothHeat;
+            this.bodyMove = bodyMove;
             this.charge = charge;
             this.actionTime = actionTime;
             this.x = x;
             this.y = y;
             this.rotation = rotation;
+            this.positionRotation = rotation;
+            this.modeIndex = -1;
+            this.motionX = 0f;
+            this.motionY = 0f;
+            this.motionRotation = 0f;
             this.sideOverride = -1;
             this.life = 0f;
             this.sideMultiplier = 1;
             return this;
         }
 
-        public UnitPartParams setRecoil(float recoils){
-            this.recoil = recoils;
+        public UnitPartParams setRecoil(float recoil) {
+            this.recoil = recoil;
             return this;
         }
     }
@@ -67,10 +83,10 @@ public abstract class DrawUnitPart{
         public UnitPartProgress progress = UnitPartProgress.warmup;
         public float x, y, gx, gy, rot;
 
-        public PowerArmourUnit unit;
-        public PowerArmourUnitType type;
+        public MechUnit unit;
+        public UnitType type;
 
-        public UnitPartMove(PowerArmourUnit unit, PowerArmourUnitType type, UnitPartProgress progress, float x, float y, float gx, float gy, float rot){
+        public UnitPartMove(MechUnit unit, UnitType type, UnitPartProgress progress, float x, float y, float gx, float gy, float rot){
             this.progress = progress;
             this.x = x;
             this.y = y;
@@ -137,8 +153,8 @@ public abstract class DrawUnitPart{
             return clamp ? Mathf.clamp(get(p)) : get(p);
         }
 
-        static UnitPartProgress moveSin(float moveScl){
-            return p -> Mathf.sin(moveScl * Mathf.pi, 1 * p.unit.bodyMove);
+        static UnitPartProgress moveSin(float moveScl) {
+            return p -> Mathf.sin(moveScl * Mathf.pi, p.bodyMove);
         }
 
         default UnitPartProgress inv(){

@@ -23,15 +23,27 @@ public class WHShallowLiquid extends ShallowLiquid {
             return;
         }
 
-        var overlay = Core.atlas.getPixmap(liquidBase.region);
+        TextureRegion overlayRegion = liquidBase.region == null ? Core.atlas.find(liquidBase.name) : liquidBase.region;
+        var overlay = overlayRegion == null ? null : packer.get(overlayRegion);
         Pixmap firstProcessed = null;
         int index = 0;
 
         for (TextureRegion region : floorBase.variantRegions()) {
-            var res = Core.atlas.getPixmap(region).crop();
-            for (int x = 0; x < res.width; x++) {
-                for (int y = 0; y < res.height; y++) {
-                    res.setRaw(x, y, Pixmap.blend((overlay.getRaw(x, y) & 0xffffff00) | (int) (liquidOpacity * 255), res.getRaw(x, y)));
+            if (region == null) {
+                continue;
+            }
+
+            var source = packer.get(region);
+            if (source == null) {
+                continue;
+            }
+
+            var res = source.crop();
+            if (overlay != null) {
+                for (int x = 0; x < res.width; x++) {
+                    for (int y = 0; y < res.height; y++) {
+                        res.setRaw(x, y, Pixmap.blend((overlay.getRaw(x % overlay.width, y % overlay.height) & 0xffffff00) | (int) (liquidOpacity * 255), res.getRaw(x, y)));
+                    }
                 }
             }
 

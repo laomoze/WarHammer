@@ -1,7 +1,6 @@
 package wh.entities.world.Psy;
 
 import arc.Core;
-import arc.graphics.g2d.TextureRegion;
 import arc.math.Mathf;
 import arc.struct.IntFloatMap;
 import arc.util.Strings;
@@ -26,7 +25,7 @@ public class PsychicRegenProjectorBlock extends RegenProjector {
 
     public float psychicCapacity = 120f;
     public float psychicUse = 0.8f;
-    public String fallbackRegionName = "wrap-projector";
+    public float psychicRepairMultiplier = 2.5f;
 
     public PsychicRegenProjectorBlock(String name) {
         super(name);
@@ -35,11 +34,6 @@ public class PsychicRegenProjectorBlock extends RegenProjector {
     @Override
     public void load() {
         super.load();
-
-        TextureRegion fallback = Core.atlas.find(fallbackRegionName, region);
-        if (region == null || !region.found()) {
-            region = fallback;
-        }
     }
 
     @Override
@@ -71,9 +65,18 @@ public class PsychicRegenProjectorBlock extends RegenProjector {
     public class PsychicRegenProjectorBuild extends RegenProjectorBuild implements PsychicNetworkNode {
         public final PsychicModule psychic = new PsychicModule();
         public float lastUse;
+        public float repairSpeedBoost = 1f;
 
         public float psychicStored() {
             return psychic.amount();
+        }
+
+        public float repairSpeedMultiplier() {
+            return Math.max(repairSpeedBoost, 1f);
+        }
+
+        public void boostRepairSpeed(float multiplier) {
+            repairSpeedBoost = Math.max(repairSpeedBoost, multiplier);
         }
 
         public float psychicFraction() {
@@ -93,6 +96,7 @@ public class PsychicRegenProjectorBlock extends RegenProjector {
             anyTargets = false;
 
             psychic.clamp(psychicCapacity);
+            repairSpeedBoost = Mathf.approachDelta(repairSpeedBoost, 1f, 0.035f);
 
             if (checkSuppression()) {
                 lastUse = 0f;
@@ -104,18 +108,22 @@ public class PsychicRegenProjectorBlock extends RegenProjector {
             float used = 0f;
             if (efficiency > 0f && anyTargets) {
                 float required = psychicUse / 60f * edelta();
-
-                if (required <= 0.0001f || psychic.remove(required) >= required * 0.999f) {
+                boolean psychicBoosted = required > 0.0001f && psychic.has(required);
+                if (psychicBoosted) {
+                    psychic.remove(required);
                     used = required;
+                }
 
-                    if ((optionalTimer += edelta() * optionalEfficiency) >= optionalUseTime) {
-                        consume();
-                        optionalTimer = 0f;
-                    }
+                if ((optionalTimer += edelta() * optionalEfficiency) >= optionalUseTime) {
+                    consume();
+                    optionalTimer = 0f;
+                }
 
-                    float healAmount = Mathf.lerp(1f, optionalMultiplier, optionalEfficiency) * healPercent;
+                float healAmount = Mathf.lerp(1f, optionalMultiplier, optionalEfficiency) * healPercent;
+                if (psychicBoosted) healAmount *= psychicRepairMultiplier;
+                healAmount *= repairSpeedMultiplier();
 
-                    for (var build : targets) {
+                for (var build : targets) {
                         if (!build.damaged() || build.isHealSuppressed()) continue;
 
                         didRegen = true;
@@ -129,7 +137,6 @@ public class PsychicRegenProjectorBlock extends RegenProjector {
                         }
                     }
                 }
-            }
 
             lastUse = Mathf.lerpDelta(lastUse, used / Math.max(delta(), 0.0001f), 0.18f);
 
@@ -173,7 +180,7 @@ public class PsychicRegenProjectorBlock extends RegenProjector {
 
         @Override
         public byte version() {
-            return 1;
+            return 2;
         }
 
         @Override
@@ -181,13 +188,20 @@ public class PsychicRegenProjectorBlock extends RegenProjector {
             super.write(write);
             psychic.write(write);
             write.f(lastUse);
+            write.f(repairSpeedBoost);
         }
 
         @Override
         public void read(Reads read, byte revision) {
             super.read(read, revision);
-            psychic.read(read);
-            lastUse = revision >= 1 ? read.f() : 0f;
+            if (revision >= 1) {
+                psychic.read(read);
+                lastUse = read.f();
+            } else {
+                psychic.clear();
+                lastUse = 0f;
+            }
+            repairSpeedBoost = revision >= 2 ? Math.max(read.f(), 1f) : 1f;
         }
     }
 }

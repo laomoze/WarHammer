@@ -1,13 +1,21 @@
 package wh.entities.world.entities.powerArmorComp;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.struct.*;
-import arc.util.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
+import arc.Core;
+import arc.graphics.Blending;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.struct.Seq;
+import arc.util.Interval;
+import arc.util.Nullable;
+import arc.util.Tmp;
+import mindustry.gen.MechUnit;
+import mindustry.gen.Unit;
+import mindustry.graphics.Drawf;
+import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
 
 public class UnitRegionPart extends DrawUnitPart{
     protected UnitPartParams childParam = new UnitPartParams();
@@ -35,6 +43,11 @@ public class UnitRegionPart extends DrawUnitPart{
     public boolean heatLight = false;
     /** Whether to clamp progress to (0-1). If false, allows usage of interps that go past the range, but may have unwanted visual bugs depending on values. */
     public boolean clampProgress = true;
+    /**
+     * 是否继承父部件的绘制方向；关闭后仍跟随父部件位置，但使用自身方向。
+     */
+    public boolean inheritParentDirection = true;
+    public boolean inheritParentMotion = true;
     /** Progress function for determining position/rotation. */
     public UnitPartProgress progress = UnitPartProgress.warmup;
     /** Progress function for scaling. */
@@ -81,10 +94,10 @@ public class UnitRegionPart extends DrawUnitPart{
     }
 
     @Override
-    public void draw(UnitPartParams params){
+    public void draw(UnitPartParams params) {
 
-        PowerArmourUnit unit = params.unit;
-        PowerArmourUnitType type = params.type;
+        MechUnit unit = params.unit;
+        mindustry.type.UnitType type = params.type;
 
         float z = Draw.z();
         if(layer > 0) Draw.z(layer);
@@ -99,7 +112,7 @@ public class UnitRegionPart extends DrawUnitPart{
 
 
         float prog = progress.getClamp(params, clampProgress), sclProg = growProgress.getClamp(params, clampProgress);
-        float mx = moveX * prog + ax, my = moveY * prog + ay, mr = moveRot * prog + rotation + aRot,
+        float mx = moveX * prog + ax + params.motionX, my = moveY * prog + ay + params.motionY, mr = moveRot * prog + rotation + aRot + params.motionRotation,
         gx = growX * sclProg + agx, gy = growY * sclProg + agy;
 
         if(moves.size > 0){
@@ -127,7 +140,9 @@ public class UnitRegionPart extends DrawUnitPart{
             var region = drawRegion && regions.length > 0 ? regions[Math.min(i, regions.length - 1)] : null;
             var cellRegion = drawRegion && cellRegions.length > 0 ? cellRegions[Math.min(i, cellRegions.length - 1)] : null;
             float sign = (i == 0 ? 1 : -1) * params.sideMultiplier;
-            Tmp.v1.set((x + mx) * sign, y + my).rotateRadExact((params.rotation - 90) * Mathf.degRad);
+            Tmp.v1.set(x * sign, y).rotateRadExact((params.positionRotation - 90) * Mathf.degRad);
+            Tmp.v2.set(mx * sign, my).rotateRadExact((params.rotation - 90) * Mathf.degRad);
+            Tmp.v1.add(Tmp.v2);
 
             Draw.xscl *= sign;
 
@@ -142,14 +157,14 @@ public class UnitRegionPart extends DrawUnitPart{
             float boostTrns = e * 2f;
             float swingX = swingFront ? extension * r - boostTrns : 0, swingY = swingFront ? -boostTrns * r : 0;
             float moveSin = moveSinProgress.getClamp(params, false);
-            float sx = Angles.trnsx(params.rotation + mr + moveSin * sinAngle * unit.bodyMove, swingX, swingY) * sinAngle * unit.bodyMove * swingScl;
-            float sy = Angles.trnsy(params.rotation + mr + moveSin * sinAngle * unit.bodyMove, swingX, swingY) * sinAngle * unit.bodyMove * swingScl;
-            float sGrow = (1 - Math.max(-unit.bodyMove * i, 0) * 0.5f) * swingScl;
+            float sx = Angles.trnsx(params.rotation + mr + moveSin * sinAngle * params.bodyMove, swingX, swingY) * sinAngle * params.bodyMove * swingScl;
+            float sy = Angles.trnsy(params.rotation + mr + moveSin * sinAngle * params.bodyMove, swingX, swingY) * sinAngle * params.bodyMove * swingScl;
+            float sGrow = (1 - Math.max(-params.bodyMove * i, 0) * 0.5f) * swingScl;
 
             float rx, ry, rot;
             rx = params.x + sx + Tmp.v1.x;
             ry = params.y + sy + Tmp.v1.y;
-            rot = mr * sign + params.rotation - 90 + moveSin * sinAngle * unit.bodyMove;
+            rot = mr * sign + params.rotation - 90 + moveSin * sinAngle * params.bodyMove;
 
             Draw.xscl *= xScl + sinGrowX * sGrow;
             Draw.yscl *= yScl + sinGrowY * sGrow;
@@ -207,23 +222,47 @@ public class UnitRegionPart extends DrawUnitPart{
             for(int s = 0; s < len; s++){
                 int i = (params.sideOverride == -1 ? s : params.sideOverride);
                 float sign = (i == 1 ? -1 : 1) * params.sideMultiplier;
-                Tmp.v1.set((x + mx) * sign, y + my).rotateRadExact((params.rotation - 90) * Mathf.degRad);
+                float parentBaseDirection = rotation * sign + params.rotation;
+                float parentDirection = mr * sign + params.rotation;
+                float childX = inheritParentMotion ? x + mx : x;
+                float childY = inheritParentMotion ? y + my : y;
+                float childPositionDirection = inheritParentMotion ? parentDirection : parentBaseDirection;
+                Tmp.v1.set(childX * sign, childY).rotateRadExact((params.rotation - 90) * Mathf.degRad);
 
                 float chargeTime = 1f, smothHeat = 1f;
                 if(unit.mounts.length > 0){
                     var source = unit.mounts[0];
-                    PowerArmourWeaponData data = PowerArmourWeaponData.get(source.weapon);
-                    PowerArmourUnit.WeaponAnimState state = unit.weaponAnimState(0);
-                    if(data != null && data.melee && state != null){
-                        chargeTime = state.actionProgress;
-                        smothHeat = state.smoothHeat;
+                    if (unit instanceof PowerArmourUnit powerUnit) {
+                        PowerArmourWeaponData data = PowerArmourWeaponData.get(source.weapon);
+                        PowerArmourUnit.WeaponAnimState state = powerUnit.weaponAnimState(0);
+                        if (data != null && data.melee && state != null) {
+                            chargeTime = state.actionProgress;
+                            smothHeat = state.smoothHeat;
+                        }
+                    } else if (unit instanceof MultiModePowerArmourUnit multiUnit) {
+                        chargeTime = multiUnit.comboProgress();
                     }
                 }
-                childParam.set(unit, type, params.warmup, params.reload, params.smoothReload, params.heat, params.recoil, params.charge, smothHeat, chargeTime, params.x + Tmp.v1.x, params.y + Tmp.v1.y, mr * sign + params.rotation);
-                childParam.sideMultiplier = params.sideMultiplier;
-                childParam.life = params.life;
-                childParam.sideOverride = i;
-                for(var child : children){
+                for (var child : children) {
+                    boolean inheritParentDirection = !(child instanceof UnitRegionPart childPart) || childPart.inheritParentDirection;
+                    float childDirection = inheritParentDirection ? childPositionDirection : params.rotation;
+                    childParam.set(unit, type, params.bodyMove, params.warmup, params.reload, params.smoothReload, smothHeat, params.heat, params.recoil, params.charge, chargeTime, params.x + Tmp.v1.x, params.y + Tmp.v1.y, childDirection);
+                    childParam.positionRotation = childPositionDirection;
+                    childParam.motionX = 0f;
+                    childParam.motionY = 0f;
+                    childParam.motionRotation = 0f;
+                    childParam.sideMultiplier = params.sideMultiplier;
+                    childParam.life = params.life;
+                    childParam.modeIndex = params.modeIndex;
+                    childParam.sideOverride = i;
+                    if (unit instanceof MultiModePowerArmourUnit multiUnit
+                            && type instanceof MultiModePowerArmourUnitType
+                            && child.comboIndex >= 0) {
+                        var childPose = multiUnit.comboPose(child.comboIndex);
+                        childParam.motionX += childPose.x;
+                        childParam.motionY += childPose.y;
+                        childParam.motionRotation += childPose.rotation;
+                    }
                     child.draw(childParam);
                 }
             }

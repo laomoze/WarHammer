@@ -805,6 +805,8 @@ public final class KarvexTeachTree {
 
                         node(WHBlocks.t5Module, () -> {
                             node(WHBlocks.jumpBeacon, () -> {
+                                node(WHUnitTypes.MPsy, () -> {
+                                });
                                 node(WHUnitTypes.tankD1, () -> {
                                 });
                                 node(WHUnitTypes.tankD2, () -> {
@@ -812,9 +814,8 @@ public final class KarvexTeachTree {
                                 /*   node(WHUnitTypes.MEn1, () -> {});*/
                             });
                             node(WHBlocks.t6Module, () -> {
-                                node(WHBlocks.airborneDeploymentBeacon, () -> {
-
-                                });
+                              /*  node(WHBlocks.airborneDeploymentBeacon, () -> {
+                                });*/
 
                                 node(WHBlocks.energyWarpGate, () -> {
                                     node(WHUnitTypes.airB7, () -> {

@@ -39,8 +39,6 @@ public class MainRenderer{
     private final Vec2 hudLaunch = new Vec2();
     private final Vec2 hudTakeoffFrom = new Vec2();
     private final Vec2 hudTakeoffTo = new Vec2();
-    private final Vec2 hudVel = new Vec2();
-    private final Vec2 hudNose = new Vec2();
     public static MainRenderer renderer;
 
     public FrameBuffer buffer = new FrameBuffer();
@@ -56,7 +54,6 @@ public class MainRenderer{
 
     protected MainRenderer(){
         if(!Vars.headless){
-            WHShaders.createHoleShader();
             Events.run(EventType.Trigger.draw, this::draw);
         }
     }
@@ -153,6 +150,10 @@ public class MainRenderer{
             initFloat[i] = new float[i * 4];
             initStrength[i] = new float[i * 4];
         }
+
+        if (!Vars.headless && WHShaders.holeShader == null) {
+            WHShaders.createHoleShader();
+        }
     }
 
     public void drawShader(Shader shader, float layer, float range){
@@ -229,8 +230,9 @@ public class MainRenderer{
         });
 
         Draw.draw(Layer.space + 16, () -> {
-            int holeCount = holes.size;
-            if(holeCount >= WHShaders.MaxCont) WHShaders.createHoleShader();
+            if (holes.size >= WHShaders.MaxCont) WHShaders.createHoleShader();
+
+            int holeCount = Math.min(holes.size, WHShaders.MaxCont);
 
             //The capture buffer must be bound from the floor pass; otherwise skip to avoid stale-frame artifacts.
             if (!buffer.isBound()) {

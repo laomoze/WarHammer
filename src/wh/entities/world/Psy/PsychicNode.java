@@ -594,8 +594,7 @@ public class PsychicNode extends PsychicBlock {
 
 
         protected float transferBudget() {
-            float overloadSpeed = 1f + Mathf.clamp(overload) * overloadTransferSpeedBoost;
-            return transferRate / 60f * delta() * overloadSpeed;
+            return transferRate / 60f * delta();
         }
 
         protected void updateTransferOverload() {
@@ -606,6 +605,12 @@ public class PsychicNode extends PsychicBlock {
             if (excess > PsychicNetworkNode.epsilon) {
                 addPsychicOverload(excess * overloadFlowGain / 60f * delta());
             }
+        }
+
+        @Override
+        protected boolean shouldDecayPsychicOverload() {
+            if (transferRate <= PsychicNetworkNode.epsilon) return true;
+            return ratePerSecond(Math.max(lastPull, lastPush)) <= transferRate + PsychicNetworkNode.epsilon;
         }
 
         public float displayFlowRate() {
@@ -926,8 +931,9 @@ public class PsychicNode extends PsychicBlock {
         protected void afterBeamTransfer(int direction, Building other, float amount, boolean pushing) {
             if (amount <= PsychicNetworkNode.epsilon || !WHSettings.effectEnabled()) return;
 
-            float normalized = Mathf.clamp(ratePerSecond(amount) / Math.max(transferRate, 0.0001f));
-            if (!Mathf.chanceDelta(overloadLightningChance * normalized)) return;
+            float normalized = ratePerSecond(amount) / Math.max(transferRate, 0.0001f);
+            float excess = Mathf.clamp(normalized - 1f);
+            if (excess <= PsychicNetworkNode.epsilon || !Mathf.chanceDelta(overloadLightningChance * excess)) return;
 
             Building from = pushing ? this : other;
             Building to = pushing ? other : this;

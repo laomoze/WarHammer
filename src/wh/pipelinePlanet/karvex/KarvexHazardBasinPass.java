@@ -28,6 +28,7 @@ public class KarvexHazardBasinPass implements GenPass{
     @Override
     public void apply(GenContext ctx){
         seedSlagAndHeat(ctx);
+        seedOilFields(ctx);
         seedTarAndPromethium(ctx);
         spreadHazards(ctx, 1);
         polishHazardEdges(ctx);
@@ -42,6 +43,7 @@ public class KarvexHazardBasinPass implements GenPass{
         for(Tile tile : ctx.tiles){
             if(tile.block() != Blocks.air) continue;
             if(!tile.floor().hasSurface() || tile.floor().isLiquid) continue;
+            if (!isHeatHost(tile.floor())) continue;
             if(isNearRoom(ctx, tile.x, tile.y, 24f, 14f)) continue;
             if(nearPollutedWater(ctx, tile.x, tile.y, 2)) continue;
 
@@ -64,6 +66,26 @@ public class KarvexHazardBasinPass implements GenPass{
         }
     }
 
+    private void seedOilFields(GenContext ctx) {
+        for (Tile tile : ctx.tiles) {
+            if (tile.block() != Blocks.air) continue;
+            if (!tile.floor().hasSurface() || tile.floor().isLiquid) continue;
+            if (isNearRoom(ctx, tile.x, tile.y, 20f, 12f)) continue;
+
+            Block floor = tile.floor();
+            if (!isOilHost(floor)) continue;
+
+            float oilA = sample(ctx, ctx.seed + 701, tile.x + 120f, tile.y - 280f, 3, 0.70f, 220f);
+            float oilB = sample(ctx, ctx.seed + 709, tile.x - 430f, tile.y + 160f, 2, 0.66f, 390f);
+            if (oilA < 0.82f || oilB < 0.12f) continue;
+
+            tile.setFloor(WHBlocksEnvironment.oilMineralSand.asFloor());
+            tile.setOverlay(Blocks.air);
+            if (oilA > 0.91f && oilB > 0.24f && ctx.rand.chance(0.46f)) {
+                tile.setFloor(WHBlocksEnvironment.oilMineralSandWater.asFloor());
+            }
+        }
+    }
     private void seedTarAndPromethium(GenContext ctx){
         for(Tile tile : ctx.tiles){
             if(tile.block() != Blocks.air) continue;
@@ -74,11 +96,6 @@ public class KarvexHazardBasinPass implements GenPass{
             float tarA = sample(ctx, ctx.seed + 451, tile.x + 90f, tile.y - 60f, 3, 0.70f, 190f);
             float tarB = sample(ctx, ctx.seed + 453, tile.x + 510f, tile.y + 730f, 2, 0.66f, 320f);
 
-            if((floor == WHBlocksEnvironment.darkRock || floor == WHBlocksEnvironment.trachyte)
-            && tarA > 0.78f && tarB > 0.18f){
-                tile.setFloor(WHBlocksEnvironment.oreShale.asFloor());
-                floor = tile.floor();
-            }
 
             if(isTarHost(floor) && tarA > 0.76f && tarB > 0.16f && !nearFloor(ctx, tile.x, tile.y, Blocks.slag, 2)){
                 tile.setFloor(Blocks.tar.asFloor());
@@ -655,6 +672,16 @@ public class KarvexHazardBasinPass implements GenPass{
         }
     }
 
+    private boolean isOilHost(Block floor) {
+        return floor == WHBlocksEnvironment.mineralSand
+                || floor == WHBlocksEnvironment.mineralSandFloor
+                || floor == WHBlocksEnvironment.darkMineralFloor
+                || floor == WHBlocksEnvironment.darkMineralSandstone
+                || floor == WHBlocksEnvironment.quartzSand
+                || floor == WHBlocksEnvironment.apatiteCoarse
+                || floor == WHBlocksEnvironment.rustSand
+                || floor == WHBlocksEnvironment.trachyte;
+    }
     private boolean isSlagBandFloor(Block floor){
         return floor == WHBlocksEnvironment.darkRock
         || floor == WHBlocksEnvironment.scorchedEarth;
@@ -666,12 +693,25 @@ public class KarvexHazardBasinPass implements GenPass{
 
     private boolean isPromethiumHost(Block floor){
         return floor == WHBlocksEnvironment.mineralSand
+                || floor == WHBlocksEnvironment.oilMineralSand
+                || floor == WHBlocksEnvironment.promethiumSand
                 || floor == WHBlocksEnvironment.darkMineralSandstone
         || floor == WHBlocksEnvironment.darkRock
         || floor == WHBlocksEnvironment.scorchedEarth
-        || floor == WHBlocksEnvironment.quartzSand;
+                || floor == WHBlocksEnvironment.quartzSand
+                || floor == WHBlocksEnvironment.apatiteCoarse
+                || floor == WHBlocksEnvironment.rustSand;
     }
 
+    private boolean isHeatHost(Block floor) {
+        return floor == WHBlocksEnvironment.darkRock
+                || floor == WHBlocksEnvironment.darkRockCraters
+                || floor == WHBlocksEnvironment.darkDacite
+                || floor == WHBlocksEnvironment.trachyte
+                || floor == WHBlocksEnvironment.scorchedEarth
+                || floor == WHBlocksEnvironment.scorchedEarthFloor
+                || floor == WHBlocksEnvironment.scorchedStone;
+    }
     private boolean isHeatFloor(Block floor){
         return floor == Blocks.slag
         || floor == WHBlocksEnvironment.darkMagmaRock

@@ -1,13 +1,13 @@
 package wh.entities.world.entities.powerArmorComp;
 
-import arc.graphics.g2d.*;
-import arc.math.*;
-import arc.struct.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import mindustry.type.*;
-import wh.entities.world.entities.*;
+import arc.graphics.g2d.TextureRegion;
+import arc.math.Mathf;
+import arc.struct.Seq;
+import mindustry.entities.units.WeaponMount;
+import mindustry.gen.Unit;
+import mindustry.graphics.Drawf;
+import mindustry.type.Weapon;
+import wh.entities.world.entities.WHUnitType;
 
 public class PowerArmourUnitType extends WHUnitType{
 
@@ -87,7 +87,7 @@ public class PowerArmourUnitType extends WHUnitType{
                     partSmoothHeat = sourceState.smoothHeat;
                 }
 
-                DrawUnitPart.params.set(powerUnit, this, partWarmup, partReload, partSmoothReload, partSmoothHeat,
+                DrawUnitPart.params.set(powerUnit, this, powerUnit.bodyMove, partWarmup, partReload, partSmoothReload, partSmoothHeat,
                 partHeat, partRecoil, partCharge, partAction, powerUnit.x, powerUnit.y, weaponRotation + 90f);
                 DrawUnitPart.params.sideMultiplier = weapon.flipSprite ? -1 : 1;
 

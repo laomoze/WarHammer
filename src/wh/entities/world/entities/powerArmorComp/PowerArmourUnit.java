@@ -1,17 +1,15 @@
 package wh.entities.world.entities.powerArmorComp;
 
-import arc.math.*;
-import arc.util.*;
-import mindustry.entities.units.*;
-import mindustry.gen.*;
-import mindustry.graphics.*;
-import wh.gen.*;
+import arc.math.Interp;
+import arc.math.Mathf;
+import arc.util.Nullable;
+import mindustry.entities.units.WeaponMount;
+import mindustry.gen.MechUnit;
+import wh.gen.EntityRegister;
 
 public class PowerArmourUnit extends MechUnit{
 
     public float bodyMove = 0f;
-    public Trail BladeTrail;
-    // 每个武器挂点对应一份动画状态（按 mounts 下标一一对应）
     private WeaponAnimState[] weaponAnimStates = new WeaponAnimState[0];
 
     public @Nullable WeaponAnimState weaponAnimState(int index){

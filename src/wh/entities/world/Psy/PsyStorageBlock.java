@@ -371,8 +371,9 @@ public class PsyStorageBlock extends StorageBlock {
         @Override
         public void read(Reads read, byte revision) {
             super.read(read, revision);
-            psychic.read(read);
-            Building build = TypeIO.readBuilding(read);
+            if (revision >= 1) psychic.read(read);
+            else psychic.clear();
+            Building build = revision >= 1 ? TypeIO.readBuilding(read) : null;
             remoteCore = build instanceof CoreBuild core ? core : null;
             if (remoteCore != null) {
                 cachedCorePos = remoteCore.pos();

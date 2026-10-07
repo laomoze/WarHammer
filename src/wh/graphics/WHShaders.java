@@ -665,20 +665,28 @@ public class WHShaders{
 
     public static int MaxCont = 4;
     public static HoleShader holeShader;
+    private static boolean holeShaderCreationFailed;
 
     public static void createHoleShader(){
-        if(MaxCont >= 512) return;
+        if (MaxCont >= 512 || holeShaderCreationFailed) return;
 
-        MaxCont = Math.min(MaxCont * 2, 512);
-        if(holeShader != null) holeShader.dispose();
+        int nextMaxCont = Math.min(MaxCont * 2, 512);
+        HoleShader nextShader = null;
         try{
-            Shader.prependFragmentCode = "#define MAX_COUNT " + MaxCont + "\n";
-            holeShader = new HoleShader();
+            Shader.prependFragmentCode = "#define MAX_COUNT " + nextMaxCont + "\n";
+            nextShader = new HoleShader();
         }catch(Throwable t){
-            holeShader = null;
+            holeShaderCreationFailed = true;
             Log.err("Failed to load black hole shader.", t);
         }finally{
             Shader.prependFragmentCode = "";
+        }
+
+        if (nextShader != null) {
+            HoleShader previousShader = holeShader;
+            holeShader = nextShader;
+            MaxCont = nextMaxCont;
+            if (previousShader != null) previousShader.dispose();
         }
     }
 

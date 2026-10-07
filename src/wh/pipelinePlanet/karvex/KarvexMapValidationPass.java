@@ -3,8 +3,6 @@ package wh.pipelinePlanet.karvex;
 import arc.math.Mathf;
 import arc.math.geom.Geometry;
 import arc.math.geom.Point2;
-import arc.math.geom.Vec3;
-import arc.util.noise.Simplex;
 import mindustry.content.Blocks;
 import mindustry.world.Block;
 import mindustry.world.Tile;
@@ -17,7 +15,7 @@ import static mindustry.Vars.content;
 import static mindustry.Vars.world;
 
 /**
- * Final map sanity pass with trimDark border and wall cleanup.
+ * Final map sanity pass with room and wall cleanup.
  */
 public class KarvexMapValidationPass implements GenPass{
     @Override
@@ -31,9 +29,6 @@ public class KarvexMapValidationPass implements GenPass{
         keepCriticalRoomsPlayable(ctx);
         sanitizeOverlays(ctx);
         cleanupFragmentWalls(ctx, 2);
-        addEdgeFloorNoise(ctx);
-        trimDark(ctx);
-        expandDarkRimWalls(ctx);
         cleanupFragmentWalls(ctx, 1);
     }
 
@@ -120,111 +115,9 @@ public class KarvexMapValidationPass implements GenPass{
                 }
             }
 
-            for(Tile tile : ctx.tiles){
+            for (Tile tile : ctx.tiles) {
                 Block block = content.block(next[tile.x + tile.y * w]);
                 tile.setBlock(block == null ? Blocks.air : block);
-            }
-        }
-    }
-
-    private void trimDark(GenContext ctx){
-        if(world == null) return;
-
-        for(Tile tile : ctx.tiles){
-            boolean any = world.getDarkness(tile.x, tile.y) > 0f;
-            for(int i = 0; i < 4 && !any; i++){
-                any = world.getDarkness(tile.x + Geometry.d4[i].x, tile.y + Geometry.d4[i].y) > 0f;
-            }
-
-            if(any){
-                Block wall = wallForFloor(tile.floor());
-                if(wall != Blocks.air){
-                    tile.setBlock(wall);
-                }
-            }
-        }
-    }
-
-    private void expandDarkRimWalls(GenContext ctx){
-        if(world == null) return;
-
-        int w = ctx.width();
-        short[] next = new short[w * ctx.height()];
-        for(Tile tile : ctx.tiles){
-            next[tile.x + tile.y * w] = tile.block().id;
-        }
-
-        for(Tile tile : ctx.tiles){
-            if(tile.block() != Blocks.air) continue;
-            if(tile.floor().isLiquid || !tile.floor().hasSurface()) continue;
-            if(isNearRoom(ctx, tile.x, tile.y, 8f, 6f)) continue;
-
-            int dark1 = darknessNeighborCount(tile.x, tile.y, 1);
-            int dark2 = darknessNeighborCount(tile.x, tile.y, 2);
-            if(dark1 <= 0 && dark2 <= 0) continue;
-
-            int nearWalls = staticNeighborCount8(ctx, tile.x, tile.y);
-            float chance = 0.04f + dark1 * 0.17f + dark2 * 0.03f + nearWalls * 0.03f;
-            if(!ctx.rand.chance(Mathf.clamp(chance, 0f, 0.56f))) continue;
-
-            Block wall = wallForFloor(tile.floor());
-            if(wall != Blocks.air){
-                next[tile.x + tile.y * w] = wall.id;
-            }
-        }
-
-        for(Tile tile : ctx.tiles){
-            Block block = content.block(next[tile.x + tile.y * w]);
-            tile.setBlock(block == null ? Blocks.air : block);
-        }
-    }
-
-    private void addEdgeFloorNoise(GenContext ctx){
-        if(world == null) return;
-        int w = ctx.width();
-        short[] next = new short[w * ctx.height()];
-
-        for(Tile tile : ctx.tiles){
-            next[tile.x + tile.y * w] = tile.floor().id;
-        }
-
-        for(Tile tile : ctx.tiles){
-            if(tile.block() != Blocks.air) continue;
-            if(tile.floor().isLiquid || !tile.floor().hasSurface()) continue;
-            if(isNearRoom(ctx, tile.x, tile.y, 11f, 8f)) continue;
-            if(world.getDarkness(tile.x, tile.y) > 0f) continue;
-
-            int dark1 = darknessNeighborCount(tile.x, tile.y, 1);
-            int dark2 = darknessNeighborCount(tile.x, tile.y, 2);
-            if(dark1 <= 0) continue;
-            if(dark2 > 8) continue;
-
-            float edgeStrength = Mathf.clamp(dark1 * 0.28f + dark2 * 0.08f);
-            float n1 = rimNoise(ctx, ctx.seed + 1701, tile.x + 31f, tile.y - 43f, 2, 0.66, 19f);
-            float n2 = rimNoise(ctx, ctx.seed + 1709, tile.x - 71f, tile.y + 27f, 1, 1f, 8.5f);
-            float n3 = rimNoise(ctx, ctx.seed + 1723, tile.x + 17f, tile.y + 13f, 1, 1f, 42f);
-            float field = n1 * 0.56f + n2 * 0.34f + n3 * 0.18f;
-            float chance = Mathf.clamp(0.04f + edgeStrength * 0.24f + Math.abs(field) * 0.10f, 0f, 0.28f);
-            if(!ctx.rand.chance(chance)) continue;
-
-            int idx = tile.x + tile.y * w;
-            if(field > 0.82f){
-                next[idx] = WHBlocksEnvironment.mineralSand.id;
-            }else if(field > 0.62f){
-                next[idx] = WHBlocksEnvironment.darkMineralSandstone.id;
-            }else if(field < -0.82f){
-                next[idx] = WHBlocksEnvironment.trachyte.id;
-            }else if(field < -0.62f){
-                next[idx] = WHBlocksEnvironment.darkMineralSandstone.id;
-            }else if(field > 0.30f && ctx.rand.chance(0.55f)){
-                next[idx] = WHBlocksEnvironment.mineralSand.id;
-            }
-        }
-
-        for(Tile tile : ctx.tiles){
-            Block floor = content.block(next[tile.x + tile.y * w]);
-            if(floor != null && floor.asFloor() != null){
-                tile.setFloor(floor.asFloor());
             }
         }
     }
@@ -273,29 +166,6 @@ public class KarvexMapValidationPass implements GenPass{
             }
         }
         return false;
-    }
-
-    private int darknessNeighborCount(int x, int y, int radius){
-        if(world == null) return 0;
-        int count = 0;
-        int r2 = radius * radius;
-
-        for(int ox = -radius; ox <= radius; ox++){
-            for(int oy = -radius; oy <= radius; oy++){
-                if(ox == 0 && oy == 0) continue;
-                if(ox * ox + oy * oy > r2) continue;
-                if(world.getDarkness(x + ox, y + oy) > 0f){
-                    count++;
-                }
-            }
-        }
-
-        return count;
-    }
-
-    private float rimNoise(GenContext ctx, int seed, float x, float y, double octaves, double falloff, double scl){
-        Vec3 v = ctx.sector.rect.project(x, y).scl(5f);
-        return Simplex.noise3d(seed, octaves, falloff, 1f / scl, v.x, v.y, v.z);
     }
 
     private Block wallForFloor(Block floor){
