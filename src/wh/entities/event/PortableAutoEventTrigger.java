@@ -1,37 +1,20 @@
 package wh.entities.event;
 
-import arc.Core;
 import arc.Events;
-import arc.audio.Sound;
 import arc.func.Boolf;
 import arc.func.Cons;
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Lines;
-import arc.math.Interp;
-import arc.math.Mathf;
-import arc.math.geom.Vec2;
-import arc.scene.actions.Actions;
-import arc.scene.event.Touchable;
-import arc.scene.ui.Label;
-import arc.scene.ui.layout.Table;
 import arc.struct.ObjectIntMap;
 import arc.struct.ObjectMap;
 import arc.struct.ObjectSet;
 import arc.struct.Seq;
-import arc.util.Align;
 import arc.util.Log;
 import arc.util.Time;
 import mindustry.Vars;
 import mindustry.game.EventType;
 import mindustry.game.Team;
 import mindustry.gen.Groups;
-import mindustry.gen.Tex;
 import mindustry.type.StatusEffect;
 import mindustry.type.UnitType;
-import wh.content.WHContent;
-import wh.content.WHSounds;
-import wh.ui.UIUtils;
 
 /**
  * 基于实体序列化的便携式自动触发器。
@@ -59,9 +42,6 @@ public final class PortableAutoEventTrigger{
     private static boolean worldLoadSyncPending = false;
     private static final Seq<Trigger> templates = new Seq<>();
     private static final Seq<Trigger> active = new Seq<>();
-    private static final Vec2 markScreenTmp = new Vec2();
-    private static final Color markPulseTmp = new Color();
-    private static final Color markShadowTmp = new Color();
 
     /** 与 AutoEventTrigger 保持一致的时间缩放因子。 */
     public static float timeScale = 1f;
@@ -84,22 +64,6 @@ public final class PortableAutoEventTrigger{
 
     /** 调试开关：绕过刷怪点/波次/资源条件，允许强制触发辅助逻辑。 */
     public static boolean debugBypassMeet = false;
-
-    /** 可选世界标记（十字准星），默认关闭。 */
-    public static boolean worldMarkEnabled = false;
-
-    /** 舰队预警 HUD 显示模式。 */
-    public enum FleetWarnHudMode{
-        legacy,
-        centered
-    }
-
-    /** 全局默认使用居中 HUD。 */
-    public static FleetWarnHudMode fleetWarnHudMode = FleetWarnHudMode.centered;
-
-    public static void setFleetWarnHudMode(FleetWarnHudMode mode){
-        fleetWarnHudMode = mode == null ? FleetWarnHudMode.centered : mode;
-    }
 
     public static void init(){
         if(inited) return;
@@ -631,180 +595,6 @@ public final class PortableAutoEventTrigger{
             }
         }
         return out;
-    }
-
-    static void showInlineChatHud(String text, float duration){
-        if(text == null || text.isEmpty()) return;
-        if(Vars.headless || Core.scene == null || Core.scene.root == null) return;
-
-        Table body = new Table(Tex.paneSolid);
-        body.touchable = Touchable.disabled;
-        body.margin(8f);
-        body.add(text).color(Color.white).wrap().width(Math.min(Core.graphics.getWidth() * 0.7f, 680f)).pad(4f);
-
-        Table container = Core.scene.table();
-        container.touchable = Touchable.disabled;
-        container.bottom().add(body).padBottom(Vars.mobile ? 90f : 56f);
-        container.actions(
-        Actions.alpha(0f),
-        Actions.fadeIn(0.16f),
-        Actions.delay(Math.max(0.6f, duration / 60f)),
-        Actions.fadeOut(0.24f),
-        Actions.remove()
-        );
-    }
-
-    static void showInlineWorldMark(float x, float y, float radius, float lifetime, Color color){
-        if(Float.isNaN(x) || Float.isNaN(y)) return;
-        if(Vars.headless || Core.scene == null || Core.scene.root == null) return;
-
-        Core.scene.root.addChild(new BuiltinWorldMark(x, y, radius, lifetime, color));
-    }
-
-    private static class BuiltinWorldMark extends Table{
-        final float worldX;
-        final float worldY;
-        final float radius;
-        final float lifetime;
-        final Color color = new Color();
-        float life = 0f;
-
-        BuiltinWorldMark(float x, float y, float radius, float lifetime, Color color){
-            this.worldX = x;
-            this.worldY = y;
-            this.radius = Math.max(8f, radius);
-            this.lifetime = Math.max(30f, lifetime);
-            this.color.set(color == null ? Color.valueOf("ff7b69") : color);
-
-            touchable = Touchable.disabled;
-            setFillParent(true);
-        }
-
-        @Override
-        public void act(float delta){
-            super.act(delta);
-            life += Time.delta;
-            if(Vars.state == null || Vars.state.isMenu() || life > lifetime){
-                remove();
-            }
-        }
-
-        @Override
-        public void draw(){
-            super.draw();
-            if(Vars.headless || Core.camera == null) return;
-
-            Vec2 pos = markScreenTmp.set(Core.camera.project(worldX, worldY));
-
-            float w = Core.graphics.getWidth();
-            float h = Core.graphics.getHeight();
-            float xPad = w * 0.05f;
-            float yPad = h * 0.05f;
-
-            boolean out = pos.x < xPad || pos.y < yPad || pos.x > w - xPad || pos.y > h - yPad;
-            if(out){
-                pos.x = Mathf.clamp(pos.x, xPad, w - xPad);
-                pos.y = Mathf.clamp(pos.y, yPad, h - yPad);
-            }
-
-            float size = radius * (Vars.renderer == null ? 1f : Vars.renderer.getDisplayScale());
-            float rotate = 45f + 90f * ((life / 120f) % 1f);
-
-            Color pulse = markPulseTmp.set(color).lerp(Color.white, Mathf.absin(life, 6f, 0.35f)).a(parentAlpha);
-            Color shadow = markShadowTmp.set(0.15f, 0.15f, 0.15f, pulse.a);
-
-            Lines.stroke(7f, shadow);
-            Lines.square(pos.x, pos.y, size + 3f, rotate);
-            Lines.stroke(2.4f, pulse);
-            Lines.square(pos.x, pos.y, size + 3f, rotate);
-
-            Lines.stroke(7f, shadow);
-            for(int i : Mathf.signs){
-                Lines.line(Math.max(0f, i) * w, pos.y, pos.x + size * i * 1.8f, pos.y);
-                Lines.line(pos.x, Math.max(0f, i) * h, pos.x, pos.y + size * i * 1.8f);
-            }
-
-            Lines.stroke(2.4f, pulse);
-            for(int i : Mathf.signs){
-                Lines.line(Math.max(0f, i) * w, pos.y, pos.x + size * i * 1.8f, pos.y);
-                Lines.line(pos.x, Math.max(0f, i) * h, pos.x, pos.y + size * i * 1.8f);
-            }
-
-            if(out){
-                Lines.stroke(2.6f, pulse);
-                Lines.spikes(pos.x, pos.y, size * 1.8f, size * 0.55f, 4, 45f);
-            }
-
-            Draw.reset();
-        }
-    }
-
-    static void showFleetWarnHud(TriggerContext ctx, float duration, Sound sound, FleetWarnHudMode mode, String centeredText){
-        if(Vars.headless || Vars.player == null || Core.scene == null || Vars.state.isMenu()) return;
-
-        Team team = ctx.teamSpawn != null ? ctx.teamSpawn : ctx.teamChecked;
-        if(team == null) return;
-
-        Color color = team.color;
-        if(team != Vars.player.team() && sound != null){
-            sound.play();
-        }
-
-        FleetWarnHudMode renderMode = mode == null ? fleetWarnHudMode : mode;
-        switch(renderMode){
-            case centered:
-                UIUtils.showFleetWarnHudCentered(WHContent.fleet, color, centeredText, duration);
-                return;
-            case legacy:
-            default:
-                showFleetWarnHudLegacy(color, duration, centeredText);
-        }
-    }
-
-    public static void showFleetWarnHudNow(Team team, float duration, FleetWarnHudMode mode, String text){
-        if(team == null) return;
-        TriggerContext ctx = new TriggerContext(null, team, team, 0f, 0f);
-        showFleetWarnHud(ctx, Math.max(0.1f, duration), WHSounds.alert2, mode, text == null ? "" : text);
-    }
-
-    private static void showFleetWarnHudLegacy(Color color, float duration, String text){
-        float width = Core.graphics.getWidth();
-        float bannerWidth = Math.min(width * 0.78f, 620f);
-
-        Table warning = new Table(Tex.paneSolid);
-        warning.margin(4f);
-        warning.table(t2 -> {
-            t2.defaults().growY();
-            t2.image().growX().height(Math.max(4f, UIUtils.OFFSET / 2f)).pad(UIUtils.OFFSET / 3f).padRight(-9f).color(color);
-            t2.image(WHContent.safeRegion(WHContent.fleet)).size(UIUtils.LEN - UIUtils.OFFSET).color(color);
-            t2.image().growX().height(Math.max(4f, UIUtils.OFFSET / 2f)).pad(UIUtils.OFFSET / 3f).padLeft(-9f).color(color);
-        }).width(bannerWidth).growX().pad(UIUtils.OFFSET / 2f).fillY().row();
-
-        if(UIUtils.hasText(text)){
-            String legacyText = text.trim();
-            if(!(legacyText.startsWith("<<") && legacyText.endsWith(">>"))){
-                legacyText = "<< " + legacyText + " >>";
-            }
-            Label legacyLabel = new Label(legacyText);
-            legacyLabel.setWrap(true);
-            legacyLabel.setAlignment(Align.center);
-            UIUtils.applyTrigBlink(legacyLabel, color);
-            warning.add(legacyLabel).growX().padTop(4f).padBottom(2f).center().row();
-        }
-
-        warning.pack();
-
-        Table container = Core.scene.table();
-        container.top().add(warning).padTop(Vars.mobile ? 60f : 24f);
-        container.setTranslation(0f, warning.getPrefHeight());
-        container.actions(
-        Actions.translateBy(0f, -warning.getPrefHeight(), 0.25f, Interp.fade),
-        Actions.delay(Math.max(0.1f, duration)),
-        Actions.run(() -> container.actions(
-        Actions.translateBy(0f, warning.getPrefHeight(), 0.25f, Interp.fade),
-        Actions.remove()
-        ))
-        );
     }
 
 }

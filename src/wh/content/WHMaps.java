@@ -25,5 +25,6 @@ public class WHMaps {
             difficulty = 3;
             captureWave = 37;
         }};
+
     }
 }

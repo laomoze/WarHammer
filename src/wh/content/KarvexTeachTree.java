@@ -467,6 +467,8 @@ public final class KarvexTeachTree {
                             });
 
                             node(WHBlocks.waterPurifier, () -> {
+                                node(WHBlocks.purificationTower, () -> {
+                                });
                                 node(WHBlocks.T2WaterPurifier, () -> {
                                     node(WHBlocks.cryofluidMixer, () -> {
                                         node(WHBlocks.LiquidNitrogenPlant, () -> {
@@ -545,6 +547,8 @@ public final class KarvexTeachTree {
         node(WHBlocks.ventDistiller, () -> {
             node(WHBlocks.armorIlluminator, () -> {
                 node(WHBlocks.searchlight, () -> {
+                    node(WHBlocks.largeSearchlight, () -> {
+                    });
                 });
             });
             node(WHBlocks.oxidationGenerator, () -> {
@@ -650,6 +654,8 @@ public final class KarvexTeachTree {
                 node(WHBlocks.AutoGun, () -> {
                     node(WHBlocks.SSWord, () -> {
                         node(WHBlocks.Blade, () -> {
+                            node(WHBlocks.Torch, () -> {
+                            });
                             node(WHBlocks.Prevent, () ->
                                     node(WHBlocks.Crumble, () -> {
                                         node(WHBlocks.Collapse, () -> {

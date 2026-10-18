@@ -12,13 +12,17 @@ import arc.math.geom.Position;
 import arc.util.Nullable;
 import arc.util.Time;
 import arc.util.Tmp;
+import arc.util.pooling.Pools;
 import mindustry.Vars;
 import mindustry.content.Fx;
 import mindustry.entities.Damage;
 import mindustry.entities.Effect;
+import mindustry.entities.Mover;
 import mindustry.entities.Units;
 import mindustry.entities.bullet.ContinuousBulletType;
+import mindustry.game.Team;
 import mindustry.gen.Bullet;
+import mindustry.gen.Entityc;
 import mindustry.gen.Teamc;
 import mindustry.gen.Unit;
 import mindustry.graphics.Drawf;
@@ -38,7 +42,7 @@ import static wh.content.WHFx.groundEffect;
 /**
  * 给我干哪来了，Forts？
  */
-public class DoomLaserBulletType extends ContinuousBulletType{
+public class DoomLaserBulletType extends ContinuousBulletType implements ShieldDam {
     public float startOffset = 900;
     public float fixedAngle = 20;
     public float sideAngle = 80f;
@@ -52,6 +56,7 @@ public class DoomLaserBulletType extends ContinuousBulletType{
     public float oscScl = 2, oscMag = 0.5f;
 
     public boolean autoHoming = true;
+
 
     public DoomLaserBulletType(){
         reflectable = false;
@@ -232,21 +237,67 @@ public class DoomLaserBulletType extends ContinuousBulletType{
 
     @Override
     public void update(Bullet b){
+        DoomLaserBullet laserBullet = (DoomLaserBullet) b;
         if(shake > 0){
             Effect.shake(shake, shake, b);
         }
         float targetX = b.x;
         float targetY = b.y;
-        if(b.timer(0, damageInterval)){
+        if (b.timer(0, damageInterval) && laserBullet.canCreateSplashDamage) {
             Damage.collidePoint(b, b.team, hitEffect, targetX, targetY);
             hit(b, targetX, targetY);
         }
         Floor floor = Vars.world.floorWorld(targetX, targetY);
-        if(floor != null && b.timer(1, damageInterval)){
+        if (floor != null && b.timer(1, damageInterval) && laserBullet.canCreateSplashDamage) {
             groundEffect.at(targetX, targetY, b.rotation(), floor.mapColor.cpy().lerp(Color.black, 0.2f));
         }
         updateHoming(b);
         updateTrail(b);
-        updateBulletInterval(b);
+        laserBullet.canCreateSplashDamage = true;
+    }
+
+
+    @Override
+    public boolean canDamageShield() {
+        return true;
+    }
+
+    @Override
+    public float shieldDamageMultiplier() {
+        return 0.08f;
+    }
+
+    @Override
+    public void setCanCreateSplashDamage(Bullet bullet, boolean canCreateSplashDamage) {
+        ((DoomLaserBullet) bullet).canCreateSplashDamage = canCreateSplashDamage;
+    }
+
+    @Override
+    public void createSplashDamage(Bullet b, float x, float y) {
+        if (b instanceof DoomLaserBullet laserBullet && !laserBullet.canCreateSplashDamage) return;
+        super.createSplashDamage(b, x, y);
+    }
+
+    @Override
+    public @Nullable Bullet create(@Nullable Entityc owner, @Nullable Entityc shooter, Team team, float x, float y,
+                                   float angle, float damage, float velocityScl, float lifetimeScl, Object data,
+                                   @Nullable Mover mover, float aimX, float aimY, @Nullable Teamc target) {
+        DoomLaserBullet bullet = DoomLaserBullet.create();
+        return WHUtils.anyOtherCreate(bullet, this, shooter, owner, team, x, y, angle, damage, velocityScl,
+                lifetimeScl, data, mover, aimX, aimY, target);
+    }
+
+    public static class DoomLaserBullet extends Bullet {
+        public boolean canCreateSplashDamage = true;
+
+        public static DoomLaserBullet create() {
+            return Pools.obtain(DoomLaserBullet.class, DoomLaserBullet::new);
+        }
+
+        @Override
+        public void reset() {
+            super.reset();
+            canCreateSplashDamage = true;
+        }
     }
 }

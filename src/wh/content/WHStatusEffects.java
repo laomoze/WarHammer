@@ -294,6 +294,8 @@ public final class WHStatusEffects{
             color = WHPal.SkyBlue;
             damage = 500 / 60f;
             speedMultiplier = 0.8f;
+            reloadMultiplier = 0.8f;
+            damageMultiplier = 0.85f;
             effect = new Effect(40, e -> {
                 if(!(e.data instanceof Unit u)) return;
                 color(WHPal.SkyBlueF, Pal.techBlue, e.fin() * 0.75f);
@@ -344,6 +346,7 @@ public final class WHStatusEffects{
                 damage = 90 / 60f;
                 speedMultiplier = 0.9f;
                 dragMultiplier = 0.95f;
+                healthMultiplier = 0.8f;
                 effectChance = 0.09f;
                 transitionDamage = 1000 / 60f;
                 effect = new Effect(90, e -> {

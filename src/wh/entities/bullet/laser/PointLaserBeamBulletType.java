@@ -23,6 +23,7 @@ import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 import mindustry.world.blocks.environment.Floor;
+import wh.graphics.PositionLightning;
 import wh.util.WHUtils;
 
 import static mindustry.Vars.state;
@@ -183,6 +184,7 @@ public class PointLaserBeamBulletType extends PointLaserBulletType {
         Draw.reset();
 
         if (drawPositionLighting && data.currentLength > 0.1f && !state.isPaused()) {
+            PositionLightning.createEffect(Tmp.v1, b.fdata, b.rotation(), lightningColor, 2, PositionLightning.WIDTH);
             Drawf.light(data.startX, data.startY, endX, endY, width * 1.2f * b.fout(), colors[0], 0.6f);
         }
         Draw.reset();

@@ -228,7 +228,12 @@ public class TubeConduit extends Conduit {
             for (int i = 0; i < 4; i++) {
                 if ((blending & (1 << i)) != 0) {
                     int dir = r - i;
+                    float connectionScaleX = Geometry.d4x(dir) == 0 ? 1f : connectionScale;
+                    float connectionScaleY = Geometry.d4y(dir) == 0 ? 1f : connectionScale;
+                    float oldConnectionScaleX = Draw.xscl, oldConnectionScaleY = Draw.yscl;
+                    Draw.scl(connectionScaleX, connectionScaleY);
                     drawAt(x + Geometry.d4x(dir) * mindustry.Vars.tilesize * 0.75f, y + Geometry.d4y(dir) * mindustry.Vars.tilesize * 0.75f, 0, i == 0 ? r : dir, i != 0 ? SliceMode.bottom : SliceMode.top, false);
+                    Draw.scl(oldConnectionScaleX, oldConnectionScaleY);
                 }
             }
 
@@ -244,8 +249,10 @@ public class TubeConduit extends Conduit {
                     int dir = r - i;
                     float connectionX = x + Geometry.d4x(dir) * mindustry.Vars.tilesize * 0.75f;
                     float connectionY = y + Geometry.d4y(dir) * mindustry.Vars.tilesize * 0.75f;
+                    float connectionScaleX = Geometry.d4x(dir) == 0 ? 1f : connectionScale;
+                    float connectionScaleY = Geometry.d4y(dir) == 0 ? 1f : connectionScale;
                     float oldConnectionScaleX = Draw.xscl, oldConnectionScaleY = Draw.yscl;
-                    Draw.scl(connectionScale, 1f);
+                    Draw.scl(connectionScaleX, connectionScaleY);
                     Draw.rect(sliced(topRegion[0][1 << Mathf.mod(dir, 4)], i != 0 ? SliceMode.bottom : SliceMode.top),
                             connectionX, connectionY, 0f);
                     Draw.scl(oldConnectionScaleX, oldConnectionScaleY);
@@ -253,8 +260,10 @@ public class TubeConduit extends Conduit {
             }
             Draw.color();
             Draw.z(capped || backCapped ? Layer.block - 0.003f : Layer.block + 0.001f);
+            float oldTopScaleX = Draw.xscl, oldTopScaleY = Draw.yscl;
+            Draw.scl(1.017f, 1.017f);
             Draw.rect(topRegion[0][tiling], x, y, 0);
-            Draw.scl();
+            Draw.scl(oldTopScaleX, oldTopScaleY);
 
             if (drawArrow) {
                 Draw.z(Layer.block + 0.001f);

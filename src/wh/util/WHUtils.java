@@ -147,7 +147,13 @@ public final class WHUtils {
 
         for (int y = 0; y < height / size; y++) {
             for (int x = 0; x < width / size; x++) {
-                layers[y][x] = new TextureRegion(base, x * size, y * size, size, size);
+                TextureRegion region = new TextureRegion(base, x * size, y * size, size, size);
+                float du = 0.5f / region.texture.width;
+                float dv = 0.5f / region.texture.height;
+                region.set(region.u + du, region.v + dv, region.u2 - du, region.v2 - dv);
+                region.width = size;
+                region.height = size;
+                layers[y][x] = region;
             }
         }
         return layers;
@@ -841,6 +847,45 @@ public final class WHUtils {
         Tile selected = validTiles.get(Mathf.random(validTiles.size - 1));
         out.set(selected.worldx(), selected.worldy());
         return true;
+    }
+
+    /**
+     * Selects a random position that can accept every unit in the group.
+     * Mixed movement groups fall back to the first valid unit terrain when no shared tile exists.
+     */
+    public static boolean snapToSpawnPosition(UnitType[] types, float x, float y, float range, Vec2 out) {
+        if (types == null || out == null || world == null) return false;
+
+        UnitType first = null;
+        for (UnitType type : types) {
+            if (type != null) {
+                first = type;
+                break;
+            }
+        }
+        if (first == null) return false;
+
+        Seq<Tile> sharedTiles = new Seq<>(Tile.class);
+        int tileX = toTile(x);
+        int tileY = toTile(y);
+        int tileRange = Math.max(0, toTile(range));
+        Geometry.circle(tileX, tileY, tileRange, (cx, cy) -> {
+            Tile tile = world.tile(cx, cy);
+            if (tile == null) return;
+
+            for (UnitType type : types) {
+                if (type != null && !ableToSpawn(type).get(tile)) return;
+            }
+            sharedTiles.add(tile);
+        });
+
+        if (!sharedTiles.isEmpty()) {
+            Tile selected = sharedTiles.get(Mathf.random(sharedTiles.size - 1));
+            out.set(selected.worldx(), selected.worldy());
+            return true;
+        }
+
+        return snapToSpawnPosition(first, x, y, range, out);
     }
 
     public static Seq<Tile> ableToSpawn(UnitType type, float x, float y, float range) {

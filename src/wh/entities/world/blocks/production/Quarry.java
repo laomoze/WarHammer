@@ -335,11 +335,12 @@ public class Quarry extends Block {
             }
 
             fullColor = Tmp.c1.set(areaColor).lerp(boostColor, boostWarmup);
+            boolean blocked = items.total() >= itemCapacity;
             float speed = 0;
-            if (items.total() < itemCapacity && efficiency > 0) {
+            if (!blocked && efficiency > 0) {
                 speed = Mathf.lerp(1f, liquidBoostIntensity, optionalEfficiency) * efficiency;
             }
-            if (!empty && progress >= mineTime && items.total() < itemCapacity && deployProgress >= 4) {
+            if (!empty && progress >= mineTime && !blocked && deployProgress >= 4) {
                 progress = 0;
                 Item tileItem;
                 for (int ix = 0; ix < areaSize; ix++) {
@@ -366,28 +367,29 @@ public class Quarry extends Block {
                         }
                     }
                 }
+                blocked = items.total() >= itemCapacity;
             }
-            if (deployProgress >= 4 && Mathf.random(1) > 0.3 && efficiency > 0 && items.total() < itemCapacity) {
+            if (!empty && deployProgress >= 4 && Mathf.random(1) > 0.3 && efficiency > 0 && !blocked) {
                 drillEffect.at(drillX + mx, drillY + my, rand.random(0, 360f), fullColor);
             }
             if (!empty) {
 
-                if (efficiency > 0) {
+                if (!blocked && efficiency > 0) {
                     if (deployProgress <= 4) {
                         this.deployProgress += delta() * deploySpeed * efficiency;
                         deploying = true;
                     } else progress += delta() * speed;
-                } else if (deployProgress > 0 && Mathf.zero(drillX, 0.01f) && Mathf.zero(drillY, 0.01f) && items.total() < itemCapacity) {
-                    this.deployProgress -= delta() * deploySpeed;
+                } else if (deployProgress > 0 && Mathf.zero(drillX, 0.01f) && Mathf.zero(drillY, 0.01f)) {
+                    this.deployProgress = Math.max(0f, this.deployProgress - delta() * deploySpeed);
                     deploying = false;
                 }
 
-                if (items.total() >= itemCapacity || efficiency <= 0) {
+                if (blocked || efficiency <= 0) {
                     drillX = Mathf.lerpDelta(drillX, 0, 0.07f);
                     drillY = Mathf.lerpDelta(drillY, 0, 0.07f);
                     //move to center
                     if(Mathf.zero(drillX, 0.01f) && Mathf.zero(drillY, 0.01f)){
-                        this.deployProgress -= delta() * deploySpeed;
+                        this.deployProgress = Math.max(0f, this.deployProgress - delta() * deploySpeed);
                         deploying = false;
                     }
                 } else {
@@ -401,7 +403,11 @@ public class Quarry extends Block {
                     }
                 }
 
-            } else this.deployProgress = 0;
+            } else {
+                this.deployProgress = 0;
+                this.progress = 0;
+                this.deploying = false;
+            }
 
             dumpOutputs();
         }

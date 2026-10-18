@@ -1,13 +1,17 @@
 package wh.content;
 
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import mindustry.*;
-import mindustry.game.*;
-import wh.entities.*;
-import wh.entities.event.*;
-import wh.entities.event.PortableAutoEventTrigger.*;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.geom.Vec2;
+import arc.util.Log;
+import arc.util.Time;
+import mindustry.Vars;
+import mindustry.game.Gamemode;
+import mindustry.game.Team;
+import wh.entities.Spawner;
+import wh.entities.event.PortableAutoEventTrigger;
+import wh.entities.event.Trigger;
+import wh.ui.UIUtils;
 
 public class WHAutoTriggerSetup{
     /** 调试开关：开启后放宽触发条件，便于本地测试。 */
@@ -45,7 +49,7 @@ public class WHAutoTriggerSetup{
         // Fallback: even if per-unit invoker mappings are lost after load, keep custom spawn path.
         .spawnerInvoker(WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
         .spawnShape(200, 180, 90, 180f)
-        .useFleetWarnHUD(true, PortableAutoEventTrigger.FleetWarnHudMode.centered, 3)
+                .useFleetWarnHUD(true, UIUtils.FleetWarnHudMode.centered, 3)
         .chatText("[scarlet]Enemy fleet incoming[]", 120f);
 
         PortableAutoEventTrigger.registerTemplate(globalChaos);
@@ -67,7 +71,7 @@ public class WHAutoTriggerSetup{
         // Fallback: even if per-unit invoker mappings are lost after load, keep custom spawn path.
         .spawnerInvoker(WHAutoTriggerSetup::spawnByWHSpawnerAtEnemySpawn)
         .spawnShape(200, 180, 90, 180f)
-        .useFleetWarnHUD(true, FleetWarnHudMode.legacy, 3)
+                .useFleetWarnHUD(true, UIUtils.FleetWarnHudMode.legacy, 3)
         .chatText("[scarlet]Enemy fleet incoming[]", 120f);
 
         /* PortableAutoEventTrigger.registerTemplate(globalChaos2);*/

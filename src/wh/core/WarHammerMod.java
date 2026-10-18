@@ -306,6 +306,7 @@ public class WarHammerMod extends Mod {
         WHUnitTypes.load();
         WHBlocksEnvironment.load();
         WHBlocks.load();
+        applyCalculatedResearchCostMultipliers();
 
         WHEvents.load();
         WHAutoTriggerSetup.load();
@@ -317,7 +318,6 @@ public class WarHammerMod extends Mod {
         WHOverride.load();
         WHMaps.load();
         applyTauntTargetPriority();
-        applyCalculatedResearchCostMultipliers();
     }
 
     private static final float markSortBias = 11451.4f;

@@ -1,25 +1,42 @@
 package wh.entities.event;
 
-import arc.audio.*;
-import arc.func.*;
-import arc.graphics.*;
-import arc.math.*;
-import arc.math.geom.*;
-import arc.struct.*;
-import arc.util.*;
-import arc.util.io.*;
-import mindustry.*;
-import mindustry.content.*;
-import mindustry.ctype.*;
-import mindustry.entities.*;
-import mindustry.game.*;
-import mindustry.gen.*;
-import mindustry.io.*;
-import mindustry.type.*;
-import mindustry.world.*;
-import mindustry.world.blocks.storage.*;
-import wh.content.*;
-import wh.gen.*;
+import arc.audio.Sound;
+import arc.func.Boolf;
+import arc.func.Cons;
+import arc.func.Func;
+import arc.func.Prov;
+import arc.graphics.Color;
+import arc.math.Mathf;
+import arc.math.Rand;
+import arc.math.geom.Vec2;
+import arc.struct.ObjectIntMap;
+import arc.struct.ObjectMap;
+import arc.struct.Seq;
+import arc.util.Log;
+import arc.util.Time;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
+import mindustry.Vars;
+import mindustry.content.StatusEffects;
+import mindustry.ctype.ContentType;
+import mindustry.entities.EntityGroup;
+import mindustry.entities.Units;
+import mindustry.game.Rules;
+import mindustry.game.Team;
+import mindustry.game.Teams;
+import mindustry.gen.Entityc;
+import mindustry.gen.Groups;
+import mindustry.gen.Unit;
+import mindustry.io.TypeIO;
+import mindustry.type.Item;
+import mindustry.type.SectorPreset;
+import mindustry.type.StatusEffect;
+import mindustry.type.UnitType;
+import mindustry.world.Block;
+import mindustry.world.Tile;
+import mindustry.world.blocks.storage.CoreBlock;
+import wh.content.WHSounds;
+import wh.gen.EntityRegister;
 
 import static wh.entities.event.PortableAutoEventTrigger.*;
 import static wh.ui.UIUtils.*;
@@ -66,7 +83,9 @@ public class Trigger implements Entityc, Cloneable{
     public boolean useFleetWarnHudStyle = false;
     public float fleetWarnHudDuration = 2.5f;
     public Sound fleetWarnSound = WHSounds.alert2;
-    /** 单个触发器的 HUD 样式覆盖；为 null 时使用全局默认 {@link PortableAutoEventTrigger#fleetWarnHudMode}。 */
+    /**
+     * 单个触发器的 HUD 样式覆盖；为 null 时使用全局默认 {@link UIUtils#fleetWarnHudMode}。
+     */
     public FleetWarnHudMode fleetWarnHudModeOverride = null;
     public String hudText = "";
     public float hudToastDuration = 2.5f;
@@ -600,8 +619,8 @@ public class Trigger implements Entityc, Cloneable{
 
         if(!Vars.headless){
             if(warnHudEnabled){
-                if(useFleetWarnHudStyle){
-                    showFleetWarnHud(ctx, fleetWarnHudDuration, fleetWarnSound, warnMode, centeredHudText);
+                if(useFleetWarnHudStyle) {
+                    showFleetWarnHud(ctx.teamSpawn != null ? ctx.teamSpawn : ctx.teamChecked, fleetWarnHudDuration, fleetWarnSound, warnMode, centeredHudText);
                     centeredTextEmbedded = hasText(centeredHudText);
                 }else if(hasText(hudText)){
                     showToastText(hudText);

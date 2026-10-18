@@ -14,7 +14,6 @@ import arc.scene.ui.TextField;
 import arc.scene.ui.layout.Table;
 import arc.struct.Seq;
 import arc.util.Time;
-import arc.util.Tmp;
 import mindustry.Vars;
 import mindustry.content.UnitTypes;
 import mindustry.ctype.ContentType;
@@ -33,6 +32,7 @@ import wh.entities.event.logic.actionLogic.BusLogicInstruction;
 import wh.entities.event.objective.RaidEventObjective;
 import wh.net.WHCall;
 import wh.ui.UIUtils;
+import wh.util.WHUtils;
 import wh.util.WeightedRandom;
 import wh.util.struct.WeightedOption;
 
@@ -278,6 +278,12 @@ public class DefaultAirborneRaid extends LStatement{
                     int groupIndex = i;
                     root.table(line -> {
                         line.left();
+                        for (UnitType type : parsed) {
+                            if (type == null) continue;
+                            TextureRegion iconRegion = type.fullIcon == null ? type.uiIcon : type.fullIcon;
+                            Drawable icon = iconRegion != null && iconRegion.found() ? new TextureRegionDrawable(iconRegion) : Icon.units;
+                            line.image(icon).size(26f).padRight(3f);
+                        }
                         line.add((groupIndex + 1) + ". " + names + " (" + parsed.size + "/" + maxUnitsPerGroup + ")")
                         .wrap().width(Vars.mobile ? 370f : 290f).left();
                         TextButton addToGroup = new TextButton("+", Styles.logict);
@@ -625,13 +631,12 @@ public class DefaultAirborneRaid extends LStatement{
             }
 
             float spread = Math.max(0f, inaccuracy.numf()) * tilesize;
-            Tmp.v1.trns(Mathf.random(360f), Mathf.random(spread));
-            float sx = target.x + Tmp.v1.x;
-            float sy = target.y + Tmp.v1.y;
-            float rot = Angles.angle(source.x, source.y, target.x, target.y);
+            Vec2 dropPosition = new Vec2();
+            if (!WHUtils.snapToSpawnPosition(loadout, target.x, target.y, spread, dropPosition)) return;
+            float rot = Angles.angle(source.x, source.y, dropPosition.x, dropPosition.y);
 
             AirborneSpawner spawner = new AirborneSpawner();
-            spawner.init(spawnTeam, new Vec2(sx, sy), rot, 90f, loadout);
+            spawner.init(spawnTeam, dropPosition, rot, 90f, loadout);
             spawner.add();
         }
 
@@ -643,7 +648,7 @@ public class DefaultAirborneRaid extends LStatement{
                 return out;
             }
 
-            String[] groups = text.split(";");
+            String[] groups = text.split(";", -1);
             for(String group : groups){
                 String g = group == null ? "" : group.trim();
                 if(g.isEmpty()) continue;
@@ -651,14 +656,14 @@ public class DefaultAirborneRaid extends LStatement{
                 Seq<UnitType> seq = new Seq<>();
                 for(String token : unitTokens){
                     UnitType type = parseUnitTypeToken(token);
-                    if(type != null) seq.add(type);
-                    if(seq.size >= 4) break;
+                    if (type == null) continue;
+                    seq.add(type);
+                    if (seq.size >= maxUnitsPerGroup) {
+                        out.add((UnitType[]) seq.toArray(UnitType.class));
+                        seq.clear();
+                    }
                 }
-                if(seq.isEmpty()){
-                    seq.add(UnitTypes.alpha);
-                }
-                UnitType[] arr = seq.toArray(UnitType.class);
-                out.add(arr);
+                if (!seq.isEmpty()) out.add((UnitType[]) seq.toArray(UnitType.class));
             }
 
             if(out.isEmpty()){

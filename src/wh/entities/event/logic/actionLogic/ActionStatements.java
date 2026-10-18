@@ -637,7 +637,7 @@ public final class ActionStatements{
      * Fullscreen black overlay fades from opaque to transparent.
      */
     public static class ScreenFadeOutStatement extends BaseActionStatement {
-        public String durationSec = \u00221\u0022;
+        public String durationSec = "1";
 
         public ScreenFadeOutStatement(){
         }
@@ -650,9 +650,9 @@ public final class ActionStatements{
 
         @Override
         public void build(Table table) {
-            fieldLabeled(table, \u0022run \u0022, run, v -> run = v, 72f);
-            fieldLabeled(table, \u0022 duration \u0022, durationSec, v -> durationSec = v, 72f);
-            fieldLabeled(table, \u0022 result \u0022, out, v -> out = v, 120f);
+            fieldLabeled(table, "run ", run, v -> run = v, 72f);
+            fieldLabeled(table, " duration ", durationSec, v -> durationSec = v, 72f);
+            fieldLabeled(table, " result ", out, v -> out = v, 120f);
         }
 
         @Override
@@ -705,7 +705,7 @@ public final class ActionStatements{
 
         @Override
         public void write(StringBuilder builder) {
-            writeCommon(builder, \u0022wh-screen-fade-out\u0022, durationSec);
+            writeCommon(builder, "wh-screen-fade-out", durationSec);
         }
     }
     /** 设置信息面板文本。 */
@@ -1229,6 +1229,7 @@ public final class ActionStatements{
 
     public static class AirborneJumpInStatement extends BaseActionStatement{
         private static final float DEFAULT_TIMER_DURATION_SEC = 3f;
+        private static final float DEFAULT_SPAWN_RADIUS_TILES = 18f;
         private static final int MAX_AIRBORNE_UNITS = 4;
 
         public String units = "@alpha";
@@ -1269,7 +1270,8 @@ public final class ActionStatements{
         private void rebuild(Table table){
             table.clearChildren();
 
-            int parsedCount = parseUnitList(units).size;
+            Seq<UnitType[]> parsedGroups = parseUnitGroups(units);
+            int parsedCount = countGroupUnits(parsedGroups);
             fieldLabeled(table, "run ", run, v -> run = v, 64f);
             fieldLabeled(table, " units ", units, v -> units = v, 180f);
             TextButton unitPick = new TextButton("pick", Styles.logict);
@@ -1283,7 +1285,7 @@ public final class ActionStatements{
             TextButton unitDetail = new TextButton("detail", Styles.logict);
             unitDetail.clicked(this::showUnitDetailDialog);
             table.add(unitDetail).size(74f, 32f).padLeft(2f);
-            TextButton unitCount = new TextButton("count " + parsedCount + "/" + MAX_AIRBORNE_UNITS, Styles.logict);
+            TextButton unitCount = new TextButton("groups " + parsedGroups.size + "  units " + parsedCount, Styles.logict);
             unitCount.clicked(() -> rebuild(table));
             table.add(unitCount).size(106f, 32f).padLeft(2f);
             table.row();
@@ -1324,13 +1326,47 @@ public final class ActionStatements{
                     String trimmed = token.trim();
                     if(trimmed.isEmpty()) continue;
                     parsed.add(ActionLogicSupport.parseUnitType(trimmed));
-                    if(parsed.size >= MAX_AIRBORNE_UNITS) break;
                 }
             }
             if(parsed.isEmpty()){
                 parsed.add(ActionLogicSupport.parseUnitType(text));
             }
             return parsed;
+        }
+
+        private Seq<UnitType[]> parseUnitGroups(String raw) {
+            Seq<UnitType[]> groups = new Seq<>();
+            String text = raw == null ? "" : raw.trim();
+            if (text.isEmpty()) {
+                groups.add(new UnitType[]{ActionLogicSupport.parseUnitType(text)});
+                return groups;
+            }
+
+            for (String rawGroup : text.split(";", -1)) {
+                Seq<UnitType> group = new Seq<>();
+                String groupText = rawGroup == null ? "" : rawGroup.trim();
+                if (groupText.isEmpty()) continue;
+                for (String token : groupText.split("[,|\\s]+")) {
+                    if (token == null || token.trim().isEmpty()) continue;
+                    group.add(ActionLogicSupport.parseUnitType(token.trim()));
+                    if (group.size >= MAX_AIRBORNE_UNITS) {
+                        groups.add((UnitType[]) group.toArray(UnitType.class));
+                        group.clear();
+                    }
+                }
+                if (!group.isEmpty()) groups.add((UnitType[]) group.toArray(UnitType.class));
+            }
+
+            if (groups.isEmpty()) groups.add(new UnitType[]{ActionLogicSupport.parseUnitType(text)});
+            return groups;
+        }
+
+        private int countGroupUnits(Seq<UnitType[]> groups) {
+            int count = 0;
+            for (UnitType[] group : groups) {
+                if (group != null) count += group.length;
+            }
+            return count;
         }
 
         private int rawUnitCount(String raw){
@@ -1345,8 +1381,8 @@ public final class ActionStatements{
         }
 
         private void showUnitDetailDialog(){
-            arc.struct.Seq<UnitType> parsed = parseUnitList(units);
-            int rawCount = rawUnitCount(units);
+            Seq<UnitType[]> groups = parseUnitGroups(units);
+            Seq<UnitType> parsed = parseUnitList(units);
 
             mindustry.ui.dialogs.BaseDialog dialog = new mindustry.ui.dialogs.BaseDialog("airborne units");
             dialog.cont.pane(root -> {
@@ -1354,11 +1390,24 @@ public final class ActionStatements{
 
                 String rawText = units == null || units.trim().isEmpty() ? "(empty)" : units.trim();
                 root.add("raw: " + rawText).wrap().width(Vars.mobile ? 420f : 340f).left().row();
-                root.add("parsed: " + parsed.size + "/" + MAX_AIRBORNE_UNITS).color(Color.lightGray).left().row();
-                if(rawCount > MAX_AIRBORNE_UNITS){
-                    root.add("truncated to first " + MAX_AIRBORNE_UNITS + " units").color(Pal.remove).left().row();
+                root.add("parsed: " + parsed.size + " units in " + groups.size + " groups").color(Color.lightGray).left().row();
+                root.row();
+                for (int i = 0; i < groups.size; i++) {
+                    UnitType[] group = groups.get(i);
+                    int groupIndex = i;
+                    root.table(Styles.grayPanel, card -> {
+                        card.left().top().defaults().left().pad(2f);
+                        card.add(String.valueOf(groupIndex + 1) + "  " + group.length + "/" + MAX_AIRBORNE_UNITS).color(Pal.accent).row();
+                        for (UnitType type : group) {
+                            if (type == null) continue;
+                            TextureRegion iconRegion = type.fullIcon == null ? type.uiIcon : type.fullIcon;
+                            Drawable icon = iconRegion != null && iconRegion.found() ? new TextureRegionDrawable(iconRegion) : Icon.units;
+                            String display = type.localizedName == null ? type.name : type.localizedName;
+                            card.image(icon).size(32f).padRight(5f);
+                            card.add(display).left().growX().row();
+                        }
+                    }).growX().padTop(3f).row();
                 }
-
                 root.row();
                 for(int i = 0; i < parsed.size; i++){
                     UnitType type = parsed.get(i);
@@ -1409,24 +1458,23 @@ public final class ActionStatements{
                         vUnitOut.setobj(null);
                     }
 
-                    Seq<UnitType> types = parseUnitList(ActionLogicSupport.valueText(vus));
-                    UnitType[] typeArray = new UnitType[Math.min(types.size, MAX_AIRBORNE_UNITS)];
-                    for(int i = 0; i < typeArray.length; i++){
-                        typeArray[i] = types.get(i);
-                    }
+                    Seq<UnitType[]> groups = parseUnitGroups(ActionLogicSupport.valueText(vus));
                     float maxHitSize = 8f;
-                    for (UnitType t : typeArray) {
-                        if (t != null) maxHitSize = Math.max(maxHitSize, t.hitSize);
+                    for (UnitType[] group : groups) {
+                        if (group == null) continue;
+                        for (UnitType t : group) {
+                            if (t != null) maxHitSize = Math.max(maxHitSize, t.hitSize);
+                        }
                     }
                     float delay = autoDelaySecFromHitSize(maxHitSize) * Time.toSeconds;
-                    float spread = autoSpreadFromHitSize(maxHitSize);
-                    UnitType terrainType = typeArray.length == 0 ? null : typeArray[0];
-                    Vec2 dropPosition = new Vec2();
-                    if (!WHUtils.snapToSpawnPosition(terrainType, worldX, worldY, spread * tilesize, dropPosition)) {
-                        return true;
-                    }
 
-                    Runnable spawnOne = () -> {
+                    for (int i = 0; i < waves; i++) {
+                        int groupIndex = i < groups.size ? i : 0;
+                        UnitType[] typeArray = groups.get(groupIndex);
+                        Runnable spawnOne = () -> {
+                            Vec2 dropPosition = new Vec2();
+                            if (!WHUtils.snapToSpawnPosition(typeArray, worldX, worldY, DEFAULT_SPAWN_RADIUS_TILES * tilesize, dropPosition))
+                                return;
                         AirborneSpawner spawner = new AirborneSpawner();
                         spawner.init(teamVal, dropPosition, 0f, delay, typeArray);
                         spawner.setShieldToApply(shieldVal);
@@ -1435,9 +1483,7 @@ public final class ActionStatements{
                             spawner.onSpawned(unit -> vUnitOut.setobj(unit));
                         }
                         spawner.add();
-                    };
-
-                    for(int i = 0; i < waves; i++){
+                        };
                         float spawnDelayTicks = intervalTicks * i;
                         if(spawnDelayTicks <= 0f){
                             spawnOne.run();
@@ -1827,17 +1873,12 @@ public final class ActionStatements{
 
                     // 单条语句流程：淡入 -> 停留 -> 淡出。
                     Sounds.uiChat.play();
-                    ActionContext.cutsceneUI.textLabel = new FLabel(val);
+                    ActionContext.cutsceneUI.setSignalText(val, fontColor, scale);
                     // 使用默认 UI 字体以获得更好的中日韩字符覆盖。
-                    ActionContext.cutsceneUI.textLabel.setStyle(Styles.defaultLabel);
-                    ActionContext.cutsceneUI.textLabel.setColor(fontColor);
-                    ActionContext.cutsceneUI.textLabel.setFontScale(scale);
-                    ActionContext.cutsceneUI.textArea.clear();
-                    ActionContext.cutsceneUI.textArea.add(ActionContext.cutsceneUI.textLabel).pad(4f, 32f, 4f, 32f);
 
-                    ActionContext.cutsceneUI.textTable.clearActions();
-                    ActionContext.cutsceneUI.textTable.color.a = 0f;
-                    ActionContext.cutsceneUI.textTable.actions(
+                    ActionContext.cutsceneUI.signalTable.clearActions();
+                    ActionContext.cutsceneUI.signalTable.color.a = 0f;
+                    ActionContext.cutsceneUI.signalTable.actions(
                     Actions.sequence(
                     Actions.alpha(0f),
                     Actions.fadeIn(inSec, WHInterp.bounce5Out),
@@ -1856,10 +1897,7 @@ public final class ActionStatements{
                 @Override
                 protected void end(LExecutor exec){
                     if(Vars.headless) return;
-                    ActionContext.cutsceneUI.textLabel = new FLabel("");
-                    ActionContext.cutsceneUI.textArea.clear();
-                    ActionContext.cutsceneUI.textArea.add(ActionContext.cutsceneUI.textLabel).pad(4f, 32f, 4f, 32f);
-                    ActionContext.cutsceneUI.textTable.actions(Actions.alpha(0f));
+                    ActionContext.cutsceneUI.clearSignalText();
                 }
 
                 @Override
@@ -2129,7 +2167,7 @@ public final class ActionStatements{
     }
 
     public static void load() {
-        registerStatement(\u0022wh-screen-fade-out\u0022, ActionStatements.ScreenFadeOutStatement::new, ActionStatements.ScreenFadeOutStatement::new);
+        registerStatement("wh-screen-fade-out", ActionStatements.ScreenFadeOutStatement::new, ActionStatements.ScreenFadeOutStatement::new);
         registerStatement("wh-camera-control", ActionStatements.CameraControlStatement::new, ActionStatements.CameraControlStatement::new);
         registerStatement("wh-camera-reset", ActionStatements.CameraResetStatement::new, ActionStatements.CameraResetStatement::new);
         registerStatement("wh-camera-zoom", ActionStatements.CameraZoomStatement::new, ActionStatements.CameraZoomStatement::new);

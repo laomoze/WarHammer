@@ -107,7 +107,7 @@ public class WHBullets {
     public static BulletType AutoGunChromium;
     public static BulletType AutoGunManganeseSteel;
     public static BulletType AutoGunCombustible;
-    public static BulletType AutoGunArmorAlloy;
+    public static BulletType AutoGunTungsten;
 
     //33
     public static BulletType LcarusBullet;
@@ -116,7 +116,7 @@ public class WHBullets {
     public static BulletType SSWordMnSteel;
     public static BulletType SSWordCombustible;
     public static BulletType SSWordCarbide;
-    public static BulletType SSWordArmorAlloy;
+    public static BulletType SSWordTungsten;
     public static BulletType SSWordPlastanium;
 
     public static BulletType ShardTungsten;
@@ -363,7 +363,7 @@ public class WHBullets {
         nuBlackHole = new EffectBulletType(20) {
             {
                 despawnHit = true;
-                hitColor = WHPal.WHYellow;
+                lightColor = hitColor = WHPal.WHYellow;
                 splashDamageRadius = 36;
 
                 lightningDamage = 2000;
@@ -799,7 +799,7 @@ public class WHBullets {
                 fragBullet = new LightningBulletType() {
                     {
                         lifetime = 30;
-                        hitColor = lightningColor = Pal.sapBullet;
+                        lightColor = hitColor = lightningColor = Pal.sapBullet;
                         despawnEffect = hitEffect = Fx.hitLancer;
                         lightning = 1;
                         lightningDamage = 30;
@@ -840,7 +840,7 @@ public class WHBullets {
                 shrinkY = 0.5f;
                 shrinkX = 0.5f;
                 frontColor = WHPal.ShootOrangeLight;
-                lightningColor = trailColor = hitColor = backColor = WHPal.ShootOrange;
+                lightColor = lightningColor = trailColor = hitColor = backColor = WHPal.ShootOrange;
                 hitEffect = despawnEffect = new MultiEffect(
                         WHFx.generalExplosion(60, hitColor, splashDamageRadius, 5, false),
                         WHFx.line45Explosion(hitColor, hitColor, 10));
@@ -1022,7 +1022,7 @@ public class WHBullets {
                 pierceCap = 3;
                 bouncing = true;
 
-                lightningColor = hitColor = backColor = trailColor = Pal.techBlue;
+                lightColor = lightningColor = hitColor = backColor = trailColor = Pal.techBlue;
                 frontColor = backColor.cpy().lerp(Color.white, 0.3f);
                 hitEffect = despawnEffect = new MultiEffect(
                         Fx.hitBulletColor, WHFx.square(60, hitColor, 4, 12, 4));
@@ -1030,7 +1030,7 @@ public class WHBullets {
                 intervalBullet = new LightningBulletType() {{
                     damage = 10;
                     collidesAir = true;
-                    lightningColor = Pal.techBlue;
+                    lightColor = lightningColor = Pal.techBlue;
                     lightningLength = 3;
                     lightningLengthRand = 4;
 
@@ -1076,7 +1076,7 @@ public class WHBullets {
             trailLength = 4;
             trailWidth = width / 4.4f;
 
-            hitColor = backColor = trailColor = WHItems.manganese.color;
+            lightColor = hitColor = backColor = trailColor = WHItems.manganese.color;
             frontColor = backColor.cpy().lerp(Color.white, 0.5f);
             hitEffect = despawnEffect = Fx.hitBulletColor;
 
@@ -1092,7 +1092,7 @@ public class WHBullets {
             trailLength = 4;
             trailWidth = width / 4.4f;
 
-            hitColor = backColor = trailColor = WHItems.chromium.color;
+            lightColor = hitColor = backColor = trailColor = WHItems.chromium.color;
             frontColor = backColor.cpy().lerp(Color.white, 0.5f);
             hitEffect = despawnEffect = Fx.hitBulletColor;
 
@@ -1111,7 +1111,7 @@ public class WHBullets {
             trailLength = 4;
             trailWidth = width / 4.4f;
 
-            hitColor = backColor = trailColor = Pal.siliconAmmoBack;
+            lightColor = hitColor = backColor = trailColor = Pal.siliconAmmoBack;
             frontColor = Pal.siliconAmmoFront;
             hitEffect = despawnEffect = Fx.hitBulletColor;
         }};
@@ -1131,7 +1131,7 @@ public class WHBullets {
             trailWidth = width / 4.4f;
 
             hitEffect = despawnEffect = Fx.hitBulletColor;
-            hitColor = backColor = trailColor = Items.graphite.color;
+            lightColor = hitColor = backColor = trailColor = Items.graphite.color;
             frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
             shootEffect = Fx.shootBigColor;
@@ -1149,7 +1149,7 @@ public class WHBullets {
             height = 8;
             trailWidth = width / 4.4f;
             trailLength = 4;
-            backColor = hitColor = trailColor = WHPal.MnSteelColor;
+            lightColor = backColor = hitColor = trailColor = WHPal.MnSteelColor;
             explodeRange = splashDamageRadius = 20;
             shieldDamageMultiplier = 0.5f;
             splashDamage = 20f;
@@ -1165,7 +1165,7 @@ public class WHBullets {
                 height = 10f;
                 shrinkY = 1f;
                 lifetime = 20f;
-                backColor = Pal.gray;
+                lightColor = backColor = Pal.gray;
                 frontColor = Color.white;
                 despawnEffect = Fx.none;
                 collidesGround = true;
@@ -1187,7 +1187,7 @@ public class WHBullets {
             splashDamage = 30f;
             explodeRange = splashDamageRadius = 28;
             shieldDamageMultiplier = 0.5f;
-            backColor = hitColor = trailColor = Pal.glassAmmoBack;
+            lightColor = backColor = hitColor = trailColor = Pal.glassAmmoBack;
             shootEffect = Fx.shootSmallColor;
             hitEffect = Fx.flakExplosion;
 
@@ -1200,7 +1200,7 @@ public class WHBullets {
                 height = 10f;
                 shrinkY = 1f;
                 lifetime = 20f;
-                backColor = Pal.gray;
+                lightColor = backColor = Pal.gray;
                 frontColor = Color.white;
                 despawnEffect = Fx.none;
                 collidesGround = true;
@@ -1217,7 +1217,7 @@ public class WHBullets {
             trailLength = 5;
             trailSinScl = 12f;
             trailSinMag = 0.1f;
-            hitColor = trailColor = backColor = Pal.plastaniumBack;
+            lightColor = hitColor = trailColor = backColor = Pal.plastaniumBack;
             frontColor = Pal.plastaniumFront;
             splashDamage = 45f;
             explodeRange = splashDamageRadius = 32;
@@ -1231,7 +1231,7 @@ public class WHBullets {
                 height = 12f;
                 shrinkY = 1f;
                 lifetime = 12f;
-                backColor = Pal.plastaniumBack;
+                lightColor = backColor = Pal.plastaniumBack;
                 frontColor = Pal.plastaniumFront;
                 despawnEffect = Fx.none;
                 collidesAir = false;
@@ -1245,7 +1245,7 @@ public class WHBullets {
                 critChance = 0.1f;
                 critMultiplier = 2f;
                 lifetime = 240 / 8f;
-                backColor = hitColor = trailColor = Items.graphite.color;
+                lightColor = backColor = hitColor = trailColor = Items.graphite.color;
                 width = 3;
                 height = width * 4.5f;
                 trailWidth = 2f;
@@ -1274,7 +1274,7 @@ public class WHBullets {
                 critChance = 0.1f;
                 critMultiplier = 2f;
                 lifetime = 240 / 8.5f;
-                backColor = hitColor = trailColor = WHItems.chromium.color;
+                lightColor = backColor = hitColor = trailColor = WHItems.chromium.color;
                 width = 3;
                 height = width * 4.5f;
                 trailWidth = 2f;
@@ -1288,6 +1288,7 @@ public class WHBullets {
                 splashDamage = 20;
                 armorMultiplier = blockArmorMultiplier = 0.8f;
                 trailChance = 0.1f;
+
                 critEffect = WHFx.square(20, Items.silicon.color, 1, 10, 3f);
                 shootEffect = Fx.shootBig;
                 smokeEffect = Fx.shootBigSmoke;
@@ -1305,14 +1306,15 @@ public class WHBullets {
             }
         };
 
-        AutoGunManganeseSteel = new CritBulletType(8.5f, 40) {
+        AutoGunManganeseSteel = new CritBulletType(8.5f, 50) {
             {
+                reloadMultiplier = 1.2f;
                 ammoMultiplier = 4;
                 critChance = 0.3f;
                 critMultiplier = 1.4f;
                 rangeChange = 12f;
                 lifetime = (240 + 12) / 8.5f;
-                backColor = hitColor = trailColor = WHItems.chromium.color;
+                lightColor = backColor = hitColor = trailColor = WHItems.chromium.color;
                 width = 3;
                 height = width * 4.5f;
                 trailWidth = 2f;
@@ -1325,6 +1327,8 @@ public class WHBullets {
                 trailChance = 0.1f;
                 splashDamageRadius = 40;
                 splashDamage = 50;
+                status = WHStatusEffects.rock;
+                statusDuration = 30;
                 critEffect = WHFx.square(20, Items.silicon.color, 1, 10, 3f);
                 shootEffect = Fx.shootBig;
                 smokeEffect = Fx.shootBigSmoke;
@@ -1352,7 +1356,7 @@ public class WHBullets {
                 knockback = 0.8f;
                 armorMultiplier = 0.5f;
                 lifetime = 240 / 8.5f;
-                backColor = hitColor = trailColor = Items.pyratite.color;
+                lightColor = backColor = hitColor = trailColor = Items.pyratite.color;
                 width = 3;
                 height = width * 4.5f;
                 trailWidth = 2f;
@@ -1382,7 +1386,7 @@ public class WHBullets {
                 Draw.reset();
             }
         };
-        AutoGunArmorAlloy = new CritBulletType(8.5f, 30) {
+        AutoGunTungsten = new CritBulletType(8.5f, 30) {
             {
                 ammoMultiplier = 4f;
                 reloadMultiplier = 1.5f;
@@ -1391,7 +1395,7 @@ public class WHBullets {
                 critMultiplier = 2f;
                 knockback = 0.8f;
                 lifetime = 240 / 8.5f;
-                backColor = hitColor = trailColor = Items.surgeAlloy.color.cpy().lerp(WHItems.manganeseSteel.color, 0.7f);
+                lightColor = backColor = hitColor = trailColor = Items.surgeAlloy.color.cpy().lerp(WHItems.manganeseSteel.color, 0.7f);
                 width = 2;
                 height = width * 5;
                 trailWidth = 2f;
@@ -1429,7 +1433,7 @@ public class WHBullets {
             laser = Fx.none;
             delayEffectLifeTime = 28f;
             renderingDistortion = true;
-            hitColor = WHPal.SkyBlue.cpy();
+            lightColor = hitColor = WHPal.SkyBlue.cpy();
             hitEffect = despawnEffect = new MultiEffect(new ExplosionEffect() {{
                 waveColor = sparkColor = WHPal.SkyBlue;
                 waveRad = splashDamageRadius;
@@ -1457,7 +1461,7 @@ public class WHBullets {
             width = 20;
             delayEffectLifeTime = 25f;
             renderingDistortion = true;
-            hitColor = WHPal.ShootOrangeLight;
+            lightColor = hitColor = WHPal.ShootOrangeLight;
             hitEffect = WHFx.linePolyOut(60, hitColor, splashDamageRadius, 2, 4, 0);
             despawnEffect = new MultiEffect(new ExplosionEffect() {{
                 waveColor = sparkColor = WHPal.ShootOrangeLight;
@@ -1479,12 +1483,12 @@ public class WHBullets {
 
             critChance = 0.1f;
             critMultiplier = 2f;
-            speed = 8f;
+            speed = 6f;
             damage = 40;
             splashDamageRadius = 32;
-            splashDamage = 40;
+            splashDamage = 60;
             lifetime = 420 / speed;
-            homingDelay = lifetime * 0.8f;
+            homingDelay = lifetime * 0.5f;
             homingPower = 0.04f;
             homingRange = 80;
             /*       followAimSpeed = 2f;*/
@@ -1496,7 +1500,7 @@ public class WHBullets {
             trailSinScl = 12f;
             trailSinMag = 0.12f;
             sprite = name("large-missile");
-            hitColor = trailColor = backColor = WHItems.manganeseSteel.color.cpy();
+            lightColor = hitColor = trailColor = backColor = WHItems.manganeseSteel.color.cpy();
             width = 18f;
             height = 60;
             hitSize = 10f;
@@ -1523,7 +1527,49 @@ public class WHBullets {
             flameLength = 16f;
             lengthOffset = 5;
             colors = new Color[]{WHItems.manganeseSteel.color.cpy().a(0.4f), WHItems.manganeseSteel.color.cpy().a(0.8f), Pal.lancerLaser};
-        }};
+        }
+
+            @Override
+            public void updateHoming(Bullet b) {
+                if (homingPower > 0.0001f && b.time >= homingDelay) {
+                    float realAimX = b.aimX < 0 ? b.x : b.aimX;
+                    float realAimY = b.aimY < 0 ? b.y : b.aimY;
+
+                    Teamc target;
+                    if (heals()) {
+                        target = Units.closestTarget(null, realAimX, realAimY, homingRange,
+                                e -> e.checkTarget(collidesAir, collidesGround) && e.team != b.team && !b.hasCollided(e.id),
+                                t -> collidesGround && (t.team != b.team || t.damaged()) && !b.hasCollided(t.id));
+                    } else if (b.aimTile != null && b.aimTile.build != null &&
+                            b.aimTile.build.team != b.team && collidesGround && !b.hasCollided(b.aimTile.build.id)) {
+                        target = b.aimTile.build;
+                    } else {
+                        target = Units.closestTarget(b.team, realAimX, realAimY, homingRange,
+                                e -> e != null && e.checkTarget(collidesAir, collidesGround) && !b.hasCollided(e.id),
+                                t -> t != null && collidesGround && !b.hasCollided(t.id));
+                    }
+
+                    if (target != null) {
+                        float distance = Mathf.dst(b.x, b.y, target.x(), target.y());
+                        float distanceMultiplier = Mathf.clamp(homingRange / Math.max(distance, 1f), 1f, 5f);
+                        b.vel.setAngle(Angles.moveToward(b.rotation(), b.angleTo(target),
+                                homingPower * distanceMultiplier * Time.delta * 50f));
+                    }
+                }
+
+                if (followAimSpeed > 0f) {
+                    if (b.shooter instanceof Unit u) {
+                        float angle = b.angleTo(u.aimX, u.aimY);
+                        b.vel.setAngle(Angles.moveToward(b.vel.angle(), angle, followAimSpeed * Time.delta));
+                    }
+                    if (b.shooter instanceof ControlBlock bld) {
+                        Unit unit = bld.unit();
+                        float angle = b.angleTo(unit.aimX, unit.aimY);
+                        b.vel.setAngle(Angles.moveToward(b.vel.angle(), angle, followAimSpeed * Time.delta));
+                    }
+                }
+            }
+        };
 
         SSWordPlastanium = new CritMissileBulletType() {{
             ammoMultiplier = 3;
@@ -1536,7 +1582,7 @@ public class WHBullets {
             lifetime = 420 / speed;
             homingDelay = lifetime * 0.8f;
             homingPower = 0.04f;
-            homingRange = 80;
+            homingRange = 120;
             /*   followAimSpeed = 2f;*/
             weaveRandom = true;
             weaveScale = 12f;
@@ -1547,21 +1593,21 @@ public class WHBullets {
             trailSinMag = 0.12f;
             trailInterp = Interp.exp5In;
             sprite = name("large-missile");
-            hitColor = trailColor = backColor = Items.plastanium.color.cpy();
+            lightColor = hitColor = trailColor = backColor = Items.plastanium.color.cpy();
             width = 18f;
             height = 60;
             hitSize = 10f;
             keepVelocity = false;
 
             fragBullets = 6;
-            fragBullet = new BasicBulletType(2.5f, 25, name("tall")) {{
+            fragBullet = new CritBulletType(2.5f, 30, name("tall")) {{
                 splashDamageRadius = 32;
                 splashDamage = 20;
                 width = 10f;
                 height = 12f;
                 shrinkY = 1f;
                 lifetime = 15f;
-                backColor = Pal.plastaniumBack;
+                lightColor = backColor = Pal.plastaniumBack;
                 frontColor = Pal.plastaniumFront;
                 despawnEffect = Fx.none;
             }};
@@ -1574,20 +1620,62 @@ public class WHBullets {
             flameLength = 16f;
             lengthOffset = 5;
             colors = new Color[]{Items.plastanium.color.cpy().a(0.4f), Items.plastanium.color.cpy().a(0.8f), Items.plastanium.color.cpy().lerp(Color.white, 0.8f)};
-        }};
+        }
+
+            @Override
+            public void updateHoming(Bullet b) {
+                if (homingPower > 0.0001f && b.time >= homingDelay) {
+                    float realAimX = b.aimX < 0 ? b.x : b.aimX;
+                    float realAimY = b.aimY < 0 ? b.y : b.aimY;
+
+                    Teamc target;
+                    if (heals()) {
+                        target = Units.closestTarget(null, realAimX, realAimY, homingRange,
+                                e -> e.checkTarget(collidesAir, collidesGround) && e.team != b.team && !b.hasCollided(e.id),
+                                t -> collidesGround && (t.team != b.team || t.damaged()) && !b.hasCollided(t.id));
+                    } else if (b.aimTile != null && b.aimTile.build != null &&
+                            b.aimTile.build.team != b.team && collidesGround && !b.hasCollided(b.aimTile.build.id)) {
+                        target = b.aimTile.build;
+                    } else {
+                        target = Units.closestTarget(b.team, realAimX, realAimY, homingRange,
+                                e -> e != null && e.checkTarget(collidesAir, collidesGround) && !b.hasCollided(e.id),
+                                t -> t != null && collidesGround && !b.hasCollided(t.id));
+                    }
+
+                    if (target != null) {
+                        float distance = Mathf.dst(b.x, b.y, target.x(), target.y());
+                        float distanceMultiplier = Mathf.clamp(homingRange / Math.max(distance, 1f), 1f, 5f);
+                        b.vel.setAngle(Angles.moveToward(b.rotation(), b.angleTo(target),
+                                homingPower * distanceMultiplier * Time.delta * 50f));
+                    }
+                }
+
+                if (followAimSpeed > 0f) {
+                    if (b.shooter instanceof Unit u) {
+                        float angle = b.angleTo(u.aimX, u.aimY);
+                        b.vel.setAngle(Angles.moveToward(b.vel.angle(), angle, followAimSpeed * Time.delta));
+                    }
+                    if (b.shooter instanceof ControlBlock bld) {
+                        Unit unit = bld.unit();
+                        float angle = b.angleTo(unit.aimX, unit.aimY);
+                        b.vel.setAngle(Angles.moveToward(b.vel.angle(), angle, followAimSpeed * Time.delta));
+                    }
+                }
+            }
+        };
 
         SSWordCombustible = new CritMissileBulletType() {{
             ammoMultiplier = 5;
             critChance = 0.1f;
             critMultiplier = 2f;
-            speed = 8f;
+            speed = 7f;
             damage = 60;
-            splashDamageRadius = 42;
-            splashDamage = 60;
+            splashDamageRadius = 46;
+            splashDamage = 80;
             lifetime = 55;
-            homingDelay = lifetime * 0.8f;
+            homingDelay = lifetime * 0.4f;
             homingPower = 0.04f;
-            homingRange = 80;
+            homingRange = 120;
             /* followAimSpeed = 2f;*/
             weaveRandom = true;
             weaveScale = 12f;
@@ -1597,7 +1685,7 @@ public class WHBullets {
             trailSinScl = 12f;
             trailSinMag = 0.12f;
             sprite = name("large-missile");
-            hitColor = trailColor = backColor = WHItems.combustible.color.cpy();
+            lightColor = hitColor = trailColor = backColor = WHItems.combustible.color.cpy();
             width = 18f;
             height = 60;
             hitSize = 10f;
@@ -1622,18 +1710,61 @@ public class WHBullets {
             flameLength = 16f;
             lengthOffset = 5;
             colors = new Color[]{Items.pyratite.color.cpy().a(0.4f), Items.pyratite.color.cpy().a(0.8f), Items.pyratite.color.cpy().lerp(Color.white, 0.8f)};
-        }};
+        }
+
+            @Override
+            public void updateHoming(Bullet b) {
+                if (homingPower > 0.0001f && b.time >= homingDelay) {
+                    float realAimX = b.aimX < 0 ? b.x : b.aimX;
+                    float realAimY = b.aimY < 0 ? b.y : b.aimY;
+
+                    Teamc target;
+                    if (heals()) {
+                        target = Units.closestTarget(null, realAimX, realAimY, homingRange,
+                                e -> e.checkTarget(collidesAir, collidesGround) && e.team != b.team && !b.hasCollided(e.id),
+                                t -> collidesGround && (t.team != b.team || t.damaged()) && !b.hasCollided(t.id));
+                    } else if (b.aimTile != null && b.aimTile.build != null &&
+                            b.aimTile.build.team != b.team && collidesGround && !b.hasCollided(b.aimTile.build.id)) {
+                        target = b.aimTile.build;
+                    } else {
+                        target = Units.closestTarget(b.team, realAimX, realAimY, homingRange,
+                                e -> e != null && e.checkTarget(collidesAir, collidesGround) && !b.hasCollided(e.id),
+                                t -> t != null && collidesGround && !b.hasCollided(t.id));
+                    }
+
+                    if (target != null) {
+                        float distance = Mathf.dst(b.x, b.y, target.x(), target.y());
+                        float distanceMultiplier = Mathf.clamp(homingRange / Math.max(distance, 1f), 1f, 5f);
+                        b.vel.setAngle(Angles.moveToward(b.rotation(), b.angleTo(target),
+                                homingPower * distanceMultiplier * Time.delta * 50f));
+                    }
+                }
+
+                if (followAimSpeed > 0f) {
+                    if (b.shooter instanceof Unit u) {
+                        float angle = b.angleTo(u.aimX, u.aimY);
+                        b.vel.setAngle(Angles.moveToward(b.vel.angle(), angle, followAimSpeed * Time.delta));
+                    }
+                    if (b.shooter instanceof ControlBlock bld) {
+                        Unit unit = bld.unit();
+                        float angle = b.angleTo(unit.aimX, unit.aimY);
+                        b.vel.setAngle(Angles.moveToward(b.vel.angle(), angle, followAimSpeed * Time.delta));
+                    }
+                }
+            }
+        };
 
         SSWordCarbide = new CritMissileBulletType() {{
             ammoMultiplier = 6;
-            reloadMultiplier = 0.6f;
+            reloadMultiplier = 0.8f;
+            armorMultiplier = 0.7f;
 
             speed = 6f;
             damage = 70;
-            splashDamageRadius = 50;
-            splashDamage = 50;
+            splashDamageRadius = 48;
+            splashDamage = 80;
             lifetime = 55;
-            homingDelay = lifetime * 0.8f;
+            homingDelay = lifetime * 0.4f;
             homingPower = 0.04f;
             homingRange = 80;
             /*   followAimSpeed = 2f;*/
@@ -1645,7 +1776,7 @@ public class WHBullets {
             trailSinScl = 12f;
             trailSinMag = 0.12f;
             sprite = name("large-missile");
-            lightningColor = hitColor = trailColor = backColor = Color.valueOf("ab8ec5").cpy();
+            lightColor = lightningColor = hitColor = trailColor = backColor = Color.valueOf("ab8ec5").cpy();
             width = 18f;
             height = 60;
             hitSize = 10f;
@@ -1674,9 +1805,10 @@ public class WHBullets {
             lengthOffset = 5;
             colors = new Color[]{hitColor.cpy().a(0.4f), hitColor.cpy().a(0.8f), hitColor.cpy().lerp(Color.white, 0.8f)};
 
-            fragBullet = new CritBulletType(6, 25, "bullet") {{
+            fragBullet = new CritBulletType(6, 45, "bullet") {{
                 critMultiplier = 1.3f;
-                critChance = 0.05f;
+                critChance = 0.1f;
+                armorMultiplier = 0.7f;
 
                 width = 11f;
                 height = 14f;
@@ -1684,7 +1816,7 @@ public class WHBullets {
                 lifetime = 50 / speed;
                 pierceCap = 2;
                 armorMultiplier = blockArmorMultiplier = 0.6f;
-                lightningColor = backColor = trailColor = hitColor = Color.valueOf("ab8ec5").cpy();
+                lightColor = lightningColor = backColor = trailColor = hitColor = Color.valueOf("ab8ec5").cpy();
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
                 trailEffect = Fx.disperseTrail;
@@ -1696,19 +1828,61 @@ public class WHBullets {
                 despawnEffect = Fx.hitBulletColor;
             }};
             fragBullets = 3;
-        }};
+        }
 
-        SSWordArmorAlloy = new CritMissileBulletType() {{
+            @Override
+            public void updateHoming(Bullet b) {
+                if (homingPower > 0.0001f && b.time >= homingDelay) {
+                    float realAimX = b.aimX < 0 ? b.x : b.aimX;
+                    float realAimY = b.aimY < 0 ? b.y : b.aimY;
+
+                    Teamc target;
+                    if (heals()) {
+                        target = Units.closestTarget(null, realAimX, realAimY, homingRange,
+                                e -> e.checkTarget(collidesAir, collidesGround) && e.team != b.team && !b.hasCollided(e.id),
+                                t -> collidesGround && (t.team != b.team || t.damaged()) && !b.hasCollided(t.id));
+                    } else if (b.aimTile != null && b.aimTile.build != null &&
+                            b.aimTile.build.team != b.team && collidesGround && !b.hasCollided(b.aimTile.build.id)) {
+                        target = b.aimTile.build;
+                    } else {
+                        target = Units.closestTarget(b.team, realAimX, realAimY, homingRange,
+                                e -> e != null && e.checkTarget(collidesAir, collidesGround) && !b.hasCollided(e.id),
+                                t -> t != null && collidesGround && !b.hasCollided(t.id));
+                    }
+
+                    if (target != null) {
+                        float distance = Mathf.dst(b.x, b.y, target.x(), target.y());
+                        float distanceMultiplier = Mathf.clamp(homingRange / Math.max(distance, 1f), 1f, 5f);
+                        b.vel.setAngle(Angles.moveToward(b.rotation(), b.angleTo(target),
+                                homingPower * distanceMultiplier * Time.delta * 50f));
+                    }
+                }
+
+                if (followAimSpeed > 0f) {
+                    if (b.shooter instanceof Unit u) {
+                        float angle = b.angleTo(u.aimX, u.aimY);
+                        b.vel.setAngle(Angles.moveToward(b.vel.angle(), angle, followAimSpeed * Time.delta));
+                    }
+                    if (b.shooter instanceof ControlBlock bld) {
+                        Unit unit = bld.unit();
+                        float angle = b.angleTo(unit.aimX, unit.aimY);
+                        b.vel.setAngle(Angles.moveToward(b.vel.angle(), angle, followAimSpeed * Time.delta));
+                    }
+                }
+            }
+        };
+
+        SSWordTungsten = new CritMissileBulletType() {
+            {
             ammoMultiplier = 6;
-            reloadMultiplier = 1.25f;
+                reloadMultiplier = 0.8f;
 
             critChance = 0.2f;
 
-            speed = 8f;
-            damage = 90;
-            splashDamageRadius = 56;
-            splashDamage = 50;
-            armorMultiplier = blockArmorMultiplier = 0.5f;
+                speed = 6f;
+                damage = 100;
+                pierceCap = 2;
+                armorMultiplier = blockArmorMultiplier = 0.75f;
             lifetime = 55;
             homingDelay = lifetime * 0.8f;
             homingPower = 0.04f;
@@ -1722,14 +1896,17 @@ public class WHBullets {
             trailSinScl = 12f;
             trailSinMag = 0.12f;
             sprite = name("large-missile");
-            lightningColor = hitColor = trailColor = backColor = WHItems.armorAlloy.color.cpy();
+                lightColor = lightningColor = hitColor = trailColor = backColor = WHItems.armorAlloy.color.cpy();
             width = 18f;
             height = 60;
             hitSize = 10f;
             keepVelocity = false;
 
             status = WHStatusEffects.rock;
-            statusDuration = 60f;
+                statusDuration = 20f;
+                lightning = 1;
+                lightningDamage = 20;
+                lightningLengthRand = lightningLength = 4;
             smokeEffect = Fx.shootSmallFlame;
             shootEffect = new MultiEffect(Fx.shootBigColor, Fx.colorSparkBig);
             hitEffect = despawnEffect = new MultiEffect(
@@ -1752,7 +1929,49 @@ public class WHBullets {
             flameLength = 16f;
             lengthOffset = 5;
             colors = new Color[]{hitColor.cpy().a(0.4f), hitColor.cpy().a(0.8f), hitColor.cpy().lerp(Color.white, 0.8f)};
-        }};
+            }
+
+            @Override
+            public void updateHoming(Bullet b) {
+                if (homingPower > 0.0001f && b.time >= homingDelay) {
+                    float realAimX = b.aimX < 0 ? b.x : b.aimX;
+                    float realAimY = b.aimY < 0 ? b.y : b.aimY;
+
+                    Teamc target;
+                    if (heals()) {
+                        target = Units.closestTarget(null, realAimX, realAimY, homingRange,
+                                e -> e.checkTarget(collidesAir, collidesGround) && e.team != b.team && !b.hasCollided(e.id),
+                                t -> collidesGround && (t.team != b.team || t.damaged()) && !b.hasCollided(t.id));
+                    } else if (b.aimTile != null && b.aimTile.build != null &&
+                            b.aimTile.build.team != b.team && collidesGround && !b.hasCollided(b.aimTile.build.id)) {
+                        target = b.aimTile.build;
+                    } else {
+                        target = Units.closestTarget(b.team, realAimX, realAimY, homingRange,
+                                e -> e != null && e.checkTarget(collidesAir, collidesGround) && !b.hasCollided(e.id),
+                                t -> t != null && collidesGround && !b.hasCollided(t.id));
+                    }
+
+                    if (target != null) {
+                        float distance = Mathf.dst(b.x, b.y, target.x(), target.y());
+                        float distanceMultiplier = Mathf.clamp(homingRange / Math.max(distance, 1f), 1f, 5f);
+                        b.vel.setAngle(Angles.moveToward(b.rotation(), b.angleTo(target),
+                                homingPower * distanceMultiplier * Time.delta * 50f));
+                    }
+                }
+
+                if (followAimSpeed > 0f) {
+                    if (b.shooter instanceof Unit u) {
+                        float angle = b.angleTo(u.aimX, u.aimY);
+                        b.vel.setAngle(Angles.moveToward(b.vel.angle(), angle, followAimSpeed * Time.delta));
+                    }
+                    if (b.shooter instanceof ControlBlock bld) {
+                        Unit unit = bld.unit();
+                        float angle = b.angleTo(unit.aimX, unit.aimY);
+                        b.vel.setAngle(Angles.moveToward(b.vel.angle(), angle, followAimSpeed * Time.delta));
+                    }
+                }
+            }
+        };
 
         ShardTungsten = new CritBulletType(6, 70) {{
             critChance = 0.1f;
@@ -1765,7 +1984,7 @@ public class WHBullets {
             pierce = true;
             pierceCap = 3;
             knockback = 0.7f;
-            backColor = trailColor = hitColor = Items.tungsten.color.cpy();
+            lightColor = backColor = trailColor = hitColor = Items.tungsten.color.cpy();
             width = 10f;
             height = 30f;
             homingPower = 0.08f;
@@ -1802,7 +2021,7 @@ public class WHBullets {
             pierce = true;
             pierceCap = 4;
             knockback = 0.7f;
-            backColor = trailColor = hitColor = WHItems.molybdenumAlloy.color.cpy();
+            lightColor = backColor = trailColor = hitColor = WHItems.molybdenumAlloy.color.cpy();
             width = 10f;
             height = 30f;
             homingPower = 0.08f;
@@ -1827,7 +2046,7 @@ public class WHBullets {
             impact = false;
             pierceBuilding = true;
             knockback = 0.7f;
-            lightningColor = backColor = trailColor = hitColor = WHItems.refineCeramite.color.cpy();
+            lightColor = lightningColor = backColor = trailColor = hitColor = WHItems.refineCeramite.color.cpy();
             width = 11f;
             height = 30f;
             trailLength = 12;
@@ -2067,7 +2286,7 @@ public class WHBullets {
             smokeEffect = Fx.shootBigSmoke;
             trailEffect = smokeTrail;
             trailChance = 0.2f;
-            despawnEffect = new MultiEffect(
+            hitEffect = despawnEffect = new MultiEffect(
                     WHFx.instRotation2(30, hitColor, splashDamageRadius, 0.6f, 1, 0, false),
                     WHFx.generalExplosion(20, hitColor, splashDamageRadius, 10, false),
                     WHFx.square(30, hitColor, 12, splashDamageRadius, 6)
@@ -2082,7 +2301,7 @@ public class WHBullets {
                 height = 12f;
                 shrinkY = 1f;
                 lifetime = 12f;
-                backColor = Pal.plastaniumBack;
+                lightColor = backColor = Pal.plastaniumBack;
                 frontColor = Pal.plastaniumFront;
                 despawnEffect = Fx.explosion;
                 collidesGround = false;
@@ -2100,8 +2319,10 @@ public class WHBullets {
             collidesGround = false;
 
             ammoMultiplier = 8;
+            armorMultiplier = 0.7f;
+            scaledSplashDamage = true;
 
-            explodeRange = splashDamageRadius * 0.6f;
+            explodeRange = splashDamageRadius * 0.75f;
             flakDelay = 12;
             explodeDelay = 12f;
 
@@ -2125,7 +2346,7 @@ public class WHBullets {
             trailRotation = true;
             trailInterval = 3f;
 
-            despawnEffect = new MultiEffect(
+            hitEffect = despawnEffect = new MultiEffect(
                     new Effect(100, 200f, b -> {
                         float intensity = 2f;
 
@@ -2160,11 +2381,11 @@ public class WHBullets {
 
             ammoMultiplier = 8;
 
-            explodeRange = splashDamageRadius * 0.6f;
+            explodeRange = splashDamageRadius * 0.8f;
             flakDelay = 12;
             explodeDelay = 12f;
 
-            armorMultiplier = 1.2f;
+            armorMultiplier = 0.7f;
 
             lifetime = 350 / speed;
             lightColor = lightningColor = backColor = trailColor = hitColor = WHItems.uranium.color.cpy();
@@ -2182,7 +2403,7 @@ public class WHBullets {
             smokeEffect = Fx.shootBigSmoke;
             trailEffect = smokeTrail;
             trailChance = 0.2f;
-            despawnEffect = new MultiEffect(
+            hitEffect = despawnEffect = new MultiEffect(
                     WHFx.instRotation2(30, hitColor, splashDamageRadius, 0.6f, 1, 0, false),
                     WHFx.generalExplosion(20, hitColor, splashDamageRadius, 10, true),
                     WHFx.square(30, hitColor, 15, splashDamageRadius, 6)
@@ -2197,7 +2418,7 @@ public class WHBullets {
                 splashDamageRadius = 22f;
                 splashDamage = damage;
                 lightColor = lightningColor = backColor = trailColor = hitColor = WHItems.uranium.color.cpy();
-                despawnEffect = new MultiEffect(
+                hitEffect = despawnEffect = new MultiEffect(
                         Fx.titanExplosionFrag,
                         WHFx.generalExplosion(20, hitColor, splashDamageRadius, 10, true));
                 width = 8f;
@@ -2224,7 +2445,7 @@ public class WHBullets {
                 critChance = 0.18f;
                 critMultiplier = 1.5f;
 
-                Color c = WHItems.ceramite.color.cpy();
+                Color c = WHItems.ceramite.color.cpy().lerp(Pal.plastanium, 0.25f);
 
                 pierceCap = 2;
                 splashDamage = 150;
@@ -2240,7 +2461,6 @@ public class WHBullets {
                 collidesTiles = false;
                 shootEffect = new MultiEffect(WHFx.shootLine(10, 30), Fx.shootBig2);
                 smokeEffect = Fx.shootSmokeDisperse;
-                frontColor = c.lerp(Color.white, 0.5f);
 
                 lightColor = lightningColor = backColor = trailColor = hitColor = c;
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
@@ -2268,7 +2488,7 @@ public class WHBullets {
                     lightColor = lightningColor = backColor = trailColor = hitColor = c;
                     splashDamageRadius = 30;
                     splashDamage = damage;
-                    despawnEffect = new MultiEffect(
+                    hitEffect = despawnEffect = new MultiEffect(
                             Fx.titanExplosionFrag,
                             WHFx.generalExplosion(20, hitColor, splashDamageRadius, 10, true));
                     width = height = 10;
@@ -2291,7 +2511,7 @@ public class WHBullets {
             armorMultiplier = 1.2f;
 
             lifetime = 316 / speed;
-            hitColor = backColor = trailColor = WHItems.chromium.color.cpy();
+            lightColor = hitColor = backColor = trailColor = WHItems.chromium.color.cpy();
             frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
             width = 13f;
@@ -2321,7 +2541,7 @@ public class WHBullets {
             buildingDamageMultiplier = 0.3f;
 
             lifetime = 316 / speed;
-            Color c = hitColor = backColor = trailColor = Items.tungsten.color.cpy();
+            Color c = lightColor = hitColor = backColor = trailColor = Items.tungsten.color.cpy();
             frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
             width = 13f;
@@ -2351,8 +2571,8 @@ public class WHBullets {
                 buildingDamageMultiplier = 0.3f;
 
                 lifetime = 300 / speed;
-                backColor = WHItems.uranium.color.cpy();
-                Color c = hitColor = trailColor = backColor.cpy().lerp(Color.white, 0.3f);
+                lightColor = backColor = WHItems.uranium.color.cpy();
+                Color c = lightColor = hitColor = trailColor = backColor.cpy().lerp(Color.white, 0.3f);
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
                 width = 13f;
@@ -2408,7 +2628,7 @@ public class WHBullets {
                 armorMultiplier = 1.2f;
 
                 lifetime = 316 / speed;
-                Color c = hitColor = backColor = trailColor = Color.valueOf("ab8ec5");
+                Color c = lightColor = hitColor = backColor = trailColor = Color.valueOf("ab8ec5");
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
                 width = 13f;
@@ -2426,7 +2646,7 @@ public class WHBullets {
                     height = 14f;
                     hitSize = 7f;
                     pierceCap = 2;
-                    hitColor = backColor = trailColor = c;
+                    lightColor = hitColor = backColor = trailColor = c;
                     frontColor = Color.white;
                     trailWidth = 1.8f;
                     trailLength = 5;
@@ -2457,7 +2677,7 @@ public class WHBullets {
             buildingDamageMultiplier = 0.3f;
 
             lifetime = 316 / speed;
-            Color c = hitColor = backColor = trailColor = WHItems.armorAlloy.color.lerp(Color.white, 0.1f).cpy();
+            Color c = lightColor = hitColor = backColor = trailColor = WHItems.armorAlloy.color.lerp(Color.white, 0.1f).cpy();
             frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
             width = 13f;
@@ -2496,7 +2716,7 @@ public class WHBullets {
             buildingDamageMultiplier = 0.3f;
 
             lifetime = 316 / speed;
-            Color c = hitColor = backColor = trailColor = WHItems.combustible.color.cpy();
+            Color c = lightColor = hitColor = backColor = trailColor = WHItems.combustible.color.cpy();
             frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
             width = 13f;
@@ -2538,6 +2758,7 @@ public class WHBullets {
 
         HeavyHammerUranium = new CritMissileBulletType() {{
             reloadMultiplier = 1.2f;
+            armorMultiplier = blockArmorMultiplier = -1;
             ammoMultiplier = 2f;
 
             critChance = 0.15f;
@@ -2549,12 +2770,12 @@ public class WHBullets {
             flameWidth = 2f;
             despawnEffect = Fx.none;
             knockback = 3f;
-            speed = 4f;
+            speed = 3.55f;
             height = 28f;
             width = 15f;
 
             damage = 300f;
-            splashDamageRadius = 48;
+            splashDamageRadius = 60;
             splashDamage = 450;
             collidesTiles = false;
             collides = false;
@@ -2564,9 +2785,9 @@ public class WHBullets {
             scaledSplashDamage = true;
             hitSound = explosionTitan;
 
-            backColor = WHItems.uranium.color.cpy();
+            lightColor = backColor = WHItems.uranium.color.cpy();
 
-            Color c = hitColor = trailColor = backColor.cpy().lerp(Color.white, 0.3f);
+            Color c = lightColor = hitColor = trailColor = backColor.cpy().lerp(Color.white, 0.3f);
             frontColor = backColor.cpy().lerp(Color.white, 0.5f);
             colors = new Color[]{c.cpy().a(0.4f), c.cpy().a(0.8f), c.cpy().lerp(Color.white, 0.8f)};
             hitEffect = new MultiEffect(
@@ -2609,9 +2830,9 @@ public class WHBullets {
                 splashDamageRadius = 30;
                 splashDamage = 50f;
                 scaledSplashDamage = true;
-                backColor = WHItems.uranium.color.cpy();
+                lightColor = backColor = WHItems.uranium.color.cpy();
 
-                Color c = hitColor = trailColor = backColor.cpy().lerp(Color.white, 0.3f);
+                Color c = lightColor = hitColor = trailColor = backColor.cpy().lerp(Color.white, 0.3f);
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
                 hitEffect = new MultiEffect(Fx.titanExplosionFrag, Fx.titanLightSmall, new WaveEffect() {{
                     lifetime = 15f;
@@ -2626,6 +2847,7 @@ public class WHBullets {
         HeavyHammerCeramite = new CritMissileBulletType() {{
             ammoMultiplier = 2f;
             reloadMultiplier = 0.9f;
+            armorMultiplier = blockArmorMultiplier = 0.55f;
 
             critChance = 0.15f;
             critMultiplier = 1.2f;
@@ -2636,7 +2858,7 @@ public class WHBullets {
             flameWidth = 2f;
             despawnEffect = Fx.none;
             knockback = 3f;
-            speed = 5f;
+            speed = 4.5f;
             height = 28f;
             width = 15f;
 
@@ -2651,9 +2873,9 @@ public class WHBullets {
             scaledSplashDamage = true;
             hitSound = explosionTitan;
 
-            backColor = WHItems.ceramite.color.cpy();
+            lightColor = backColor = WHItems.ceramite.color.cpy();
 
-            Color c = hitColor = trailColor = backColor.cpy();
+            Color c = lightColor = hitColor = trailColor = backColor.cpy();
             frontColor = backColor.cpy().lerp(Color.white, 0.5f);
             colors = new Color[]{c.cpy().a(0.4f), c.cpy().a(0.8f), c.cpy().lerp(Color.white, 0.8f)};
             hitEffect = new MultiEffect(
@@ -2694,7 +2916,7 @@ public class WHBullets {
                 lifetime = 50f;
                 knockback = 0.5f;
 
-                hitColor = trailColor = backColor = WHItems.ceramite.color.cpy();
+                lightColor = hitColor = trailColor = backColor = WHItems.ceramite.color.cpy();
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
                 hitEffect = new MultiEffect(
                         WHFx.square(40, hitColor, 6, splashDamageRadius, 4),
@@ -2707,7 +2929,7 @@ public class WHBullets {
             }};
         }};
 
-        HeavyHammerMolybdenumAlloy = new ShieldBreakerType(5, 600, "missile-large", 300) {{
+        HeavyHammerMolybdenumAlloy = new ShieldBreakerType(5, 400, "missile-large", 600) {{
             ammoMultiplier = 3f;
             reloadMultiplier = 1.2f;
             armorMultiplier = -1;
@@ -2719,14 +2941,13 @@ public class WHBullets {
             drag = -0.03f;
             speed = 5f;
             rangeChange = 6 * 8f;
-            lifetime = 40.06f;
+            lifetime = 40.1f;
             height = 40f;
             width = 15f;
 
-            pierce = true;
             pierceCap = 2;
             collidesAir = false;
-            backColor = hitColor = trailColor = WHItems.molybdenumAlloy.color.cpy();
+            lightColor = backColor = hitColor = trailColor = WHItems.molybdenumAlloy.color.cpy();
             hitSound = explosionTitan;
 
             status = WHStatusEffects.tear;
@@ -2752,37 +2973,44 @@ public class WHBullets {
 
             fragBullets = 3;
             fragRandomSpread = fragAngle = 0;
-            fragSpread = 30f;
+            fragSpread = 25f;
             fragBullet = new CritBulletType(10f, 150, name("pierce")) {{
                 despawnEffect = hitEffect = new MultiEffect(hitSpark(20, WHItems.molybdenumAlloy.color.cpy(), 5, 30, 1f, 8),
                         WHFx.instHit(WHItems.molybdenumAlloy.color.cpy(), true, 2, 10));
                 critChance = 0.25f;
                 critMultiplier = 3f;
+
+                splashDamage = 80;
+                splashDamageRadius = 45;
                 width = 15;
                 height = 60f;
                 lifetime = (50 + 6 * 8) / speed;
                 trailRotation = true;
-                pierceCap = 2;
+                pierceCap = 4;
                 trailEffect = Fx.disperseTrail;
                 trailChance = 0.8f;
-                backColor = hitColor = trailColor = WHItems.molybdenumAlloy.color.cpy();
+                lightColor = backColor = hitColor = trailColor = WHItems.molybdenumAlloy.color.cpy();
                 trailLength = 8;
                 trailWidth = 3;
+                armorMultiplier = -1;
 
-                status = WHStatusEffects.tear;
-                statusDuration = 20f;
+                status = WHStatusEffects.armorFracture;
+                statusDuration = 120;
 
                 fragBullets = 1;
                 fragRandomSpread = fragAngle = 0;
                 fragBullet = new LaserBulletType(110) {
                     {
+                        largeHit = true;
                         pierceCap = 3;
                         colors = new Color[]{WHItems.molybdenumAlloy.color.cpy().a(0.4f), WHItems.molybdenumAlloy.color.cpy().a(0.8f), WHItems.molybdenumAlloy.color.cpy().lerp(Color.white, 0.8f)};
-                        hitColor = trailColor = WHItems.molybdenumAlloy.color;
+                        lightColor = hitColor = trailColor = WHItems.molybdenumAlloy.color;
                         length = 90f;
                         width = 10f;
                         sideLength = 15;
                         sideAngle = 0;
+                        status = WHStatusEffects.tear;
+                        statusDuration = 30;
                     }
                 };
             }};
@@ -2793,7 +3021,7 @@ public class WHBullets {
             subTrailWidth = 2;
 
             float rad = 70;
-            Color c = backColor = hitColor = trailColor = WHItems.entanglement.color.cpy();
+            Color c = lightColor = backColor = hitColor = trailColor = WHItems.entanglement.color.cpy();
             frontColor = backColor.cpy().lerp(Color.white, 0.7f);
 
             hitEffect = despawnEffect = new MultiEffect(
@@ -2869,7 +3097,7 @@ public class WHBullets {
                 lifetime = 400 / speed;
                 weaveMag = 1;
                 weaveScale = 5;
-                Color c = backColor = hitColor = trailColor = WHItems.entanglement.color.cpy().lerp(Pal.techBlue, 0.5f);
+                Color c = lightColor = backColor = hitColor = trailColor = WHItems.entanglement.color.cpy().lerp(Pal.techBlue, 0.5f);
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
                 chargeEffect = new MultiEffect(
@@ -2884,7 +3112,7 @@ public class WHBullets {
 
                 intervalBullet = new LightningBulletType() {{
                     damage = 50;
-                    lightningColor = c;
+                    lightColor = lightningColor = c;
                     lightningLength = 5;
                     lightningLengthRand = 5;
                     buildingDamageMultiplier = 0.25f;
@@ -2895,7 +3123,7 @@ public class WHBullets {
                 status = WHStatusEffects.plasma;
                 statusDuration = 30;
 
-                fragBullets = 4;
+                fragBullets = 2;
                 fragBullet = new CritBulletType(3, 100) {{
                     armorMultiplier = 2;
                     bouncing = true;
@@ -2905,7 +3133,7 @@ public class WHBullets {
                     height = 14f;
                     hitSize = 7f;
                     pierceCap = 3;
-                    lightningColor = hitColor = backColor = trailColor = c;
+                    lightColor = lightningColor = hitColor = backColor = trailColor = c;
                     frontColor = backColor.cpy().lerp(Color.white, 0.5f);
                     trailWidth = 1.8f;
                     trailLength = 5;
@@ -3144,7 +3372,7 @@ public class WHBullets {
                 height = width = 25;
                 shrinkX = shrinkY = 0;
                 frontColor = backColor = lightningColor = lightColor =
-                        hitColor = trailColor = Pal.slagOrange.cpy().lerp(Pal.lightOrange, 0.25f);
+                        lightColor = hitColor = trailColor = Pal.slagOrange.cpy().lerp(Pal.lightOrange, 0.25f);
                 trailWidth = 4;
                 trailSpread = 5;
                 trailInterval = 1;
@@ -3221,7 +3449,7 @@ public class WHBullets {
                 height = width = 30;
                 shrinkX = shrinkY = 0;
                 frontColor = backColor = lightningColor = lightColor =
-                        hitColor = trailColor = Pal.slagOrange.cpy().lerp(Pal.lightOrange, 0.25f);
+                        lightColor = hitColor = trailColor = Pal.slagOrange.cpy().lerp(Pal.lightOrange, 0.25f);
                 trailWidth = 4;
                 trailSpread = 5;
                 trailInterval = 1;
@@ -3353,7 +3581,7 @@ public class WHBullets {
             }};*/
 
                 lightningColor = lightColor =
-                        hitColor = trailColor = Pal.slagOrange.cpy().lerp(Pal.lightOrange, 0.25f);
+                        lightColor = hitColor = trailColor = Pal.slagOrange.cpy().lerp(Pal.lightOrange, 0.25f);
 
                 chargeEffect = new MultiEffect(
                         WHFx.genericChargeCircle(60, hitColor, 6, 60),
@@ -3379,7 +3607,7 @@ public class WHBullets {
 
         CollapseResonantCrystal = new DelayedPointBulletType() {
             {
-                Color c = hitColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
+                Color c = lightColor = hitColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
                 colors = new Color[]{hitColor.cpy().mul(1f, 1f, 1f, 0.4f), hitColor.cpy(), hitColor.cpy(), Pal.coalBlack};
                 reflectable = hittable = false;
                 damage = 1;
@@ -3426,7 +3654,7 @@ public class WHBullets {
                         statusDuration = 180f;
                         effectTimer = 2f;
                         fx = WHFx.square(60, c, 1, 0, 5);
-                        lightningColor = c;
+                        lightColor = lightningColor = c;
                     }
                 };
             }
@@ -3435,7 +3663,7 @@ public class WHBullets {
         CollapseCulverCrystal = new TrailFadeBulletType() {
             {
                 sprite = name("energy-bullet");
-                Color c = hitColor = backColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
+                Color c = lightColor = hitColor = backColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
                 reflectable = hittable = false;
                 damage = 1;
@@ -3506,7 +3734,7 @@ public class WHBullets {
                         statusDuration = 400f;
                         effectTimer = 4f;
                         fx = WHFx.tri(60, c, 1, 0, 5);
-                        lightningColor = c;
+                        lightColor = lightningColor = c;
                         despawnEffect =
                                 new MultiEffect(
                                         WHFx.hitSpark(90, c, 20, DOTRadius, 1.5f, 10),
@@ -3651,7 +3879,7 @@ public class WHBullets {
             lengthOffset = 11;
 
             colors = new Color[]{Pal.redLight.cpy().a(0.4f), Pal.redLight.cpy().a(0.8f), Pal.redLight.cpy().lerp(Color.white, 0.8f)};
-            hitColor = trailColor = Pal.redLight.cpy();
+            lightColor = hitColor = trailColor = Pal.redLight.cpy();
 
             drawMissile = true;
             loopSound = loopMissileTrail;
@@ -3688,7 +3916,7 @@ public class WHBullets {
                 collidesTiles = false;
                 splashDamageRadius = 40f;
                 splashDamage = 100f;
-                backColor = trailColor = hitColor = Pal.redLight;
+                lightColor = backColor = trailColor = hitColor = Pal.redLight;
                 frontColor = Color.white;
                 smokeEffect = Fx.shootBigSmoke2;
                 despawnShake = 7f;
@@ -3733,7 +3961,7 @@ public class WHBullets {
 
             Color c = WHItems.sealedPromethium.color.cpy();
             colors = new Color[]{c.a(0.4f), c.a(0.8f), c.lerp(Color.white, 0.8f)};
-            hitColor = trailColor = c;
+            lightColor = hitColor = trailColor = c;
 
             drawMissile = true;
             loopSound = loopMissileTrail;
@@ -3786,7 +4014,7 @@ public class WHBullets {
                 lengthOffset = 11;
 
                 colors = new Color[]{WHItems.refineCeramite.color.cpy().a(0.4f), WHItems.refineCeramite.color.cpy().a(0.8f), WHItems.refineCeramite.color.cpy().lerp(Color.white, 0.8f)};
-                hitColor = trailColor = WHItems.refineCeramite.color.cpy();
+                lightColor = hitColor = trailColor = WHItems.refineCeramite.color.cpy();
 
                 drawMissile = true;
                 loopSound = loopMissileTrail;
@@ -3804,7 +4032,7 @@ public class WHBullets {
                 splashDamageRadius = 120;
 
                 lightning = 5;
-                lightningColor = WHItems.refineCeramite.color.cpy();
+                lightColor = lightningColor = WHItems.refineCeramite.color.cpy();
                 lightningDamage = 50;
                 lightningLength = 8;
                 lightningLengthRand = 7;
@@ -3837,7 +4065,7 @@ public class WHBullets {
                     collidesTiles = false;
                     splashDamageRadius = 40f;
                     splashDamage = 300;
-                    backColor = trailColor = hitColor = WHItems.refineCeramite.color.cpy();
+                    lightColor = backColor = trailColor = hitColor = WHItems.refineCeramite.color.cpy();
                     frontColor = Color.white;
                     smokeEffect = Fx.shootBigSmoke2;
                     despawnShake = 7f;
@@ -3893,7 +4121,7 @@ public class WHBullets {
                 smokeEffect = Fx.shootSmokeDisperse;
                 frontColor = Color.white;
 
-                trailColor = backColor = hitColor = WHItems.ceramite.color.cpy();
+                lightColor = trailColor = backColor = hitColor = WHItems.ceramite.color.cpy();
 
                 trailLength = 6;
                 trailWidth = width / 4f;
@@ -3954,7 +4182,7 @@ public class WHBullets {
                 shrinkY = 0.3f;
                 sprite = name("tall");
 
-                Color c = hitColor = backColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
+                Color c = lightColor = hitColor = backColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
                 shootEffect = new MultiEffect(
@@ -3999,7 +4227,7 @@ public class WHBullets {
                         height = width * 2f;
                         splashDamageRadius = 24f;
                         splashDamage = damage;
-                        backColor = trailColor = hitColor = c;
+                        lightColor = backColor = trailColor = hitColor = c;
                         frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
                         hitEffect = despawnEffect = new MultiEffect(
@@ -4087,7 +4315,7 @@ public class WHBullets {
                 shrinkY = 0;
                 trailLength = 13;
                 trailWidth = 32 / 4f;
-                hitColor = lightningColor = backColor = frontColor = trailColor = WHPal.SkyBlue.cpy();
+                lightColor = hitColor = lightningColor = backColor = frontColor = trailColor = WHPal.SkyBlue.cpy();
                 width = height = 15;
 
                 hitSound = explosionQuad;
@@ -4234,7 +4462,7 @@ public class WHBullets {
             {
                 ammoMultiplier = 8f;
 
-                hitColor = trailColor = WHPal.SkyBlue.cpy().lerp(Pal.techBlue, 0.2f).lerp(Color.white, 0.2f);
+                lightColor = hitColor = trailColor = WHPal.SkyBlue.cpy().lerp(Pal.techBlue, 0.2f).lerp(Color.white, 0.2f);
                 shootEffect = WHFx.instShoot(WHPal.SkyBlue, WHPal.SkyBlueF);
                 pierceEffect = hitEffect = WHFx.instHit(hitColor, false, 3, 40);
                 smokeEffect = Fx.smokeCloud;
@@ -4342,7 +4570,7 @@ public class WHBullets {
                 ammoMultiplier = 2f;
                 rangeChange = 48;
 
-                hitColor = trailColor = WHItems.molybdenumAlloy.color.cpy().lerp(Pal.techBlue, 0.2f).lerp(Color.white, 0.2f);
+                lightColor = hitColor = trailColor = WHItems.molybdenumAlloy.color.cpy().lerp(Pal.techBlue, 0.2f).lerp(Color.white, 0.2f);
                 shootEffect = WHFx.instShoot(hitColor, Color.white);
                 pierceEffect = hitEffect = WHFx.instHit(hitColor, false, 3, 40);
                 smokeEffect = Fx.smokeCloud;
@@ -4501,7 +4729,7 @@ public class WHBullets {
                 width = 15;
                 height = width * 1.2f;
 
-                Color c = hitColor = backColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
+                Color c = lightColor = hitColor = backColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
                 shootEffect = new MultiEffect(
@@ -4568,7 +4796,7 @@ public class WHBullets {
                         height = width * 2f;
                         splashDamageRadius = 24f;
                         splashDamage = damage;
-                        backColor = trailColor = hitColor = c;
+                        lightColor = backColor = trailColor = hitColor = c;
                         frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
                         hitEffect = despawnEffect = new MultiEffect(
@@ -4653,7 +4881,7 @@ public class WHBullets {
                 ammoMultiplier = 2f;
                 rangeChange = 16;
 
-                hitColor = trailColor = WHItems.refineCeramite.color.cpy().lerp(Pal.techBlue, 0.2f).lerp(Color.white, 0.2f);
+                lightColor = hitColor = trailColor = WHItems.refineCeramite.color.cpy().lerp(Pal.techBlue, 0.2f).lerp(Color.white, 0.2f);
                 shootEffect = WHFx.instShoot(hitColor, Color.white);
                 pierceEffect = hitEffect = WHFx.instHit(hitColor, false, 3, 40);
                 smokeEffect = Fx.smokeCloud;
@@ -4690,7 +4918,7 @@ public class WHBullets {
                     length = damage = 120;
                     lifetime = 25f;
                     width = 25f;
-                    Color c = hitColor = trailColor = WHItems.refineCeramite.color.cpy().lerp(Pal.techBlue, 0.2f).lerp(Color.white, 0.2f);
+                    Color c = lightColor = hitColor = trailColor = WHItems.refineCeramite.color.cpy().lerp(Pal.techBlue, 0.2f).lerp(Color.white, 0.2f);
                     pierceCap = 3;
                     hitEffect = WHFx.square(40, hitColor, 6, 40, 6);
                     fromColor = c.cpy().lerp(Color.white, 0.5f);
@@ -4878,7 +5106,7 @@ public class WHBullets {
                 scaledSplashDamage = true;
 
                 sprite = name("energy-bullet");
-                Color c = hitColor = backColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
+                Color c = lightColor = hitColor = backColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
                 hitShake = 1f;
@@ -4917,11 +5145,11 @@ public class WHBullets {
                     {
                         drawCircle = true;
                         frontColor = Pal.coalBlack;
-                        backColor = c;
+                        lightColor = backColor = c;
                         linkLightingDamage = 120;
                         linkRange = sp;
                         hitSpacing = 10;
-                        hitColor = trailColor = lightningColor = c;
+                        lightColor = hitColor = trailColor = lightningColor = c;
 
                         shieldDamageMultiplier = 5;
 
@@ -5177,7 +5405,7 @@ public class WHBullets {
             width = 16;
             height = 32;
 
-            hitColor = lightningColor = backColor = trailColor = WHItems.ceramite.color.cpy();
+            lightColor = hitColor = lightningColor = backColor = trailColor = WHItems.ceramite.color.cpy();
             frontColor = WHItems.ceramite.color.cpy().lerp(Color.white, 0.5f);
             despawnEffect = hitEffect =
                     new MultiEffect(
@@ -5209,7 +5437,7 @@ public class WHBullets {
                 knockback = 1.5f;
                 width = 8;
                 height = 8;
-                lightningColor = frontColor = hitColor = trailColor = backColor = WHItems.ceramite.color.cpy();
+                lightColor = lightningColor = frontColor = hitColor = trailColor = backColor = WHItems.ceramite.color.cpy();
                 trailLength = 12;
                 trailWidth = 2;
                 trailChance = 0.01f;
@@ -5267,7 +5495,7 @@ public class WHBullets {
             width = 15;
             height = 36;
 
-            hitColor = lightningColor = backColor = trailColor = moColor;
+            lightColor = hitColor = lightningColor = backColor = trailColor = moColor;
             frontColor = moColor.cpy().lerp(Color.white, 0.5f);
             despawnSound = hitSound = explosionDull;
             hitSoundVolume /= 2.2f;
@@ -5298,7 +5526,7 @@ public class WHBullets {
                     maxHitSizeScale = 40f;
                     hitSizeLightingScale = 4;
 
-                    hitColor = lightningColor = frontColor = trailColor = backColor = moColor;
+                    lightColor = hitColor = lightningColor = frontColor = trailColor = backColor = moColor;
                     trailLength = 12;
                     trailWidth = 2;
                     trailChance = 0.01f;
@@ -5431,7 +5659,7 @@ public class WHBullets {
                             hitSizeDamage = 150;
                             maxHitSizeScale = UnitTypes.vanquish.hitSize * 2;
 
-                            hitSizeColor = hitColor = lightningColor = frontColor = trailColor = backColor = WHItems.refineCeramite.color.cpy();
+                            hitSizeColor = lightColor = hitColor = lightningColor = frontColor = trailColor = backColor = WHItems.refineCeramite.color.cpy();
                             trailLength = 12;
                             trailWidth = 2;
                             trailChance = 0.01f;
@@ -5468,7 +5696,7 @@ public class WHBullets {
                     maxHitSizeScale = UnitTypes.conquer.hitSize * 2.5f;
                     damageInterp = Interp.pow3In;
 
-                    hitSizeColor = hitColor = lightningColor = frontColor = trailColor = backColor = WHItems.refineCeramite.color.cpy();
+                    hitSizeColor = lightColor = hitColor = lightningColor = frontColor = trailColor = backColor = WHItems.refineCeramite.color.cpy();
                     despawnEffect = hitEffect = Fx.none;
                 }
 
@@ -5555,8 +5783,8 @@ public class WHBullets {
                 smokeEffect = Fx.shootSmokeDisperse;
                 frontColor = Color.white;
 
-                backColor = hitColor = Color.sky.cpy();
-                trailColor = Color.sky.cpy().lerp(Color.white, 0.3f);
+                lightColor = backColor = hitColor = Color.sky.cpy();
+                lightColor = trailColor = Color.sky.cpy().lerp(Color.white, 0.3f);
 
                 trailLength = 8;
                 trailWidth = width / 4f;
@@ -5586,8 +5814,8 @@ public class WHBullets {
                 collidesGround = false;
 
                 lifetime = 58 * tilesize / speed;
-                backColor = WHItems.uranium.color.cpy();
-                Color c = hitColor = trailColor = backColor.cpy().lerp(Color.white, 0.3f);
+                lightColor = backColor = WHItems.uranium.color.cpy();
+                Color c = lightColor = hitColor = trailColor = backColor.cpy().lerp(Color.white, 0.3f);
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
                 width = 15;
@@ -5681,7 +5909,7 @@ public class WHBullets {
                 shootEffect = new MultiEffect(WHFx.shootLine(10, 30), Fx.shootBig2);
                 smokeEffect = Fx.shootSmokeDisperse;
                 frontColor = c.lerp(Color.white, 0.5f);
-                backColor = trailColor = hitColor = c;
+                lightColor = backColor = trailColor = hitColor = c;
                 trailLength = 8;
                 trailWidth = width / 6f;
                 trailSinMag = 0.1f;
@@ -5701,7 +5929,7 @@ public class WHBullets {
 
                 fragBullets = 3;
                 fragBullet = new CritBulletType() {{
-                    backColor = trailColor = hitColor = c;
+                    lightColor = backColor = trailColor = hitColor = c;
                     despawnEffect = hitEffect = WHFx.square(30, hitColor, 4, splashDamageRadius, 4);
                     width = height = 10;
                     sprite = "circle";
@@ -5762,8 +5990,8 @@ public class WHBullets {
                 collidesTiles = false;
                 shootEffect = new MultiEffect(WHFx.shootLine(10, 30), Fx.shootBig2);
                 smokeEffect = Fx.shootSmokeDisperse;
-                trailColor = hitColor = frontColor = moColor;
-                backColor = moColorDark;
+                lightColor = trailColor = hitColor = frontColor = moColor;
+                lightColor = backColor = moColorDark;
 
                 trailLength = 12;
                 trailWidth = width / 5f;
@@ -5794,7 +6022,7 @@ public class WHBullets {
                         hitSizeDamage = 100;
                         maxHitSizeScale = UnitTypes.eclipse.hitSize;
 
-                        hitSizeColor = hitColor = lightningColor = frontColor = trailColor = backColor = moColor;
+                        hitSizeColor = lightColor = hitColor = lightningColor = frontColor = trailColor = backColor = moColor;
                         trailLength = 12;
                         trailWidth = 2;
                         trailChance = 0.01f;
@@ -5850,7 +6078,7 @@ public class WHBullets {
                 shootEffect = new MultiEffect(WHFx.shootLine(10, 30), Fx.shootBig2);
 
                 smokeEffect = Fx.shootSmokeDisperse;
-                hitColor = backColor = trailColor = lightningColor = circleColor;
+                lightColor = hitColor = backColor = trailColor = lightningColor = circleColor;
                 frontColor = circleColor.lerp(Color.white, 0.3f);
                 trailWidth = 3f;
                 trailLength = 12;
@@ -5872,7 +6100,7 @@ public class WHBullets {
 
                 bulletInterval = 6f;
                 intervalBullet = new LightningBulletType() {{
-                    lightningColor = circleColor;
+                    lightColor = lightningColor = circleColor;
                     lightningCone = 10f;
                     lightningLength = 8;
                     lightningLengthRand = 8;
@@ -5885,7 +6113,7 @@ public class WHBullets {
                     colors = new Color[]{circleColor.cpy().a(0.4f), circleColor, Color.white};
                     buildingDamageMultiplier = 0.25f;
                     width = 19f;
-                    hitColor = lightningColor = circleColor;
+                    lightColor = hitColor = lightningColor = circleColor;
                     hitEffect = Fx.hitLancer;
                     sideAngle = 175f;
                     sideWidth = 1f;
@@ -5907,7 +6135,7 @@ public class WHBullets {
                         colors = new Color[]{circleColor.cpy().a(0.4f), circleColor, Color.white};
                         buildingDamageMultiplier = 0.25f;
                         width = 19f;
-                        hitColor = lightningColor = circleColor;
+                        lightColor = hitColor = lightningColor = circleColor;
                         hitEffect = Fx.hitLancer;
                         sideAngle = 175f;
                         sideWidth = 1f;
@@ -5941,7 +6169,7 @@ public class WHBullets {
                                 hitSizeDamage = 100;
                                 maxHitSizeScale = UnitTypes.eclipse.hitSize * 1.5f;
 
-                                hitSizeColor = hitColor = lightningColor = frontColor = trailColor = backColor = circleColor;
+                                hitSizeColor = lightColor = hitColor = lightningColor = frontColor = trailColor = backColor = circleColor;
                                 trailLength = 12;
                                 trailWidth = 2;
                                 trailChance = 0.01f;
@@ -5988,7 +6216,7 @@ public class WHBullets {
             trailEffect = Fx.disperseTrail;
             trailRotation = true;
             trailInterval = 4f;
-            backColor = hitColor = trailColor = Pal.tungstenShot;
+            lightColor = backColor = hitColor = trailColor = Pal.tungstenShot;
             frontColor = WHPal.SkyBlueF;
 
             hitEffect = despawnEffect = new MultiEffect(WHFx.square(20, hitColor, 4, 30, 5), Fx.hitBulletColor);
@@ -6040,7 +6268,7 @@ public class WHBullets {
                 pierceCap = 3;
                 pierce = true;
                 pierceBuilding = true;
-                hitColor = backColor = trailColor = WHItems.ceramite.color.cpy();
+                lightColor = hitColor = backColor = trailColor = WHItems.ceramite.color.cpy();
                 frontColor = Color.white;
                 trailWidth = 1.7f;
                 trailLength = 3;
@@ -6096,7 +6324,7 @@ public class WHBullets {
                 width = 12;
                 height = 32;
 
-                hitColor = lightningColor = backColor = trailColor = moColor;
+                lightColor = hitColor = lightningColor = backColor = trailColor = moColor;
                 frontColor = moColor.cpy().lerp(Color.white, 0.5f);
                 despawnSound = hitSound = explosionDull;
                 hitSoundVolume /= 2.2f;
@@ -6127,7 +6355,7 @@ public class WHBullets {
                         maxHitSizeScale = UnitTypes.oct.hitSize * 1.5f;
                         hitSizeLightingScale = 3;
 
-                        hitColor = lightningColor = frontColor = trailColor = backColor = moColor;
+                        lightColor = hitColor = lightningColor = frontColor = trailColor = backColor = moColor;
                         trailLength = 12;
                         trailWidth = 2;
                         trailChance = 0.01f;
@@ -6184,7 +6412,7 @@ public class WHBullets {
                 shrinkY = 0.3f;
                 sprite = name("tall");
 
-                Color c = hitColor = backColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
+                Color c = lightColor = hitColor = backColor = trailColor = lightningColor = WHItems.culverCrystal.color.cpy();
                 frontColor = backColor.cpy().lerp(Color.white, 0.5f);
 
                 shootEffect = new MultiEffect(
@@ -6272,7 +6500,7 @@ public class WHBullets {
 
                 pierceCap = 3;
 
-                hitColor = lightningColor = frontColor = trailColor = backColor = color;
+                lightColor = hitColor = lightningColor = frontColor = trailColor = backColor = color;
 
                 trailEffect = WHFx.square(30, color, 2, 10, 4);
                 trailChance = 0.18f;
@@ -6368,7 +6596,7 @@ public class WHBullets {
                 hitShake = 5;
                 frontColor = f.cpy().lerp(Color.white, 0.15f);
 
-                backColor = trailColor = hitColor = lightningColor = f;
+                lightColor = backColor = trailColor = hitColor = lightningColor = f;
 
                 trailLength = 15;
                 trailWidth = width / 5f;
@@ -6478,7 +6706,7 @@ public class WHBullets {
                 trailLength = 14;
                 trailWidth = 17 / 5f;
 
-                hitColor = lightningColor = backColor = trailColor = moColor;
+                lightColor = hitColor = lightningColor = backColor = trailColor = moColor;
                 frontColor = moColor.cpy().lerp(Color.white, 0.5f);
 
                 despawnSound = hitSound = explosionArtilleryShock;
@@ -6530,7 +6758,7 @@ public class WHBullets {
                     hitSizeLightingScale = 5;
                     splashDamageRadius = 26;
 
-                    hitColor = lightningColor = frontColor = trailColor = backColor = moColor;
+                    lightColor = hitColor = lightningColor = frontColor = trailColor = backColor = moColor;
                     trailLength = 12;
                     trailWidth = 2;
                     trailChance = 0.01f;
@@ -6602,7 +6830,7 @@ public class WHBullets {
                 collidesAir = false;
                 scaleLife = true;
                 scaledSplashDamage = true;
-                backColor = hitColor = trailColor = lightningColor = c;
+                lightColor = backColor = hitColor = trailColor = lightningColor = c;
                 frontColor = c.cpy().lerp(Color.white, 0.5f);
 
                 hitEffect = new MultiEffect(WHFx.trailHitSpark(90, hitColor, 10, splashDamageRadius, 1.5f, 10),
@@ -6701,7 +6929,7 @@ public class WHBullets {
                     lightningLength = lightningLengthRand = 10;
                     scaledSplashDamage = true;
                     pierceArmor = true;
-                    lightningColor = frontColor = backColor = hitColor = c;
+                    lightColor = lightningColor = frontColor = backColor = hitColor = c;
                     buildingDamageMultiplier = 0.3f;
 
                     fragBullets = 1;
@@ -6721,7 +6949,7 @@ public class WHBullets {
                             hitSizeLightingScale = 5;
                             splashDamageRadius = 70;
 
-                            hitColor = lightningColor = frontColor = trailColor = backColor = c;
+                            lightColor = hitColor = lightningColor = frontColor = trailColor = backColor = c;
                             trailLength = 12;
                             trailWidth = 2;
                             trailChance = 0.01f;
@@ -6957,7 +7185,7 @@ public class WHBullets {
                             hitSizeDamage = 1000;
                             maxHitSizeScale = UnitTypes.eclipse.hitSize * 2.5f;
 
-                            hitSizeColor = hitColor = lightningColor = frontColor = trailColor = backColor = c;
+                            hitSizeColor = lightColor = hitColor = lightningColor = frontColor = trailColor = backColor = c;
                             trailLength = 12;
                             trailWidth = 2;
                             trailChance = 0.01f;
@@ -6995,7 +7223,7 @@ public class WHBullets {
                     maxHitSizeScale = UnitTypes.conquer.hitSize * 1.5f;
                     damageInterp = Interp.pow3In;
 
-                    hitSizeColor = hitColor = lightningColor = frontColor = trailColor = backColor = WHItems.adamantium.color.cpy();
+                    hitSizeColor = lightColor = hitColor = lightningColor = frontColor = trailColor = backColor = WHItems.adamantium.color.cpy();
                     despawnEffect = hitEffect = Fx.none;
                 }
 

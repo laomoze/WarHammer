@@ -6,15 +6,19 @@ import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
 import arc.graphics.g2d.TextureRegion;
+import arc.input.KeyCode;
 import arc.math.Interp;
 import arc.math.Mathf;
 import arc.scene.actions.Actions;
+import arc.scene.event.InputEvent;
+import arc.scene.event.InputListener;
 import arc.scene.event.Touchable;
 import arc.scene.ui.layout.Scl;
 import arc.scene.ui.layout.Table;
 import arc.scene.ui.layout.WidgetGroup;
 import arc.struct.ObjectMap;
 import arc.struct.Seq;
+import arc.util.Align;
 import arc.util.Time;
 import mindustry.Vars;
 import mindustry.gen.Tex;
@@ -37,9 +41,12 @@ public class WHCutsceneUI{
 
     public Table textTable = new Table();
     public Table textArea = new Table();
+    public Table signalTable = new Table();
+    public Table signalArea = new Table();
     public Table infoTable = new Table();
 
     public FLabel textLabel = new FLabel("");
+    public FLabel signalLabel = new FLabel("");
     public FLabel infoLabel = new FLabel("");
 
     public boolean controlOverride = false;
@@ -48,6 +55,9 @@ public class WHCutsceneUI{
     public float screenFadeAlphaShiftSpeed = OVERLAY_SPEED;
 
     private boolean built = false;
+    private boolean signalPositionSet = false;
+    private float signalX;
+    private float signalY;
     private final Seq<WorldMark> worldMarks = new Seq<>();
     private final ObjectMap<MarkStyle, MarkDrawer> markDrawers = new ObjectMap<>();
 
@@ -62,6 +72,7 @@ public class WHCutsceneUI{
         buildCurtain();
         buildScreenFade();
         buildTextTable();
+        buildSignalTable();
         buildInfoTable();
         attach();
         reset();
@@ -168,12 +179,71 @@ public class WHCutsceneUI{
         });
     }
 
+    private void buildSignalTable() {
+        signalTable = new Table(Tex.buttonEdge3);
+        signalTable.touchable(() -> signalTable.color.a > 0.01f ? Touchable.enabled : Touchable.disabled);
+        signalTable.visible(() -> state != null && state.isGame());
+        signalTable.color.a = 0f;
+
+        signalTable.pane(Styles.smallPane, table -> {
+            signalArea = table;
+            signalArea.left().top();
+            signalArea.defaults().left().top().pad(2f);
+            table.fillParent = true;
+        }).grow();
+
+        signalTable.addCaptureListener(new InputListener() {
+            private float lastX;
+            private float lastY;
+
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, KeyCode button) {
+                lastX = event.stageX;
+                lastY = event.stageY;
+                return true;
+            }
+
+            @Override
+            public void touchDragged(InputEvent event, float x, float y, int pointer) {
+                signalX += event.stageX - lastX;
+                signalY += event.stageY - lastY;
+                lastX = event.stageX;
+                lastY = event.stageY;
+                signalPositionSet = true;
+            }
+        });
+
+        signalTable.update(() -> {
+            float width = Core.graphics.getWidth();
+            float height = Core.graphics.getHeight();
+
+            if (Vars.mobile) {
+                signalTable.setSize(width * 0.6f, height * 0.2f);
+                if (!signalPositionSet) {
+                    signalX = width * 0.05f;
+                    signalY = height * 0.1f;
+                }
+            } else {
+                signalTable.setSize(width * 0.45f, height * 0.16f);
+                if (!signalPositionSet) {
+                    signalX = width * 0.04f;
+                    signalY = height * 0.12f;
+                }
+            }
+
+            signalX = Mathf.clamp(signalX, 0f, Math.max(0f, width - signalTable.getWidth()));
+            signalY = Mathf.clamp(signalY, 0f, Math.max(0f, height - signalTable.getHeight()));
+            signalTable.setPosition(signalX, signalY);
+        });
+    }
+
     private void attach(){
         Vars.control.input.addLock(() -> controlOverride);
         Core.scene.root.addChildAt(0, root);
         root.addChild(curtain);
         root.addChild(screenFade);
         root.addChild(textTable);
+        root.addChild(signalTable);
         root.addChild(infoTable);
     }
 
@@ -232,7 +302,31 @@ public class WHCutsceneUI{
         textArea.clear();
         textArea.add(textLabel).pad(4f, 32f, 4f, 32f);
         textTable.actions(Actions.alpha(0f));
+        clearSignalText();
         worldMarks.clear();
+    }
+
+    public void setSignalText(String text, Color color, float scale) {
+        Color textColor = color == null ? Color.white : color;
+        String value = text == null ? "" : text;
+        value = value.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "\n{wait=2}");
+        signalLabel = new FLabel(value + "{blink=white;" + textColor.toString() + ";1;0.5}_{/blink}");
+        signalLabel.setStyle(Styles.defaultLabel);
+        signalLabel.setAlignment(Align.left | Align.top, Align.left);
+        signalLabel.setWrap(true);
+        signalLabel.setColor(textColor);
+        signalLabel.setFontScale(scale);
+        signalArea.clear();
+        signalArea.add(signalLabel).growX().left().top().pad(4f, 32f, 4f, 32f);
+    }
+
+    public void clearSignalText() {
+        signalLabel = new FLabel("");
+        if (signalArea != null) {
+            signalArea.clear();
+            signalArea.add(signalLabel).growX().left().top().pad(4f, 32f, 4f, 32f);
+        }
+        if (signalTable != null) signalTable.actions(Actions.alpha(0f));
     }
 
     /**

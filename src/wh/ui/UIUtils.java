@@ -27,6 +27,7 @@ import arc.scene.ui.layout.Table;
 import arc.struct.ObjectMap;
 import arc.struct.Seq;
 import arc.util.*;
+import mindustry.Vars;
 import mindustry.content.StatusEffects;
 import mindustry.core.World;
 import mindustry.ctype.UnlockableContent;
@@ -34,6 +35,7 @@ import mindustry.entities.bullet.BulletType;
 import mindustry.entities.bullet.EmpBulletType;
 import mindustry.entities.bullet.LaserBulletType;
 import mindustry.entities.bullet.MultiBulletType;
+import mindustry.game.Team;
 import mindustry.gen.Icon;
 import mindustry.gen.Sounds;
 import mindustry.gen.Tex;
@@ -47,6 +49,7 @@ import mindustry.ui.Styles;
 import mindustry.world.blocks.defense.turrets.Turret;
 import mindustry.world.meta.*;
 import wh.content.WHContent;
+import wh.content.WHSounds;
 import wh.entities.bullet.*;
 import wh.entities.bullet.laser.ChainLightingBulletType;
 import wh.entities.bullet.laser.LaserBeamBulletType;
@@ -69,6 +72,9 @@ public final class UIUtils{
     private static final Vec2 ctrlVec = new Vec2();
     private static final DecimalFormat df = new DecimalFormat("######0.0");
     private static final Vec2 point = new Vec2(-1, -1);
+    private static final Vec2 markScreenTmp = new Vec2();
+    private static final Color markPulseTmp = new Color();
+    private static final Color markShadowTmp = new Color();
 
     private static long lastToast;
     private static @Nullable Table pTable, floatTable;
@@ -394,6 +400,191 @@ public final class UIUtils{
             float alpha = 0.55f + Mathf.absin(Time.time, 6f, 0.45f);
             label.setColor(baseColor.r, baseColor.g, baseColor.b, Mathf.clamp(alpha));
         });
+    }
+
+    public static boolean worldMarkEnabled = false;
+
+    public enum FleetWarnHudMode {
+        legacy,
+        centered
+    }
+
+    public static FleetWarnHudMode fleetWarnHudMode = FleetWarnHudMode.centered;
+
+    public static void setFleetWarnHudMode(FleetWarnHudMode mode) {
+        fleetWarnHudMode = mode == null ? FleetWarnHudMode.centered : mode;
+    }
+
+    public static void showInlineChatHud(String text, float duration) {
+        if (text == null || text.isEmpty()) return;
+        if (Vars.headless || Core.scene == null || Core.scene.root == null) return;
+
+        Table body = new Table(Tex.paneSolid);
+        body.touchable = Touchable.disabled;
+        body.margin(8f);
+        body.add(text).color(Color.white).wrap().width(Math.min(Core.graphics.getWidth() * 0.7f, 680f)).pad(4f);
+
+        Table container = Core.scene.table();
+        container.touchable = Touchable.disabled;
+        container.bottom().add(body).padBottom(Vars.mobile ? 90f : 56f);
+        container.actions(
+                Actions.alpha(0f),
+                Actions.fadeIn(0.16f),
+                Actions.delay(Math.max(0.6f, duration / 60f)),
+                Actions.fadeOut(0.24f),
+                Actions.remove()
+        );
+    }
+
+    public static void showInlineWorldMark(float x, float y, float radius, float lifetime, Color color) {
+        if (Float.isNaN(x) || Float.isNaN(y)) return;
+        if (Vars.headless || Core.scene == null || Core.scene.root == null) return;
+
+        Core.scene.root.addChild(new BuiltinWorldMark(x, y, radius, lifetime, color));
+    }
+
+    private static class BuiltinWorldMark extends Table {
+        final float worldX;
+        final float worldY;
+        final float radius;
+        final float lifetime;
+        final Color color = new Color();
+        float life = 0f;
+
+        BuiltinWorldMark(float x, float y, float radius, float lifetime, Color color) {
+            this.worldX = x;
+            this.worldY = y;
+            this.radius = Math.max(8f, radius);
+            this.lifetime = Math.max(30f, lifetime);
+            this.color.set(color == null ? Color.valueOf("ff7b69") : color);
+
+            touchable = Touchable.disabled;
+            setFillParent(true);
+        }
+
+        @Override
+        public void act(float delta) {
+            super.act(delta);
+            life += Time.delta;
+            if (Vars.state == null || Vars.state.isMenu() || life > lifetime) {
+                remove();
+            }
+        }
+
+        @Override
+        public void draw() {
+            super.draw();
+            if (Vars.headless || Core.camera == null) return;
+
+            Vec2 pos = markScreenTmp;
+            pos.set(Core.camera.project(worldX, worldY));
+
+            float w = Core.graphics.getWidth();
+            float h = Core.graphics.getHeight();
+            float xPad = w * 0.05f;
+            float yPad = h * 0.05f;
+
+            boolean out = pos.x < xPad || pos.y < yPad || pos.x > w - xPad || pos.y > h - yPad;
+            if (out) {
+                pos.x = Mathf.clamp(pos.x, xPad, w - xPad);
+                pos.y = Mathf.clamp(pos.y, yPad, h - yPad);
+            }
+
+            float size = radius * (Vars.renderer == null ? 1f : Vars.renderer.getDisplayScale());
+            float rotate = 45f + 90f * ((life / 120f) % 1f);
+
+            Color pulse = markPulseTmp.set(color).lerp(Color.white, Mathf.absin(life, 6f, 0.35f)).a(parentAlpha);
+            Color shadow = markShadowTmp.set(0.15f, 0.15f, 0.15f, pulse.a);
+
+            Lines.stroke(7f, shadow);
+            Lines.square(pos.x, pos.y, size + 3f, rotate);
+            Lines.stroke(2.4f, pulse);
+            Lines.square(pos.x, pos.y, size + 3f, rotate);
+
+            Lines.stroke(7f, shadow);
+            for (int i : Mathf.signs) {
+                Lines.line(Math.max(0f, i) * w, pos.y, pos.x + size * i * 1.8f, pos.y);
+                Lines.line(pos.x, Math.max(0f, i) * h, pos.x, pos.y + size * i * 1.8f);
+            }
+
+            Lines.stroke(2.4f, pulse);
+            for (int i : Mathf.signs) {
+                Lines.line(Math.max(0f, i) * w, pos.y, pos.x + size * i * 1.8f, pos.y);
+                Lines.line(pos.x, Math.max(0f, i) * h, pos.x, pos.y + size * i * 1.8f);
+            }
+
+            if (out) {
+                Lines.stroke(2.6f, pulse);
+                Lines.spikes(pos.x, pos.y, size * 1.8f, size * 0.55f, 4, 45f);
+            }
+
+            Draw.reset();
+        }
+    }
+
+    public static void showFleetWarnHud(Team team, float duration, Sound sound, FleetWarnHudMode mode, String centeredText) {
+        if (Vars.headless || Vars.player == null || Core.scene == null || Vars.state.isMenu()) return;
+        if (team == null) return;
+
+        Color color = team.color;
+        if (team != Vars.player.team() && sound != null) {
+            sound.play();
+        }
+
+        FleetWarnHudMode renderMode = mode == null ? fleetWarnHudMode : mode;
+        switch (renderMode) {
+            case centered:
+                showFleetWarnHudCentered(WHContent.fleet, color, centeredText, duration);
+                return;
+            case legacy:
+            default:
+                showFleetWarnHudLegacy(color, duration, centeredText);
+        }
+    }
+
+    public static void showFleetWarnHudNow(Team team, float duration, FleetWarnHudMode mode, String text) {
+        if (team == null) return;
+        showFleetWarnHud(team, Math.max(0.1f, duration), WHSounds.alert2, mode, text == null ? "" : text);
+    }
+
+    private static void showFleetWarnHudLegacy(Color color, float duration, String text) {
+        float width = Core.graphics.getWidth();
+        float bannerWidth = Math.min(width * 0.78f, 620f);
+
+        Table warning = new Table(Tex.paneSolid);
+        warning.margin(4f);
+        warning.table(t2 -> {
+            t2.defaults().growY();
+            t2.image().growX().height(Math.max(4f, OFFSET / 2f)).pad(OFFSET / 3f).padRight(-9f).color(color);
+            t2.image(WHContent.safeRegion(WHContent.fleet)).size(LEN - OFFSET).color(color);
+            t2.image().growX().height(Math.max(4f, OFFSET / 2f)).pad(OFFSET / 3f).padLeft(-9f).color(color);
+        }).width(bannerWidth).growX().pad(OFFSET / 2f).fillY().row();
+
+        if (hasText(text)) {
+            String legacyText = text.trim();
+            if (!(legacyText.startsWith("<<") && legacyText.endsWith(">>"))) {
+                legacyText = "<< " + legacyText + " >>";
+            }
+            Label legacyLabel = new Label(legacyText);
+            legacyLabel.setWrap(true);
+            legacyLabel.setAlignment(Align.center);
+            applyTrigBlink(legacyLabel, color);
+            warning.add(legacyLabel).growX().padTop(4f).padBottom(2f).center().row();
+        }
+
+        warning.pack();
+
+        Table container = Core.scene.table();
+        container.top().add(warning).padTop(Vars.mobile ? 60f : 24f);
+        container.setTranslation(0f, warning.getPrefHeight());
+        container.actions(
+                Actions.translateBy(0f, -warning.getPrefHeight(), 0.25f, Interp.fade),
+                Actions.delay(Math.max(0.1f, duration)),
+                Actions.run(() -> container.actions(
+                        Actions.translateBy(0f, warning.getPrefHeight(), 0.25f, Interp.fade),
+                        Actions.remove()
+                ))
+        );
     }
 
     public static void showFleetWarnHudCentered(TextureRegion region, Color color, String text, float duration){

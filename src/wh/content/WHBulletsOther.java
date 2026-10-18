@@ -22,6 +22,7 @@ import mindustry.content.StatusEffects;
 import mindustry.entities.*;
 import mindustry.entities.bullet.*;
 import mindustry.entities.effect.MultiEffect;
+import mindustry.entities.effect.WaveEffect;
 import mindustry.entities.pattern.ShootHelix;
 import mindustry.entities.pattern.ShootMulti;
 import mindustry.entities.pattern.ShootPattern;
@@ -54,6 +55,7 @@ import static arc.graphics.g2d.Lines.stroke;
 import static mindustry.Vars.state;
 import static mindustry.content.Fx.none;
 import static mindustry.gen.Sounds.explosionArtilleryShock;
+import static mindustry.gen.Sounds.explosionTitan;
 import static wh.content.WHFx.*;
 import static wh.core.WarHammerMod.name;
 import static wh.util.WHUtils.rand;
@@ -79,11 +81,20 @@ public class WHBulletsOther {
     public static BulletType RevengeBullet3;
     public static BulletType RevengeBullet4;
 
+    public static BulletType DarkLighting;
+
     public static BulletType GeminiBullet1;
     public static BulletType GeminiBullet2;
     public static BulletType GeminiBullet3;
 
-    public static BulletType DarkLighting;
+    public static BulletType RaiderBullet1;
+    public static BulletType RaiderBullet2;
+    public static BulletType RaiderBullet3;
+    public static BulletType RaiderBullet4;
+    public static BulletType RaiderBullet5;
+    public static BulletType RaiderBullet6;
+    public static BulletType RaiderBullet7;
+    public static BulletType RaiderBullet8;
 
     public static void load() {
         IonizeInterval = new BulletType() {
@@ -2161,8 +2172,89 @@ public class WHBulletsOther {
                 return WHUtils.anyOtherCreate(bullet, this, shooter, owner, team, x, y, angle, damage, velocityScl, lifetimeScl, data, mover, aimX, aimY, target);
             }
         };
-    }
 
+        RaiderBullet1 = new RaidBullet() {{
+            reloadMultiplier = 1.2f;
+            armorMultiplier = blockArmorMultiplier = -1;
+            ammoMultiplier = 2f;
+
+            sprite = "large-missile";
+
+            despawnEffect = Fx.none;
+            knockback = 3f;
+            speed = 3.55f;
+            height = 28f;
+            width = 15f;
+
+            damage = 300f;
+            splashDamageRadius = 60;
+            splashDamage = 450;
+            collidesTiles = false;
+            collides = false;
+            collidesAir = false;
+            scaleLife = true;
+
+            scaledSplashDamage = true;
+            hitSound = explosionTitan;
+
+            lightColor = backColor = WHPal.ShootOrange.cpy();
+
+            Color c = lightColor = hitColor = trailColor = backColor.cpy().lerp(Color.white, 0.3f);
+            frontColor = backColor.cpy().lerp(Color.white, 0.5f);
+            hitEffect = new MultiEffect(
+                    WHFx.circleOut(c, splashDamageRadius * 1.5f),
+                    Fx.titanExplosion, Fx.titanSmoke,
+                    WHFx.hitSpark(90, hitColor, 20, splashDamageRadius, 1.5f, 12),
+                    WHFx.spreadOutSpark(240, splashDamageRadius * 1.5f, 20, 4, 30, 25, 4, Interp.pow2Out)
+            );
+            shootEffect = Fx.shootTitan;
+            smokeEffect = Fx.shootSmokeTitan;
+
+            status = WHStatusEffects.radiation;
+            statusDuration = 200;
+
+            trailLength = 32;
+            trailWidth = 3.35f;
+            trailSinScl = 2.5f;
+            trailSinMag = 0.5f;
+            trailEffect = Fx.disperseTrail;
+            trailInterval = 2f;
+            despawnShake = 7f;
+            trailRotation = true;
+
+            trailInterp = v -> Math.max(Mathf.slope(v), 0.8f);
+            shrinkX = 0.2f;
+            shrinkY = 0.1f;
+            buildingDamageMultiplier = 0.5f;
+            fragLifeMin = 1.5f;
+            fragBullets = 3;
+            fragBullet = new CritBulletType(1, 100, "shell") {{
+                armorMultiplier = 1.5f;
+                collidesAir = false;
+
+                despawnShake = 3f;
+                width = 8f;
+                height = 12f;
+                lifetime = 50f;
+                knockback = 0.5f;
+                shrinkY = 0.3f;
+                splashDamageRadius = 30;
+                splashDamage = 50f;
+                scaledSplashDamage = true;
+                lightColor = backColor = WHItems.uranium.color.cpy();
+
+                Color c = lightColor = hitColor = trailColor = backColor.cpy().lerp(Color.white, 0.3f);
+                frontColor = backColor.cpy().lerp(Color.white, 0.5f);
+                hitEffect = new MultiEffect(Fx.titanExplosionFrag, Fx.titanLightSmall, new WaveEffect() {{
+                    lifetime = 15f;
+                    strokeFrom = 1f;
+                    sizeTo = 8f;
+                }});
+                despawnEffect = Fx.hitBulletColor;
+                buildingDamageMultiplier = 0.3f;
+            }};
+        }};
+    }
 
     public static class TrailBullet extends Bullet {
         @Nullable

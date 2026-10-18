@@ -290,11 +290,19 @@ public class RaidControl extends LStatement{
             }
 
             return switch(typeId){
-                case 1 -> WHBullets.airRaiderBomb;
-                case 2 -> WHBullets.airRaiderMissile;
-                case 3 -> WHBullets.CycloneMissleLauncherMissile1;
+                case 1 -> WHBullets.HeavyHammerUranium;
+                case 2 -> WHBullets.HeavyHammerCeramite;
+                case 3 -> WHBullets.HeavyHammerMolybdenumAlloy;
                 case 4 -> WHBullets.CycloneMissleLauncherMissile2;
                 case 5 -> WHBullets.CycloneMissleLauncherMissile3;
+                case 6 -> WHBullets.CycloneMissleLauncherMissile3;
+                case 7 -> WHBullets.CycloneMissleLauncherMissile3;
+                case 8 -> WHBullets.CycloneMissleLauncherMissile3;
+                case 9 -> WHBullets.CycloneMissleLauncherMissile3;
+                case 10 -> WHBullets.CycloneMissleLauncherMissile3;
+                case 11 -> WHBullets.CycloneMissleLauncherMissile3;
+                case 12 -> WHBullets.CycloneMissleLauncherMissile3;
+                case 13 -> WHBullets.CycloneMissleLauncherMissile3;
                 default -> WHBullets.airRaiderMissile;
             };
         }

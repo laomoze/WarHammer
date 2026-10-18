@@ -1,21 +1,27 @@
 package wh.entities.bullet;
 
-import arc.math.*;
-import arc.math.geom.*;
-import arc.util.*;
-import arc.util.pooling.*;
-import mindustry.content.*;
+import arc.math.Angles;
+import arc.math.Mathf;
+import arc.math.Rand;
+import arc.math.geom.Vec2;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.pooling.Pools;
+import mindustry.content.Fx;
+import mindustry.content.StatusEffects;
 import mindustry.entities.*;
-import mindustry.entities.bullet.*;
-import mindustry.game.*;
+import mindustry.entities.bullet.BasicBulletType;
+import mindustry.game.Team;
 import mindustry.gen.*;
-import mindustry.graphics.*;
-import wh.gen.*;
-import wh.util.*;
+import mindustry.graphics.Pal;
+import mindustry.graphics.Trail;
+import wh.gen.PlasmaFire;
+import wh.util.WHUtils;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.headless;
+import static mindustry.Vars.indexer;
 
-public class CritBulletType extends BasicBulletType{
+public class CritBulletType extends BasicBulletType {
     protected static Rand critRand = new Rand();
 
     public float critChance = 0.1f, critMultiplier = 2f;
@@ -220,7 +226,6 @@ public class CritBulletType extends BasicBulletType{
 
         return WHUtils.anyOtherCreate(bullet, this, shooter, owner, team, x, y, angle, damage, velocityScl, lifetimeScl, data, mover, aimX, aimY, target);
     }
-
     public static class CritBullet extends Bullet{
         public float splash;
 

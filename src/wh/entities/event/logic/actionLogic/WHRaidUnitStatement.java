@@ -32,7 +32,6 @@ import mindustry.world.Tile;
 import mindustry.world.blocks.storage.CoreBlock;
 import wh.content.WHUnitTypes;
 import wh.entities.Spawner;
-import wh.entities.event.PortableAutoEventTrigger;
 import wh.entities.event.logic.WHLogicStatements;
 import wh.entities.event.objective.TriggerObjective;
 import wh.ui.UIUtils;
@@ -636,7 +635,7 @@ public class WHRaidUnitStatement extends LStatement{
         private float cachedShield;
         private StatusEffect cachedStatus;
         private float cachedStatusDuration;
-        private PortableAutoEventTrigger.FleetWarnHudMode cachedWarnMode;
+        private UIUtils.FleetWarnHudMode cachedWarnMode;
         private String cachedWarnText;
         private float cachedSpawnerLifetime = 12f;
         private boolean cachedSpawnerAirdrop = false;
@@ -880,18 +879,18 @@ public class WHRaidUnitStatement extends LStatement{
 
         private void showWarnHud(){
             Team spawnTeam = cachedSpawnTeam == null ? resolveTeam() : cachedSpawnTeam;
-            PortableAutoEventTrigger.showFleetWarnHudNow(
+            UIUtils.showFleetWarnHudNow(
             spawnTeam, 3f, cachedWarnMode, cachedWarnText);
         }
 
         /** 解析 HUD 预警模式。 */
-        private PortableAutoEventTrigger.FleetWarnHudMode parseWarnMode(LVar value){
-            if(value == null) return PortableAutoEventTrigger.FleetWarnHudMode.centered;
+        private UIUtils.FleetWarnHudMode parseWarnMode(LVar value) {
+            if (value == null) return UIUtils.FleetWarnHudMode.centered;
             String raw = rawText(value);
-            if(raw == null) return PortableAutoEventTrigger.FleetWarnHudMode.centered;
+            if (raw == null) return UIUtils.FleetWarnHudMode.centered;
             String normalized = raw.trim().toLowerCase();
-            if(normalized.equals("legacy")) return PortableAutoEventTrigger.FleetWarnHudMode.legacy;
-            return PortableAutoEventTrigger.FleetWarnHudMode.centered;
+            if (normalized.equals("legacy")) return UIUtils.FleetWarnHudMode.legacy;
+            return UIUtils.FleetWarnHudMode.centered;
         }
 
         private String decodeWarnText(LVar value){

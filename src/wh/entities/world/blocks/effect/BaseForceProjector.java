@@ -1,14 +1,15 @@
 package wh.entities.world.blocks.effect;
 
-import arc.func.*;
-import arc.math.*;
-import arc.util.*;
-import mindustry.content.*;
-import mindustry.entities.*;
-import mindustry.gen.*;
-import mindustry.world.blocks.defense.*;
+import arc.func.Cons;
+import arc.math.Mathf;
+import arc.util.Time;
+import arc.util.Tmp;
+import mindustry.content.Fx;
+import mindustry.entities.Units;
+import mindustry.gen.Unit;
+import wh.entities.world.blocks.defense.WHForceProjector;
 
-public class BaseForceProjector extends ForceProjector {
+public class BaseForceProjector extends WHForceProjector {
     public BaseForceProjector(String name) {
         super(name);
     }

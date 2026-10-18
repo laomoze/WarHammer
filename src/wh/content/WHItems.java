@@ -47,21 +47,21 @@ public final class WHItems{
 
         manganese = new Item("manganese", Color.valueOf("947C9EFF")){{
             hardness = 2;
-            cost = 0.7f;
+            cost = 0.4f;
             alwaysUnlocked = true;
             healthScaling = 0.06f;
         }};
 
         chromium = new Item("chromium", Color.valueOf("DC9B94FF")){{
             hardness = 3;
-            cost = 0.8f;
+            cost = 0.5f;
             flammability = 0.3f;
             healthScaling = 0.08f;
         }};
 
         cobalt = new Item("cobalt", Color.valueOf("A9C0CDFF")){{
             hardness = 4;
-            cost = 0.9f;
+            cost = 0.6f;
             healthScaling = 0.1f;
         }};
 
@@ -69,24 +69,24 @@ public final class WHItems{
             hardness = 6;
             explosiveness = 0.2f;
             radioactivity = 0.8f;
-            cost = 1.3f;
+            cost = 0.75f;
             healthScaling = 0.2f;
         }};
 
         molybdenum = new Item("molybdenum", Color.valueOf(" DF90CAFF")){{
             hardness = 7;
-            cost = 1.4f;
+            cost = 1f;
             healthScaling = 0.8f;
         }};
 
         vibranium = new Item("vibranium", Color.valueOf("85CBFFFF")){{
-            cost = 4f;
+            cost = 2f;
             hardness = 8;
             healthScaling = 1.4f;
         }};
 
         manganeseSteel = new Item("manganese-steel", WHPal.MnSteelColor){{
-            cost = 1f;
+            cost = 0.75f;
             healthScaling = 0.12f;
         }};
 
@@ -97,23 +97,23 @@ public final class WHItems{
         }};
 
         armorAlloy = new Item("armor-alloy", Color.valueOf("8693AEFF")){{
-            cost = 1.6f;
+            cost = 1;
             healthScaling = 0.3f;
         }};
 
         cobaltNitride = new Item("cobalt-nitride", Color.valueOf("938197FF")){{
-            cost = 1.4f;
+            cost = 1;
             charge = 0.5f;
             healthScaling = 0.2f;
         }};
 
         ceramite = new Item("ceramite", WHPal.CeramiteColor){{
-            cost = 1.6f;
+            cost = 1.2f;
             healthScaling = 0.4f;
         }};
 
         entanglement = new Item("entanglement", Color.valueOf("8C67ADFF")){{
-            cost = 1.5f;
+            cost = 1.2f;
             healthScaling = 0.18f;
             charge = 1;
             radioactivity = 1f;
