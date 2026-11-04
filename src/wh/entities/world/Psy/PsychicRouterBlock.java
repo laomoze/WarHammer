@@ -8,8 +8,6 @@ import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
 
-import java.util.Arrays;
-
 import static mindustry.Vars.tilesize;
 
 public class PsychicRouterBlock extends PsychicNode {
@@ -58,35 +56,14 @@ public class PsychicRouterBlock extends PsychicNode {
             return isOutputSide(direction);
         }
 
-        @Override
-        protected void refreshLinks() {
-            Arrays.fill(links, null);
-            Arrays.fill(dests, null);
-            Arrays.fill(inputs, null);
-
-            int input = inputSide();
-            inputs[input] = findLinkInDirection(input, false);
-
-            for (int i = 0; i < 4; i++) {
-                if (!isOutputSide(i)) continue;
-                links[i] = findLinkInDirection(i, true);
-                dests[i] = linkTile(i, links[i]);
-            }
-        }
 
         @Override
         protected void updateBeamCache() {
             for (int i = 0; i < 4; i++) {
                 if (!isOutputSide(i)) continue;
 
-                beamFlowRate[i] = Mathf.approachDelta(beamFlowRate[i], 0f, Math.max(transferRate * 0.04f, flowParticleMinRate));
-                beamPotentialDiff[i] = Mathf.approachDelta(beamPotentialDiff[i], 0f, flowParticleMinPotential * 0.04f);
-                beamEffectAlpha[i] = Mathf.approachDelta(beamEffectAlpha[i], 0f, flowParticleFadeSpeed);
+                decayBeamCache(i);
 
-                if (beamEffectAlpha[i] <= PsychicNetworkNode.epsilon) {
-                    beamFlowRate[i] = 0f;
-                    beamPotentialDiff[i] = 0f;
-                }
             }
 
             if (beamEffectAlpha[0] <= PsychicNetworkNode.epsilon &&

@@ -1,5 +1,6 @@
 package wh.entities.bullet.laser;
 
+import arc.Core;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
@@ -45,6 +46,7 @@ import static wh.content.WHFx.groundEffect;
 public class DoomLaserBulletType extends ContinuousBulletType implements ShieldDam {
     public float startOffset = 900;
     public float fixedAngle = 20;
+    public float parallaxHeight = 18f;
     public float sideAngle = 80f;
     public float sideLength = 50f;
     public float triSize = 50f;
@@ -102,17 +104,31 @@ public class DoomLaserBulletType extends ContinuousBulletType implements ShieldD
         float fout2 = b.fout(Interp.pow10Out) * fadeIn;
 
         float rx = b.x, ry = b.y;
+        Tmp.v2.set(rx, ry);
+        float headScale = 1f;
+        if (Core.camera != null && Vars.renderer != null) {
+            WHUtils.getParallaxFrom(Tmp.v2, Core.camera.position, parallaxHeight);
+            headScale += parallaxHeight * Vars.renderer.getDisplayScale() / 50f;
+        }
+        Tmp.v2.add(Angles.trnsx(fixedAngle, startOffset), Angles.trnsy(fixedAngle, startOffset));
+        float headX = Tmp.v2.x, headY = Tmp.v2.y;
+        float normalAngle = Angles.angle(headX, headY, rx, ry) + 90f;
+        float normalX = Mathf.cosDeg(normalAngle), normalY = Mathf.sinDeg(normalAngle);
         for(int i = 0; i < colors.length; i++){
             Draw.z(Layer.bullet);
             float strokeWidth = (width + Mathf.absin(Time.time, oscScl, oscMag)) * (1 - i * 0.2f) * fout2;
+            float groundHalfWidth = strokeWidth / 2f, headHalfWidth = groundHalfWidth * headScale;
             Draw.color(Tmp.c1.set(colors[i]).mul(1f + Mathf.absin(Time.time + i * 10f, 1f, 0.1f)));
-            Tmp.v2.trns(fixedAngle, startOffset).add(rx, ry);
-            Fill.circle(Tmp.v2.x, Tmp.v2.y, width * fout2 * (1.1f - i * 0.2f));
-            Lines.stroke(strokeWidth);
-            Lines.lineAngle(Tmp.v2.x, Tmp.v2.y, fixedAngle - 180, startOffset, false);
+            Fill.circle(headX, headY, width * fout2 * (1.1f - i * 0.2f) * headScale);
+            Fill.quad(
+                    headX + normalX * headHalfWidth, headY + normalY * headHalfWidth,
+                    headX - normalX * headHalfWidth, headY - normalY * headHalfWidth,
+                    rx - normalX * groundHalfWidth, ry - normalY * groundHalfWidth,
+                    rx + normalX * groundHalfWidth, ry + normalY * groundHalfWidth
+            );
             Fill.circle(rx, ry, width * fout2 * (1f - i * 0.2f));
-            Drawf.tri(Tmp.v2.x, Tmp.v2.y, strokeWidth, sideLength * fout2 * (0.8f - i * 0.2f), sideAngle);
-            Drawf.tri(Tmp.v2.x, Tmp.v2.y, strokeWidth, sideLength * fout2 * (0.8f - i * 0.2f), sideAngle - 180);
+            Drawf.tri(headX, headY, strokeWidth * headScale, sideLength * fout2 * (0.8f - i * 0.2f) * headScale, sideAngle);
+            Drawf.tri(headX, headY, strokeWidth * headScale, sideLength * fout2 * (0.8f - i * 0.2f) * headScale, sideAngle - 180);
 
             Rand rand = WHUtils.rand(b.id);
 
@@ -143,25 +159,26 @@ public class DoomLaserBulletType extends ContinuousBulletType implements ShieldD
         for(int i = 0; i < particles; i++){
             Draw.z(Layer.bullet + 0.03f);
             float fin1 = (rand.random(1f) + base) % 1f, fout1 = 1f - fin1;
-            float len = rand.random(particleLen * 0.7f, particleLen * 1.3f);
+            float particleScale = Mathf.lerp(headScale, 1f, fin1);
+            float len = rand.random(particleLen * 0.7f, particleLen * 1.3f) * particleScale;
             float centerDeg = rand.random(Mathf.pi);
 
             float progress = Interp.pow2Out.apply(fin1);
-            float offset = rand.range(width * 2) * (1 - progress) * Mathf.cos(centerDeg) * (fout1 + 0.1f);
+            float offset = rand.range(width * 2) * particleScale * (1 - progress) * Mathf.cos(centerDeg) * (fout1 + 0.1f);
 
-            Tmp.v4.set(Tmp.v2).add(rand.random(-width, width), rand.random(-width, width));
+            Tmp.v4.set(headX, headY).add(rand.random(-width, width), rand.random(-width, width));
 
             float moveAngle = Angles.angle(rx, ry, Tmp.v4.x, Tmp.v4.y);
 
-            Tmp.v3.trns(moveAngle, -startOffset * fin1).add(Tmp.v2.x, Tmp.v2.y);
+            Tmp.v3.set(Mathf.lerp(Tmp.v4.x, rx, fin1), Mathf.lerp(Tmp.v4.y, ry, fin1));
 
             Tmp.v3.add(rand.range(offset), rand.range(offset));
 
             Draw.color(hitColor);
-            Lines.stroke(Mathf.curve(fout1, 0, 1f) * fout1 * rand.random(width / 8f) * fout2);
+            Lines.stroke(Mathf.curve(fout1, 0, 1f) * fout1 * rand.random(width / 8f) * fout2 * particleScale);
             Lines.lineAngleCenter(Tmp.v3.x, Tmp.v3.y, moveAngle, len * fout1);
 
-            Lines.stroke(Mathf.curve(fin1, 0, 1f) * fin1 * Math.max(rand.random(1, 1.2f), width / 8f) * fout2);
+            Lines.stroke(Mathf.curve(fin1, 0, 1f) * fin1 * Math.max(rand.random(1, 1.2f), width / 8f) * fout2 * particleScale);
             Lines.lineAngleCenter(Tmp.v3.x, Tmp.v3.y, moveAngle, len * fin1);
         }
 

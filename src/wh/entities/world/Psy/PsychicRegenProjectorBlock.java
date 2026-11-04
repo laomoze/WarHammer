@@ -62,13 +62,19 @@ public class PsychicRegenProjectorBlock extends RegenProjector {
         ));
     }
 
-    public class PsychicRegenProjectorBuild extends RegenProjectorBuild implements PsychicNetworkNode {
+    public class PsychicRegenProjectorBuild extends RegenProjectorBuild implements PsychicStorage {
         public final PsychicModule psychic = new PsychicModule();
         public float lastUse;
         public float repairSpeedBoost = 1f;
 
-        public float psychicStored() {
-            return psychic.amount();
+        @Override
+        public PsychicModule psychicModule() {
+            return psychic;
+        }
+
+        @Override
+        public float psychicCapacity() {
+            return psychicCapacity;
         }
 
         public float repairSpeedMultiplier() {
@@ -77,10 +83,6 @@ public class PsychicRegenProjectorBlock extends RegenProjector {
 
         public void boostRepairSpeed(float multiplier) {
             repairSpeedBoost = Math.max(repairSpeedBoost, multiplier);
-        }
-
-        public float psychicFraction() {
-            return psychic.fraction(psychicCapacity);
         }
 
         @Override

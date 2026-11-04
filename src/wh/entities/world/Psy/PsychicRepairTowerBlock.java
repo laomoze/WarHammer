@@ -111,13 +111,23 @@ public class PsychicRepairTowerBlock extends Block {
         Drawf.dashCircle(x * tilesize + offset, y * tilesize + offset, range, Pal.placing);
     }
 
-    public class PsychicRepairTowerBuild extends Building implements Ranged, PsychicNetworkNode {
+    public class PsychicRepairTowerBuild extends Building implements Ranged, PsychicStorage {
         public final PsychicModule psychic = new PsychicModule();
         public float refresh = Mathf.random(refreshInterval);
         public float warmup;
         public float totalProgress;
         public float lastUse;
         public Seq<Unit> targets = new Seq<>();
+
+        @Override
+        public PsychicModule psychicModule() {
+            return psychic;
+        }
+
+        @Override
+        public float psychicCapacity() {
+            return psychicCapacity;
+        }
 
         @Override
         public void updateTile() {

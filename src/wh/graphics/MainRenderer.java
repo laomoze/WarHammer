@@ -1,7 +1,9 @@
 package wh.graphics;
 
 import arc.Events;
+import arc.graphics.Blending;
 import arc.graphics.Color;
+import arc.graphics.Gl;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
 import arc.graphics.g2d.Lines;
@@ -44,10 +46,14 @@ public class MainRenderer{
     public FrameBuffer buffer = new FrameBuffer();
     public FrameBuffer buffer2 = new FrameBuffer();
     public int width, height;
+    private boolean capturing;
+    private final Runnable beginDistortion = this::beginDistortion;
+    private final Runnable endDistortion = this::endDistortion;
 
     private static final float[][] initFloat = new float[512][];
     private static final float[][] initStrength = new float[512][];
     private static final Pool<BlackHole> holePool = Pools.get(BlackHole.class, BlackHole::new);
+    private static final Blending premultiplied = new Blending(Gl.one, Gl.oneMinusSrcAlpha, Gl.one, Gl.oneMinusSrcAlpha);
     private static boolean warnedConvexMissing = false;
     private static boolean warnedRectMissing = false;
     private static boolean warnedHoleMissing = false;
@@ -165,6 +171,21 @@ public class MainRenderer{
         }
     }
 
+    /**
+     * FrameBuffer pixels are already alpha-composited while being captured.
+     * The capture pass stores premultiplied RGB, so source RGB must not be multiplied by alpha again.
+     */
+    public static void blitPremultiplied(FrameBuffer source, Shader shader) {
+        Blending previousBlending = Draw.getBlend();
+        Draw.flush();
+        premultiplied.apply();
+        try {
+            source.blit(shader);
+        } finally {
+            previousBlending.apply();
+        }
+    }
+
     public static void addShockCircle(float x, float y, float r, float lifetime){
         addShockCircle(x, y, r, lifetime, WHShaders.convex == null ? 0f : WHShaders.convex.strength);
     }
@@ -224,74 +245,85 @@ public class MainRenderer{
             clearQueuedHoles();
             return;
         }
-        Draw.draw(Layer.floor - 8, () -> {
-            buffer.resize(graphics.getWidth(), graphics.getHeight());
-            if (!buffer.isBound()) buffer.begin(Color.clear);
-        });
 
-        Draw.draw(Layer.space + 16, () -> {
-            if (holes.size >= WHShaders.MaxCont) WHShaders.createHoleShader();
+        Draw.draw(Layer.floor - 8, beginDistortion);
+        Draw.draw(Layer.effect + 0.03f, endDistortion);
+    }
 
-            int holeCount = Math.min(holes.size, WHShaders.MaxCont);
+    private void beginDistortion() {
+        capturing = false;
+        if (holes.isEmpty() && (WHShaders.convex == null || !WHShaders.convex.hasAny()) &&
+                (WHShaders.convexRect == null || !WHShaders.convexRect.hasAny())) return;
+        buffer.resize(graphics.getWidth(), graphics.getHeight());
+        if (!buffer.isBound()) {
+            buffer.begin(Color.clear);
+            capturing = true;
+        }
+    }
 
-            //The capture buffer must be bound from the floor pass; otherwise skip to avoid stale-frame artifacts.
-            if (!buffer.isBound()) {
-                clearQueuedHoles();
-                return;
-            }
-            buffer.end();
+    private void endDistortion() {
+        if (!capturing) return;
+        capturing = false;
+        if (holes.size >= WHShaders.MaxCont) WHShaders.createHoleShader();
 
-            buffer2.resize(graphics.getWidth(), graphics.getHeight());
-            buffer2.begin(Color.clear);
-            if(WHShaders.holeShader != null){
-                float[] blackholes = initFloat[holeCount];
-                float[] strengths = initStrength[holeCount];
+        int holeCount = Math.min(holes.size, WHShaders.MaxCont);
 
-                for(int i = 0; i < holeCount; i++){
-                    var hole = holes.get(i);
-                    blackholes[i * 4] = hole.x;
-                    blackholes[i * 4 + 1] = hole.y;
-                    blackholes[i * 4 + 2] = hole.inRadius;
-                    blackholes[i * 4 + 3] = hole.outRadius;
-                    strengths[i * 4] = hole.strength;
-                }
+        //The capture buffer must be bound from the floor pass; otherwise skip to avoid stale-frame artifacts.
+        if (!buffer.isBound()) {
+            clearQueuedHoles();
+            return;
+        }
+        buffer.end();
 
-                WHShaders.holeShader.blackHoles = blackholes;
-                WHShaders.holeShader.blackHoleStrengths = strengths;
-                //Compose blackhole pass into buffer2 first, so convex can sample the already-distorted image.
-                buffer.blit(WHShaders.holeShader);
-            }else{
-                buffer.blit(Shaders.screenspace);
-            }
-            buffer2.end();
+        buffer2.resize(graphics.getWidth(), graphics.getHeight());
+        buffer2.begin(Color.clear);
+        if (WHShaders.holeShader != null) {
+            float[] blackholes = initFloat[holeCount];
+            float[] strengths = initStrength[holeCount];
 
-            boolean hasCircleDistortion = WHShaders.convex != null && WHShaders.convex.hasAny();
-            boolean hasRectDistortion = WHShaders.convexRect != null && WHShaders.convexRect.hasAny();
-
-            if(hasCircleDistortion && hasRectDistortion){
-                buffer.resize(graphics.getWidth(), graphics.getHeight());
-                buffer.begin(Color.clear);
-                WHShaders.convex.blitFrom(buffer2);
-                buffer.end();
-                WHShaders.convexRect.blitFrom(buffer);
-            }else if(hasCircleDistortion){
-                WHShaders.convex.blitFrom(buffer2);
-            }else if(hasRectDistortion){
-                WHShaders.convexRect.blitFrom(buffer2);
-            }else{
-                buffer2.blit(Shaders.screenspace);
-            }
-
-            //Draw black cores after post-processing to avoid donut-like rings from re-sampling.
-            for(int i = 0; i < holeCount; i++){
+            for (int i = 0; i < holeCount; i++) {
                 var hole = holes.get(i);
-                Draw.color(Tmp.c2.set(Color.black).a(hole.alpha));
-                Fill.circle(hole.x, hole.y, hole.inRadius * 1.5f);
-                holePool.free(hole);
+                blackholes[i * 4] = hole.x;
+                blackholes[i * 4 + 1] = hole.y;
+                blackholes[i * 4 + 2] = hole.inRadius;
+                blackholes[i * 4 + 3] = hole.outRadius;
+                strengths[i * 4] = hole.strength;
             }
-            Draw.color();
-            holes.clear();
-        });
+
+            WHShaders.holeShader.blackHoles = blackholes;
+            WHShaders.holeShader.blackHoleStrengths = strengths;
+            //Compose blackhole pass into buffer2 first, so convex can sample the already-distorted image.
+            blitPremultiplied(buffer, WHShaders.holeShader);
+        } else {
+            blitPremultiplied(buffer, Shaders.screenspace);
+        }
+        buffer2.end();
+
+        boolean hasCircleDistortion = WHShaders.convex != null && WHShaders.convex.hasAny();
+        boolean hasRectDistortion = WHShaders.convexRect != null && WHShaders.convexRect.hasAny();
+        if (hasCircleDistortion && hasRectDistortion) {
+            buffer.resize(graphics.getWidth(), graphics.getHeight());
+            buffer.begin(Color.clear);
+            WHShaders.convex.blitFrom(buffer2);
+            buffer.end();
+            WHShaders.convexRect.blitFrom(buffer);
+        } else if (hasCircleDistortion) {
+            WHShaders.convex.blitFrom(buffer2);
+        } else if (hasRectDistortion) {
+            WHShaders.convexRect.blitFrom(buffer2);
+        } else {
+            blitPremultiplied(buffer2, Shaders.screenspace);
+        }
+
+        //Draw black cores after post-processing to avoid donut-like rings from re-sampling.
+        for (int i = 0; i < holeCount; i++) {
+            var hole = holes.get(i);
+            Draw.color(Tmp.c2.set(Color.black).a(hole.alpha));
+            Fill.circle(hole.x, hole.y, hole.inRadius * 1.5f);
+            holePool.free(hole);
+        }
+        Draw.color();
+        holes.clear();
     }
 
     private void clearQueuedHoles() {

@@ -8,7 +8,6 @@ package wh.graphics;
 import arc.Core;
 import arc.Events;
 import arc.files.Fi;
-import arc.graphics.Blending;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
@@ -475,9 +474,7 @@ public class WHShaders{
 
         public void blitFrom(FrameBuffer source){
             if(source == null || !hasAny()) return;
-            Draw.blend(Blending.disabled);
-            source.blit(this);
-            Draw.blend();
+            MainRenderer.blitPremultiplied(source, this);
         }
     }
 
@@ -656,9 +653,7 @@ public class WHShaders{
 
         public void blitFrom(FrameBuffer source){
             if(source == null || !hasAny()) return;
-            Draw.blend(Blending.disabled);
-            source.blit(this);
-            Draw.blend();
+            MainRenderer.blitPremultiplied(source, this);
         }
     }
 

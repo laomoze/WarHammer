@@ -2,7 +2,6 @@ package wh.entities.world.Psy;
 
 import arc.Core;
 import arc.graphics.Color;
-import arc.math.Mathf;
 import arc.util.Strings;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
@@ -104,61 +103,44 @@ public class PsychicUnitFactory extends UnitFactory {
         }
     }
 
-    public class PsychicUnitFactoryBuild extends UnitFactoryBuild implements PsychicNetworkNode {
+    public class PsychicUnitFactoryBuild extends UnitFactoryBuild implements PsychicConsumer {
         public final PsychicModule psychic = new PsychicModule();
         public float overload;
         public float overloadExposure;
 
-        public float psychicStored() {
-            return psychic.amount();
-        }
-
-        public float psychicFraction() {
-            return psychic.fraction(psychicCapacity);
+        @Override
+        public PsychicModule psychicModule() {
+            return psychic;
         }
 
         @Override
-        public float getEnergyPotential() {
-            return psychicStored();
+        public float psychicCapacity() {
+            return psychicCapacity;
         }
 
         @Override
-        public float inputPotential() {
-            return psychicSpace() > PsychicNetworkNode.epsilon ? 0f : psychicStored();
+        public boolean psychicEnabled() {
+            return enabled;
         }
 
-        public float psychicSpace() {
-            return Math.max(psychicCapacity - psychicStored(), 0f);
+        @Override
+        public float psychicOverload() {
+            return overload;
         }
 
-        public float addPsychic(float amount) {
-            return psychic.add(amount, psychicCapacity);
+        @Override
+        public void psychicOverload(float value) {
+            overload = value;
         }
 
-        public float drainPsychic(float amount) {
-            return psychic.remove(amount);
-        }
-
-        public boolean hasPsychic(float amount) {
-            return psychic.has(amount);
+        @Override
+        public float psychicOverloadBlockScale() {
+            return overloadBlockScale;
         }
 
         protected void updatePsychic() {
-            if (passivePsychicLoss > 0f) {
-                psychic.remove(passivePsychicLoss / 60f * delta());
-            }
-            if (overload > PsychicNetworkNode.epsilon) {
-                overloadExposure += delta() / 60f * Mathf.clamp(overload);
-            } else {
-                overloadExposure = Mathf.approachDelta(overloadExposure, 0f, 0.03f);
-            }
-            if (overload > overloadDangerThreshold && overloadHealthLoss > 0f) {
-                float severity = Mathf.pow(Math.max(overload - overloadDangerThreshold, 0f), overloadDangerExponent);
-                float exposureScale = 1f + overloadExposure;
-                damage(severity * exposureScale * overloadHealthLoss / 60f * delta());
-            }
-            overload = Mathf.approachDelta(overload, 0f, overloadDecay);
-            psychic.clamp(psychicCapacity);
+            overloadExposure = updatePsychicConsumer(this, overloadExposure, passivePsychicLoss, overloadDecay,
+                    overloadHealthLoss, overloadDangerThreshold, overloadDangerExponent);
         }
 
         protected UnitPlan currentPlan() {
@@ -171,51 +153,6 @@ public class PsychicUnitFactory extends UnitFactory {
 
         public float currentPsychicUse() {
             return psychicUsePerSecond(currentPlan());
-        }
-
-        @Override
-        public boolean acceptEnergy(PsychicNetworkNode source) {
-            return enabled && psychicSpace() > 0.0001f;
-        }
-
-        @Override
-        public boolean outputEnergy() {
-            return false;
-        }
-
-        @Override
-        public float getEnergyNeed() {
-            return acceptEnergy(null) ? psychicSpace() : 0f;
-        }
-
-        @Override
-        public float getEnergy() {
-            return 0f;
-        }
-
-        @Override
-        public float drag() {
-            return overload * overloadBlockScale;
-        }
-
-        @Override
-        public float energyTransferScale() {
-            return Mathf.clamp(1f - overload * 0.2f, 0.2f, 1f);
-        }
-
-        @Override
-        public float handleEnergy(float amount) {
-            return acceptEnergy(null) ? addPsychic(amount) : 0f;
-        }
-
-        @Override
-        public float removeEnergy(float amount) {
-            return 0f;
-        }
-
-        @Override
-        public void onEnergyOverload(float amount) {
-            overload = Math.max(overload + amount, 0f);
         }
 
         @Override

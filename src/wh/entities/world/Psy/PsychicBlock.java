@@ -156,7 +156,7 @@ public abstract class PsychicBlock extends Block {
         return findConsumer(consume -> consume instanceof ConsumePower) != null;
     }
 
-    public class PsychicBuild extends Building implements PsychicNetworkNode {
+    public class PsychicBuild extends Building implements PsychicStorage {
         public final PsychicModule psychic = new PsychicModule();
         public float overload;
         public float networkStability;
@@ -165,16 +165,14 @@ public abstract class PsychicBlock extends Block {
         public float activityTotalProgress;
         public float consumeProgress;
 
-        public float psychicStored() {
-            return psychic.amount();
+        @Override
+        public PsychicModule psychicModule() {
+            return psychic;
         }
 
+        @Override
         public float psychicCapacity() {
             return PsychicBlock.this.psychicCapacity;
-        }
-
-        public float psychicFraction() {
-            return psychic.fraction(psychicCapacity());
         }
 
         @Override
@@ -192,22 +190,6 @@ public abstract class PsychicBlock extends Block {
             float usable = psychicStored() * Math.max(1f - overload * PsychicBlock.this.overloadBlockScale, 0f);
             float pressure = pressureBoost * psychicCapacity() * PsychicBlock.this.pressurePotentialScale;
             return usable + pressure;
-        }
-
-        public float psychicSpace() {
-            return Math.max(psychicCapacity() - psychicStored(), 0f);
-        }
-
-        public float addPsychic(float amount) {
-            return psychic.add(amount, psychicCapacity());
-        }
-
-        public float drainPsychic(float amount) {
-            return psychic.remove(amount);
-        }
-
-        public boolean hasPsychic(float amount) {
-            return psychic.has(amount);
         }
 
         public boolean consumePsychic(float amount) {

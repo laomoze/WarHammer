@@ -157,7 +157,7 @@ public class PsyStorageBlock extends StorageBlock {
         return closest;
     }
 
-    public class PsychicCoreWarehouseBuild extends StorageBuild implements PsychicNetworkNode {
+    public class PsychicCoreWarehouseBuild extends StorageBuild implements PsychicStorage {
         public final PsychicModule psychic = new PsychicModule();
         public final ItemModule emptyItems = new ItemModule();
         public @Nullable CoreBuild remoteCore;
@@ -167,6 +167,16 @@ public class PsyStorageBlock extends StorageBlock {
         public float coreCheckTime;
         public float lastCoreX, lastCoreY;
         public int lastCoreSize = 1;
+
+        @Override
+        public PsychicModule psychicModule() {
+            return psychic;
+        }
+
+        @Override
+        public float psychicCapacity() {
+            return psychicCapacity;
+        }
 
         @Override
         public void draw() {

@@ -4,18 +4,13 @@ import arc.Core;
 import arc.func.Cons2;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Lines;
 import arc.graphics.g2d.TextureRegion;
-import arc.math.Angles;
-import arc.math.Interp;
 import arc.math.Mathf;
-import arc.math.Rand;
 import arc.math.geom.Geometry;
 import arc.math.geom.Point2;
 import arc.math.geom.Vec2;
 import arc.struct.Seq;
 import arc.util.Strings;
-import arc.util.Time;
 import arc.util.Tmp;
 import mindustry.Vars;
 import mindustry.core.Renderer;
@@ -34,7 +29,6 @@ import wh.graphics.PositionLightning;
 import wh.graphics.WHPal;
 import wh.ui.PsychicBar;
 import wh.ui.PsychicStatValues;
-import wh.util.WHUtils;
 
 import java.util.Arrays;
 
@@ -186,54 +180,18 @@ public class PsychicNode extends PsychicBlock {
     protected Building findPlacementLinkInDirection(int sourceX, int sourceY, int direction, boolean output, mindustry.game.Team team) {
         if (team == null) return null;
 
-        Point2 dir = Geometry.d4[direction];
         boolean horizontal = direction == 0 || direction == 2;
         int sourceFixed = horizontal
                 ? (direction == 0 ? maxPlacementTileOnAxis(sourceX, size) : minPlacementTileOnAxis(sourceX, size))
                 : (direction == 1 ? maxPlacementTileOnAxis(sourceY, size) : minPlacementTileOnAxis(sourceY, size));
         int axisMin = horizontal ? minPlacementTileOnAxis(sourceY, size) : minPlacementTileOnAxis(sourceX, size);
         int axisMax = horizontal ? maxPlacementTileOnAxis(sourceY, size) : maxPlacementTileOnAxis(sourceX, size);
+        float axisCenter = horizontal ? sourceY : sourceX;
 
-        boolean[] blocked = new boolean[Math.max(0, axisMax - axisMin + 1)];
-
-        for (int dist = 1; dist <= linkRange; dist++) {
-            Building best = null;
-            float bestAxisDistance = Float.MAX_VALUE;
-            boolean anyOpenLane = false;
-
-            for (int axis = axisMin; axis <= axisMax; axis++) {
-                int index = axis - axisMin;
-                if (blocked[index]) continue;
-                anyOpenLane = true;
-
-                int tx = horizontal ? sourceFixed + dir.x * dist : axis;
-                int ty = horizontal ? axis : sourceFixed + dir.y * dist;
-
-                Building other = Vars.world.build(tx, ty);
-                if (other == null) continue;
-                if (other.isInsulated()) {
-                    blocked[index] = true;
-                    continue;
-                }
-                if (!linkValidPreview(other, team, output)) continue;
-                if (!previewLinkMatchesDirection(direction, output, other)) {
-                    blocked[index] = true;
-                    continue;
-                }
-
-                float axisDistance = horizontal ? Math.abs(other.y - sourceY) : Math.abs(other.x - sourceX);
-                if (best == null || axisDistance < bestAxisDistance) {
-                    best = other;
-                    bestAxisDistance = axisDistance;
-                }
-
-                blocked[index] = true;
-            }
-
-            if (best != null) return best;
-            if (!anyOpenLane) break;
-        }
-        return null;
+        return PsychicLinkScanner.find(direction, sourceFixed, axisMin, axisMax, axisCenter, linkRange, other -> {
+            if (!linkValidPreview(other, team, output)) return PsychicLinkScanner.ignore;
+            return previewLinkMatchesDirection(direction, output, other) ? PsychicLinkScanner.accept : PsychicLinkScanner.block;
+        });
     }
 
     /**
@@ -636,19 +594,24 @@ public class PsychicNode extends PsychicBlock {
         protected void updateBeamCache() {
             boolean active = false;
             for (int i = 0; i < 4; i++) {
-                beamFlowRate[i] = Mathf.approachDelta(beamFlowRate[i], 0f, Math.max(transferRate * 0.04f, flowParticleMinRate));
-                beamPotentialDiff[i] = Mathf.approachDelta(beamPotentialDiff[i], 0f, flowParticleMinPotential * 0.04f);
-                beamEffectAlpha[i] = Mathf.approachDelta(beamEffectAlpha[i], 0f, flowParticleFadeSpeed);
+                decayBeamCache(i);
 
-                if (beamEffectAlpha[i] <= PsychicNetworkNode.epsilon) {
-                    beamFlowRate[i] = 0f;
-                    beamPotentialDiff[i] = 0f;
-                } else {
+                if (beamEffectAlpha[i] > PsychicNetworkNode.epsilon) {
                     active = true;
                 }
             }
 
             if (!active) beamFlowSign = 0;
+        }
+
+        protected void decayBeamCache(int direction) {
+            beamFlowRate[direction] = Mathf.approachDelta(beamFlowRate[direction], 0f, Math.max(transferRate * 0.04f, flowParticleMinRate));
+            beamPotentialDiff[direction] = Mathf.approachDelta(beamPotentialDiff[direction], 0f, flowParticleMinPotential * 0.04f);
+            beamEffectAlpha[direction] = Mathf.approachDelta(beamEffectAlpha[direction], 0f, flowParticleFadeSpeed);
+            if (beamEffectAlpha[direction] <= PsychicNetworkNode.epsilon) {
+                beamFlowRate[direction] = 0f;
+                beamPotentialDiff[direction] = 0f;
+            }
         }
 
         protected void updateLinks() {
@@ -664,18 +627,19 @@ public class PsychicNode extends PsychicBlock {
             Arrays.fill(dests, null);
             Arrays.fill(inputs, null);
 
-            int out = outputSide();
-            links[out] = findLinkInDirection(out, true);
-            dests[out] = linkTile(out, links[out]);
-
-            for (int i = 0; i < 4; i++) {
-                if (i == out) continue;
-                inputs[i] = findLinkInDirection(i, false);
+            for (int direction = 0; direction < 4; direction++) {
+                if (!canOutputToSide(direction)) continue;
+                links[direction] = findLinkInDirection(direction, true);
+                dests[direction] = linkTile(direction, links[direction]);
+            }
+            for (int direction = 0; direction < 4; direction++) {
+                if (canReceiveFromSide(direction)) {
+                    inputs[direction] = findLinkInDirection(direction, false);
+                }
             }
         }
 
         protected Building findLinkInDirection(int direction, boolean output) {
-            Point2 dir = Geometry.d4[direction];
             boolean horizontal = direction == 0 || direction == 2;
             int fixed = horizontal
                     ? (direction == 0 ? maxTileOnAxis(this, true) : minTileOnAxis(this, true))
@@ -684,52 +648,12 @@ public class PsychicNode extends PsychicBlock {
             int axisMax = horizontal ? maxTileOnAxis(this, false) : maxTileOnAxis(this, true);
             float axisCenter = horizontal ? y : x;
 
-            boolean[] blocked = new boolean[Math.max(0, axisMax - axisMin + 1)];
-
-            for (int dist = 1; dist <= linkRange; dist++) {
-                Building best = null;
-                float bestAxisDistance = Float.MAX_VALUE;
-                boolean anyOpenLane = false;
-
-                for (int axis = axisMin; axis <= axisMax; axis++) {
-                    int index = axis - axisMin;
-                    if (blocked[index]) continue;
-                    anyOpenLane = true;
-
-                    int tx = horizontal ? fixed + dir.x * dist : axis;
-                    int ty = horizontal ? axis : fixed + dir.y * dist;
-
-                    Building other = Vars.world.build(tx, ty);
-                    if (other == null) continue;
-                    if (other.isInsulated()) {
-                        blocked[index] = true;
-                        continue;
-                    }
-                    if (!linkValid(this, other)) continue;
-                    if (!linkMatchesDirection(direction, output, other)) {
-                        blocked[index] = true;
-                        continue;
-                    }
-
-                    PsychicNetworkNode node = (PsychicNetworkNode) other;
-                    if (!(output ? canReceiveLink(node) : canOutputLink(node))) {
-                        blocked[index] = true;
-                        continue;
-                    }
-
-                    float axisDistance = horizontal ? Math.abs(other.y - axisCenter) : Math.abs(other.x - axisCenter);
-                    if (best == null || axisDistance < bestAxisDistance) {
-                        best = other;
-                        bestAxisDistance = axisDistance;
-                    }
-
-                    blocked[index] = true;
-                }
-
-                if (best != null) return best;
-                if (!anyOpenLane) break;
-            }
-            return null;
+            return PsychicLinkScanner.find(direction, fixed, axisMin, axisMax, axisCenter, linkRange, other -> {
+                if (!linkValid(this, other)) return PsychicLinkScanner.ignore;
+                if (!linkMatchesDirection(direction, output, other)) return PsychicLinkScanner.block;
+                PsychicNetworkNode node = (PsychicNetworkNode) other;
+                return (output ? canReceiveLink(node) : canOutputLink(node)) ? PsychicLinkScanner.accept : PsychicLinkScanner.block;
+            });
         }
 
         protected boolean linkMatchesDirection(int direction, boolean output, Building other) {
@@ -1002,40 +926,7 @@ public class PsychicNode extends PsychicBlock {
         }
 
         protected void drawFlowParticles(int direction, Building from, Building to, int fromDirection, int toDirection) {
-            if (!WHSettings.effectEnabled() || beamEffectAlpha[direction] <= PsychicNetworkNode.epsilon) return;
-            if (!resolvePrimaryBeamEndpoints(from, to, fromDirection, toDirection)) return;
-
-            float rate = Math.max(beamFlowRate[direction], flowParticleMinRate);
-            float pressure = Math.max(beamPotentialDiff[direction], flowParticleMinPotential);
-            float amountScl = Mathf.clamp(rate / Math.max(transferRate, flowParticleMinRate));
-            int particles = Mathf.clamp(Mathf.ceil(maxFlowParticles * amountScl), 1, maxFlowParticles);
-            float alpha = Renderer.laserOpacity * Mathf.clamp(beamEffectAlpha[direction]) *
-                    Mathf.clamp(pressure / Math.max(flowParticleMinPotential * 2f, 1f));
-            float angle = Angles.angle(Tmp.v1.x, Tmp.v1.y, Tmp.v2.x, Tmp.v2.y);
-            float dst = Tmp.v1.dst(Tmp.v2);
-            if (dst <= flowParticleLen) return;
-
-            Rand rand = WHUtils.rand((long) id() * 31L + direction * 9973L);
-
-            for (int i = 0; i < particles; i++) {
-                float offset = rand.random(flowParticleLife);
-                float widthScl = rand.random(0.45f, 1.25f);
-                float lenScl = rand.random(0.65f, 1.35f);
-                float alphaScl = rand.random(0.55f, 1f);
-                float fin = ((Time.time + offset) % flowParticleLife) / flowParticleLife;
-                float slope = Interp.pow2Out.apply(Mathf.slope(fin));
-                float len = flowParticleLen * lenScl * (0.45f + 0.55f * slope);
-                float offsetLen = hitSize() / 2.5f * rand.random(-1f, 1f);
-                float cx = Mathf.lerp(Tmp.v1.x, Tmp.v2.x, fin) + Angles.trnsx(angle + 90f, offsetLen);
-                float cy = Mathf.lerp(Tmp.v1.y, Tmp.v2.y, fin) + Angles.trnsy(angle + 90f, offsetLen);
-                float hx = Angles.trnsx(angle, len / 2f);
-                float hy = Angles.trnsy(angle, len / 2f);
-
-                Draw.color(Tmp.c1.set(WHPal.PsyColor).lerp(laserColor1, 0.35f + 0.25f * widthScl).a(alpha * alphaScl));
-                Lines.stroke(flowParticleWidth * widthScl * slope);
-                Lines.line(cx - hx, cy - hy, cx + hx, cy + hy, false);
-            }
-            Lines.stroke(1f);
+            PsychicBeamEffects.drawFlowParticles(PsychicNode.this, this, direction, from, to, fromDirection, toDirection);
         }
 
         protected void drawDashedLink(Building from, Building to, Color color) {

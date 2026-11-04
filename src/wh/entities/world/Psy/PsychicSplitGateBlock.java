@@ -107,36 +107,14 @@ public class PsychicSplitGateBlock extends PsychicNode {
             return isAnyOutput(direction);
         }
 
-        @Override
-        protected void refreshLinks() {
-            for (int i = 0; i < 4; i++) {
-                links[i] = null;
-                dests[i] = null;
-                inputs[i] = null;
-            }
-
-            inputs[inputSide()] = findLinkInDirection(inputSide(), false);
-
-            for (int i = 0; i < 4; i++) {
-                if (!isAnyOutput(i)) continue;
-                links[i] = findLinkInDirection(i, true);
-                dests[i] = linkTile(i, links[i]);
-            }
-        }
 
         @Override
         protected void updateBeamCache() {
             for (int i = 0; i < 4; i++) {
                 if (!isAnyOutput(i)) continue;
 
-                beamFlowRate[i] = Mathf.approachDelta(beamFlowRate[i], 0f, Math.max(transferRate * 0.04f, flowParticleMinRate));
-                beamPotentialDiff[i] = Mathf.approachDelta(beamPotentialDiff[i], 0f, flowParticleMinPotential * 0.04f);
-                beamEffectAlpha[i] = Mathf.approachDelta(beamEffectAlpha[i], 0f, flowParticleFadeSpeed);
+                decayBeamCache(i);
 
-                if (beamEffectAlpha[i] <= PsychicNetworkNode.epsilon) {
-                    beamFlowRate[i] = 0f;
-                    beamPotentialDiff[i] = 0f;
-                }
             }
         }
 
