@@ -185,4 +185,6 @@ core/assets-raw/sprites/ui/sectors/*.json
 
 # decompiler outputs / local reverse-engineering artifacts
 tools/decompiled/
+tools/effect-preview/
+/tests/
 tmp
